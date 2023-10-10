@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@600&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	touch-action: none;
+	overscroll-behavior-y: none;
+	overflow: auto;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    font-family: 'Roboto', sans-serif;
+    font-size: 15px;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    width: 100vw;
+    height: 100vh;
+    background-color: #ececec;
+}
+
+:root {
+
+    --color-primary: #16d3dd;
+    --color-primary-dark: #02b8c1;
+    --color-primary-light: #4bf0f9;
+    --color-primary-lighter: #9bf8fd;
+    --color-primary-contrast: #fff;
+
+    --color-highlight: #e9a642;
+
+    --color-positive: #69e11e;
+    --color-negative: #ff0084;
+    --color-warning: #f5a623;
+
+/*
+    --color-primary: #2a63f2;
+    --color-primary-dark: #1c50cd;
+    --color-primary-light: #5189f5;
+    --color-primay-lighter: #c8dbfa;
+    */
+    --color-lighter: #fafafa;
+    --color-light: #ebebeb;
+    --color-secondary: #999;
+
+
+    --color-diagnosis: var(--color-primary);
+    --color-therapy: #65ad38;
+    --color-lab: #a2165c;
+    --color-vitals: #ff0084;
+    --color-imaging: #444444;
+    --color-report: #02b8c1;
+    --color-consult: #c300ff;
+    --color-procedure: #980068;
+
+    --color-white: #FFF;
+
+
+    --color-border: #d2d2d2;
+
+    --header-height: 3.5rem;
+    --footer-height: 3.5rem;
+    --footer-bottom: 0;
+
+    /* TOP MARGIN offset for ios status bar */
+    --top-offset: 0rem;
+
+
+    /** IOS PHONE */
+    --footer-height: 5rem;
+    --footer-bottom: 1rem;
+
+    --page-background: #e7eef4;
+}
+body {
+    background-color: var(--page-background);
+}
+
+.page {
+    margin: 0 auto;
+    padding: 0 1rem;
+    max-width: 1100px
+}
+
+
+h1 {
+    font-family: 'Baloo Thambi 2', cursive;
+    font-size: 2.5em;
+    color: var(--color-primary-dark); /* Your primary color for headers */
+}
+
+h3 {
+    font-size: 1.6em;
+    color: var(--color-primary-dark); /* Your primary color for headers */
+    border-bottom: 1px dotted var(--color-primary); /* Dashed line for a slight eerie feel */
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    font-family: 'Baloo Thambi 2', cursive;
+}
+
+p {
+    font-size: 1.1em;
+    line-height: 1.5em;
+    margin-bottom: 20px;
+    transition: color 0.5s; /* Transition effect for color change on hover */
+}
+
+p strong {
+    display: inline-block;
+    font-weight: 700;
+    text-transform: uppercase;
+    background-color: var(--color-primary-dark); /* Primary color for bold text */
+    color: #FFF;
+    padding: 0 .5em;
+}
+
+p:hover {
+    color: var(--color-primary-dark); /* Primary color when paragraph is hovered for a sudden unsettling change */
+}
+
+a {
+    color: var(--color-primary-dark); /* Primary color for links */
+    text-decoration: none; /* Removing default underline */
+    transition: text-shadow 0.5s; /* Transition effect for shadow depth change on hover */
+}
+
+a:hover {
+    text-shadow: 2px 2px 2px rgba(50, 50, 50, 0.5); /* Deep shadow for an eerie hover effect */
+}
