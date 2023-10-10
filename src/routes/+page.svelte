@@ -1,8 +1,16 @@
 
+<script lang="ts">
+    import Segment from '$components/segment.svelte';
+
+</script>
+
+
 <div class="theme1">
-    <h3>Empower Your Health Journey with Aouros</h3>
 </div>
 
+<div class="page centered">
+    <h1>Empower Your Health Journey with Aouros</h1>
+</div>
 
 <section class="blocks page">
     <div>
@@ -25,42 +33,35 @@
 
 <div class="segments">
 
-    <div class="segment">
-        <div class="page">
+    <Segment>
             <h3>Unified Medical Data At Your Fingertips</h3>
             <p>Tired of sifting through scattered medical reports? With Aouros, you have complete control. Consolidate, view, and manage all your health data in one secure place. X-Rays, MRIs, lab results or simple reports are seamlessly organized and mapped for quick reference.</p>
-        </div>
-    </div>
-    <div class="segment">
-        <div class="page">
+            <img src="/app.jpg" alt="EHR" />
+    </Segment>
+    <Segment>
             <h3>Seamless Data Sharing</h3>
             <p>Consult with specialists, get a second opinion, or change doctors with ease. Share your comprehensive medical history with a click, ensuring every healthcare professional has the full picture.</p>
-        </div>
-    </div>
-    <div class="segment">
-        <div class="page">
+            <img src="/sharing.jpg" alt="Sharing" />
+    </Segment>
+    <Segment>
             <h3>Your Privacy is Our Priority</h3>
         <p>Your health data is sensitive. That's why we've built Aouros with top-tier security measures. Plus, our AI-powered insights are designed to work privately, safeguarding your information at every step.</p>
-        </div>
-    </div>
-    <div class="segment">
-        <div class="page">
+        <img src="/privacy.jpg" alt="Privacy" />
+    </Segment>
+    <Segment>
             <h3>AI-Powered Insights For Better Health</h3>
             <p>Dive deep into your health data with AI-driven insights. Discover early warning signs, understand your health better, and get tailored recommendations to elevate your well-being.</p>
-        </div>
-    </div>
-    <div class="segment">
-        <div class="page">
+            <img src="/insights.jpg" alt="Privacy" />
+    </Segment>
+    <Segment>
             <h3>Healthcare Collaboration Made Easy</h3>
             <p>Open the doors to collaborative care. Connect with healthcare professionals and ensure they work together using a single, unified data source for your best health outcome.</p>
-        </div>
-    </div>
-    <div class="segment">
-        <div class="page">
+            <img src="/research.jpg" alt="Privacy" />
+    </Segment>
+    <Segment>
             <h3>Simplify Your Health Experience</h3>
             <p>Say goodbye to cumbersome administrative tasks and lengthy waits for records. Aouros is here to streamline your healthcare journey, giving you more time to focus on what truly matters: your health.</p>
-        </div>
-    </div>
+    </Segment>
 </div>
 <div class="page">
     <h4>Join the revolution in patient-centric healthcare. Dive into Aouros and experience the future of health management!</h4>
@@ -80,19 +81,6 @@
         background-position: center;
         text-align: center;
         position: relative;
-        margin-bottom: 3rem;
-    }
-    .theme1 h3 {
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: var(--color-primary);
-        text-shadow: 1px 1px 0px var(--color-primary-dark);
-        font-size: 2.5rem;
-        margin: 0;
-        font-family: 'Baloo Thambi 2', cursive;
-
     }
 
 
@@ -140,39 +128,5 @@
         flex-direction: column;  
         margin-top: 2rem;  
     } 
-    .segment {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        min-height: 20vh;
-        padding: 1rem;
-        width: 110%;
-        overflow: hidden;
-    }
 
-    .segment h3 {
-        font-size: 2rem;
-        font-family: 'Baloo Thambi 2', cursive;
-    }
-    .segment:nth-child(odd) {
-        background-color: var(--color-primary-lighter);
-        transform: rotate(-2deg) translateX(-5%);
-    }
-    .segment:nth-child(odd) .page {
-        transform: rotate(2deg);
-        padding: 0 3rem;
-    }
-    .segment:nth-child(odd) .page > * {
-        margin-right: 50%;
-    }
-
-    .segment:nth-child(even) {
-        text-align: right;
-        transform: translateX(-5%);
-    }
-
-    .segment:nth-child(even) .page > * {
-        margin-left: 50%;
-        padding: 0 3rem;
-    }
 </style>

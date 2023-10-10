@@ -87,6 +87,12 @@ body {
     max-width: 1100px
 }
 
+.page.centered {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
 
 h1 {
     font-family: 'Baloo Thambi 2', cursive;
@@ -119,9 +125,6 @@ p strong {
     padding: 0 .5em;
 }
 
-p:hover {
-    color: var(--color-primary-dark); /* Primary color when paragraph is hovered for a sudden unsettling change */
-}
 
 a {
     color: var(--color-primary-dark); /* Primary color for links */
