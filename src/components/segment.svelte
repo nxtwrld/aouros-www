@@ -15,6 +15,7 @@
         width: 110%;
         overflow: hidden;
         transform: rotate(-2deg) translateX(-5%);
+        -webkit-mask-image: -webkit-radial-gradient(white, black);
     }
 
     .segment:nth-child(odd) {
