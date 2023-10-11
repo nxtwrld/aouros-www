@@ -27,22 +27,70 @@
 
 
     <form  method="POST" action="?/signup" use:enhance>
-        <label for="email">Email</label>
-        <input type="email" name="email" id="email" placeholder="Enter your email address" required>
+        <div class="field">
+            <label for="email">Email</label>
+            <input type="email" name="email" id="email" placeholder="Enter your email address" required>
+        </div>
 
-        <label for="role">Role</label>
-        <select name="role" id="role" bind:value={role}>
-            <option value="patient">Patient</option>
-            <option value="doctor">Doctor</option>
-            <option value="researcher">Researcher</option>
-            <option value="partner">Integration Partner</option>
-        </select>
+        <div class="field">
+            <label for="role">Role</label>
+            <select name="role" id="role" bind:value={role}>
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="researcher">Researcher</option>
+                <option value="partner">Integration Partner</option>
+            </select>
+        </div>
+
 
         {#if ['researcher', 'partner'].includes(role)}
-        <textarea name="usecase" id="usecase" placeholder="Tell us more about your use case"></textarea>
+        <div class="field">
+            <textarea name="usecase" id="usecase" placeholder="Tell us more about your use case"></textarea>
+        </div>
         {/if}
 
         <button type="submit">Sign Up</button>
     </form>
     {/if}
 </div>
+
+
+<style>
+
+    .page {
+        max-width: 500px;
+    }
+
+    .field {
+        margin-bottom: 1rem;
+    }
+
+    .field label {
+        display: block;
+        font-size: 1.25rem;
+        margin-bottom: .5rem;
+
+    }
+    .field input,
+    .field textarea,
+    .field select {
+        border: 0;
+        border-bottom: 1px solid var(--color-primary-dark);;
+        background-color: transparent;
+        color: var(--color-primary-dark);
+        font-size: 1.25rem;
+        padding: .5rem 0;
+        width: 100%;
+
+    }
+
+    button {
+        background-color: var(--color-primary);
+        border: 0;
+        border-radius: 4px;
+        color: #FFF;
+        cursor: pointer;
+        font-size: 1.25rem;
+        padding: .5rem 1rem;
+    }
+</style>

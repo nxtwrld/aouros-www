@@ -20,6 +20,7 @@
 
     .segment:nth-child(odd) {
         background-color: var(--color-primary-lighter);
+        background-image: linear-gradient(150deg, var(--color-primary-light) 0%,  #ececec 30%, var(--color-primary-lighter) 100%);
     }
     .segment .page {
         transform: rotate(4deg);
