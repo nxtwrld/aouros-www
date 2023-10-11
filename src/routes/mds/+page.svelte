@@ -14,6 +14,8 @@
 
 <h3>Streamlined Patient Data Management</h3>
 <p>Gain instant access to patient health data, encrypted for utmost security. With patients having control over their data, say goodbye to delayed transfers and outdated records. Experience a seamless flow of up-to-date medical information, leading to informed decisions and improved care delivery.</p>
+<div class="theme" style="background-image: url('mds.jpg');"></div>
+
 </Segment>
 
 <Segment>
@@ -22,12 +24,10 @@
 
 <h3>Comprehensive Patient Overview</h3>
 <p>Utilize Aouros' advanced tools to gain a holistic understanding of your patients' health. Seamlessly integrate data spanning physical, mental, and environmental factors to make informed decisions and provide comprehensive care.</p>
+
+<div class="theme" style="background-image: url('holistic.jpg');"></div>
 </Segment>
 
-<Segment>
-<h3>Unlock Collaborative Research Opportunities</h3>
-<p>With an ever-growing user base willing to contribute to medical research, tap into a vast pool of anonymized data. Collaborate on groundbreaking research, develop advanced treatment methodologies, and contribute to global health advancements. All while ensuring patient privacy and adhering to GDPR and CPA standards.</p>
-</Segment>
 
 <Segment>
 <h3>Seamless Telemedicine Integration</h3>
@@ -38,6 +38,8 @@
 
 <h3>Easy Scheduling & Management</h3>
 <p>Integrating telemedicine doesn't mean complicating your schedule. With our intuitive interface, seamlessly manage virtual appointments, set reminders, and handle billing — all from one platform. And with secure end-to-end encryption, both you and your patients can have peace of mind during every consultation.</p>
+
+<div class="theme" style="background-image: url('telemedicine.jpg');"></div>
 </Segment>
 
 <Segment>
@@ -46,8 +48,7 @@
 
 <h3>Join a Community of Forward-Thinking Professionals</h3>
 <p>By integrating Aouros into your practice, you're not just adopting a tool; you're joining a movement. A movement towards transparent healthcare, where professionals and patients come together for a brighter, healthier future. Join us and redefine the boundaries of medical care and research.</p>
-</Segment>
+<p><a href="/account">Request beta account</a></p>
 
-<div class="page">
-<p><a href="#">Discover More About Aouros for Professionals</a></p>
-</div>
+<div class="theme" style="background-image: url('mds2.jpg');"></div>
+</Segment>

@@ -17,6 +17,10 @@
 
 <h3>Connecting You with Healthcare Services</h3>
 <p>Our revenue model is straightforward and transparent. We've built a platform where users can connect with potential health service providers. Whether it's specialist care, innovative treatments, or wellness guidance, our platform facilitates these connections. And, importantly, only with your explicit consent do we make any such introductions, ensuring your data is always under your control.</p>
+
+
+<div class="theme" style="background-image: url('holistic2.jpg');"></div>
+
 </Segment>
 
 <Segment>
@@ -31,6 +35,8 @@
 <p><strong>Empowering Users:</strong> You're not just a number in a database. With Aouros, you become an active participant in shaping the future of medicine. Choose to contribute and know that your anonymized data is catalyzing advancements, potentially benefiting millions worldwide. And remember, the choice to contribute is always yours. Every time.</p>
 
 <p><strong>Revolutionizing the Research Landscape:</strong> By intertwining user empowerment with transparent research facilitation, we're bringing about a paradigm shift. Our platform aims to redefine how medical research operates in a post-GDPR and CPA world, ensuring discoveries aren't hindered while keeping user privacy at the forefront.</p>
+
+<div class="theme" style="background-image: url('research2.jpg');"></div>
 </Segment>
 
 <Segment>
@@ -40,6 +46,6 @@
 
 <h3>Join Us in Transforming Healthcare</h3>
 <p>Experience a health management tool that's free, private, and built around your needs. With Aouros, you're in control, always.</p>
-
-
+<p><a href="/account">Request beta account</a></p>
+<div class="theme" style="background-image: url('transparency.jpg');"></div>
 </Segment>

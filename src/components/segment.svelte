@@ -38,7 +38,7 @@
         padding: 0 3rem;
     }
 
-    .segment .page :global(img) {
+    .segment .page > :global(img) {
         width: 100%;
         height: auto;
         position: absolute;
@@ -47,10 +47,33 @@
         width: 50%;
     }
 
-    .segment:nth-child(even)  .page :global(img) {
+    .segment:nth-child(even)  .page > :global(img) {
         transform: rotate(0deg) translate(-100%, -25%);
     }
-    .segment:nth-child(odd)  .page :global(img) {
+    .segment:nth-child(odd)  .page > :global(img) {
         transform: rotate(0deg) translate(100%, -25%);
     }
+
+    .segment .page :global(.theme) {
+        width: 100%;
+        height: auto;
+        position: absolute;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        top: 50%;
+        width: 30%;
+        max-height: 70% !important;
+        aspect-ratio: 1/1 !important;
+        transform: translate(-50%, -50%) rotate(4deg);
+        box-shadow: 3px 3px 10px rgba(0, 0, 0, .25);
+    }
+
+    .segment:nth-child(even) .page > :global(.theme) {
+        left: -25%;
+    }
+    .segment:nth-child(odd) .page > :global(.theme) {
+        left: 75%;
+    }
+
 </style>
