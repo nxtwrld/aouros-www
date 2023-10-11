@@ -5,8 +5,6 @@
 </script>
 
 
-<div class="theme1">
-</div>
 
 <div class="page centered">
     <h1>Empower Your Health Journey with Aouros</h1>
@@ -72,16 +70,6 @@
 
 
 <style>
-
-.theme1 {
-        height: 30vh;
-        background-image: url('/theme1.jpg');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        text-align: center;
-        position: relative;
-    }
 
 
     .blocks {

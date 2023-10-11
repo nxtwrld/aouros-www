@@ -1,4 +1,7 @@
 
+<div class="theme1">
+</div>
+
 <div class="page">
 
     <h1>Contact</h1>
@@ -18,3 +21,17 @@
     <a href="/account">Request beta account</a>
 
 </div>
+
+<style>
+    .theme1 {
+        height: 30vh;
+        background-image: url('/theme1.jpg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        text-align: center;
+        position: relative;
+    }
+
+
+</style>

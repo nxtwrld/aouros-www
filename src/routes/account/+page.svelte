@@ -12,6 +12,8 @@
 </script>
 
 
+<div class="theme1">
+</div>
 <!-- sign up form with email  field and a dropdown -->
 <div class="page">
 
@@ -93,4 +95,16 @@
         font-size: 1.25rem;
         padding: .5rem 1rem;
     }
+
+    .theme1 {
+        height: 30vh;
+        background-image: url('/theme1.jpg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        text-align: center;
+        position: relative;
+    }
+
+
 </style>
