@@ -114,6 +114,7 @@ p {
     line-height: 1.5em;
     margin-bottom: 20px;
     transition: color 0.5s; /* Transition effect for color change on hover */
+    text-align: justify;
 }
 
 p strong {
