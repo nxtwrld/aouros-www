@@ -59,7 +59,7 @@
 <h3>Join the Revolution in Health Management</h3>
 <p>With Aouros, you're not just a patient - you're a partner in a brighter, healthier future. Take charge of your health journey and experience the peace of mind you deserve.</p>
 
-<p><a href="/account">Request beta account</a></p>
+<p><a href="/account" class="button">Request beta account</a></p>
 
 <div class="theme" style="background-image: url('telemedicine.jpg');"></div>
 </Segment>

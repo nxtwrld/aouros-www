@@ -48,7 +48,7 @@
 
 <h3>Join a Community of Forward-Thinking Professionals</h3>
 <p>By integrating Aouros into your practice, you're not just adopting a tool; you're joining a movement. A movement towards transparent healthcare, where professionals and patients come together for a brighter, healthier future. Join us and redefine the boundaries of medical care and research.</p>
-<p><a href="/account">Request beta account</a></p>
+<p><a href="/account" class="button">Request beta account</a></p>
 
 <div class="theme" style="background-image: url('mds2.jpg');"></div>
 </Segment>

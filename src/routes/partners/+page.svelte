@@ -33,7 +33,7 @@
 
     <h3>Join Us in Shaping the Future of Healthcare</h3>
     <p>Become a partner, offer your innovations, or collaborate on research. Let's work together to provide the best for our users and elevate the healthcare landscape!</p>
-    <p><a href="/contact">Partner With Us</a></p>
+    <p><a href="/contact" class="button">Partner With Us</a></p>
 
     <div class="theme" style="background-image: url('privacy.jpg');"></div>
 </Segment>

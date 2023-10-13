@@ -14,6 +14,12 @@
 
     <slot />
 
+<footer>
+    <div class="page">
+        &copy; 2023 aouros
+    </div>
+</footer>
+
 <style>
     header {
         background-color: var(--color-primary);
@@ -38,6 +44,17 @@
         margin-right: 1rem;
         width: auto;
     }
+
+    footer {
+        position: relative;
+        margin-top: 3rem;
+        background-color: #FFF;
+        border-top: 1px solid var(--color-primary-dark);
+        padding-top: 1rem;
+        padding-bottom: 4rem;
+        z-index: 9;
+    }
+
 
     .spacer {
         flex-grow: 1;

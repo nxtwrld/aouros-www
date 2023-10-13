@@ -51,7 +51,7 @@
         </div>
         {/if}
 
-        <button type="submit">Sign Up</button>
+        <button class="button" type="submit">Sign Up</button>
     </form>
     {/if}
 </div>
@@ -86,15 +86,6 @@
 
     }
 
-    button {
-        background-color: var(--color-primary);
-        border: 0;
-        border-radius: 4px;
-        color: #FFF;
-        cursor: pointer;
-        font-size: 1.25rem;
-        padding: .5rem 1rem;
-    }
 
     .theme1 {
         height: 30vh;
@@ -105,6 +96,9 @@
         text-align: center;
         position: relative;
     }
+
+
+
 
 
 </style>

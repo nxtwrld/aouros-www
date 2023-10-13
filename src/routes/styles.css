@@ -92,7 +92,10 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    text-align: center;
 }
+
+
 
 h1 {
     font-family: 'Baloo Thambi 2', cursive;
@@ -106,6 +109,12 @@ h3 {
     border-bottom: 1px dotted var(--color-primary); /* Dashed line for a slight eerie feel */
     margin-bottom: 20px;
     padding-bottom: 10px;
+    font-family: 'Baloo Thambi 2', cursive;
+}
+
+h4 {
+    font-size: 1.6em;
+    color: var(--color-primary-dark); /* Your primary color for headers */
     font-family: 'Baloo Thambi 2', cursive;
 }
 
@@ -135,4 +144,18 @@ a {
 
 a:hover {
     text-shadow: 2px 2px 2px rgba(50, 50, 50, 0.5); /* Deep shadow for an eerie hover effect */
+}
+
+
+
+
+
+.button {
+    background-color: var(--color-primary);
+    border: 0;
+    border-radius: 4px;
+    color: #FFF;
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: .5rem 1rem;
 }

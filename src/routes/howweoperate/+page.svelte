@@ -46,6 +46,6 @@
 
 <h3>Join Us in Transforming Healthcare</h3>
 <p>Experience a health management tool that's free, private, and built around your needs. With Aouros, you're in control, always.</p>
-<p><a href="/account">Request beta account</a></p>
+<p><a href="/account" class="button">Request beta account</a></p>
 <div class="theme" style="background-image: url('transparency.jpg');"></div>
 </Segment>

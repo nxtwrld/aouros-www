@@ -61,9 +61,9 @@
             <p>Say goodbye to cumbersome administrative tasks and lengthy waits for records. Aouros is here to streamline your healthcare journey, giving you more time to focus on what truly matters: your health.</p>
     </Segment>
 </div>
-<div class="page">
-    <h4>Join the revolution in patient-centric healthcare. Dive into Aouros and experience the future of health management!</h4>
-    <button disabled>Coming soon...</button>
+<div class="page centered">
+    <h4 class="centered">Join the revolution in patient-centric healthcare. Dive into Aouros and experience the future of health management!</h4>
+    <a href="/access" class="button">Request beta access</a>
 
 </div>
 
