@@ -7,7 +7,13 @@
       menuOpen = !menuOpen;
     }
 
-  
+    // hide menu on body mousedown
+    function hideMenu () {
+      if (menuOpen) {
+        toggleMenu();
+      }
+    };
+
     // hide menu on navigation
     navigating.subscribe((navigating) => {
       if (navigating && menuOpen) {
@@ -17,8 +23,9 @@
 
   </script>
   
+  <svelte:window on:mousedown={hideMenu} />
   <div class="navbar">
-    <nav>
+    <nav on:mousedown|stopPropagation>
       <ul class="nav-links {menuOpen ? 'active' : ''}">
         <li><a href="/" class:active={$page.route.id == '/'}>Home</a></li>
         <li><a href="/benefits" class:active={$page.route.id == '/benefits'}>Patients</a></li>

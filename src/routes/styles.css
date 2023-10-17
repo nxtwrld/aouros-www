@@ -8,7 +8,6 @@ html, body {
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
     -webkit-overflow-scrolling: touch; /* Enables momentum scrolling on iOS devices */
-	touch-action: none;
 	overflow: auto;
     margin: 0;
     padding: 0;
