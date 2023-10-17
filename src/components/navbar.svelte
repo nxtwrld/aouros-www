@@ -5,22 +5,9 @@
   
     function toggleMenu() {
       menuOpen = !menuOpen;
-      
-      if (menuOpen) {
-        document.body.style.overflow = 'hidden';
-      } else {
-        document.body.style.overflow = 'auto';
-      }
-
     }
 
-    // hide menu on body mousedown
-    function hideMenu () {
-      if (menuOpen) {
-        toggleMenu();
-      }
-    };
-
+  
     // hide menu on navigation
     navigating.subscribe((navigating) => {
       if (navigating && menuOpen) {
@@ -30,9 +17,8 @@
 
   </script>
   
-  <svelte:window on:mousedown={hideMenu} />
   <div class="navbar">
-    <nav on:mousedown|stopPropagation>
+    <nav>
       <ul class="nav-links {menuOpen ? 'active' : ''}">
         <li><a href="/" class:active={$page.route.id == '/'}>Home</a></li>
         <li><a href="/benefits" class:active={$page.route.id == '/benefits'}>Patients</a></li>
@@ -67,7 +53,7 @@
           justify-content: space-between;
           align-items: center;
           background-color: #16d3dd;
-          padding: 1rem 2rem;
+          padding: 1rem;
         }
       
         ul {
@@ -101,6 +87,7 @@
             display: none;
             cursor: pointer;
             background-color: transparent;
+            color: #FFF;
             border: 0;
             padding: 0;
             margin: 0;
