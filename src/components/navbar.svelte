@@ -15,11 +15,11 @@
     }
 
     // hide menu on body mousedown
-    document.body.addEventListener('mousedown', (e) => {
+    function hideMenu () {
       if (menuOpen) {
         toggleMenu();
       }
-    });
+    };
 
     // hide menu on navigation
     navigating.subscribe((navigating) => {
@@ -30,7 +30,7 @@
 
   </script>
   
-
+  <svelte:window on:mousedown={hideMenu} />
   <div class="navbar">
     <nav on:mousedown|stopPropagation>
       <ul class="nav-links {menuOpen ? 'active' : ''}">
