@@ -5,12 +5,34 @@
   
     function toggleMenu() {
       menuOpen = !menuOpen;
+      
+      if (menuOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'auto';
+      }
+
     }
+
+    // hide menu on body mousedown
+    document.body.addEventListener('mousedown', (e) => {
+      if (menuOpen) {
+        toggleMenu();
+      }
+    });
+
+    // hide menu on navigation
+    navigating.subscribe((navigating) => {
+      if (navigating && menuOpen) {
+        toggleMenu();
+      }
+    });
+
   </script>
   
 
   <div class="navbar">
-    <nav>
+    <nav on:mousedown|stopPropagation>
       <ul class="nav-links {menuOpen ? 'active' : ''}">
         <li><a href="/" class:active={$page.route.id == '/'}>Home</a></li>
         <li><a href="/benefits" class:active={$page.route.id == '/benefits'}>Patients</a></li>
@@ -97,7 +119,7 @@
             display: block;
             position: absolute;
             top: 4rem;
-            right: 2rem;
+            right: 0rem;
             background-color: #16d3dd;
             padding: 1rem;
             border-radius: 5px;
@@ -105,6 +127,7 @@
       
           li {
             display: block;
+            margin: .5rem 0;
           }
         }
       </style>

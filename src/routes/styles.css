@@ -8,19 +8,17 @@ html, body {
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: antialiased;
 	touch-action: none;
-	overscroll-behavior-y: none;
 	overflow: auto;
     margin: 0;
     padding: 0;
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
     font-family: 'Roboto', sans-serif;
     font-size: 15px;
     margin: 0;
     padding: 0;
+    padding-top: 2rem;
     color: #333;
-    width: 100vw;
-    height: 100vh;
     background-image: linear-gradient(130deg, #ececec 0%, #ececec 50%, #ffffff 100%);
 }
 

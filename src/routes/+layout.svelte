@@ -26,9 +26,10 @@
         padding: 0;
         border-bottom: 1px solid var(--color-primary-dark);
         box-shadow: 0 0 1rem rgba(0, 0, 0, .25);
-        position: sticky;
+        position: fixed;
         top: 0;
         z-index: 10;
+        width: 100vw;
         height: 4rem;
     }
     header .page {

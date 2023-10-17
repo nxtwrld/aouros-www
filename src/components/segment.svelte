@@ -40,7 +40,6 @@
     }
 
     .segment .page > :global(img) {
-        width: 100%;
         height: auto;
         position: absolute;
         left: 0;
@@ -54,6 +53,7 @@
     .segment:nth-child(odd)  .page > :global(img) {
         transform: rotate(0deg) translate(100%, -25%);
     }
+    
 
     .segment .page :global(.theme) {
         width: 100%;
@@ -76,5 +76,45 @@
     .segment:nth-child(odd) .page > :global(.theme) {
         left: 75%;
     }
+
+    /* mobile screen media query */
+    @media (max-width: 768px) {
+        .segment {
+            flex-direction: column;
+            transform: rotate(0deg) translateX(0);
+            width: 100%;
+        }
+        .segment:nth-child(odd) .page,
+        .segment:nth-child(even) .page {
+            transform: rotate(0deg) translateX(0);
+        }
+        .segment:nth-child(odd) .page :global(> *) {
+            margin-right: 0;
+            padding: 0;
+            transform: rotate(0deg);
+        }
+        .segment:nth-child(even) .page :global(> *) {
+            margin-left: 0;
+            padding: 0;
+            transform: rotate(0deg);
+        }
+        .segment .page > :global(img) {
+            display: block;
+            position: relative;
+            height: auto;
+            width: 100%;
+            transform: rotate(0deg) translate(0, 0) !important;
+        }
+        .segment .page :global(.theme) {
+            display: block;
+            position: relative;
+            height: auto;
+            width: 100%;
+            left: 0 !important;
+            transform: rotate(0deg) translate(0, 0) !important;
+        }
+    }
+
+
 
 </style>
