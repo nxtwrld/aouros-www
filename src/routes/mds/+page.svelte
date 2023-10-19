@@ -14,7 +14,7 @@
 
 <h3>Streamlined Patient Data Management</h3>
 <p>Gain instant access to patient health data, encrypted for utmost security. With patients having control over their data, say goodbye to delayed transfers and outdated records. Experience a seamless flow of up-to-date medical information, leading to informed decisions and improved care delivery.</p>
-<div class="theme" style="background-image: url('mds.jpg');"></div>
+<div class="theme" style="background-image: url('female-doctor.png');"></div>
 
 </Segment>
 

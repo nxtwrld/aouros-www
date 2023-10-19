@@ -34,12 +34,12 @@
     <Segment>
             <h3>Unified Medical Data At Your Fingertips</h3>
             <p>Tired of sifting through scattered medical reports? With Aouros, you have complete control. Consolidate, view, and manage all your health data in one secure place. X-Rays, MRIs, lab results or simple reports are seamlessly organized and mapped for quick reference.</p>
-            <img src="/app.jpg" alt="EHR" />
+            <img src="/shot-of-a-male.png" alt="EHR" />
     </Segment>
     <Segment>
             <h3>Seamless Data Sharing</h3>
             <p>Consult with specialists, get a second opinion, or change doctors with ease. Share your comprehensive medical history with a click, ensuring every healthcare professional has the full picture.</p>
-            <img src="/sharing.jpg" alt="Sharing" />
+            <img src="/doctor-medical.png" alt="Sharing" />
     </Segment>
     <Segment>
             <h3>Your Privacy is Our Priority</h3>

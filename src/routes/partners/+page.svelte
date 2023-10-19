@@ -14,7 +14,7 @@
     <h3>Seamless Medical Data Integration with OpenAPI</h3>
     <p>Securely bridge the gap between patients and healthcare providers with our robust OpenAPI. Enhance the user experience by enabling automatic uploads of encrypted lab tests and other medical data, making healthcare more seamless and efficient. Our end-to-end encryption ensures maximum data security, with patients retaining complete control over re-encryption and data sharing.</p>
 
-    <div class="theme" style="background-image: url('research2.jpg');"></div>
+    <div class="theme" style="background-image: url('doctor-researcher.png');"></div>
 </Segment>
 
 <Segment>
