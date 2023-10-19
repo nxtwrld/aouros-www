@@ -12,7 +12,7 @@
     <p>At Aouros, we're not just revolutionizing patient healthcare management; we're opening doors for partners and developers to co-create the future of health technology.</p>
 
     <h3>Seamless Medical Data Integration with OpenAPI</h3>
-    <p>Securely bridge the gap between patients and healthcare providers with our robust OpenAPI. Enhance the user experience by enabling automatic uploads of encrypted lab tests and other medical data, making healthcare more seamless and efficient. Our end-to-end encryption ensures maximum data security, with patients retaining complete control over re-encryption and data sharing.</p>
+    <p>Securely bridge the gap between patients and healthcare providers using Aouros partners' robust OpenAPI. By adopting FHIR as our foundational data format for storage and exchange, we treat each resource as a Verifiable Credential. This approach ensures maximal compliance with industry standards, simplifying integration processes. Enhance the patient experience by facilitating automatic uploads of encrypted lab tests and other medical data, driving a more cohesive and efficient healthcare journey. Our end-to-end encryption guarantees unparalleled data security. Furthermore, patients retain absolute authority over re-encryption and data sharing, aligning with the highest standards of data ownership and privacy.</p>
 
     <div class="theme" style="background-image: url('doctor-researcher.png');"></div>
 </Segment>
