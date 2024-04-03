@@ -1,11 +1,5 @@
 import { error } from '@sveltejs/kit';
 
-
-
-export function 
-
-
-
 /** @type {import('./$types.d').RequestHandler} */
 export function POST({ url }) {
 	const min = Number(url.searchParams.get('min') ?? '0');
