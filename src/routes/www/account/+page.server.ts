@@ -1,11 +1,11 @@
-/** @type {import('./$types').PageServerLoad} */
+/** @type {import('./$types.d').PageServerLoad} */
 export function load(event) {
 	return {
 		locals: event.locals
 	};
 }
 
-/** @type {import('./$types').Actions} */
+/** @type {import('./$types.d').Actions} */
 export const actions = {
 	signup: async ({ request }) => {
 		// store data to vercel postgres beta account requests table

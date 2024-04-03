@@ -1,6 +1,6 @@
 <script lang="ts">
     import './styles.css';
-	import Navbar from '$components/navbar.svelte';
+	import Navbar from '$componentsLocal/navbar.svelte';
 </script>
 <header>
     <div class="page">

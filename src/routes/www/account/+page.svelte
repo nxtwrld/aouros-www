@@ -1,10 +1,10 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
 
-    /** @type {import('./$types').PageData} */
+    /** @type {import('./$types.d').PageData} */
 	export let data;
 
-    /** @type {import('./$types').ActionData} */
+    /** @type {import('./$types.d').ActionData} */
     export let form;
 
 

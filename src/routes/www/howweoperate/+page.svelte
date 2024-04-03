@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Segment from '$components/segment.svelte';
+    import Segment from '$componentsLocal/segment.svelte';
 </script>
 
 

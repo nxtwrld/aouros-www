@@ -27,13 +27,13 @@
   <div class="navbar">
     <nav on:mousedown|stopPropagation>
       <ul class="nav-links {menuOpen ? 'active' : ''}">
-        <li><a href="/" class:active={$page.route.id == '/'}>Home</a></li>
-        <li><a href="/benefits" class:active={$page.route.id == '/benefits'}>Patients</a></li>
-        <li><a href="/mds" class:active={$page.route.id == '/mds'}>MDs</a></li>
-        <li><a href="/partners" class:active={$page.route.id == '/partners'}>Partners</a></li>
-        <li><a href="/howweoperate" class:active={$page.route.id == '/howweoperate'}>How we operate</a></li>
+        <li><a href="/www" class:active={$page.route.id == '/'}>Home</a></li>
+        <li><a href="/www/benefits" class:active={$page.route.id == '/benefits'}>Patients</a></li>
+        <li><a href="/www/mds" class:active={$page.route.id == '/mds'}>MDs</a></li>
+        <li><a href="/www/partners" class:active={$page.route.id == '/partners'}>Partners</a></li>
+        <li><a href="/www/howweoperate" class:active={$page.route.id == '/howweoperate'}>How we operate</a></li>
         <!--li><a href="/team" class:active={$page.route.id == '/team'}>Team</a></li-->
-        <li><a href="/contact" class:active={$page.route.id == '/contact'}>Contact</a></li>
+        <li><a href="/www/contact" class:active={$page.route.id == '/contact'}>Contact</a></li>
 
       </ul>
     </nav>
