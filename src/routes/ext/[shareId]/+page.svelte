@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { ActionData } from "./$types.d";
-    import { sha256 } from "$lib/vault/sha";
+    //import { sha256 } from "$lib/vault/sha";
 
     export let data: {
         shareId: string;
@@ -12,11 +12,11 @@
     let hash: string;
 
     $: {
-        if (password) {
+        if (password) {/*
             sha256(password)
             .then((h) => {
                 hash = h;
-            })
+            })*/
         }
 
     }
