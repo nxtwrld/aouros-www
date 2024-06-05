@@ -12,7 +12,8 @@
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
 		"test:integration": "playwright test",
-		"test:unit": "vitest"
+		"test:unit": "vitest",
+		"vercel-install": "./vercel-submodule-workaround.sh && yarn --ignore-scripts --production=false"
 	},
 	"devDependencies": {
 		"@auth/core": "^0.24.0",
