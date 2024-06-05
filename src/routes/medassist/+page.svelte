@@ -30,7 +30,7 @@
         medication: [],
         chat_response: "",
     }
-
+    let language: string = 'en-US';
     let description: string = 'I have a bad cough attacks for the past several days. There are several small ones during the day, but in the evening I get a severe one, when I sometime loose consciousness and find myself on the floor several minutes later.';
     let response: {
         diagnosisList: {
@@ -119,24 +119,35 @@
 
 
 </script>
-<img class="doctor" src="/medassist/doctor.png" />
 
-<SpeakCore></SpeakCore>
+<SpeakCore {language}></SpeakCore>
 
-<h1>Akeso Iaso</h1>
 
-<h3>Patient input</h3>
-<textarea bind:value={description} class="code" placeholder="Describe your symptoms"></textarea>
-<Speak bind:value={description}>Record</Speak>
 
-<button class="button" on:click={submit}>Process</button>
+<div class="input">
+    <h1>Akeso Iaso</h1>
 
-<div>
-    Summary:
+    <img class="doctor" src="/medassist/doctor.png" />
 
-    {description}
+    <h3>Percieved symptoms:</h3>
+    <select bind:value={language}>
+        <option value="en-US">English</option>
+        <option value="cs-CZ">Čeština</option>
+    </select>
+    <textarea bind:value={description} class="code" placeholder="Describe your symptoms"></textarea>
+    <Speak bind:value={description}>
+        <svelte:fragment let:status>
+                {#if status === 'listen'}
+                    Stop
+                {:else if status === 'idle'}
+                    Speak
+                {/if}
+        </svelte:fragment>
+    </Speak>
+
+    <button class="button" on:click={submit}>Process</button>
+
 </div>
-
 <div class="suggestions">
     <div>
         <h3>Diagnosis:</h3>
@@ -228,6 +239,8 @@
         max-width: 300px;
         margin: 0 auto;
         display: block;
+        border-radius: 100%;
+        border: 1rem solid #EEE;
     }
 
     .code {
