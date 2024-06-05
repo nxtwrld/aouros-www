@@ -1,0 +1,97 @@
+{
+    "name": "extractor",
+    "description": "As a medical professional asses the user input and extracts fields from the input",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "diagnosisList": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the diagnosis"
+                        },
+                        "basis": {
+                            "type": "string",
+                            "description": "The basis of the diagnosis"
+                        },
+                        "probability": {
+                            "type": "number",
+                            "description": "The probability of the diagnosis"
+                        }
+                    }
+                },
+                "description": "A list of possible diagnoses"
+            },
+            "counterMeassures": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "A list of counter meassures to prevent the disease"
+            },
+            "follow_up": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": ["test", "specialist"],
+                            "description": "The type of follow up or specialist visit recommendation"
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the follow up or specialist visit recommendation"
+                        },
+                        "reason": {
+                            "type": "string",
+                            "description": "The reason for the follow up or specialist visit recommendation"
+                        }
+                    }
+                },
+                "description": "Based on the diagnosis we want to recommend further follow up tests to be done or specialists visit recommendation. List possible tests and specialists to visit."
+            },
+            "medication": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the medication"
+                        },
+                        "dosage": {
+                            "type": "number",
+                            "description": "The dosage of the medication in mg units."
+                        },
+                        "days": {
+                            "type": "string",
+                            "enum": ["1-3 days", "3-5 days", "5-7 days", "7-10 days", "10-14 days"],
+                            "description": "The days the medication should be taken"
+                        },
+                        "days_of_week": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                            },
+                            "description": "The days of the week the medication should be taken"
+                        },
+                        "time_of_day": {
+                            "type": "string",
+                            "description": "The time of day the medication should be taken"
+                        }
+                    }
+                }
+            },
+            "chat_response": {
+                "type": "string",
+                "description": "An empathic and encouraging response to the human's input. Focus on given hopen and positive reinforcement."
+            }
+        },
+        "required": [ "diagnosisList", "counterMeasures", "chat_response"]
+    }
+}

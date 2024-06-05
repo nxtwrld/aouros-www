@@ -1,7 +1,19 @@
 <script lang="ts">
     import './styles.css';
 	import Navbar from '$componentsLocal/navbar.svelte';
+    import mixpanel from "mixpanel-browser";
+    import { onMount } from "svelte";
+
+    onMount(() => {
+        
+        mixpanel.track("www", { name: location.hash });
+    });
+
+
 </script>
+
+<svelte:window on:hashchange={() => mixpanel.track("www", { name: location.hash })} />  
+
 <header>
     <div class="page">
         <img src="/icon.svg" alt="aouros logo" />

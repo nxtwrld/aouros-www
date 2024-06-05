@@ -17,6 +17,7 @@
 	"devDependencies": {
 		"@auth/core": "^0.24.0",
 		"@auth/sveltekit": "^0.10.0",
+		"@langchain/openai": "^0.0.28",
 		"@playwright/test": "^1.28.1",
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/kit": "^1.5.0",
@@ -35,5 +36,10 @@
 		"vite": "^4.5.2",
 		"vitest": "^0.32.2"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"langchain": "^0.1.33",
+		"mixpanel-browser": "^2.51.0",
+		"openai": "^4.46.1"
+	}
 }
