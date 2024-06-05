@@ -1,8 +1,8 @@
 # github submodule repo address without https:// prefix
-SUBMODULE_GITHUB=github.com:nxtwrld/aouros-core
+SUBMODULE_GITHUB=github.com/nxtwrld/aouros-core
 
 # .gitmodules submodule path
-SUBMODULE_PATH=library
+SUBMODULE_PATH=src/core
 
 # github access token is necessary
 # add it to Environment Variables on Vercel
