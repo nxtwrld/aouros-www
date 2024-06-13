@@ -9,6 +9,7 @@ import type { Extractor } from '$lib/textract';
 //import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { env } from '$env/dynamic/private';
 import diagnosis from './diagnosis.json';
+import gp_report from './gp_report.json';
 // Instantiate the parser
 const parser = new JsonOutputFunctionsParser();
 
@@ -17,7 +18,7 @@ const schemas: {
 } = {};
 
 schemas.diagnosis = diagnosis as Extractor;
-
+schemas.gp_report = gp_report as Extractor;
 
 
 // Define the function schema

@@ -1,0 +1,18 @@
+{
+    "name": "extractor",
+    "description": "As a medical professional assess the follow JSON with selected diagnosis, counter meassures, follow up and medication and generate a medical report for the patient and for the internal log where we include the original symptoms transcript.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "patientReport": {
+                "type": "string",
+                "description": "Detailed medical report for the patient"
+            },
+            "logReport": {
+                "type": "string",
+                "description": "Internal log report include the original symptoms transcript from the 'transcript' field in the input JSON"
+            }
+       },
+        "required": [ "patientReport", "logReport"]
+    }
+}

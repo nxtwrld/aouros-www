@@ -1,6 +1,6 @@
 <script lang="ts">
-    import SpeakCore from '$components/ui/SpeakCore.svelte';
-    import Speak from '$components/ui/Speak.svelte'
+    import SpeakCore, { Status, status } from '$components/ui/SpeakCore.svelte'
+    import Speak from '$components/ui/Speak.svelte';
     import { process } from '$lib/textract';
     import mixpanel from "mixpanel-browser";
     import { onMount } from "svelte";
@@ -26,7 +26,17 @@
     });
 
 
-
+    let selection:  {
+        diagnosisList: number,
+        counterMeassures: number,
+        follow_up: number,
+        medication: number,
+    } = {
+        diagnosisList: -1,
+        counterMeassures: -1,
+        follow_up: -1,
+        medication: -1,
+    }
 
     function track(name: string, v: any = undefined) {
         mixpanel.track(name, v);
@@ -50,6 +60,10 @@
     }
     let language: string = 'en-US';
     let description: string = '';//'I have a bad cough attacks for the past several days. There are several small ones during the day, but in the evening I get a severe one, when I sometime loose consciousness and find myself on the floor several minutes later.';
+    let analyzing: boolean = false;
+
+    $: hasSelection = Object.values(selection).some(v => v > -1);
+
     let response: {
         diagnosisList: {
             name: string,
@@ -69,7 +83,7 @@
             days_of_week: string[],
             time_of_day: string}[],
         chat_response: string,
-    } | undefined =  undefined; /* {
+    } | undefined = undefined;/*{
     "diagnosisList": [
         {
             "name": "Pertussis (Whooping Cough)",
@@ -116,8 +130,8 @@
     ],
     "chat_response": "I'm really sorry to hear that you've been experiencing such severe coughing attacks. It sounds incredibly distressing, especially with the loss of consciousness. Please make sure to avoid any known irritants and keep yourself hydrated. It's important to follow up with a healthcare professional, and I strongly encourage you to see a specialist like a pulmonologist and get a chest X-ray to better understand your condition. In the meantime, using medications like Salbutamol as prescribed can help manage the symptoms. Hang in there, and remember that proper medical care can make a significant difference. You're taking the right steps by seeking help."
 }
-*/
 
+*/
 
     function listen(text: string) {
         console.log('listen', text);
@@ -138,6 +152,7 @@
             track("medassist-submit", 'empty');
             return;
         }
+        analyzing = true;
         track("medassist-submit", description);
         const data = await process(description, 'diagnosis');
         console.log(data);
@@ -147,10 +162,44 @@
             counterMeasures: (response.counterMeassures) ? response.counterMeassures.length : 0,
             medication: (response.medication) ? response.medication.length : 0,
         });
+        analyzing = false;
  
     }
 
 
+    function selectItem(type: 'diagnosisList' | 'counterMeassures' | 'follow_up' | 'medication', index: number) {
+        console.log('select', type, index)
+        selection[type] = index;
+        selection = {...selection};
+    }
+
+
+    function toggle() {
+        if ($status === Status.LISTEN) {
+            ui.emit('speak-stop');
+        } else if ($status === Status.IDLE){
+            ui.emit('speak-start');
+        }
+    }
+
+
+    async function generateReport ()  {
+        track("medassist-report", selection);
+        
+        let selected : {
+            [key: string]: any
+        } = Object.entries(selection).reduce((acc, [key, value]) => {
+            console.log(key, value);
+            if (value >= 0) {
+                acc[key] = response[key][value];
+            }
+            return acc;
+        }, {});
+        selected.transcript = description;
+        console.log('generate report', selection, selected);
+        const data = await process(JSON.stringify(selected), 'gp_report');
+        console.log(data);
+    }
 
 </script>
 
@@ -171,7 +220,7 @@
         <Speak bind:value={description}>
             <svelte:fragment let:status>
                 <button>
-                {#if status === 'listen'}
+                {#if status === Status.LISTEN}
                     <SpeechIndicator />            
                     <img class="doctor" src="/medassist/doctor.png" />
                     <div class="button stop">
@@ -179,8 +228,16 @@
                             <use href="/sprite.svg#doctor"></use>
                         </svg>
                     </div>
-                    {:else if status === 'idle'}
+                    {:else if status === Status.IDLE && !analyzing}
   
+                    <img class="doctor" src="/medassist/doctor.png" />
+                    <div class="button">
+                        <svg>
+                            <use href="/sprite.svg#microphone"></use>
+                        </svg>
+                    </div>
+                    {:else if analyzing}
+                    <SpeechIndicator />     
                     <img class="doctor" src="/medassist/doctor.png" />
                     <div class="button">
                         <svg>
@@ -199,14 +256,28 @@
     </select-->
     <form on:submit|preventDefault={submit}>
         <Textarea class="symptoms" bind:value={description}  placeholder="Describe your symptoms"></Textarea>
-        <button class="button" type="submit">Analyze</button>
+        <div>
+
+            {#if analyzing}
+                <div>Analysing...</div>
+            {:else}
+
+                <button class="button" on:click={toggle}>
+                    {#if $status === Status.LISTEN}
+                        Stop Listening...
+                    {:else}
+                        Record Audio
+                    {/if}
+                </button>
+                <button class="button" type="submit" disabled={description == ''}>Analyze</button>
+            {/if}
+            {#if hasSelection}
+                <button class="button" on:click={generateReport}>Generate Report</button>
+            {/if}
+        </div>
     </form>
     <!--button class="button" on:click={submit}>Process</button-->
-    {#if response}
-    <div class="response">
-            {response.chat_response}
-    </div>
-    {/if}
+
 </div>
 
 
@@ -231,13 +302,15 @@
             </div>
         </div>
         <ul>
-        {#each response.diagnosisList as {name: diagnosis, basis, probability}}
-            <li>
-                <h4>{diagnosis} ({probability*100}%)</h4>
-                <div class="progress">
-                    <div style="width: {probability*100}%"></div>
-                </div>
-              <div>{basis}</div>
+        {#each response.diagnosisList as {name: diagnosis, basis, probability}, index}
+            <li class:selected={selection['diagnosisList'] == index}>
+                <button on:click={() => selectItem('diagnosisList', index)}>
+                    <h4>{diagnosis} ({probability*100}%)</h4>
+                    <div class="progress">
+                        <div style="width: {probability*100}%"></div>
+                    </div>
+                <div>{basis}</div>
+                </button>
             </li>
         {/each}
         </ul>   
@@ -259,8 +332,8 @@
             </div>
         </div>
         <ul>
-        {#each response.counterMeassures as counterMeassure}
-            <li>{counterMeassure}</li>
+        {#each response.counterMeassures as counterMeassure, index}
+            <li class:selected={selection['counterMeassures'] == index}><button on:click={() => selectItem('counterMeassures', index)}>{counterMeassure}</button></li>
         {/each}
         </ul>
 
@@ -283,8 +356,9 @@
             </div>
         </div>
         <ul>
-        {#each response.follow_up as {type, name, reason}}
-            <li>
+        {#each response.follow_up as {type, name, reason}, index}
+            <li class:selected={selection['follow_up'] == index}>
+                <button on:click={() => selectItem('follow_up', index)}>
                 <div class="section-title">
 
                     <h4>{name}</h4>
@@ -300,6 +374,7 @@
                  
                 </div>
                 <p>{reason}</p>
+                </button>
             </li>
         {/each}
         </ul>
@@ -321,8 +396,9 @@
             </div>
         </div>
         <ul>
-            {#each response.medication as {name, dosage, days, days_of_week, time_of_day}}
-                <li>
+            {#each response.medication as {name, dosage, days, days_of_week, time_of_day}, index}
+                <li class:selected={selection['medication'] == index}>
+                    <button on:click={() => selectItem('medication', index)}>
                     <div class="section-title">
                         <h4>{name} {dosage}mg</h4>
                         <svg>
@@ -330,6 +406,7 @@
                         </svg>
                     </div>
                     <p>{days} - {days_of_week.join(',')} - {time_of_day}</p>
+                    </button>
                 </li>
             {/each}
         </ul>
@@ -350,6 +427,11 @@
 
 </div>
 
+
+<div class="footer">
+    <h3>Warning!</h3>
+    This is a prototype of a medical assistant. The information provided is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition. Never disregard professional medical advice or delay in seeking it because of something you have read on this website.
+</div>
 <style>
 
     .layout {
@@ -359,6 +441,11 @@
         padding: 1rem;
     }
 
+    button {
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
     .input {
         height: 100%;
         width: 45%;
@@ -369,6 +456,7 @@
         justify-content: center;
         order: 2;
     }
+
     .speak {
         width: 40vh;
         height: 40vh;
@@ -450,6 +538,11 @@
         margin: 0;
         font-size: 1.5rem;
         border-radius: .6rem;
+    }
+    .button:disabled {
+        background-color: #ddd;
+        color: #666;
+        opacity: .6;
     }
 
     .input :global(.symptoms) {
@@ -545,8 +638,16 @@
     ul li {
         margin: 0;
         margin-bottom: 1px;
-        padding: .5rem;
         background-color: #eeee;
+    }
+    ul li > button {
+        width: 100%;
+        height: 100%;
+        padding: .5rem;
+        background-color: transparent;
+    }
+    ul li.selected {
+        background-color: #7cbbff;
     }
     ul li svg {
         width: 2rem;
@@ -566,5 +667,16 @@
     .progress div {
         height: 100%;
         background-color: #0094fe;
+    }
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background-color: #f0f0f0;
+        color: #F00;
+        font-size: .8rem;
+        text-align: center;
     }
 </style>
