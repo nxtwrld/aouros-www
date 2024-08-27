@@ -8,8 +8,8 @@ import type { Extractor } from '$lib/textract';
 //import { type RunnableConfig, RunnableWithMessageHistory } from "@langchain/core/runnables";
 //import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
 import { env } from '$env/dynamic/private';
-import diagnosis from './diagnosis.json';
-import gp_report from './gp_report.json';
+import report from './report.json';
+
 // Instantiate the parser
 const parser = new JsonOutputFunctionsParser();
 
@@ -17,8 +17,7 @@ const schemas: {
     [key: string]: Extractor
 } = {};
 
-schemas.diagnosis = diagnosis as Extractor;
-schemas.gp_report = gp_report as Extractor;
+schemas.report = report as Extractor;
 
 
 // Define the function schema
@@ -106,7 +105,6 @@ export async function POST({ request }) {
 
     const data = await request.json();
 
-    console.log({ data } );
     // Instantiate the ChatOpenAI class
     const model = new ChatOpenAI({ 
         model: "gpt-4o",
@@ -122,16 +120,34 @@ export async function POST({ request }) {
   
 
     // Create a new runnable, bind the function to the model, and pipe the output through the parser
-
-
     if (typeof data.schema == 'string' ) {
       if (schemas[data.schema] === undefined) {
-        error(404, { message: 'Schema does not exist: ' + data.schema })
+        throw error(404, { message: 'Schema does not exist: ' + data.schema })
       } else {
         data.schema = schemas[data.schema];
       }
     }
 
+    const content = [];
+    if (data.text) {
+      content.push({
+        type: 'text',
+        text: `${data.text}`,
+      });
+    }
+    if (data.image) {
+      content.push({
+        type: 'image_url',
+        image_url: {
+          url: data.image
+        }
+      });
+    }
+
+    if (content.length === 0) {
+        throw error(400, { message: 'No content provided' });
+    }
+  
     const runnable = model
         .bind({
             functions: [ data.schema ],
@@ -141,10 +157,11 @@ export async function POST({ request }) {
 
     // Invoke the runnable with an input
     const result = await runnable.invoke([
-        new HumanMessage(data.text),
+        new HumanMessage({
+          content
+        })
     ]);
 
-    console.log({ result });
 
     return json(result);
 }

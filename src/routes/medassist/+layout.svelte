@@ -1,5 +1,16 @@
 <script lang="ts">
     import { onMount } from "svelte";
+	
+    export let data;
+	
+    $: ({ supabase } = data);
+
+	$: logout = async () => {
+		const { error } = await supabase.auth.signOut();
+		if (error) {
+			console.error(error);
+		}
+	};
 
     let isReady: boolean = false;
 
@@ -7,10 +18,18 @@
         isReady = true;
     });
 </script>
+<header>
+	<nav>
+		<a href="/">Home</a>
+	</nav>
+	<button on:click={logout}>Logout</button>
+</header>
+<main>
+    {#if isReady}
+        <slot/>
+    {/if}
+</main>
 
-{#if isReady}
-    <slot/>
-{/if}
 
 
 <style>

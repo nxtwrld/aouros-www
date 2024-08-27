@@ -18,6 +18,7 @@ const config = {
 			lib: 'src/core/lib',
 		},
 		alias : {
+			'$slib': 'src/lib',
 			'$components': 'src/core/components',
 			'$data': 'src/core/data',
 			'$media': 'src/core/media',

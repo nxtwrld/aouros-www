@@ -3,13 +3,14 @@
     import { browser } from '$app/environment';
     import { goto } from '$app/navigation';
     import './www/styles.css';
+
+	export let data;
+	$: ({ countries } = data);
+    console.log(data);
     if (browser) {
      //   goto('/www');
     }
 </script>
-
-<!-- Redirecting... -->
-
 
 <div class="placer">
     <img src="/icon.svg" alt="aouros logo" />

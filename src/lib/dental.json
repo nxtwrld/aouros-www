@@ -1,0 +1,102 @@
+{
+    "name": "extractor",
+    "description": "Proceed step by step. From the dental record, extract the following information. If it is not a dental record, mark it as isDental as false.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "category": {
+                "type": "boolean",
+                "description": "FHIR Classification of type of observation" 
+            },
+            "observation": {
+                "type": "string",
+                "description": "Convert the extracted data to FHIR Observation JSON format structure with components, interpretations, triggeredBy, etc. fields."
+            },
+            "title": {
+                "type": "string",
+                "description": "Title of the observation. Respect the original report language"
+            },
+            "summary": {
+                "type": "string",
+                "description": "Summary and findings of the observation. Respect the original report language"
+            },
+            "bodyParts": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "description": "Devide the information into individual teeth. If the tooth is missing, leave the information empty.",
+                    "properties": {
+                        "identification": {
+                            "type": "string",
+                            "description": "Identification number of the tooth. 1-32. Add prefix tooth- to the number. If the tooth is missing, leave it empty."
+                        },
+                        "status": {
+                            "type": "string",
+                            "description": "Status of the tooth. If the tooth is missing, leave it empty."
+                        },
+                        "diagnosis": {
+                            "type": "string",
+                            "description": "Diagnosis of the tooth. If the tooth is missing, leave it empty."
+                        },
+                        "treatment": {
+                            "type": "string",
+                            "description": "Treatment of the tooth. If the tooth is missing, leave it empty."
+                        }
+                    },
+                    "required": [ "identification", "status", "diagnosis", "treatment"]
+                }
+            },
+            "date" : {
+                "type": "string",
+                "description": "Date of the report. Format: YYYY-MM-DD HH:MM:SS. Leave empty if the date is not available."
+            },
+            "performer": {
+                "type": "object",
+                "description": "Origin of the report. Leave empty if the origin is not available.",
+                "properties": {
+                    "doctor": {
+                        "type": "string",
+                        "description": "Name of the doctor."
+                    },
+                    "role": {
+                        "type": "string",
+                        "description": "Role of the doctor."
+                    },
+                    "institution": {
+                        "type": "string",
+                        "description": "Name of the institution."
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "Address of the origin."
+                    }
+                }
+            },
+            "patient": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the patient."
+                    },
+                    "gender": {
+                        "type": "string",
+                        "description": "Biological gender if available. If not available, leave empty.",
+                        "enum": ["male", "female"]
+                    },
+                    "identifier": {
+                        "type": "string",
+                        "description": "Identifier of the patient."
+                    },
+                    "dob": {
+                        "type": "string",
+                        "description": "Date of birth of the patient. Format: YYYY-MM-DD. Leave empty if the date is not available."
+                    }
+                }
+            }
+
+            
+        },
+        "required": [ "category", "observation", "title", "summary", "teeth"]
+    }
+}

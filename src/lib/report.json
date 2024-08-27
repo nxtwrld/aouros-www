@@ -1,0 +1,152 @@
+{
+    "name": "extractor",
+    "description": "You are FHIR expert data analyzer. Proceed step by step. Identify the content of the image. We are analyzing medical data, if it is not medical report, lab results of medical imaging, mark it as notMedical. With each section provide only iformation contained in the document. For dates, if only a year is known, just list the year without day or month.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "category": {
+                "type": "string",
+                "description": "Select proper subclassfication of the nature of the report. If the report is not in the list, use general.",
+                "enum": [
+                    "general",
+                    "laboratory",
+                    "vital-signs",
+                    "imaging",
+                    "exam",
+                    "procedure",
+                    "medication",
+                    "social-history",
+                    "survey",
+                    "therapy",
+                    "activity",
+                    "other"
+                ]
+            },
+            "observation": {
+                "type": "string",
+                "description": "Convert the extracted data to FHIR Observation JSON format structure with components, interpretations, triggeredBy, etc. fields."
+            },
+            "title": {
+                "type": "string",
+                "description": "Title of the observation. Respect the original report language, but provide specific context from the report."
+            },
+            "summary": {
+                "type": "string",
+                "description": "Summary and findings of the observation. Respect the original report language"
+            },
+            "content": {
+                "type": "string",
+                "description": "Content of the observation in markdown format exluding the headings and footers, patient and performer information. Respect the original formatting and report language."
+            },
+            "recommendations": {
+                "type": "array",
+                "description": "Recommendation contained within the the report spit into individual logical points (if none leave blank array)",
+                "items" : {
+                    "type": "string",
+                    "description": "A record for each individual recommendation contained within the the report. Respect the original report language."
+                }
+            },
+            "results": {
+                "type": "array",
+                "description": "If there are any lab results and values presented in the text, extract them here or leave empty array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "test": {
+                            "type": "string",
+                            "description": "Name of the lab test."
+                        },
+                        "value": {
+                            "type": "string",
+                            "description": "Value of the lab test."
+                        },
+                        "unit": {
+                            "type": "string",
+                            "description": "Unit of the lab test."
+                        },
+                        "reference": {
+                            "type": "string",
+                            "description": "Reference range of the lab test NUMBER - NUMBER or an appropriate alternative."
+                        }
+                    }
+                }
+            },
+            "bodyParts": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "description": "Provide information about individual the body parts mentioned in the report.",
+                    "properties": {
+                        "identification": {
+                            "type": "string",
+                            "description": "Identification of the body part."
+                        },
+                        "status": {
+                            "type": "string",
+                            "description": "Observed status of the body part. Leave is empty if the status is not available in the original report."
+                        },
+                        "diagnosis": {
+                            "type": "string",
+                            "description": "Diagnosis of the body part. Leave empty if the diagnosis is not available."
+                        },
+                        "treatment": {
+                            "type": "string",
+                            "description": "Performed or suggested treatment of the body part. Leave empty if the treatment is not available."
+                        }
+                    },
+                    "required": [ "identification", "status", "diagnosis", "treatment"]
+                }
+            },
+            "date" : {
+                "type": "string",
+                "description": "Date of the report. Format: YYYY-MM-DD HH:MM:SS. Leave empty if the date is not available."
+            },
+            "performer": {
+                "type": "object",
+                "description": "Origin of the report. Leave empty if the origin is not available.",
+                "properties": {
+                    "doctor": {
+                        "type": "string",
+                        "description": "Name of the doctor."
+                    },
+                    "role": {
+                        "type": "string",
+                        "description": "Role of the doctor."
+                    },
+                    "institution": {
+                        "type": "string",
+                        "description": "Name of the institution."
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "Address of the origin."
+                    }
+                }
+            },
+            "patient": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the patient."
+                    },
+                    "gender": {
+                        "type": "string",
+                        "description": "Biological gender if available. If not available, leave empty.",
+                        "enum": ["male", "female"]
+                    },
+                    "identifier": {
+                        "type": "string",
+                        "description": "Identifier of the patient."
+                    },
+                    "dob": {
+                        "type": "string",
+                        "description": "Date of birth of the patient. Format: YYYY-MM-DD. Leave empty if the date is not available."
+                    }
+                }
+            }
+            
+        },
+        "required": [ "observation_type", "observation", "results", "date", "patient"]
+    }
+}
