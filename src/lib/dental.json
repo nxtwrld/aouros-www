@@ -8,17 +8,13 @@
                 "type": "boolean",
                 "description": "FHIR Classification of type of observation" 
             },
-            "observation": {
-                "type": "string",
-                "description": "Convert the extracted data to FHIR Observation JSON format structure with components, interpretations, triggeredBy, etc. fields."
-            },
             "title": {
                 "type": "string",
-                "description": "Title of the observation. Respect the original report language"
+                "description": "Title of the observation. Respect the original report language, but provide specific context from the report to clearly identify the report subject."
             },
             "summary": {
                 "type": "string",
-                "description": "Summary and findings of the observation. Respect the original report language"
+                "description": "Summary and findings of the observation in natural language. Respect the original report language, but enhance comprehension by providing a clear and concise summary. Highlight abnormal findings."
             },
             "bodyParts": {
                 "type": "array",

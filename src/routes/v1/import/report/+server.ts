@@ -8,12 +8,12 @@ export async function POST({ request }) {
 
 
     const data = await request.json();
-    if (data.images === undefined) {
-        throw error(400, { message: 'No image provided' });
+    if (data.images === undefined && data.text === undefined) {
+        throw error(400, { message: 'No image or text provided' });
     }
 
 
-    const result = await analyze(data.images);
+    const result = await analyze(data);
     
 
     return json(result);

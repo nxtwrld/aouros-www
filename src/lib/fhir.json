@@ -10,7 +10,7 @@
             },
             "entry": {
                 "type": "array",
-                "description": "Array of FHIR resource entries.",
+                "description": "Array of FHIR resource entries. Generate all that apply. Full records for Observation or DiganosticReport. Add Patient, Performer, Organization. If it applies add separate records for individual Lab result valueQuantities, Medications, and Immunization.",
                 "items": {
                     "type": "object",
                     "properties": {
@@ -22,6 +22,17 @@
                                     "type": "string",
                                     "description": "Type of the FHIR resource. For example: Observation, DiagnosticReport, ImagingStudy, Patient, Device, Substance, Performer, Organization, Medication, Immunization etc.",
                                     "enum": ["Observation", "DiagnosticReport", "ImagingStudy", "Patient", "Device", "Substance", "Performer", "Organization", "Medication", "Immunization"]
+                                },
+                                "text": {
+                                    "status": {
+                                        "type": "string",
+                                        "description": "The status of the text.",
+                                        "enum": ["generated", "extensions", "additional", "empty"]
+                                    },
+                                    "markdown": {
+                                        "type": "string",
+                                        "description": "The text of the observation in markdown format."
+                                    }
                                 },
                                 "id": {
                                     "type": "string",
@@ -293,6 +304,7 @@
                                         }
                                     }
                                 },
+
                                 "note": {
                                     "type": "array",
                                     "description": "The notes of the observation. If none provided, do not include this field.",

@@ -1,21 +1,21 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import { HumanMessage } from "@langchain/core/messages";
-import type { Extractor } from '$lib/textract';
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
 import { env } from '$env/dynamic/private';
 import { error } from '@sveltejs/kit';
-import { decode } from 'base64-arraybuffer'
-import crypto from 'crypto';
 import image from './image.json';
 import report from './report.json';
 import lab from './lab.json';
 import tags from './tags.json';
 import dental from './dental.json';
 import prescription from './prescription.json';
+import immunization from './immunization.json';
 import imaging from './imaging.json';
 import fhir from './fhir.json';
 //import { extractText } from "./gemini";
 import testPropserties from '$data/lab.synonyms.json';
+
 /**
  * TODO:
  * - Add support for multiple images
@@ -31,27 +31,29 @@ export enum Types {
   dental = 'dental',
   imaging = 'imaging',
   prescription = 'prescription',
+  immunization = 'immunization',
   dicom = 'dicom',
   fhir = 'fhir'
 }
 
 const schemas: {
-    [key: string]: Extractor
+    [key: string]: FunctionDefinition
 } = {
-    image: image as Extractor,
-    report: report as Extractor,
-    lab: lab as Extractor,
-    dental: dental as Extractor,
-    prescription: prescription as Extractor,
-    imaging: imaging as Extractor,
-    fhir: fhir as Extractor
+    image: image as FunctionDefinition,
+    report: report as FunctionDefinition,
+    lab: lab as FunctionDefinition,
+    dental: dental as FunctionDefinition,
+    prescription: prescription as FunctionDefinition,
+    immunization: immunization as FunctionDefinition,
+    imaging: imaging as FunctionDefinition,
+    fhir: fhir as FunctionDefinition
 
 };
 
-lab.parameters.properties.results.items.properties.test.enum = testPropserties.map((item: any) => item[0]);
-image.parameters.properties.tags.items.enum = [...tags, ...lab.parameters.properties.results.items.properties.test.enum];
-report.parameters.properties.bodyParts.items.properties.identification.enum = [...tags];
-imaging.parameters.properties.bodyParts.items.properties.identification.enum = [...tags];
+(lab.parameters.properties.results.items.properties.test.enum as string[]) = testPropserties.map((item: any) => item[0]);
+(image.parameters.properties.tags.items.enum as string[]) = [...tags, ...lab.parameters.properties.results.items.properties.test.enum];
+(report.parameters.properties.bodyParts.items.properties.identification.enum as string[]) = [...tags];
+(imaging.parameters.properties.bodyParts.items.properties.identification.enum as string[]) = [...tags];
 
 
 
@@ -71,41 +73,92 @@ export interface ReportAnalysis {
     isMedical: boolean;
     tags: string[];
     hasPrescription: boolean;
+    hasImmunization: boolean;
     hasLabOrVitals: boolean;
+    content?: string;
     report?: any;
     lab?: any;
     text: string;
     imaging?: any;
     prescriptions?: any;
+    immunizations?: any;
+    results?: {
+      test: string;
+      value: string;
+      unit: string;
+      reference: string;
+    }[];
+    recommendations?: string[];
+    tokenUsage: TokenUsage;
 }
 
-export async function analyze(images: string[]): Promise<ReportAnalysis> {
+type Input = {
+    images?: string[];
+    text?: string;
+};
 
-    //await sleep(500);
-    //return Promise.resolve(TEST_DATA);
+type TokenUsage = {
+  total: number;
+  [key: string]: number;
+}
 
-    const content: Content[] = [
-      {
-          type: 'image_url',
-          image_url: {
-              url: images[0]
-          }
+
+function getContentDefinition(input: Input): Content[] {
+  const content: Content[] = [];
+  if (input.text) {
+    content.push({
+      type: 'text',
+      text: input.text
+    });
+  }
+  if (input.images) {
+    content.push({
+      type: 'image_url',
+      image_url: {
+        url: input.images[0]
       }
-    ];
+    });
+  }
+  return content;
+}
 
-    // get basic product info
-    let data = await evaluate(content, Types.image) as ReportAnalysis;
+export async function analyze(input : Input): Promise<ReportAnalysis> {
+
+    const tokenUsage : TokenUsage = {
+      total: 0
+    };
+
+    const content: Content[] = getContentDefinition(input);
+
+  
+    await sleep(500);
+    return Promise.resolve(TEST_DATA);
+
+    // get basic item info
+    let data = await evaluate(content, Types.image, tokenUsage) as ReportAnalysis;
+    console.log('input assesed...');
+
     if (!data.isMedical) {
-      throw error(400, { message: 'Not a medical image' });
+      throw error(400, { message: 'Not a medical input' });
     }
 
     if (data.hasPrescription) {
       const prescription = await evaluate([{
         type: 'text',
         text: data.text
-      }], Types.prescription);
+      }], Types.prescription, tokenUsage);
       if (prescription.prescriptions.length > 0) {
         data.prescriptions = prescription.prescriptions;
+      }
+    }
+
+    if (data.hasImmunization) {
+      const immunization = await evaluate([{
+        type: 'text',
+        text: data.text
+      }], Types.immunization, tokenUsage);
+      if (immunization.immunizations.length > 0) {
+        data.immunizations = immunization.immunizations;
       }
     }
 
@@ -116,34 +169,35 @@ export async function analyze(images: string[]): Promise<ReportAnalysis> {
             data.report = await evaluate([{
               type: 'text',
               text: data.text
-            }], Types.report);
-
-
-            if (data.hasLabOrVitals && data.type !== Types.lab) {
+            }], Types.report, tokenUsage);
+            // extract lab or vitals from the report
+            if (data.hasLabOrVitals) {
               const lab = await evaluate([{
                 type: 'text',
                 text: data.text
-              }], Types.lab);
-              data.report.results = lab.results;
+              }], Types.lab, tokenUsage);
+              data.results = lab.results;
             }
             break;
         case Types.lab:
-            //data.lab = await evaluate(content, Types.lab);
+            // extract lab or vitals from the report
             data.report = await evaluate([{
               type: 'text',
               text: data.text
-            }], Types.lab);
+            }], Types.lab, tokenUsage);
             data.report.category = 'lab';
             break;
         case Types.dental:
+            // extract dental info from the report
             data.report = await evaluate([{
               type: 'text',
               text: data.text
-            }], Types.dental);
+            }], Types.dental, tokenUsage);
             break;
         case Types.imaging:
-          case Types.dicom:
-            data.report = await evaluate(content, Types.imaging);
+        case Types.dicom:
+            // evaluate imaging data
+            data.report = await evaluate(content, Types.imaging, tokenUsage);
             data.report.category = 'imaging';
             break;
     }
@@ -151,22 +205,25 @@ export async function analyze(images: string[]): Promise<ReportAnalysis> {
     data.fhir = await evaluate([{
       type: 'text',
       text: JSON.stringify(data)
-    }], Types.fhir);
+    }], Types.fhir, tokenUsage);
 
-
+    data.tokenUsage = tokenUsage;
     // return item
     return data;
 }
 
 
 
-export async function evaluate(content: Content[], type: Types): Promise<ReportAnalysis> {
+export async function evaluate(content: Content[], type: Types, tokenUsage: TokenUsage): Promise<ReportAnalysis> {
 
 
     // Instantiate the parser
     const parser = new JsonOutputFunctionsParser();
 
     const schema = schemas[type];
+
+    if (!schema) throw error(500, { message: 'Invalid type' });
+
     // Instantiate the ChatOpenAI class
     const model = new ChatOpenAI({ 
         model: "gpt-4o",
@@ -174,8 +231,10 @@ export async function evaluate(content: Content[], type: Types): Promise<ReportA
         callbacks: [
           {
             handleLLMEnd(output, runId, parentRunId, tags) {
-              console.log('Token Usage', output.llmOutput.tokenUsage.totalTokens);
-              console.log(JSON.stringify(output.llmOutput.tokenUsage))
+              console.log('Token Usage', output.llmOutput?.tokenUsage.totalTokens);
+              tokenUsage.total += output.llmOutput?.tokenUsage.totalTokens || 0;
+              tokenUsage[type] = output.llmOutput?.tokenUsage.totalTokens || 0;
+              //console.log(JSON.stringify(output.llmOutput?.tokenUsage))
             },
           },
         ]
@@ -212,12 +271,16 @@ const TEST_DATA: ReportAnalysis = {
   "isMedical": true,
   "type": "report",
   "language": "cs",
-  "text": "LÉKAŘSKÁ ZPRÁVA\nPacient: Mašková Andrea Sofie\nBydliště: Na Strži 57, 14000 Praha 4\nTelefon: 773594110\nZařízení: MEDOFTAL s.r.o.\nJabloňová 8, 10600 Praha 10-Záběhlice\nTelefon: 267 295 371\nDatum: 26.8.2024 Čas: 09:18\n\nRodné číslo: 116103/1355\nPojišťovna: 111\nVěk: 12 let, 9 měsíců\nOdbornost: 705\nIČP: 10-346-001\nLékař: MUDr Jana Syslová\n\nNO: nyní 5. den otok víček HV OL, nijak nekapali, bylo oteklé, nyní lepší OOE: 0 AA: 0A\nObl.: VOP 1,0 nat.\n VOL 0,9-1,0(-1) nat.\n NOT palp. Tn bíl.\nOP- PS klidný, v okrajích víček mírné šupinek, bez zarudnutí, spoj. klidná, R jasná, PK vtyv. čirá, Z okr. VC, fu-orient. bv\n              obl. zad. polu bpn\n OL- H OV hypertrofie spoj. Falt palp. drobná okr. rezistence mírné ekzoto v ocích, bez zarudnutí, everze HV spoj. překrvéná, bez <il. há h. pokl expresé, v okrajích víček mírné šupinek, R jasná, PK vtyv. čirá, Z okr. , VC, fu- orient. bpn\n Závěr: Chalazeon palp.` sup. acutum l.sin.\n Terapie: OL-Tobradex gtt 5xd po 3 dnech 3xd, celk. 7-10 dnů a EX studené obklady, poté Blefagel na víčka \n Ko: při obtížích či zhoršení hned, jinak podle potřeby Pacient byl poučen, b yl mu vysvětlen režim léčby i kontroly. všechny položené otázky byly zodpovězeny. Pacient odchází ve stabilizovaném stavu. Při výskytu nových obtíží, akutním zhoršení stavu kontaktujte naši ambulanci, v době naší nepřítomnosti provozuje službu oční pohotovostní službou\n Předepsané léky: TOBRADEX 3MG/ML+1MG/ML OPH GTT SUS 1X5ML, 0225172 (1x). 5x za den do OL",
+  "text": "LÉKAŘSKÁ ZPRÁVA \n\nPacient: Mašková Andrea Sofie\nBydliště: Na Strži 57, 14000 Praha 4\nTelefon: 773594110\nZařízení: MEDOFTAL s.r.o.\nAdresa: Jabloňová 8, 10600 Praha 10-Záběhlice\n\nDatum: 26.8.2024\n\nRodné číslo: 116103/1355\nPojišťovna: 111\nVěk: 12 let, 9 měsíců\n\nOdbornost: 705\nIČP: 10-346-001\nLékař: MUDr. Jana Syslová\n\nNO: nyní 5. den od ošetření HV OL, nikde nekapal, bylo oteklé, nyní lepší\nOA: 0 AA: 0 OEK: 0\nObl.:\nVOP 1,0 nat.\nVOL 0,9-1,0(-1) nat.\nNO: poh.bpn\nOP: PS klidný, v okrajích víček mírně šupinek, bez zarudnutí, spojivky klidné, R jasná, PK výv. čirá, Z okr. VC, fu-orient. bv\nobl. zad.polu bpn\nOL: na HV uprostřed horních víček, palp.drobně okr. rezistence mírně OOKTO V OL, bez zarudnutí, everze HV spoj. překrvená, bez granulomu, po šetrné palpaci bez expresí, v okrajích víček mírné šupinek, R jasná, PK výv. čirá, Z okr. VC , fu-orient  bpn\n\nZávěr: Chalaseon palp.supp. acutum l.sin.\nTerapie: OL: Tobradex gtt 5xd po 3 dnech 3xd, celk. 7-10 dní a EX studené obklady, poté Blephagel na víčka\n\nKO: při obtížích či zhoršení ihned, jinak podle potřeby Pacient byl poučen, byl mu vysvětlen režim léčby a kontrol, všechny položené otázky byly zodpovězeny.\nPacient odchází ve stabilizovaném stavu. Při výskytu nových obtíží, akutním zhoršení stavu kontaktuje  naší ambulanci, popř. pohotovostní službu.\n\nPředepsané léky: TOBRADEX 3MG/ML+1MG/ML OPH GTT SUS 1X5ML, 0225172 (1x), 5x za den do OL\n\nPodpis: Jana Syslová",
   "tags": [
-      "eyes"
+      "eyes",
+      "lower_eyelid",
+      "conjunctiva",
+      "eyelids"
   ],
   "hasLabOrVitals": false,
   "hasPrescription": true,
+  "hasImmunization": false,
   "prescriptions": [
       {
           "name": "Tobradex",
@@ -241,42 +304,269 @@ const TEST_DATA: ReportAnalysis = {
       }
   ],
   "report": {
-      "observation": "LÉKAŘSKÁ ZPRÁVA Pacient: Mašková Andrea Sofie Rodné číslo: 116103/1355 Pojistovna: 111 Věk: 12 let, 9 měsíců Odbornost: 705 NO: nyní 5. den otok víček HV OL, nijak nekapali, bylo oteklé, nyní lepší OOE: 0 AA: 0A Obl.: VOP 1,0 nat. VOL 0,9-1,0(-1) nat. NOT palp. Tn bíl. OP- PS klidný, v okrajích víček mírné šupinek, bez zarudnutí, spoj. klidná, R jasná, PK vtyv. čirá, Z okr. VC, fu-orient. bv obl. zad. polu bpn OL- H OV hypertrofie spoj. Falt palp. drobná okr. rezistence mírné ekzoto v ocích, bez zarudnutí, everze HV spoj. překrvéná, bez <il. há h. pokl expresé, v okrajích víček mírné šupinek, R jasná, PK vtyv. čirá, Z okr. , VC, fu- orient. bpn Závěr: Chalazeon palp.` sup. acutum l.sin. Terapie: OL-Tobradex gtt 5xd po 3 dnech 3xd, celk. 7-10 dnů a EX studené obklady, poté Blefagel na víčka Ko: při obtížích či zhoršení hned, jinak podle potřeby Pacient byl poučen, byl mu vysvětlen režim léčby i kontroly. všechny položené otázky byly zodpovězeny. Pacient odchází ve stabilizovaném stavu. Při výskytu nových obtíží, akutním zhoršení stavu kontaktujte naši ambulanci, v době naší nepřítomnosti provozuje službu oční pohotovostní službou Předepsané léky: TOBRADEX 3MG/ML+1MG/ML OPH GTT SUS 1X5ML, 0225172 (1x). 5x za den do OL",
       "category": "exam",
-      "title": "LÉKAŘSKÁ ZPRÁVA",
-      "summary": "Nyní 5. den otok víček HV OL, oči nebyly kapány, bylo oteklé, nyní lepší. VOP 1,0 nat. VOL 0,9-1,0(-1) nat. OP- PS klidný, v okrajích víček mírné šupinky, bez zarudnutí, spojivka klidná, R jasná, PK čirá, Z okr. VC, fu-orientovaný, oblast zadního pole bez patologických nálezů. OL- Hypertrofie spojivky. Drobná okr. rezistence, mírné ekzoto v očích, spojivka překrvená v okrajích víček mírné šupinky, R jasná, PK čirá, Z okr. VC, fu-orientovaný, oblast zadního pole bez patologických nálezů. Závěr: Chalazeon palpuje sup. acutum l.sin.",
-      "content": "NO: nyní 5. den otok víček HV OL, nijak nekapali, bylo oteklé, nyní lepší \n\nOOE: 0 AA: 0A \n\nObl.: VOP 1,0 nat. VOL 0,9-1,0(-1) nat. NOT palp. Tn bíl. \n\nOP- PS klidný, v okrajích víček mírné šupinek, bez zarudnutí, spoj. klidná, R jasná, PK vtyv. čirá, Z okr. VC, fu-orient. bv \nobl. zad. polu bpn OL- H OV hypertrofie spoj. Falt palp. drobná okr. rezistence mírné ekzoto v ocích, bez zarudnutí, everze HV spoj. překrvéná, bez <il. há h. pokl expresé, v okrajích víček mírné šupinek, R jasná, PK vtyv. čirá, Z okr. , VC, fu- orient. bpn \n\nZávěr: Chalazeon palp.` sup. acutum l.sin.",
+      "observation": "Oční vyšetření",
+      "title": "Oční vyšetření - Andrea Sofie Mašková",
+      "summary": "Chalaseon palp.supp. acutum l.sin. Začáteční léčba Tobradexem a studenými obklady.",
+      "content": "NO: nyní 5. den od ošetření HV OL, nikde nekapal, bylo oteklé, nyní lepší\nOA: 0 AA: 0 OEK: 0\nObl.:\nVOP 1,0 nat.\nVOL 0,9-1,0(-1) nat.\nNO: poh.bpn\nOP: PS klidný, v okrajích víček mírně šupinek, bez zarudnutí, spojivky klidné, R jasná, PK výv. čirá, Z okr. VC, fu-orient. bv\nobl. zad.polu bpn\nOL: na HV uprostřed horních víček, palp.drobně okr. rezistence mírně OOKTO V OL, bez zarudnutí, everze HV spoj. překrvená, bez granulomu, po šetrné palpaci bez expresí, v okrajích víček mírné šupinek, R jasná, PK výv. čirá, Z okr. VC , fu-orient  bpn",
       "recommendations": [
-          "OL-Tobradex gtt 5x denně po 3 dnech 3x denně, celkem 7-10 dnů",
-          "EX studené obklady, poté Blefagel na víčka",
-          "Kontrola při obtížích či zhoršení hned, jinak podle potřeby"
+          "KO: při obtížích či zhoršení ihned, jinak podle potřeby",
+          "Při výskytu nových obtíží, akutním zhoršení stavu kontaktuje naší ambulanci, popř. pohotovostní službu."
       ],
       "results": [],
       "bodyParts": [
           {
               "identification": "eyelashes",
-              "status": "otok",
-              "diagnosis": "bez zarudnutí",
-              "treatment": "Blefagel"
+              "status": "mírně šupinek",
+              "diagnosis": "",
+              "treatment": "Blephagel na víčka"
+          },
+          {
+              "identification": "eyelashes",
+              "status": "spoj. překrvená",
+              "diagnosis": "",
+              "treatment": ""
           },
           {
               "identification": "eyes",
-              "status": "hypertrofie",
-              "diagnosis": "Chalazeon palp.` sup. acutum l.sin.",
-              "treatment": "OL-Tobradex gtt"
+              "status": "PS klidný",
+              "diagnosis": "",
+              "treatment": ""
+          },
+          {
+              "identification": "eye_surface",
+              "status": "bez zarudnutí",
+              "diagnosis": "",
+              "treatment": ""
+          },
+          {
+              "identification": "eye_surface",
+              "status": "spojivky klidné",
+              "diagnosis": "",
+              "treatment": ""
           }
       ],
-      "date": "2024-08-26 09:18:00",
+      "date": "2024-08-26",
       "performer": {
-          "doctor": "MUDr Jana Syslová",
+          "doctor": "MUDr. Jana Syslová",
+          "role": "Lékař",
           "institution": "MEDOFTAL s.r.o.",
           "address": "Jabloňová 8, 10600 Praha 10-Záběhlice"
       },
       "patient": {
-          "name": "Mašková Andrea Sofie",
+          "name": "Andrea Sofie Mašková",
           "gender": "female",
           "identifier": "116103/1355",
           "dob": "2011-10-03"
       }
+  },
+  "fhir": {
+      "type": "report",
+      "entry": [
+          {
+              "resource": {
+                  "resourceType": "Patient",
+                  "id": "patient-1",
+                  "text": {
+                      "status": "generated",
+                      "div": "<div>Andrea Sofie Mašková, Female, DOB: 2011-10-03, Identifier: 116103/1355, Bydliště: Na Strži 57, 14000 Praha 4</div>"
+                  },
+                  "identifier": [
+                      {
+                          "system": "urn:ietf:rfc:3986",
+                          "value": "116103/1355"
+                      }
+                  ],
+                  "name": [
+                      {
+                          "family": "Mašková",
+                          "given": [
+                              "Andrea",
+                              "Sofie"
+                          ]
+                      }
+                  ],
+                  "gender": "female",
+                  "birthDate": "2011-10-03",
+                  "address": [
+                      {
+                          "line": [
+                              "Na Strži 57"
+                          ],
+                          "city": "Praha",
+                          "postalCode": "14000",
+                          "district": "Praha 4",
+                          "country": "CZ"
+                      }
+                  ]
+              }
+          },
+          {
+              "resource": {
+                  "resourceType": "Organization",
+                  "id": "organization-1",
+                  "text": {
+                      "status": "generated",
+                      "div": "<div>MEDOFTAL s.r.o., Jabloňová 8, 10600 Praha 10-Záběhlice</div>"
+                  },
+                  "name": "MEDOFTAL s.r.o.",
+                  "address": [
+                      {
+                          "line": [
+                              "Jabloňová 8"
+                          ],
+                          "city": "Praha",
+                          "postalCode": "10600",
+                          "district": "Praha 10-Záběhlice",
+                          "country": "CZ"
+                      }
+                  ]
+              }
+          },
+          {
+              "resource": {
+                  "resourceType": "Performer",
+                  "id": "performer-1",
+                  "text": {
+                      "status": "generated",
+                      "div": "<div>MUDr. Jana Syslová, Role: Lékař</div>"
+                  },
+                  "practitioner": {
+                      "reference": "Practitioner/MUDr. Jana Syslová",
+                      "display": "MUDr. Jana Syslová"
+                  },
+                  "role": {
+                      "coding": [
+                          {
+                              "system": "http://terminology.hl7.org/CodeSystem/practitioner-role",
+                              "code": "doctor",
+                              "display": "Doctor"
+                          }
+                      ]
+                  },
+                  "organization": {
+                      "reference": "Organization/organization-1",
+                      "display": "MEDOFTAL s.r.o."
+                  }
+              }
+          },
+          {
+              "resource": {
+                  "resourceType": "DiagnosticReport",
+                  "id": "diagnosticreport-1",
+                  "status": "final",
+                  "code": {
+                      "coding": [
+                          {
+                              "system": "http://loinc.org",
+                              "code": "abo",
+                              "display": "Eye examination"
+                          }
+                      ],
+                      "text": "Eye examination - Andrea Sofie Mašková"
+                  },
+                  "subject": {
+                      "reference": "Patient/patient-1"
+                  },
+                  "effectiveDateTime": "2024-08-26",
+                  "performer": [
+                      {
+                          "reference": "Performer/performer-1"
+                      }
+                  ],
+                  "results": [],
+                  "conclusion": "Chalaseon palp.supp. acutum l.sin.",
+                  "conclusionCode": [
+                      {
+                          "coding": [
+                              {
+                                  "system": "http://snomed.info/sct",
+                                  "code": "55990002",
+                                  "display": "Acute suppurative chalazion"
+                              }
+                          ],
+                          "text": "Chalaseon palp.supp. acutum l.sin."
+                      }
+                  ]
+              }
+          },
+          {
+              "resource": {
+                  "resourceType": "MedicationRequest",
+                  "id": "medicationrequest-1",
+                  "status": "active",
+                  "intent": "order",
+                  "medicationCodeableConcept": {
+                      "coding": [
+                          {
+                              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                              "code": "310798",
+                              "display": "Tobradex"
+                          }
+                      ],
+                      "text": "Tobradex 3MG/ML+1MG/ML OPH GTT SUS 1X5ML"
+                  },
+                  "subject": {
+                      "reference": "Patient/patient-1"
+                  },
+                  "authoredOn": "2024-08-26",
+                  "requester": {
+                      "reference": "Practitioner/performer-1",
+                      "display": "MUDr. Jana Syslová"
+                  },
+                  "dosageInstruction": [
+                      {
+                          "text": "5x za den do OL, celk. 7-10 dní",
+                          "timing": {
+                              "code": {
+                                  "coding": [
+                                      {
+                                          "system": "http://terminology.hl7.org/CodeSystem/v3-TimingEvent",
+                                          "code": "5/d",
+                                          "display": "5 times per day"
+                                      }
+                                  ]
+                              }
+                          },
+                          "route": {
+                              "coding": [
+                                  {
+                                      "system": "http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration",
+                                      "code": "OPTHAL",
+                                      "display": "Ophthalmic"
+                                  }
+                              ]
+                          },
+                          "doseAndRate": [
+                              {
+                                  "type": {
+                                      "coding": [
+                                          {
+                                              "system": "http://terminology.hl7.org/CodeSystem/dose-ratemode",
+                                              "code": "ordered",
+                                              "display": "Ordered"
+                                          }
+                                      ]
+                                  },
+                                  "doseQuantity": {
+                                      "value": 0.03,
+                                      "unit": "mL",
+                                      "system": "http://unitsofmeasure.org",
+                                      "code": "mL"
+                                  }
+                              }
+                          ]
+                      }
+                  ]
+              }
+          }
+      ]
+  },
+  "tokenUsage": {
+      "total": 18014,
+      "image": 7111,
+      "prescription": 1096,
+      "report": 6069,
+      "fhir": 3738
   }
 }

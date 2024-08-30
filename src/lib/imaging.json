@@ -16,7 +16,8 @@
                     "properties": {
                         "identification": {
                             "type": "string",
-                            "description": "Identification of the body part."
+                            "description": "Identification of the body part.",
+                            "enum": []
                         },
                         "status": {
                             "type": "string",

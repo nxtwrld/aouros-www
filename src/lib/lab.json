@@ -6,11 +6,11 @@
         "properties": {
             "title": {
                 "type": "string",
-                "description": "Title of the observation. Respect the original report language. Generate appropriate title based on the contents of the report."
+                "description": "Title of the observation. Respect the original report language, but provide specific context from the report to clearly identify the report subject."
             },
             "summary": {
                 "type": "string",
-                "description": "Summary and findings of the observation. Respect the original report language. Highlight abnormal findings."
+                "description": "Summary and findings of the observation in natural language. Respect the original report language, but enhance comprehension by providing a clear and concise summary. Highlight abnormal findings."
             },
             "results": {
                 "type": "array",

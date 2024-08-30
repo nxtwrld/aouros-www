@@ -25,9 +25,9 @@
                 "type": "array",
                 "description": "TaGS AND Labels of the image. If it is not a medical report, lab results or DICOM type image, list of labels. For example if it consideres a broken bone, list the latin bone name in tags, if the document mentions a desease, list the desease name in tags. If the document contains lab results, list the lab test names in english in tags. Everything will be provided in simplest form in latin and / or english form.",
                 "items": {
-                    "type": "string"
-                },
-                "enum": []
+                    "type": "string",
+                    "enum": []
+                }
             },
             "hasLabOrVitals": {
                 "type": "boolean",
@@ -36,6 +36,10 @@
             "hasPrescription": {
                 "type": "boolean",
                 "description": "Does the document contain a prescription? true/false. If it does not contain a prescription set as false"
+            },
+            "hasImmunization": {
+                "type": "boolean",
+                "description": "Does the document contain immunization records? true/false. If it does not contain immunization records set as false"
             }
             
         },
