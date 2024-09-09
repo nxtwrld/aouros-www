@@ -77,6 +77,10 @@
                                 "description": "The time of day the medication should be taken in HH:MM. If no relevant information is available, set to 'anytime'."
                             },
                             "description": "The times of day the medication should be taken."
+                        },
+                        "notes": {
+                            "type": "string",
+                            "description": "Additional notes and instructions about the medication. If no relevant information is available, leave empty. Translate result to the [LANGUAGE] langauge if the source is in a different language."
                         }
                     },
                     "required": ["name", "dosage", "route", "form", "days", "days_of_week", "times_per_day", "time_of_day"]

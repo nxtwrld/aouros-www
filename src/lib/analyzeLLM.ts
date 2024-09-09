@@ -57,6 +57,13 @@ const schemas: {
 
 
 
+// crawlser through the schamas and check all "description" fields and replace [LANUGAGE]  with the current language
+
+
+
+
+
+
 export interface Content {
     type: 'text' | 'image_url';
     text?: string;
@@ -95,6 +102,7 @@ export interface ReportAnalysis {
 type Input = {
     images?: string[];
     text?: string;
+    language?: string;
 };
 
 type TokenUsage = {
@@ -122,17 +130,34 @@ function getContentDefinition(input: Input): Content[] {
   return content;
 }
 
+function updateLanguage(schema: { [key: string]: any }, language: string = 'english') {
+  for (const key in schema) {
+    if (schema[key] instanceof Object) {
+      updateLanguage(schema[key]);
+    } else {
+      if (key === 'description' && typeof schema[key] == 'string') {
+        schema[key] = schema[key].replace(/\[LANGUAGE\]/ig,language);
+      }
+    }
+  }
+}
+
+
 export async function analyze(input : Input): Promise<ReportAnalysis> {
 
     const tokenUsage : TokenUsage = {
       total: 0
     };
 
-    const content: Content[] = getContentDefinition(input);
 
+    const content: Content[] = getContentDefinition(input);
+    const currentLanguage = input.language || 'English';
+    updateLanguage(schemas);
+
+    console.log('Schema updated...', currentLanguage)
   
-    await sleep(500);
-    return Promise.resolve(TEST_DATA);
+    //await sleep(500);
+    //return Promise.resolve(TEST_DATA);
 
     // get basic item info
     let data = await evaluate(content, Types.image, tokenUsage) as ReportAnalysis;
@@ -201,13 +226,15 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
             data.report.category = 'imaging';
             break;
     }
-
+/*
     data.fhir = await evaluate([{
       type: 'text',
       text: JSON.stringify(data)
     }], Types.fhir, tokenUsage);
-
+*/
     data.tokenUsage = tokenUsage;
+
+    console.log('All done...', data.tokenUsage.total)
     // return item
     return data;
 }
@@ -231,7 +258,7 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
         callbacks: [
           {
             handleLLMEnd(output, runId, parentRunId, tags) {
-              console.log('Token Usage', output.llmOutput?.tokenUsage.totalTokens);
+              console.log(type, 'token Usage', output.llmOutput?.tokenUsage.totalTokens);
               tokenUsage.total += output.llmOutput?.tokenUsage.totalTokens || 0;
               tokenUsage[type] = output.llmOutput?.tokenUsage.totalTokens || 0;
               //console.log(JSON.stringify(output.llmOutput?.tokenUsage))
