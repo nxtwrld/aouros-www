@@ -13,6 +13,9 @@ import prescription from './prescription.json';
 import immunization from './immunization.json';
 import imaging from './imaging.json';
 import fhir from './fhir.json';
+import patient from './core.patient.json';
+import performer from './core.performer.json';
+import results from './core.results.json'
 //import { extractText } from "./gemini";
 import testPropserties from '$data/lab.synonyms.json';
 
@@ -50,12 +53,31 @@ const schemas: {
 
 };
 
-(lab.parameters.properties.results.items.properties.test.enum as string[]) = testPropserties.map((item: any) => item[0]);
-(image.parameters.properties.tags.items.enum as string[]) = [...tags, ...lab.parameters.properties.results.items.properties.test.enum];
+// extend common schemas
+
+(results.items.properties.test.enum as string[]) = testPropserties.map((item: any) => item[0]);
+(image.parameters.properties.tags.items.enum as string[]) = [...tags, ...results.items.properties.test.enum];
+
+
+report.parameters.properties.performer = performer;
+imaging.parameters.properties.performer = performer;
+lab.parameters.properties.performer = performer;
+dental.parameters.properties.performer = performer;
+
+report.parameters.properties.patient = patient;
+imaging.parameters.properties.patient = patient;
+lab.parameters.properties.patient = patient;
+dental.parameters.properties.patient = patient;
+
+
+report.parameters.properties.results = results;
+lab.parameters.properties.results = results;
+
+
+
+
 (report.parameters.properties.bodyParts.items.properties.identification.enum as string[]) = [...tags];
 (imaging.parameters.properties.bodyParts.items.properties.identification.enum as string[]) = [...tags];
-
-
 
 // crawlser through the schamas and check all "description" fields and replace [LANUGAGE]  with the current language
 
@@ -295,305 +317,109 @@ function sleep(ms: number) {
 }
 
 const TEST_DATA: ReportAnalysis = {
-  "isMedical": true,
-  "type": "report",
-  "language": "cs",
-  "text": "LÉKAŘSKÁ ZPRÁVA \n\nPacient: Mašková Andrea Sofie\nBydliště: Na Strži 57, 14000 Praha 4\nTelefon: 773594110\nZařízení: MEDOFTAL s.r.o.\nAdresa: Jabloňová 8, 10600 Praha 10-Záběhlice\n\nDatum: 26.8.2024\n\nRodné číslo: 116103/1355\nPojišťovna: 111\nVěk: 12 let, 9 měsíců\n\nOdbornost: 705\nIČP: 10-346-001\nLékař: MUDr. Jana Syslová\n\nNO: nyní 5. den od ošetření HV OL, nikde nekapal, bylo oteklé, nyní lepší\nOA: 0 AA: 0 OEK: 0\nObl.:\nVOP 1,0 nat.\nVOL 0,9-1,0(-1) nat.\nNO: poh.bpn\nOP: PS klidný, v okrajích víček mírně šupinek, bez zarudnutí, spojivky klidné, R jasná, PK výv. čirá, Z okr. VC, fu-orient. bv\nobl. zad.polu bpn\nOL: na HV uprostřed horních víček, palp.drobně okr. rezistence mírně OOKTO V OL, bez zarudnutí, everze HV spoj. překrvená, bez granulomu, po šetrné palpaci bez expresí, v okrajích víček mírné šupinek, R jasná, PK výv. čirá, Z okr. VC , fu-orient  bpn\n\nZávěr: Chalaseon palp.supp. acutum l.sin.\nTerapie: OL: Tobradex gtt 5xd po 3 dnech 3xd, celk. 7-10 dní a EX studené obklady, poté Blephagel na víčka\n\nKO: při obtížích či zhoršení ihned, jinak podle potřeby Pacient byl poučen, byl mu vysvětlen režim léčby a kontrol, všechny položené otázky byly zodpovězeny.\nPacient odchází ve stabilizovaném stavu. Při výskytu nových obtíží, akutním zhoršení stavu kontaktuje  naší ambulanci, popř. pohotovostní službu.\n\nPředepsané léky: TOBRADEX 3MG/ML+1MG/ML OPH GTT SUS 1X5ML, 0225172 (1x), 5x za den do OL\n\nPodpis: Jana Syslová",
-  "tags": [
-      "eyes",
-      "lower_eyelid",
-      "conjunctiva",
-      "eyelids"
-  ],
-  "hasLabOrVitals": false,
-  "hasPrescription": true,
-  "hasImmunization": false,
-  "prescriptions": [
-      {
-          "name": "Tobradex",
-          "dosage": 3,
-          "route": "ophthalmic",
-          "form": "liquid",
-          "days": 10,
-          "days_of_week": [
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday",
-              "Saturday",
-              "Sunday"
-          ],
-          "times_per_day": 5,
-          "time_of_day": [
-              "anytime"
-          ]
-      }
-  ],
-  "report": {
-      "category": "exam",
-      "observation": "Oční vyšetření",
-      "title": "Oční vyšetření - Andrea Sofie Mašková",
-      "summary": "Chalaseon palp.supp. acutum l.sin. Začáteční léčba Tobradexem a studenými obklady.",
-      "content": "NO: nyní 5. den od ošetření HV OL, nikde nekapal, bylo oteklé, nyní lepší\nOA: 0 AA: 0 OEK: 0\nObl.:\nVOP 1,0 nat.\nVOL 0,9-1,0(-1) nat.\nNO: poh.bpn\nOP: PS klidný, v okrajích víček mírně šupinek, bez zarudnutí, spojivky klidné, R jasná, PK výv. čirá, Z okr. VC, fu-orient. bv\nobl. zad.polu bpn\nOL: na HV uprostřed horních víček, palp.drobně okr. rezistence mírně OOKTO V OL, bez zarudnutí, everze HV spoj. překrvená, bez granulomu, po šetrné palpaci bez expresí, v okrajích víček mírné šupinek, R jasná, PK výv. čirá, Z okr. VC , fu-orient  bpn",
-      "recommendations": [
-          "KO: při obtížích či zhoršení ihned, jinak podle potřeby",
-          "Při výskytu nových obtíží, akutním zhoršení stavu kontaktuje naší ambulanci, popř. pohotovostní službu."
-      ],
-      "results": [],
-      "bodyParts": [
-          {
-              "identification": "eyelashes",
-              "status": "mírně šupinek",
-              "diagnosis": "",
-              "treatment": "Blephagel na víčka"
-          },
-          {
-              "identification": "eyelashes",
-              "status": "spoj. překrvená",
-              "diagnosis": "",
-              "treatment": ""
-          },
-          {
-              "identification": "eyes",
-              "status": "PS klidný",
-              "diagnosis": "",
-              "treatment": ""
-          },
-          {
-              "identification": "eye_surface",
-              "status": "bez zarudnutí",
-              "diagnosis": "",
-              "treatment": ""
-          },
-          {
-              "identification": "eye_surface",
-              "status": "spojivky klidné",
-              "diagnosis": "",
-              "treatment": ""
-          }
-      ],
-      "date": "2024-08-26",
-      "performer": {
-          "doctor": "MUDr. Jana Syslová",
-          "role": "Lékař",
-          "institution": "MEDOFTAL s.r.o.",
-          "address": "Jabloňová 8, 10600 Praha 10-Záběhlice"
-      },
-      "patient": {
-          "name": "Andrea Sofie Mašková",
-          "gender": "female",
-          "identifier": "116103/1355",
-          "dob": "2011-10-03"
-      }
-  },
-  "fhir": {
-      "type": "report",
-      "entry": [
-          {
-              "resource": {
-                  "resourceType": "Patient",
-                  "id": "patient-1",
-                  "text": {
-                      "status": "generated",
-                      "div": "<div>Andrea Sofie Mašková, Female, DOB: 2011-10-03, Identifier: 116103/1355, Bydliště: Na Strži 57, 14000 Praha 4</div>"
-                  },
-                  "identifier": [
-                      {
-                          "system": "urn:ietf:rfc:3986",
-                          "value": "116103/1355"
-                      }
-                  ],
-                  "name": [
-                      {
-                          "family": "Mašková",
-                          "given": [
-                              "Andrea",
-                              "Sofie"
-                          ]
-                      }
-                  ],
-                  "gender": "female",
-                  "birthDate": "2011-10-03",
-                  "address": [
-                      {
-                          "line": [
-                              "Na Strži 57"
-                          ],
-                          "city": "Praha",
-                          "postalCode": "14000",
-                          "district": "Praha 4",
-                          "country": "CZ"
-                      }
-                  ]
-              }
-          },
-          {
-              "resource": {
-                  "resourceType": "Organization",
-                  "id": "organization-1",
-                  "text": {
-                      "status": "generated",
-                      "div": "<div>MEDOFTAL s.r.o., Jabloňová 8, 10600 Praha 10-Záběhlice</div>"
-                  },
-                  "name": "MEDOFTAL s.r.o.",
-                  "address": [
-                      {
-                          "line": [
-                              "Jabloňová 8"
-                          ],
-                          "city": "Praha",
-                          "postalCode": "10600",
-                          "district": "Praha 10-Záběhlice",
-                          "country": "CZ"
-                      }
-                  ]
-              }
-          },
-          {
-              "resource": {
-                  "resourceType": "Performer",
-                  "id": "performer-1",
-                  "text": {
-                      "status": "generated",
-                      "div": "<div>MUDr. Jana Syslová, Role: Lékař</div>"
-                  },
-                  "practitioner": {
-                      "reference": "Practitioner/MUDr. Jana Syslová",
-                      "display": "MUDr. Jana Syslová"
-                  },
-                  "role": {
-                      "coding": [
-                          {
-                              "system": "http://terminology.hl7.org/CodeSystem/practitioner-role",
-                              "code": "doctor",
-                              "display": "Doctor"
-                          }
-                      ]
-                  },
-                  "organization": {
-                      "reference": "Organization/organization-1",
-                      "display": "MEDOFTAL s.r.o."
-                  }
-              }
-          },
-          {
-              "resource": {
-                  "resourceType": "DiagnosticReport",
-                  "id": "diagnosticreport-1",
-                  "status": "final",
-                  "code": {
-                      "coding": [
-                          {
-                              "system": "http://loinc.org",
-                              "code": "abo",
-                              "display": "Eye examination"
-                          }
-                      ],
-                      "text": "Eye examination - Andrea Sofie Mašková"
-                  },
-                  "subject": {
-                      "reference": "Patient/patient-1"
-                  },
-                  "effectiveDateTime": "2024-08-26",
-                  "performer": [
-                      {
-                          "reference": "Performer/performer-1"
-                      }
-                  ],
-                  "results": [],
-                  "conclusion": "Chalaseon palp.supp. acutum l.sin.",
-                  "conclusionCode": [
-                      {
-                          "coding": [
-                              {
-                                  "system": "http://snomed.info/sct",
-                                  "code": "55990002",
-                                  "display": "Acute suppurative chalazion"
-                              }
-                          ],
-                          "text": "Chalaseon palp.supp. acutum l.sin."
-                      }
-                  ]
-              }
-          },
-          {
-              "resource": {
-                  "resourceType": "MedicationRequest",
-                  "id": "medicationrequest-1",
-                  "status": "active",
-                  "intent": "order",
-                  "medicationCodeableConcept": {
-                      "coding": [
-                          {
-                              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
-                              "code": "310798",
-                              "display": "Tobradex"
-                          }
-                      ],
-                      "text": "Tobradex 3MG/ML+1MG/ML OPH GTT SUS 1X5ML"
-                  },
-                  "subject": {
-                      "reference": "Patient/patient-1"
-                  },
-                  "authoredOn": "2024-08-26",
-                  "requester": {
-                      "reference": "Practitioner/performer-1",
-                      "display": "MUDr. Jana Syslová"
-                  },
-                  "dosageInstruction": [
-                      {
-                          "text": "5x za den do OL, celk. 7-10 dní",
-                          "timing": {
-                              "code": {
-                                  "coding": [
-                                      {
-                                          "system": "http://terminology.hl7.org/CodeSystem/v3-TimingEvent",
-                                          "code": "5/d",
-                                          "display": "5 times per day"
-                                      }
-                                  ]
-                              }
-                          },
-                          "route": {
-                              "coding": [
-                                  {
-                                      "system": "http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration",
-                                      "code": "OPTHAL",
-                                      "display": "Ophthalmic"
-                                  }
-                              ]
-                          },
-                          "doseAndRate": [
-                              {
-                                  "type": {
-                                      "coding": [
-                                          {
-                                              "system": "http://terminology.hl7.org/CodeSystem/dose-ratemode",
-                                              "code": "ordered",
-                                              "display": "Ordered"
-                                          }
-                                      ]
-                                  },
-                                  "doseQuantity": {
-                                      "value": 0.03,
-                                      "unit": "mL",
-                                      "system": "http://unitsofmeasure.org",
-                                      "code": "mL"
-                                  }
-                              }
-                          ]
-                      }
-                  ]
-              }
-          }
-      ]
-  },
-  "tokenUsage": {
-      "total": 18014,
-      "image": 7111,
-      "prescription": 1096,
-      "report": 6069,
-      "fhir": 3738
-  }
+    "isMedical": true,
+    "type": "report",
+    "language": "cs",
+    "text": "Rodné číslo: 116103/1355\nPojišťovna: 111\nVěk: 12 let, 9 měsíců\nOdbornost: 705\nIČP: 10-346-001\nLékař: MUDr Jana Syslová\nDatum: 26.8.2024\nČas: 09:18\n\nPacient: Mašková Andrea Sofie\nBydliště: Na Strži 57, 14000 Praha 4\nTelefon: 773594110\nZařízení: MEDOFTAL s.r.o.\nAdresa: Jabloňová 8, 10600 Praha 10-Záběhlice\nTelefon: 267 295 371\n\nNO: nyní 5. den otok HV OL, niko nekapal, bylo oteklé, nyní lepší\nOO: AA: O OA:\nObj:\nVOP: 1,0 nat.\nVOL 0,9-1, (1-1) nat.\nNopht palp. Tn bil.\nOP: PS klidný, v okrajích víček mírné šupinek, bez zarudnutí, spoj. klidná, R jasná, PK vtv. žirá, Z okr. VC, fu- orient. bv\nobl.: zad. polu bpn\nOL: na HV uprarest folikul palp. drobná okr. rezistence mírné okoto v obl. granulomu, po šetrné palpaici bez expresce, v okrajích víček mírné šupinek, R jasná, PK vtv. žirá, Z okr. VC, fu- orient. bpn\nZávěr: Chalaeson palp. sup. acutum l.sin.\n\nTerapie: OL: Tobradex gtt 5xd po 3 dnech 3xd, celk. 7-10 dní a EX studené obkládky, poté Blefagel na víčka\nKo: při obtížích š zhoršení hned, jinak podle potřeby\nPacient byl poučen, byl mü vysvělen režim léěy a kontrol. všechny položené otázky byly zodpovezeny. Pacient odchází ve stabilizovaném stavu.\nPředapsané léky: TOBRADEX 3MG/ML+1MG/ML OPH GTT SUS 1X5ML, 0225172 (1x). 5x za den do OL",
+    "tags": [
+        "eyes",
+        "eyelashes",
+        "eyebrows"
+    ],
+    "hasLabOrVitals": false,
+    "hasPrescription": true,
+    "hasImmunization": false,
+    "prescriptions": [
+        {
+            "name": "TOBRADEX 3MG/ML+1MG/ML OPH GTT SUS",
+            "dosage": "3mg/ml+1mg/ml",
+            "route": "ophthalmic",
+            "form": "liquid",
+            "days": 7,
+            "days_of_week": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "times_per_day": 5,
+            "time_of_day": [
+                "anytime"
+            ],
+            "notes": "First 3 days: 5 times a day, then 3 times a day."
+        }
+    ],
+    "report": {
+        "category": "exam",
+        "title": "Examination Report - Chalaeson Acutum",
+        "summary": "Patient Andrea Sofie Mašková, 12 years old, presented with swelling on the upper left eyelid lasting for 5 days. Initial symptoms included untreated swelling, which has now improved. Examination reveals mild scaling at the eyelid margins, clear conjunctiva, and a well-defined posterior chamber. A small area of resistance without discharge was palpated in the upper left eyelid, suggesting granuloma. Diagnosis is acute palpated chalaeson on the left side. Treatment includes Tobradex drops and cold compresses. Follow-up as needed, patient was educated about the treatment and left in stable condition.",
+        "content": "**NO:** nyní 5. den otok HV OL, niko nekapal, bylo oteklé, nyní lepší\n**OO:** AA: O OA:\n**Obj:**\n- **VOP:** 1,0 nat.\n- **VOL:** 0,9-1, (1-1) nat.\n- **Nopht:** palp. Tn bil.\n**OP:** PS klidný, v okrajích víček mírné šupinek, bez zarudnutí, spoj. klidná, R jasná, PK vtv. žirá, Z okr. VC, fu- orient. bv\n- **obl.:** zad. polu bpn\n**OL:** na HV uprarest folikul palp. drobná okr. rezistence mírné okoto v obl. granulomu, po šetrné palpaici bez expresce, v okrajích víček mírné šupinek, R jasná, PK vtv. žirá, Z okr. VC, fu- orient. bpn\n**Závěr:** Chalaeson palp. sup. acutum l.sin.\n\n**Terapie:**\n- OL: Tobradex gtt 5xd po 3 dnech 3xd, celk. 7-10 dní a EX studené obkládky, poté Blefagel na víčka\n- **Ko:** při obtížích š zhoršení hned, jinak podle potřeby\n\nPacient byl poučen, byl mü vysvělen režim léěy a kontrol. všechny položené otázky byly zodpovezeny. Pacient odchází ve stabilizovaném stavu.\nPředapsané léky: TOBRADEX 3MG/ML+1MG/ML OPH GTT SUS 1X5ML, 0225172 (1x). 5x za den do OL",
+        "localizedContent": "**NO:** Now, 5th day of swelling on the upper left eyelid, no drops were applied, it was swollen, now better\n**OO:** AA: O OA:\n**Obj:**\n- **VOP:** 1.0 naturally.\n- **VOL:** 0.9-1, (1-1) naturally.\n- **Nopht:** palp. Tn bil.\n**OP:** PS calm, slight scaling at the edges of the eyelids, no redness, clear conjunctiva, R clear, PC well-defined, Z limited VC, fu- oriented bv\n- **obl.:** rear pole no pathologic findings\n**OL:** on the upper left eyelid follicle palpated, small localized resistance with mild swelling in the area of granuloma, no discharge on gentle palpation, slight scaling at the edges of the eyelids, R clear, PC well-defined, Z limited VC, fu- oriented no pathologic findings\n**Conclusion:** Acute palpated chalaeson on the left side.\n\n**Therapy:**\n- OL: Tobradex drops 5 times a day, after 3 days 3 times a day, total 7-10 days and cold compresses, then Blefagel for the eyelids\n- **Follow-up:** If symptoms worsen, return immediately, otherwise as needed.\n\nThe patient was informed, the treatment regimen and follow-up was explained, and all questions were answered. The patient left in stable condition.\nPrescribed medication: TOBRADEX 3MG/ML+1MG/ML OPH DROPS SUSP 1X5ML, 0225172 (1x). 5 times a day into the left eye.",
+        "recommendations": [
+            {
+                "urgency": 2,
+                "description": "Use Tobradex drops 5 times daily for the first 3 days, then reduce to 3 times daily for a total of 7-10 days."
+            },
+            {
+                "urgency": 2,
+                "description": "Apply cold compresses to the affected eye area."
+            },
+            {
+                "urgency": 2,
+                "description": "Use Blefagel on the eyelids after the initial treatment with Tobradex."
+            },
+            {
+                "urgency": 3,
+                "description": "Follow up if symptoms worsen immediately, otherwise as needed."
+            }
+        ],
+        "bodyParts": [
+            {
+                "identification": "eyelashes",
+                "status": "scaling at the edges of the eyelids",
+                "diagnosis": "acute palpated chalaeson",
+                "treatment": "Tobradex drops, cold compresses, Blefagel",
+                "urgency": 3
+            },
+            {
+                "identification": "eyes",
+                "status": "localized resistance with mild swelling in the area of granuloma",
+                "diagnosis": "",
+                "treatment": "Tobradex drops, cold compresses, Blefagel",
+                "urgency": 3
+            }
+        ],
+        "date": "2024-08-26 09:18:00",
+        "performer": {
+            "doctor": {
+                "fn": "MUDr Jana Syslová",
+                "familyName": "Syslová",
+                "givenName": "Jana",
+                "honorificPrefix": "MUDr"
+            },
+            "role": "eye specialist",
+            "institution": "MEDOFTAL s.r.o.",
+            "address": {
+                "street": "Jabloňová 8",
+                "city": "Praha 10-Záběhlice",
+                "postalCode": "10600",
+                "country": "Czech Republic"
+            },
+            "phone": "267 295 371"
+        },
+        "patient": {
+            "name": "Andrea Sofie Mašková",
+            "dob": "",
+            "identifier": "116103/1355"
+        }
+    },
+    "tokenUsage": {
+        "total": 15997,
+        "image": 7059,
+        "prescription": 1163,
+        "report": 7775
+    }
 }

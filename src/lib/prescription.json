@@ -15,11 +15,11 @@
                     "properties": {
                         "name": {
                             "type": "string",
-                            "description": "The name of the medication"
+                            "description": "The name of the medication."
                         },
                         "dosage": {
-                            "type": "number",
-                            "description": "The dosage of the medication in mg units."
+                            "type": "string",
+                            "description": "The dosage of the medication add appropriate unite (tablet, mg, ml) units."
                         },
                         "route": {
                             "type": "string",

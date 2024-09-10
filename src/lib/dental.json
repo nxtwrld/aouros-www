@@ -72,52 +72,7 @@
             "date" : {
                 "type": "string",
                 "description": "Date of the report. Format: YYYY-MM-DD HH:MM:SS. Leave empty if the date is not available."
-            },
-            "performer": {
-                "type": "object",
-                "description": "Origin of the report. Leave empty if the origin is not available.",
-                "properties": {
-                    "doctor": {
-                        "type": "string",
-                        "description": "Name of the doctor."
-                    },
-                    "role": {
-                        "type": "string",
-                        "description": "Role of the doctor."
-                    },
-                    "institution": {
-                        "type": "string",
-                        "description": "Name of the institution."
-                    },
-                    "address": {
-                        "type": "string",
-                        "description": "Address of the origin."
-                    }
-                }
-            },
-            "patient": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Name of the patient."
-                    },
-                    "gender": {
-                        "type": "string",
-                        "description": "Biological gender if available. If not available, leave empty.",
-                        "enum": ["male", "female"]
-                    },
-                    "identifier": {
-                        "type": "string",
-                        "description": "Identifier of the patient."
-                    },
-                    "dob": {
-                        "type": "string",
-                        "description": "Date of birth of the patient. Format: YYYY-MM-DD. Leave empty if the date is not available."
-                    }
-                }
             }
-
             
         },
         "required": [ "category", "observation", "title", "summary", "teeth"]

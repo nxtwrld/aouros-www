@@ -12,31 +12,6 @@
                 "type": "string",
                 "description": "Summary and findings of the observation in natural language. Translate result to the [LANGUAGE] langauge if the source is in a different language. Enhance comprehension by providing a clear and concise summary. Highlight abnormal findings. Result of the lab test."
             },
-            "results": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "test": {
-                            "type": "string",
-                            "description": "Name of the lab test. Select the proper english name of the lab test. If the lab test is not in the list, use the original test name.",
-                            "enum": []
-                        },
-                        "value": {
-                            "type": "string",
-                            "description": "Value of the lab test."
-                        },
-                        "unit": {
-                            "type": "string",
-                            "description": "Unit of the lab test."
-                        },
-                        "reference": {
-                            "type": "string",
-                            "description": "Reference range of the lab test NUMBER - NUMBER or an appropriate alternative."
-                        }
-                    }
-                }
-            },
             "date" : {
                 "type": "string",
                 "description": "Date of the lab test. Format: YYYY-MM-DD HH:MM:SS. Leave empty if the date is not available."
@@ -44,50 +19,6 @@
             "samplte_date" : {
                 "type": "string",
                 "description": "Date of the sample extracted. Format: YYYY-MM-DD HH:MM:SS. Leave empty if the date is not available."
-            },
-            "performer": {
-                "type": "object",
-                "description": "Origin of the report. Leave empty if the origin is not available.",
-                "properties": {
-                    "doctor": {
-                        "type": "string",
-                        "description": "Name of the doctor."
-                    },
-                    "role": {
-                        "type": "string",
-                        "description": "Role of the doctor."
-                    },
-                    "institution": {
-                        "type": "string",
-                        "description": "Name of the institution."
-                    },
-                    "address": {
-                        "type": "string",
-                        "description": "Address of the origin."
-                    }
-                }
-            },
-            "patient": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "Name of the patient."
-                    },
-                    "gender": {
-                        "type": "string",
-                        "description": "Biological gender if available. If not available, leave empty.",
-                        "enum": ["male", "female"]
-                    },
-                    "identifier": {
-                        "type": "string",
-                        "description": "Identifier of the patient."
-                    },
-                    "dob": {
-                        "type": "string",
-                        "description": "Date of birth of the patient. Format: YYYY-MM-DD. Leave empty if the date is not available."
-                    }
-                }
             }
 
             
