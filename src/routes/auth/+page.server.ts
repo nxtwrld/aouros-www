@@ -7,11 +7,17 @@ export const actions: Actions = {
     const formData = await request.formData()
     const email = formData.get('email') as string
     const password = formData.get('password') as string
+    const password2 = formData.get('password2') as string
+
+    if (password !== password2) {
+      return { error: 'Passwords do not match',  action: 'signup' }
+    }
 
     const { error } = await supabase.auth.signUp({ email, password })
     if (error) {
       console.error(error)
-      throw redirect(303, '/auth/error')
+      //throw redirect(303, '/auth/error')
+      return { error : error.message, action: 'signup' }
     } else {
       throw redirect(303, '/')
     }
@@ -24,9 +30,9 @@ export const actions: Actions = {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       console.error(error)
-      throw redirect(303, '/auth/error')
+      return { error : error.message, action: 'login' }
     } else {
-      throw redirect(303, '/medassist')
+      throw redirect(303, '/')
     }
   },
 }
