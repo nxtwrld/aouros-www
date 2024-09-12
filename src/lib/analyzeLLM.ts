@@ -53,6 +53,8 @@ const schemas: {
 
 };
 
+let localizedSchemas = JSON.parse(JSON.stringify(schemas));
+
 // extend common schemas
 
 (results.items.properties.test.enum as string[]) = testPropserties.map((item: any) => item[0]);
@@ -152,13 +154,17 @@ function getContentDefinition(input: Input): Content[] {
   return content;
 }
 
-function updateLanguage(schema: { [key: string]: any }, language: string = 'english') {
+function updateLanguage(schema: { [key: string]: any }, language: string = 'English') {
   for (const key in schema) {
     if (schema[key] instanceof Object) {
-      updateLanguage(schema[key]);
+      updateLanguage(schema[key], language);
     } else {
       if (key === 'description' && typeof schema[key] == 'string') {
-        schema[key] = schema[key].replace(/\[LANGUAGE\]/ig,language);
+        if (schema[key].includes('[LANGUAGE]')) {
+          schema[key] = schema[key].replace(/\[LANGUAGE\]/ig,language);
+          console.log('Updated', key, schema[key]);
+        }
+        
       }
     }
   }
@@ -174,12 +180,13 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
 
     const content: Content[] = getContentDefinition(input);
     const currentLanguage = input.language || 'English';
-    updateLanguage(schemas);
+
+    localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLanguage);
 
     console.log('Schema updated...', currentLanguage)
   
-    //await sleep(500);
-    //return Promise.resolve(TEST_DATA);
+    await sleep(500);
+    return Promise.resolve(TEST_DATA);
 
     // get basic item info
     let data = await evaluate(content, Types.image, tokenUsage) as ReportAnalysis;
@@ -269,13 +276,13 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
     // Instantiate the parser
     const parser = new JsonOutputFunctionsParser();
 
-    const schema = schemas[type];
+    const schema = localizedSchemas[type];
 
     if (!schema) throw error(500, { message: 'Invalid type' });
 
     // Instantiate the ChatOpenAI class
     const model = new ChatOpenAI({ 
-        model: "gpt-4o",
+        model: env.LLM_MODEL_ID,
         apiKey: env.OPENAI_API_KEY,
         callbacks: [
           {
