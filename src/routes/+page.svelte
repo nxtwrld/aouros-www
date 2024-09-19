@@ -6,7 +6,7 @@
 
 	export let data;
 	$: ({ countries } = data);
-    console.log(data);
+    //console.log(data);
     if (browser) {
      //   goto('/www');
     }

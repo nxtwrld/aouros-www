@@ -162,7 +162,7 @@ function updateLanguage(schema: { [key: string]: any }, language: string = 'Engl
       if (key === 'description' && typeof schema[key] == 'string') {
         if (schema[key].includes('[LANGUAGE]')) {
           schema[key] = schema[key].replace(/\[LANGUAGE\]/ig,language);
-          console.log('Updated', key, schema[key]);
+        //  console.log('Updated', key, schema[key]);
         }
         
       }
@@ -276,7 +276,7 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
     // Instantiate the parser
     const parser = new JsonOutputFunctionsParser();
 
-    const schema = localizedSchemas[type];
+    const schema = schemas[type];
 
     if (!schema) throw error(500, { message: 'Invalid type' });
 

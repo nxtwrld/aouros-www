@@ -19,10 +19,10 @@
     });
 </script>
 <header>
-	<nav>
+	<!--nav>
 		<a href="/">Home</a>
 	</nav>
-	<button on:click={logout}>Logout</button>
+	<button on:click={logout}>Logout</button-->
 </header>
 <main>
     {#if isReady}
