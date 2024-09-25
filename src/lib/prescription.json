@@ -15,11 +15,11 @@
                     "properties": {
                         "name": {
                             "type": "string",
-                            "description": "The name of the medication."
+                            "description": "The name of the medication. If the medication is a combination of multiple medications, list all the medications in the combination."
                         },
                         "dosage": {
                             "type": "string",
-                            "description": "The dosage of the medication add appropriate unite (tablet, mg, ml) units."
+                            "description": "Analyze the provided data for the medication and extract the dosage of the medication add appropriate units (tablet, mg, ml) units."
                         },
                         "route": {
                             "type": "string",

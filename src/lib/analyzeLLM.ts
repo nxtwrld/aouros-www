@@ -185,8 +185,8 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
 
     console.log('Schema updated...', currentLanguage)
   
-    //await sleep(500);
-    //return Promise.resolve(TEST_DATA);
+    await sleep(500);
+    return Promise.resolve(TEST_DATA);
 
     // get basic item info
     let data = await evaluate(content, Types.image, tokenUsage) as ReportAnalysis;

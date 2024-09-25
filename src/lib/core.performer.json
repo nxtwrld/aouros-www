@@ -69,6 +69,10 @@
         "phone": {
             "type": "string",
             "description": "Phone number of the origin."
+        },
+        "email": {
+            "type": "string",
+            "description": "Email of the origin. Leave empty if the state is not available."
         }
     }
 }
