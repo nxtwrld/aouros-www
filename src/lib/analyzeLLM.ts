@@ -53,7 +53,7 @@ const schemas: {
 
 };
 
-let localizedSchemas = JSON.parse(JSON.stringify(schemas));
+let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 
 // extend common schemas
 
@@ -76,16 +76,8 @@ report.parameters.properties.results = results;
 lab.parameters.properties.results = results;
 
 
-
-
 (report.parameters.properties.bodyParts.items.properties.identification.enum as string[]) = [...tags];
 (imaging.parameters.properties.bodyParts.items.properties.identification.enum as string[]) = [...tags];
-
-// crawlser through the schamas and check all "description" fields and replace [LANUGAGE]  with the current language
-
-
-
-
 
 
 export interface Content {
@@ -157,7 +149,7 @@ function getContentDefinition(input: Input): Content[] {
 function updateLanguage(schema: { [key: string]: any }, language: string = 'English') {
   for (const key in schema) {
     if (schema[key] instanceof Object) {
-      updateLanguage(schema[key], language);
+      schema[key] = updateLanguage(schema[key], language);
     } else {
       if (key === 'description' && typeof schema[key] == 'string') {
         if (schema[key].includes('[LANGUAGE]')) {
@@ -168,6 +160,7 @@ function updateLanguage(schema: { [key: string]: any }, language: string = 'Engl
       }
     }
   }
+  return schema;
 }
 
 
@@ -185,8 +178,8 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
 
     console.log('Schema updated...', currentLanguage)
   
-    await sleep(500);
-    return Promise.resolve(TEST_DATA);
+    //await sleep(500);
+    //return Promise.resolve(TEST_DATA);
 
     // get basic item info
     let data = await evaluate(content, Types.image, tokenUsage) as ReportAnalysis;
@@ -276,10 +269,10 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
     // Instantiate the parser
     const parser = new JsonOutputFunctionsParser();
 
-    const schema = schemas[type];
+    const schema = localizedSchemas[type];
 
     if (!schema) throw error(500, { message: 'Invalid type' });
-
+    
     // Instantiate the ChatOpenAI class
     const model = new ChatOpenAI({ 
         model: env.LLM_MODEL_ID,

@@ -89,7 +89,7 @@ const authGuard: Handle = async ({ event, resolve }) => {
   event.locals.session = session
   event.locals.user = user
 
-  if (!event.locals.session && event.url.pathname.startsWith('/p')) {
+  if (!event.locals.session && event.url.pathname.startsWith('/medassist')) {
     return new Response(null, {
       status: 303,
       headers: { location: '/auth?redirect='+ event.url.pathname }

@@ -61,7 +61,7 @@
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "description": "Provide information about individual the body parts mentioned in the report. Selected only key body parts relevant to the report.",
+                    "description": "Analyze the document and seek for the affected body parts. Provide information about individual the body parts mentioned in the report.",
                     "properties": {
                         "identification": {
                             "type": "string",
