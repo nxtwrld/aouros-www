@@ -1,0 +1,22 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "Name of the patient."
+        },
+        "gender": {
+            "type": "string",
+            "description": "Biological gender if available. If not available, leave empty.",
+            "enum": ["male", "female"]
+        },
+        "identifier": {
+            "type": "string",
+            "description": "Identifier of the patient."
+        },
+        "dob": {
+            "type": "string",
+            "description": "Date of birth of the patient. Format: YYYY-MM-DD. Leave empty if the date is not available."
+        }
+    }
+}

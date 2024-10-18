@@ -7,6 +7,7 @@ import type { LayoutLoad } from './$types'
 mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: true });
 
 
+export const trailingSlash = 'always';
 
 export const load: LayoutLoad = async ({ data, depends, fetch }) => {
   /**

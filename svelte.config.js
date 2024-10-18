@@ -1,5 +1,5 @@
 import adapter from '@sveltejs/adapter-auto';
-import { vitePreprocess } from '@sveltejs/kit/vite';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -22,7 +22,7 @@ const config = {
 			'$components': 'src/core/components',
 			'$data': 'src/core/data',
 			'$media': 'src/core/media',
-			'$componentsLocal': 'src/components',
+			'$scomponents': 'src/components',
 		},
 	}
 };

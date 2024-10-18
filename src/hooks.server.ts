@@ -1,13 +1,39 @@
 import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+
+
+
+
+const options: Handle = async ({ event, resolve }) => {
+  /* SETUP CORDS for /api routes */
+  if(event.request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': '*',
+      }
+    });
+  }
+
+  return resolve(event);
+  /*
+  const response = resolve(event);
+  if (event.url.pathname.startsWith('/api')) {
+    response.headers.append('Access-Control-Allow-Origin', `*`);
+  }
+
+  return response;*/
+  
+};
 
 
 const supabase: Handle = async ({ event, resolve }) => {
 
   /* SETUP CORDS for /api routes */
+  /*
     if(event.request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
@@ -89,7 +115,7 @@ const authGuard: Handle = async ({ event, resolve }) => {
   event.locals.session = session
   event.locals.user = user
 
-  if (!event.locals.session && event.url.pathname.startsWith('/medassist')) {
+  if (!event.locals.session && event.url.pathname.startsWith('/protected')) {
     return new Response(null, {
       status: 303,
       headers: { location: '/auth?redirect='+ event.url.pathname }
@@ -106,4 +132,4 @@ const authGuard: Handle = async ({ event, resolve }) => {
   return resolve(event)
 }
 
-export const handle: Handle = sequence(supabase, authGuard);
+export const handle: Handle = sequence(options, supabase, authGuard);

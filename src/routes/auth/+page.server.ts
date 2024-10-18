@@ -23,7 +23,7 @@ export const actions: Actions = {
       return { error : error.message, action: 'signup' }
     } else {
 
-      throw redirect(303, '/auth/activate')
+      redirect(303, '/auth/activate');
     }
   },
   login: async ({ request, locals: { supabase } }) => {
@@ -37,7 +37,7 @@ export const actions: Actions = {
       //console.error(error)
       return { error : error.message, action: 'login' }
     } else {
-      throw redirect(303, redirectPath)
+      redirect(303, redirectPath);
     }
   },
 }

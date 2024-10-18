@@ -1,0 +1,78 @@
+{
+    "type": "object",
+    "description": "Origin of the report. Leave empty if the origin is not available.",
+    "properties": {
+        "doctor": {
+            "type": "object",
+            "description": "Name of the doctor.",
+            "properties": {
+                "familyName": {
+                    "type": "string",
+                    "description": "Family name of the doctor."
+                },
+                "givenName": {
+                    "type": "string",
+                    "description": "Given name of the doctor."
+                },
+                "additionalName": {
+                    "type": "string",
+                    "description": "Additional name of the doctor."
+                },
+                "honorificPrefix": {
+                    "type": "string",
+                    "description": "Honorific prefix of the doctor."
+                },
+                "honorificSuffix": {
+                    "type": "string",
+                    "description": "Honorific suffix of the doctor."
+                },
+                "fn": {
+                    "type": "string",
+                    "description": "Friendly name of the doctor (basically combine honorificPrefix givenName familyName honorificSuffix."
+                }
+            }
+        },
+        "role": {
+            "type": "string",
+            "description": "Role of the doctor."
+        },
+        "institution": {
+            "type": "string",
+            "description": "Name of the institution."
+        },
+        "address": {
+            "type": "object",
+            "description": "Address of the origin.",
+            "properties": {
+                "street": {
+                    "type": "string",
+                    "description": "Street of the origin. Leave empty if the state is not available."
+                },
+                "city": {
+                    "type": "string",
+                    "description": "City of the origin.  Leave empty if the state is not available."
+                },
+                "postalCode": {
+                    "type": "string",
+                    "description": "Zip code or postalCode of the origin.  Leave empty if the state is not available."
+                },
+                "state": {
+                    "type": "string",
+                    "description": "State of the origin. Leave empty if the state is not available."
+                },
+                "country": {
+                    "type": "string",
+                    "description": "Country of the origin. Leave empty if the state is not available."
+                }
+            }
+        },
+        "phone": {
+            "type": "string",
+            "description": "Phone number of the origin."
+        },
+        "email": {
+            "type": "string",
+            "description": "Email of the origin. Leave empty if the state is not available."
+        }
+    }
+}

@@ -1,8 +1,57 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vitest/config';
+//import { defineConfig } from 'vitest/config';
+import { type ViteDevServer, defineConfig, normalizePath  } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import topLevelAwait from "vite-plugin-top-level-await"
+import path from 'path';
+//import { Server } from 'socket.io'
+/*
+const webSocketServer = {
+	name: 'webSocketServer',
+	configureServer(server: ViteDevServer) {
+		if (!server.httpServer) return
+
+		const io = new Server(server.httpServer)
+
+		io.on('connection', (socket) => {
+			socket.emit('eventFromServer', 'Hello, World 👋')
+		})
+	}
+}*/
 
 export default defineConfig({
-	plugins: [sveltekit()],
+	//plugins: [sveltekit(), webSocketServer],
+	plugins: [
+		
+		sveltekit(),
+		topLevelAwait(),
+		viteStaticCopy({
+			targets: [
+			  {
+				src: normalizePath(path.join(__dirname, 'node_modules/@ricky0123/vad-web/dist/vad.worklet.bundle.min.js')),
+				dest: normalizePath(path.join(__dirname, 'static'))
+			  },
+			  {
+				src: normalizePath(path.join(__dirname, 'node_modules/@ricky0123/vad-web/dist/silero_vad.onnx')),
+				dest: normalizePath(path.join(__dirname, 'static'))
+			  },
+			  {
+				src: normalizePath(path.join(__dirname, 'node_modules/onnxruntime-web/dist/*.wasm')),
+				dest: normalizePath(path.join(__dirname, 'static'))
+			  }
+			],
+			watch: true
+		}),
+
+	],
+	optimizeDeps: {
+		//force: true,
+		exclude: [
+			'onnx-runtime-web',
+			//'@ricky0123/vad-web',
+
+		]
+	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']
 	}

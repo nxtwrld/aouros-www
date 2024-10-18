@@ -1,0 +1,114 @@
+@import url('../reset.css');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --toolbar-height: 3rem;
+
+    --color-blue: #3571FF;
+    --color-purple: #A989EE;
+    --color-red: #FB104A;
+    --color-yellow: #FEC400;
+    --color-green: #29CC97;
+
+    --color-black: #252733;
+    --color-gray-800: #9FA2B4;
+    --color-gray-500: #DFE0EB;
+    --color-gray-300: #E6E7EA;
+    --color-white: #FFFFFF;
+
+
+    --color-positive: var(--color-green);
+    --color-positive-text: var(--color-white);
+
+    --color-negative: var(--color-red);
+    --color-negative-text: var(--color-white);
+
+    --color-neutral: var(--color-blue);
+    --color-neutral-text: var(--color-white);
+
+    --color-warning: var(--color-yellow);
+    --color-warning-text: var(--color-black);
+
+    --color-info: var(--color-purple);
+    --color-info-text: var(--color-white);
+
+    --color-interactivity: var(--color-blue);
+    --color-interactivity-text: var(--color-white);
+   
+    --color-highlight: var(--color-purple);
+    --color-highlight-text: var(--color-white);
+
+    --text: var(--color-black);
+    --text-bold: 700;
+
+
+    --radius-24: 2rem;
+    --radius-16: 1rem;
+
+}
+
+html, body {
+    height: 100%;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: "Mulish", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-style: normal;
+}
+
+
+
+.h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+
+/**
+
+    Toolbar
+
+ */
+
+
+.toolbar {
+    --radius: 0;
+    display: flex;
+    justify-content: stretch;
+    align-items: stretch;
+    gap: .1rem;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius);
+
+}
+
+.toolbar .spacer {
+    flex-grow: 1;
+}
+.toolbar > .spacer,
+.toolbar > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: .5rem 1rem;      
+    background-color: var(--color-gray-300);
+
+}
+.toolbar a,
+.toolbar button {
+    background-color: var(--color-interactivity);
+    color: var(--color-interactivity-text);
+}
+
+.toolbar a.-active,
+.toolbar button.-active {
+    background-color: var(--color-highlight);
+    color: var(--color-highlight-text);
+}

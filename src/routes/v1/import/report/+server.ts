@@ -1,6 +1,6 @@
 
 import { error, json } from '@sveltejs/kit';
-import { analyze } from '$slib/analyzeLLM';
+import { analyze } from '$slib/reportImports/analyzeReport';
 
 /** @type {import('./$types.d').RequestHandler} */
 export async function POST({ request }) {
@@ -9,7 +9,7 @@ export async function POST({ request }) {
 
     const data = await request.json();
     if (data.images === undefined && data.text === undefined) {
-        throw error(400, { message: 'No image or text provided' });
+        error(400, { message: 'No image or text provided' });
     }
 
 

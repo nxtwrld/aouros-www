@@ -1,0 +1,20 @@
+[
+    {
+        "uid": "53ccb3af-2bef-47d8-b112-d8b127c949cd",
+        "name": "John Doe",
+        "location": "123 Main St, Anytown, USA",
+        "phone": "555-555-5555",
+        "email": "jpohn.doe@med",
+        "sex": "M",
+        "birth": "1970-31-1"
+    },
+    {
+        "uid": "18f80fc6-ef02-4ea3-a84f-0c5be6aa78f7",
+        "name": "Jane Doe",
+        "location": "123 Main St, Anytown, USA",
+        "phone": "555-555-5555",
+        "email":"jane.doe@med",
+        "sex": "M",
+        "birth": "1973-06-04"
+    }
+]
