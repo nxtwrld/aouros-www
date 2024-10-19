@@ -19,6 +19,16 @@
                         "text": {
                             "type": "string",
                             "description": "The text of the conversation. Make sure to split the conversation into separate lines for the doctor and the patient. If there are any obvious mistakes in the text created by the speech to text model, correct them according to context."
+                        },
+                        "stress": {
+                            "type": "string",
+                            "enum": ["low", "medium", "high"],
+                            "description": "The stress level of the speaker"
+                        },
+                        "urgency": {
+                            "type": "string",
+                            "enum": ["low", "medium", "high"],
+                            "description": "The urgency of the speaker"
                         }
                     }
                 }   

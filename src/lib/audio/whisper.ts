@@ -6,6 +6,10 @@ const openai = new OpenAI({
 });
 
 export async function transcribeAudio(audioData: File, instructions: { lang: string } = { lang: 'en' }) {
+
+    return {
+        text: 'test'
+    }
   const transcription = await openai.audio.transcriptions.create({
     file: audioData,
     model: "whisper-1",

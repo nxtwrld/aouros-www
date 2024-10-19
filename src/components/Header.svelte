@@ -40,14 +40,17 @@
         left: 0;
         right: 0;
         height: var(--toolbar-height);
+        background-color: var(--background);
+        z-index: 1000;
     }
 
 
     .profile.-active {
-        background-color: var(--color-gray-300);
         color: var(--color-black);
         font-weight: bold;
         flex-grow: 1;
+        border-color: var(--button-color);
+        border-bottom-width: 2px;
     }
 /*
     .toolbar *:first-child {

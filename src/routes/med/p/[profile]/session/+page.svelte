@@ -5,38 +5,50 @@
     import { onMount, onDestroy } from 'svelte';
     import ProfileView from '$scomponents/patient/Profile.svelte';
     import SessionView from '$scomponents/patient/Session.svelte';
+    import { getSortForEnum, sortbyProperty } from '$slib/array';
+    import { throttle } from 'throttle-debounce'
 
     export let data: {
         profile
     }
 
-    const CHUNK_COUNT = 100;
+    const CHUNK_COUNT = 200;
     const profile: Profile = data.profile;
 
     // UI Session States
+    const severityEnum = {
+        mild: 0,
+        moderate: 1,
+        severe: 2
+    }
 
-
+    let texts: string[] = [];
     let state: AudioState = AudioState.ready;
 
-    let conversation: string = '';
+    let lastAnalyzedTextLength: number = 0;
+    let analysis: any = undefined;
 
     let audio: AudioControlsVad | Error;
 
-    let analyzer: {
-        state: AudioState;
-        rms: number;
-        energy: number;
-    }[] = emptyAnalyzer();
-
-    function emptyAnalyzer() {
-       return (new Array(50)).fill({
-        state: AudioState.ready,
-        rms: 0,
-        energy: 0
-    }); 
-    }
-
+ 
     let speechChunks: Float32Array[] =[];
+    let micAnimationContainer: HTMLDivElement;
+
+    $: isRunning = state === AudioState.listening || state === AudioState.speaking;
+    $: hasResults = analysis;// || texts.length > 0;
+
+    const micTick = throttle(200, (energy: number) => {
+        const tickElement = document.createElement('div');
+        tickElement.addEventListener("animationend", () => {
+            tickElement.remove();
+        });
+        tickElement.style.opacity = `${Math.min(Math.max(energy, .1),.8)}`;
+        tickElement.classList.add(state);
+        micAnimationContainer.appendChild(tickElement);
+        tickElement.classList.add('animate');
+        
+    });
+
 
     async function startSession() {
         audio = await getAudioVAD({
@@ -50,11 +62,8 @@
             return;
         }
         audio.onFeatures = (d) => {
-
-            analyzer = [...analyzer.slice(1), {
-                state: audio.state,
-                ...d
-            }];
+            //console.log(d.energy)
+            if (d.energy > 0.001) micTick(d.energy);
         }
         audio.onSpeechStart = () => {
             state = audio.state;
@@ -75,7 +84,6 @@
         if (audio) {
             audio.stop();
             state = audio.state;
-            analyzer = emptyAnalyzer();
         }
 
         processData();
@@ -96,7 +104,7 @@
         text: string;
         confidence: number;
     }>[] = [];
-    let texts: string[] = [];
+
 
 
     let processingStatus = 'idle';
@@ -109,6 +117,7 @@
         while (speechChunks.length > 0) {
             const chunk: Float32Array = speechChunks.shift();
             const index = results.length;
+            texts[index] = '...';
             results = [...results, new Promise(async (resolve, reject) =>{
 
                 const mp3Blob = await convertFloat32ToMp3(chunk, 16000);
@@ -140,8 +149,7 @@
         processingStatus = 'idle';
     }
 
-    let lastAnalyzedTextLength: number = 0;
-    let analysis: any;
+
     async function analyzeTranscription() {
         let text = texts.join('\r\n');
         if (text.length === lastAnalyzedTextLength + 100) {
@@ -184,6 +192,31 @@
     }
 
 
+    enum DaysOfWeek  {
+        Monday = 'Monday',
+        Tuesday = 'Tuesday',
+        Wednesday = 'Wednesday',
+        Thursday = 'Thursday',
+        Friday = 'Friday',
+        Saturday = 'Saturday',
+        Sunday = 'Sunday'
+    }
+    enum Frequency {
+        Daily = 'Dayily',
+        Weekdays = 'Weekdays',
+        EveryTwoDays = 'EveryTwoDays'
+    }   
+    function getFrequency(days: DaysOfWeek[]): Frequency[] | DaysOfWeek[] {
+        if (days.length === 7) {
+            return [Frequency.Daily];
+        }
+        if (days.length === 5) {
+            // TODO check only workdays are present
+            return [Frequency.Weekdays]
+        }
+        return days;
+    }
+
 /*
     const socket = io()
 
@@ -198,6 +231,7 @@
 
     onMount(() => {
         //socket.emit('eventFromClient', 'Hello from client')
+        //testAnalyze();
     })
 
 
@@ -205,56 +239,33 @@
 
 
 
- <div class="session-controls">
-    <nav class="toolbar">
-        <div class="language">CZ</div>             
-        <div class="state">
-            <div class="visualizer {state}" class:-active={[AudioState.listening, AudioState.speaking, AudioState.stopping].includes(state)}>
-                {#each analyzer as analyzer}
-                    <div class="energy {analyzer.state}" style="height: {4 * analyzer.energy}%"></div>
-                {/each}
-            </div>
-            <div class="state-text">{state}</div>
-        </div>
-        
-        <button class="control" on:click={toggleSession}>
-            {#if state == AudioState.stopping}
-            ....
-            {:else if state === AudioState.listening ||  state === AudioState.speaking}
-                STP
-            {:else}
-                REC
-            {/if}
-        </button>
-        <div class="spacer"></div>
-        <button class="finalize">Finalize</button>
-    </nav>
+<div class="record-audio" class:-has-results={hasResults} bind:this={micAnimationContainer}>
+    <button class="control {state}" class:-running={isRunning} on:click={toggleSession}>
+        {#if state == AudioState.stopping}
+        ....
+        {:else if state === AudioState.listening ||  state === AudioState.speaking}
+            <svg>
+                <use href="/icons.svg#mic-off"></use>
+            </svg>
+        {:else}
+            <svg>
+                <use href="/icons.svg#mic"></use>
+            </svg>
+        {/if}
+    </button>
+    {#if true || (!isRunning && hasResults)}
+        <!--button class="finalize" >
+            Finalize Report
+        </button-->
+    {/if}
 </div>
+
 <div class="canvas">
-
-    <div class="user-profile">
-
-        <ProfileView />
-        <ul>
-            <li>Latest Lab results in charts</li>
-            <li>Medical History
-                <ul>
-                    <li>Timeline of events</li>
-                </ul>
-            </li>
-        </ul>
-        
-    </div>
+    {#if hasResults}
     <div class="session">
         <SessionView />
 
-        {#each texts as text}
-            <p>{text}</p>
-            
-        {/each}
-
         <h3 class="h3">Analysis</h3>
-        <button on:click={testAnalyze} class="button">Analyze Test</button>
 
         <div class="dashboard">
         {#if analysis && analysis.complaint}
@@ -266,10 +277,9 @@
         {#if analysis && analysis.symptoms}
                 <div class="block block-symptoms">
                     <h4 class="h4">Symptoms</h4>
-                    {#each analysis.symptoms as symptom}
+                    {#each analysis.symptoms.sort(getSortForEnum(severityEnum, 'severity')) as symptom}
                     <div class="list-item severity {symptom.severity}">
-                        <div>{symptom.name}</div>
-                        <div>{symptom.severity}</div>
+                        <div class="list-title">{symptom.name}</div>
                         <div>{symptom.duration}</div>
                         <div>{symptom.bodyParts}</div>
                     </div>
@@ -281,10 +291,10 @@
         {#if analysis && analysis.diagnosis}
                 <div class="block block-diagnosis">
                     <h4 class="h4">Diagnosis</h4>
-                    {#each analysis.diagnosis as diagnosis}
-                    <div>
-                        <div>{diagnosis.name}</div>
+                    {#each analysis.diagnosis.sort(sortbyProperty('probability')).reverse() as diagnosis}
+                    <div class="list-item">
                         <div>{diagnosis.origin}</div>
+                        <div class="list-title">{diagnosis.name}</div>
                         <div>{diagnosis.basis}</div>
                         <div>{diagnosis.probability}</div>
                     </div>
@@ -296,7 +306,7 @@
                 <div class="block block-recommendations">
                     <h4 class="h4">Treatment</h4>
                     {#each analysis.counterMeasures as counterMeasure}
-                    <div>
+                    <div class="list-item">
                         <div>{counterMeasure.description}</div>
                         <div>{counterMeasure.origin}</div>
                     </div>
@@ -308,7 +318,7 @@
                 <div class="block block-follow-up">
                     <h4 class="h4">Follow up</h4>
                     {#each analysis.followUp as followUp}
-                    <div>
+                    <div class="list-item">
                         <div>{followUp.type}</div>
                         <div>{followUp.name}</div>
                         <div>{followUp.reason}</div>
@@ -320,12 +330,17 @@
 
         {#if analysis && analysis.medication}
                 <div class="block block-prescriptions">
+                    <h4 class="h4">Suggested Medication</h4>
                     {#each analysis.medication as medication}
-                    <div>
+                    <div class="list-item">
                         <div>{medication.name}</div>
                         <div>{medication.dosage}</div>
                         <div>{medication.days}</div>
-                        <div>{medication.days_of_week}</div>
+                        <div>
+                            
+                            {getFrequency(medication.days_of_week)}
+                            
+                        </div>
                         <div>{medication.time_of_day}</div>
                         <div>{medication.origin}</div>
                     </div>
@@ -334,37 +349,6 @@
         {/if}
 
     </div>
-
-
-        <h3 class="h3">Transcript</h3>
-        <div>
-            
-
-                {#each results as result}
-                    {#await result}
-                        <p>Processing...</p>
-                    {:then result}
-                        <p>{result.text}</p>
-                    {:catch error}
-                        <p>Processing error: {error}</p>
-                    {/await}
-                {:else}
-                <p>Start recording to generate transcript</p>
-                {/each}
-
-                {#if analysis && analysis.conversation}
-                    <div class="conversation">
-                        <h4 class="h4">Conversation</h4>
-                        {#each analysis.conversation as message}
-                            <div class="message -{message.speaker}">
-                                <div>{message.text}</div>
-                            </div>
-                        {/each}
-                    </div>
-                {/if}
-
-
-        </div>
 
 
         <!--ul>
@@ -381,32 +365,154 @@
 
     </div>
 
-    
+    <div>
 
+        <h3 class="h3">Transcript</h3>
+
+
+    {#if analysis && analysis.conversation}
+        <div class="conversation">
+            {#each analysis.conversation as message}
+                <div class="message -{message.speaker}">
+                    <p class="p">{message.text}</p>
+                </div>
+            {/each}
+        </div>
+    {/if}
+
+    </div>
+    
+    {/if}
 </div>
 <style>
     .canvas {
         display: grid;
-        grid-template-columns: 1fr 3fr;
-        gap: 0;
-
+        grid-template-columns: 4fr 2fr;
+        gap: var(--gap);
+        padding-bottom: var(--toolbar-height);
     }
     .canvas > * {
-        margin: 1rem 0;
+        margin: var(--gap) 0;
+        background-color: var(--color-gray-300);
+        height: calc(100vh - 2 * var(--gap) -  var(--toolbar-height));
+        container-type: inline-size;
+        overflow: auto;
     }
 
-    .session-controls {
+    .canvas > * > .h3 {
+        position: sticky;
+        top: 0;
+        padding: 1rem;
+        background-color: inherit;
+        border-bottom: .1rem solid var(--color-gray-500);
+        z-index: 2;
+    }
+
+    .record-audio {
+        --sound-color: var(--color-interactivity);
+        --sound-color-text: var(--color-interactivity-text);
+        --speech-color: var(--color-purple);
         position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
         display: flex;
-        justify-content: stretch;
-        align-items: stretch;
-        gap: .5rem;
-        height: var(--toolbar-height);
+        justify-content: center;
+        align-items: center;
+        bottom: calc(40% + 3rem);
+        width: 60vw;
+        height: 60vw;
+        left: 50%;
+        transform: translate(-50%, calc(50% - 3rem));
+        z-index: 1001;
+        pointer-events: none;
+        transition: bottom .5s;
+    }
+    .record-audio.-has-results {
+        bottom: 1.5rem;
+    }
+    .record-audio :global(> *) {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 12rem;
+        height: 12rem;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width .5s, height .5s;
+    }
+    .record-audio.-has-results :global(> *) {
+        width: 6rem;
+        height: 6rem;
+    }
+    .record-audio .control {
+        background-color: var(--sound-color);
+        border: .2rem solid var(--sound-color);
+        color: var(--sound-color-text);
+        font-weight: var(--text-bold);
+        font-size: 1.5rem;
+        z-index: 1001;
+        pointer-events: all;
+        padding: 1rem;
+        box-shadow: 0 .6rem .6rem -.2rem rgba(0,0,0,.5);
+        transition: all .5s;
+    }   
+    .record-audio .control:hover,
+    .record-audio .control:active {
+        transform: translate(-50%, calc(-50% + .2rem)) scale(1.05);
+        box-shadow: 0 .1rem .2rem -.1rem rgba(0,0,0,.5)
+    }
+    .record-audio .control.-running {
+        background-color: var(--color-white);
+        color: var(--sound-color);
+    }
+    .record-audio .control.-running.speaking {
+        color: var(--speech-color);
+        border-color: var(--speech-color);
+    }
+    
+    .record-audio .control.-running:hover,
+    .record-audio .control.-running:active
+    .record-audio .control.-running.speaking:hover,
+    .record-audio .control.-running.speaking:active {
+        color: var(--color-negative);
+        border-color: var(--color-negative);
     }
 
+    .record-audio .control svg {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+    }
+
+
+    .record-audio :global(.animate) {
+        background-color: var(--sound-color);
+        transition: scale 1s cubic-bezier(.1,.8,.57,.98), opacity 1s cubic-bezier(.1,.8,.57,.98);
+        /*box-shadow: inner 0 0 6rem var(--color-white);*/
+        animation: pulse 2s;
+        animation-iteration-count: 1;
+    }
+    .record-audio :global(.animate.speaking) {
+        background-color: var(--speech-color);
+    }
+    .record-audio :global(.animate.stopping),
+    .record-audio :global(.animate.stopped) {
+        background-color: var(--color-white);
+    }
+    @keyframes pulse {
+        0% {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(3);
+            opacity: 0;
+        }
+    }
+
+
+
+    .toolbar > * {
+        border-bottom-width: 0;
+        border-top-width: 2px;
+    }
 
     .state,
     .spacer {
@@ -471,6 +577,7 @@
     .conversation {
         display: flex;
         flex-direction: column;
+        margin: 1rem;
         gap: 1rem;
     }
 
@@ -482,7 +589,8 @@
         background-color: var(--color-info);
         color: var(--color-info-text);
         padding: .5rem;
-        border-radius: .5rem;
+        border-radius: var(--radius-8);
+        font-weight: 600;
     }
     /* message bubble arrow at bottom left */
     .message:after {
@@ -499,34 +607,80 @@
     }
     .message.-nurse,
     .message.-doctor {
-        background-color: #f0f0f0;
+        background-color: var(--color-gray-500);
+        color: var(--text);
         justify-content: flex-end;
+        font-weight: 300;
     }
     .message.-nurse:after,
     .message.-doctor:after {
         right: 10px;
         left: auto;
-        border-top: 10px solid #f0f0f0;
+        border-top: 10px solid var(--color-gray-500);
     }
 
+    .session {
+        container-type: inline-size;
+        container-name: session;
+    }
 
     .dashboard {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-        gap: 1rem;
-    }
 
+    }
+    
+    @container session (min-width: 800px) {
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: var(--gap);
+        }
+    }
     .block {
-        padding: 1rem;
-        background-color: #f0f0f0;
-        border-radius: .5rem;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        margin: 1rem;
     }
     .block-complaint {
-        background-color: #ff8a8a;
+        background-color: var(--color-negative);
+        color: var(--color-negative-text);
         grid-column-start: 1;
         grid-column-end: 3;
+        border-radius: var(--radius-8);
+        padding: 1rem;
+        font-weight: 700;
+    }
+    .block-complaint p {
+        font-size: 1.4rem;
+    }
+
+    .block-symptoms {
+    }
+
+    .list-item {
+        display: flex;
+        gap: .5rem;
+        padding: .5rem;
+        border-radius: var(--radius-8);
+        margin-bottom: var(--gap);
+        background-color: var(--color-white);
+    }
+
+    .list-title {
+        flex-grow: 1;
+    }
+
+    .mild {
+        background-color: var(--color-white);
+        color: var(--text);
+    }
+    .moderate {
+        background-color: var(--color-warning);
+        color: var(--color-warning-text);
+        font-weight: 500;
+    }
+    .severe {
+        background-color: var(--color-negative);
+        color: var(--color-negative-text);
+        font-weight: 500;
     }
 </style>

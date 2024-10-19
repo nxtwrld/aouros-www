@@ -17,7 +17,8 @@
 
     --color-black: #252733;
     --color-gray-800: #9FA2B4;
-    --color-gray-500: #DFE0EB;
+    --color-gray-500: #d0d1d7;
+    --color-gray-400: #DFE0EB;
     --color-gray-300: #E6E7EA;
     --color-white: #FFFFFF;
 
@@ -43,24 +44,33 @@
     --color-highlight: var(--color-purple);
     --color-highlight-text: var(--color-white);
 
+    --background: var(--color-gray-500);
     --text: var(--color-black);
     --text-bold: 700;
 
 
     --radius-24: 2rem;
     --radius-16: 1rem;
+    --radius-8: .5rem;
+
+    --gap: .1rem;
 
 }
 
 html, body {
     height: 100%;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    /*font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;*/
     font-family: "Mulish", sans-serif;
     font-optical-sizing: auto;
     font-weight: 300;
     font-style: normal;
+    background-color: var(--background);
+    overflow: hidden;
 }
 
+main {
+    padding: var(--toolbar-height) 0 0 0;
+}
 
 
 .h3 {
@@ -70,6 +80,16 @@ html, body {
 }
 
 
+.h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+
+.p {
+    line-height: 1.3rem;
+}
 /**
 
     Toolbar
@@ -78,11 +98,12 @@ html, body {
 
 
 .toolbar {
+    --button-color: var(--color-gray-300);
     --radius: 0;
     display: flex;
     justify-content: stretch;
     align-items: stretch;
-    gap: .1rem;
+    gap: var(--gap);
     width: 100%;
     height: 100%;
     border-radius: var(--radius);
@@ -92,23 +113,34 @@ html, body {
 .toolbar .spacer {
     flex-grow: 1;
 }
-.toolbar > .spacer,
+
 .toolbar > * {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: .5rem 1rem;      
-    background-color: var(--color-gray-300);
-
+    background-color: var(--button-color);
+    border-width: 0px;
+    border-style: solid;
+    border-bottom-width:  2px;
+    border-color: var(--button-color);
 }
+
 .toolbar a,
 .toolbar button {
-    background-color: var(--color-interactivity);
-    color: var(--color-interactivity-text);
+    background-color: var(--button-color);
+    color: var(--color-text);
 }
 
 .toolbar a.-active,
 .toolbar button.-active {
-    background-color: var(--color-highlight);
-    color: var(--color-highlight-text);
+    border-color: var(--color-interactivity);
+}
+
+.toolbar a:hover,
+.toolbar button:hover,
+.toolbar a.-active:hover,
+.toolbar button.-active:hover {
+    border-color: var(--color-interactivity);
+    background-color: var(--color-gray-500);
 }

@@ -10,13 +10,5 @@
     const profile: Profile = data.profile;
 </script>
 
-<div class="page-patient">
-    <slot />
-</div>
 
-<style>
-    .page-patient {
-        padding: var(--toolbar-height) .5rem;
-        height: 100vh;
-    }
-</style>
+<slot />
