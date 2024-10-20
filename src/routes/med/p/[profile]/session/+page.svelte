@@ -231,7 +231,7 @@
 
     onMount(() => {
         //socket.emit('eventFromClient', 'Hello from client')
-        //testAnalyze();
+        testAnalyze();
     })
 
 
@@ -265,12 +265,16 @@
     <div class="session">
         <SessionView />
 
-        <h3 class="h3">Analysis</h3>
+        <h3 class="h3">
+            <svg>
+                <use href="/icons-o.svg#diagnosis"></use>
+            </svg>
+            Analysis</h3>
 
         <div class="dashboard">
         {#if analysis && analysis.complaint}
                 <div class="block block-complaint">
-                    <h4 class="h4">Complaint</h4>
+                    <!--h4 class="h4">Complaint</h4-->
                     <p>{analysis.complaint}</p>
                 </div>
         {/if}
@@ -297,6 +301,16 @@
                         <div class="list-title">{diagnosis.name}</div>
                         <div>{diagnosis.basis}</div>
                         <div>{diagnosis.probability}</div>
+                        <button class="list-action">
+                            <svg>
+                                <use href="/icons.svg#pin"></use>
+                            </svg>
+                        </button>
+                        <button class="list-action">
+                            <svg>
+                                <use href="/icons.svg#minus"></use>
+                            </svg>
+                        </button>
                     </div>
                     {/each}
                 </div>
@@ -367,7 +381,11 @@
 
     <div>
 
-        <h3 class="h3">Transcript</h3>
+        <h3 class="h3">
+            <svg>
+                <use href="/icons-o.svg#transcript"></use>
+            </svg>
+            Transcript</h3>
 
 
     {#if analysis && analysis.conversation}
@@ -404,8 +422,17 @@
         top: 0;
         padding: 1rem;
         background-color: inherit;
+        display: flex;
         border-bottom: .1rem solid var(--color-gray-500);
         z-index: 2;
+    }
+
+
+    .h3 svg {
+        width: 1.5rem;
+        height: 1.5rem;
+        fill: currentColor;
+        margin-right: .5rem;
     }
 
     .record-audio {
@@ -667,6 +694,15 @@
 
     .list-title {
         flex-grow: 1;
+    }
+    .list-action {
+        width: 1.3rem;
+        height: 1.3rem;
+    }
+    .list-action svg {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
     }
 
     .mild {

@@ -65,6 +65,9 @@ html, body {
     font-weight: 300;
     font-style: normal;
     background-color: var(--background);
+    text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+    -webkit-overflow-scrolling: touch;
     overflow: hidden;
 }
 

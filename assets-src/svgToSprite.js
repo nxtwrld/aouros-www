@@ -1,24 +1,40 @@
 import svgstore from 'svgstore';
 import fs from 'fs';
 
+
+
+function addIcon(name, file, s) {
+    file = file || name +'.svg';
+    s.add(name, fs.readFileSync(INPUT+file, 'utf8'));
+}
+
 var INPUT = './icons/';
 var OUTPUT = '../static/icons.svg';
 var sprites = svgstore();
-
-function addIcon(name, file) {
-    file = file || name +'.svg';
-    sprites.add(name, fs.readFileSync(INPUT+file, 'utf8'));
-}
-
 
 fs.readdirSync(INPUT).forEach(file => {
 
     if (file.includes('.svg')) {
         console.log(file)
-        addIcon(file.replace('.svg', ''), file);
+        addIcon(file.replace('.svg', ''), file, sprites);
     }
 })
 
 
 fs.writeFileSync(OUTPUT, sprites.toString());
 
+
+var INPUT = './icons-outline/';
+var OUTPUT = '../static/icons-o.svg';
+var spriteso = svgstore();
+
+fs.readdirSync(INPUT).forEach(file => {
+
+    if (file.includes('.svg')) {
+        console.log(file)
+        addIcon(file.replace('.svg', ''), file, spriteso);
+    }
+})
+
+
+fs.writeFileSync(OUTPUT, spriteso.toString());
