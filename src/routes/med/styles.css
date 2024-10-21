@@ -17,8 +17,9 @@
 
     --color-black: #252733;
     --color-gray-800: #9FA2B4;
+    --color-gray-800-o: #6263687c;
     --color-gray-500: #d0d1d7;
-    --color-gray-400: #DFE0EB;
+    --color-gray-400: #e0e0e3;
     --color-gray-300: #E6E7EA;
     --color-white: #FFFFFF;
 
@@ -53,6 +54,15 @@
     --radius-16: 1rem;
     --radius-8: .5rem;
 
+
+    --button-color: var(--color-gray-300);
+    --button-border-color: var(--color-gray-800);
+    --button-text-color: var(--color-black);
+
+    --button-color-primary: var(--color-blue);
+    --button-border-color-primary: var(--color-blue);
+    --button-text-color-primary: var(--color-white);
+
     --gap: .1rem;
 
 }
@@ -75,24 +85,100 @@ main {
     padding: var(--toolbar-height) 0 0 0;
 }
 
+button, a {
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    background-color: transparent;
+}
+
+.-mild {
+    background-color: var(--color-white);
+    color: var(--text);
+}
+.-warning,
+.-moderate {
+    background-color: var(--color-warning) !important;
+    color: var(--color-warning-text) !important;
+    font-weight: 500 !important;
+}
+.-danger,
+.-severe {
+    background-color: var(--color-negative) !important;
+    color: var(--color-negative-text) !important;
+    font-weight: 500 !important;
+}
+
+
+
 
 .h3 {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin: 1rem 0;
 }
 
 
 .h4 {
     font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin: .75rem 0;
 }
 
 
 .p {
     line-height: 1.3rem;
 }
+
+
+/**
+
+    Button
+
+ */
+
+
+.button {
+    --radius: var(--radius-8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: .5rem 1rem;
+    background-color: var(--button-color);
+    color: var(--button-text-color);
+    font-weight: 700;
+    border-width: .1rem;
+    border-style: solid;
+    transform: scale(1.01);
+    border-color: var(--button-border-color);
+    border-radius: var(--radius);
+    box-shadow: 0 .3rem .2rem -.2rem rgba(0,0,0,.1);
+    transition: all .2s;
+}
+.button:hover {
+    background-color: var(--color-gray-400);
+    border-color: var(--color-gray-400);
+    transform: scale(1.03);
+    box-shadow: 0 1rem .4rem -.7rem rgba(0,0,0,.2);
+    border-color: var(--button-border-color-primary-hover);
+}
+
+.button.-primary {
+    background-color: var(--button-color-primary);
+    border-color: var(--button-border-color-primary);
+    color: var(--button-text-color-primary);
+    box-shadow: 0 .3rem .2rem -.2rem rgba(0,0,0,.3);
+}
+
+.button.-primary:hover {    
+    box-shadow: 0 1rem .4rem -.7rem rgba(0,0,0,.3);
+}
+
+
 /**
 
     Toolbar

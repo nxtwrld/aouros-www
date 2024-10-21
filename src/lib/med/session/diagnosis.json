@@ -1,6 +1,6 @@
 {
     "name": "extractor",
-    "description": "You a medical professional assistent. You have transcript of doctor patient conversation and you provide deailed assessment of the conversation. We want to extract symptoms and diagnosis and potentially suggest alternatives. Provide all answers in [LANGUAGE] language.",
+    "description": "You a medical professional assistent. You have transcript of doctor patient conversation and you provide deailed assessment of the conversation. We want to extract symptoms and diagnosis and potentially suggest alternatives. Assume the conversation take place today. Provide all answers in [LANGUAGE] language.",
     "parameters": {
         "type": "object",
         "properties": {
@@ -96,18 +96,18 @@
                 },
                 "description": "A list of possible diagnoses. Provide answers in [LANGUAGE] language."
             },
-            "counterMeassures": {
+            "treatment": {
                 "type": "array",
                 "items": {
                     "type": "object",
                     "properties" :{
                         "description": {
                             "type": "string",
-                            "description": "The description of the counter meassure. Provide answer in [LANGUAGE] language."
+                            "description": "The description of the  treatment or counter measures. Provide answer in [LANGUAGE] language."
                         },
                         "origin": {
                             "type": "string",
-                            "description": "The origin of the counterMeassures. Select Specialist if the doctor mentioned it in conversation, select Test if it is implied by the provided test results, selecte Symptoms if if is implied from the patient symptoms description. Provide answer in [LANGUAGE] language.",
+                            "description": "The origin of the treatment or counter messages. Select Specialist if the doctor mentioned or suggested it in conversation, select Test if it is implied by the provided test results, selecte Symptoms if if is implied from the patient symptoms description. Provide answer in [LANGUAGE] language.",
                             "enum": ["symptoms", "tests", "specialist"]
                         }
                     }

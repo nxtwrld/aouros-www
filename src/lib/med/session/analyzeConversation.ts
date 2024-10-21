@@ -1,22 +1,22 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { JsonOutputFunctionsParser } from "langchain/output_parsers";
-import { HumanMessage } from "@langchain/core/messages";
+
 import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
-import { transcribeAudio } from "$slib/audio/assemblyai";
-import { env } from '$env/dynamic/private';
 import { error } from '@sveltejs/kit';
 import diagnosis from './diagnosis.json';
 import tags from '../../reportImports/tags.json';
-//import { extractText } from "./gemini";
 import testPropserties from '$data/lab.synonyms.json';
 import { fetchGpt } from '$slib/ai/gpt';
 import { type Content, type TokenUsage } from '$slib/ai/types.d';
+import resultsSchema from '$slib/reportImports/core.results.json'
+import { updateLanguage } from "$slib/ai/schema";
+import { sleep } from "$slib/utils";
 /**
  * TODO:
- * - Add support for multiple images
- * - Optimize token usage - test gemini text extration
- * - gtp-4o (7k) vs gpt-4o-mini (40k)
+ * - gtp-4o (7k) vs gpt-4o-mini (40k) -
+ * - test multi-model setups for GP, PT, etc. medical configurations.
  */
+const DEBUG = true; //env.DEBUG || false;
+
+
 
 export interface Analysis {
     tokenUsage: TokenUsage;
@@ -25,13 +25,16 @@ export interface Analysis {
         text: string;
     }[];
     complaint: string;
+    results: {
+
+    }[];
     diagnosis: {
         name: string;
         origin: string;
         basis: string;
         probability: number;
     }[];
-    counterMeassures: {
+    treatment: {
         description: string;
         origin: string;
     }[];
@@ -66,6 +69,8 @@ type Input = {
 
 
 
+diagnosis.parameters.properties.results = resultsSchema;
+
 
 const schemas: {
     [key: string]: FunctionDefinition
@@ -85,23 +90,6 @@ let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 
 
 
-function updateLanguage(schema: { [key: string]: any }, language: string = 'English') {
-  for (const key in schema) {
-    if (schema[key] instanceof Object) {
-      schema[key] = updateLanguage(schema[key], language);
-    } else {
-      if (key === 'description' && typeof schema[key] == 'string') {
-        if (schema[key].includes('[LANGUAGE]')) {
-          schema[key] = schema[key].replace(/\[LANGUAGE\]/ig,language);
-        //  console.log('Updated', key, schema[key]);
-        }
-        
-      }
-    }
-  }
-  return schema;
-}
-
 
 export async function analyze(input : Input): Promise<Analysis> {
 
@@ -115,8 +103,11 @@ export async function analyze(input : Input): Promise<Analysis> {
 
     console.log('Schema updated...', typeof input.text)
   
-    await sleep(500);
-    return Promise.resolve(TEST_DATA[Math.floor(Math.random() * TEST_DATA.length)]);
+    if (DEBUG) {
+        await sleep(500);
+        return Promise.resolve(TEST_DATA[Math.floor(Math.random() * TEST_DATA.length)]);
+    }
+
 
     // get basic item info
     let data = await evaluate([{
@@ -141,7 +132,7 @@ export async function analyze(input : Input): Promise<Analysis> {
 
 
 
-export async function evaluate(content: Content[], type: Types, tokenUsage: TokenUsage): Promise<ReportAnalysis> {
+export async function evaluate(content: Content[], type: Types, tokenUsage: TokenUsage): Promise<Analysis> {
 
 
   const schema = localizedSchemas[type];
@@ -149,20 +140,181 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
   if (!schema) error(500, { message: 'Invalid type' });
 
 
-  return await fetchGpt(content, schema, tokenUsage) as ReportAnalysis;;
+  return await fetchGpt(content, schema, tokenUsage) as Analysis;;
 }
 
 
 
 
-function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
+
 
 
 const TEST_DATA = [{
+    "conversation": [
+        {
+            "speaker": "patient",
+            "text": "Dobrý den, pane doktore. Mám bolesti v krku a horečku.",
+            "stress": "medium",
+            "urgency": "medium"
+        },
+        {
+            "speaker": "doctor",
+            "text": "Co mi můžete doporučit?",
+            "stress": "low",
+            "urgency": "medium"
+        },
+        {
+            "speaker": "doctor",
+            "text": "Od kdy pociťujete bolesti? Jak dlouho trvá horečka? Máte nějaké další příznaky?",
+            "stress": "low",
+            "urgency": "medium"
+        },
+        {
+            "speaker": "patient",
+            "text": "Nemohu polykat a mám bolesti hlavy už několik dní. Měřil jsem se předevčírem, když mi bylo už hodně blbě a měl jsem třicet sedm devět. To už trochu polevilo, ale stále se necítím dobře. Teplota je stále vysoká a mám pocit, že se mi zhoršuje zrak.",
+            "stress": "high",
+            "urgency": "high"
+        },
+        {
+            "speaker": "doctor",
+            "text": "Tak se změříme teď hned. Vydržte mi.",
+            "stress": "low",
+            "urgency": "medium"
+        },
+        {
+            "speaker": "doctor",
+            "text": "Třicet sedm šest. To je dost. Ukažte mi jazyk. Máte na něm bílý povlak.",
+            "stress": "medium",
+            "urgency": "medium"
+        }
+    ],
+    "symptoms": [
+        {
+            "name": "bolesti v krku",
+            "duration": "days",
+            "severity": "severe",
+            "bodyParts": [
+                "throat"
+            ]
+        },
+        {
+            "name": "horečka",
+            "duration": "days",
+            "severity": "moderate",
+            "bodyParts": [
+                "body"
+            ]
+        },
+        {
+            "name": "nemožnost polykání",
+            "duration": "days",
+            "severity": "severe",
+            "bodyParts": [
+                "throat"
+            ]
+        },
+        {
+            "name": "bolesti hlavy",
+            "duration": "days",
+            "severity": "moderate",
+            "bodyParts": [
+                "head"
+            ]
+        },
+        {
+            "name": "zhoršující se zrak",
+            "duration": "days",
+            "severity": "moderate",
+            "bodyParts": [
+                "eyes"
+            ]
+        },
+        {
+            "name": "bílý povlak na jazyku",
+            "duration": "days",
+            "severity": "mild",
+            "bodyParts": [
+                "tongue"
+            ]
+        }
+    ],
+    "complaint": "Bolesti v krku a horečka.",
+    "diagnosis": [
+        {
+            "name": "angína",
+            "origin": "symptoms",
+            "basis": "bolesti v krku, horečka, nemožnost polykání, bílý povlak na jazyku",
+            "probability": 0.85
+        },
+        {
+            "name": "faryngitida",
+            "origin": "symptoms",
+            "basis": "bolesti v krku, horečka, nemožnost polykání",
+            "probability": 0.75
+        },
+        {
+            "name": "infekční mononukleóza",
+            "origin": "symptoms",
+            "basis": "bolesti v krku, horečka, bílý povlak na jazyku, bolesti hlavy",
+            "probability": 0.65
+        }
+    ],
+    "treatment": [
+        {
+            "description": "Vyhýbat se kontaktu s nemocnými lidmi a místům s velkou koncentrací osob.",
+            "origin": "specialist"
+        },
+        {
+            "description": "Řádná hygiena rukou a úst, pravidelné umývání rukou a používání dezinfekčních prostředků.",
+            "origin": "specialist"
+        }
+    ],
+    "followUp": [
+        {
+            "type": "test",
+            "name": "Krevní test",
+            "reason": "potvrzení mononukleózy nebo jiné infekce",
+            "origin": "symptoms"
+        },
+        {
+            "type": "specialist",
+            "name": "ORL specialista",
+            "reason": "vyšetření krku a posouzení potřeby antibiotik",
+            "origin": "specialist"
+        }
+    ],
+    "medication": [
+        {
+            "name": "Paracetamol",
+            "dosage": 500,
+            "days": "3-5 days",
+            "days_of_week": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "time_of_day": "ráno, odpoledne, večer",
+            "origin": "specialist"
+        }
+    ],
+    "results": [
+        {
+            "test": "Měření teploty",
+            "value": "37.6",
+            "unit": "C",
+            "reference": "36.5-37.5",
+            "urgency": 3
+        }
+    ],
+    "tokenUsage": {
+        "total": 6436,
+        "You a medical professional assistent. You have transcript of doctor patient conversation and you provide deailed assessment of the conversation. We want to extract symptoms and diagnosis and potentially suggest alternatives. Assume the conversation take place today. Provide all answers in czech language.": 6436
+    }
+},/*{
   "conversation": [
       {
           "speaker": "patient",
@@ -254,7 +406,7 @@ const TEST_DATA = [{
           "probability": 0.6
       }
   ],
-  "counterMeassures": [
+  "treatment": [
       {
           "description": "vyhýbat se chlazeným nápojům a ledovým potravinám",
           "origin": "specialist"
@@ -386,7 +538,7 @@ const TEST_DATA = [{
             "probability": 0.6
         }
     ],
-    "counterMeassures": [
+    "treatment": [
         {
             "description": "Zajistit dostatečný příjem tekutin a odpočinek.",
             "origin": "symptoms"
@@ -430,6 +582,6 @@ const TEST_DATA = [{
         "total": 6011,
         "You a medical professional assistent. You have transcript of doctor patient conversation and you provide deailed assessment of the conversation. We want to extract symptoms and diagnosis and potentially suggest alternatives. Provide all answers in czech language.": 6011
     }
-}
+}*/
 ]
 

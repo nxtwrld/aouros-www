@@ -19,6 +19,7 @@
 		"@auth/core": "^0.24.0",
 		"@auth/sveltekit": "^0.10.0",
 		"@google/generative-ai": "^0.17.0",
+		"@jhubbardsf/svelte-sortablejs": "^1.1.0",
 		"@langchain/openai": "^0.0.28",
 		"@playwright/test": "^1.28.1",
 		"@supabase/ssr": "^0.3.0",
@@ -56,6 +57,7 @@
 		"langchain": "^0.1.33",
 		"meyda": "^5.6.3",
 		"mixpanel-browser": "^2.51.0",
+		"nano-markdown": "^1.2.2",
 		"openai": "^4.46.1",
 		"sveltekit-io": "^1.0.11",
 		"vite-plugin-static-copy": "^2.0.0"

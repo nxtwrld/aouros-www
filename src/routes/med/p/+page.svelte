@@ -1,9 +1,8 @@
 <script lang="ts">
     import { type Profile, SexEnum } from '$slib/med/types.d';
-    import { setProfile } from '$slib/med/headerState';
-
-    setProfile(null);
-
+    import { patient } from '$slib/med/patients';
+    
+    patient.set(null);
     export let data: {
         profiles: Profile[];
     }

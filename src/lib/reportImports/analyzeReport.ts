@@ -17,7 +17,7 @@ import results from './core.results.json'
 import testPropserties from '$data/lab.synonyms.json';
 import { fetchGpt } from '$slib/ai/gpt';
 import { type Content, type TokenUsage } from '$slib/ai/types.d';
-
+import { sleep } from "$slib/utils";
 /**
  * TODO:
  * - Add support for multiple images
@@ -269,11 +269,6 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
 
 
 
-function sleep(ms: number) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
 
 const TEST_DATA: ReportAnalysis = {
   "isMedical": true,

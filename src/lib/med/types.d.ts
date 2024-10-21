@@ -3,7 +3,7 @@ export enum SexEnum {
     female
 }
 
-export interface Profile {
+export interface Patient {
     uid: string;
     name: string;
     sex : SexEnum,

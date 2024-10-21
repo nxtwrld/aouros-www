@@ -1,6 +1,6 @@
 
 import type { PageLoad } from './$types';
-import { profileList } from '$slib/med/patients/store';
+import { profileList } from '$slib/med/patients/patients';
 
 
 

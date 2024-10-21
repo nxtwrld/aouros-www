@@ -1,7 +1,6 @@
 <script lang="ts">
-    import state from "$slib/med/headerState";
+    import { patient } from "$slib/med/patients";
     import { page } from "$app/stores";
-
 
     function isActive(path: string, currentPath: string) {
         console.log(path, $page.url.pathname, $page.url.pathname.startsWith(path));
@@ -11,19 +10,23 @@
 
 <header>
     <nav class="toolbar">
-        <a href="/med/p/">Omphilos</a>
+        <a href="/med/p/" class="logo">
+            <svg class="icon">
+                <use href="/logo.svg#icon"></use>
+            </svg>
+        </a>
         <a href="/med/p/" class:-active={$page.url.pathname == '/med/p/'}>Patients</a>
-        {#if $state.profile}
+        {#if $patient}
 
 
 
-                {#if $state.profile.uid}
-                    <a class="profile" href="/med/p/{$state.profile.uid}" class:-active={isActive('/med/p/' +$state.profile.uid , $page.url.pathname)}>{$state.profile.name}</a>
+                {#if $patient.uid}
+                    <a class="profile" href="/med/p/{$patient.uid}" class:-active={isActive('/med/p/' +$patient.uid , $page.url.pathname)}>{$patient.name}</a>
                     <!--div class="spacer"></div-->
-                    <a href="/med/p/{$state.profile.uid}/history" class:-active={isActive('/med/p/' +$state.profile.uid + '/history/', $page.url.pathname)}>History</a>
-                    <a href="/med/p/{$state.profile.uid}/session" class:-active={isActive('/med/p/' +$state.profile.uid + '/session/', $page.url.pathname)}>New Session</a>
+                    <a href="/med/p/{$patient.uid}/history" class:-active={isActive('/med/p/' +$patient.uid + '/history/', $page.url.pathname)}>History</a>
+                    <a href="/med/p/{$patient.uid}/session" class:-active={isActive('/med/p/' +$patient.uid + '/session/', $page.url.pathname)}>New Session</a>
                 {:else}
-                    <div class="profile" class:-active={$page.url.pathname == '/med/p/newpatient/'}>{$state.profile.name}</div>
+                    <div class="profile" class:-active={$page.url.pathname == '/med/p/newpatient/'}>{$patient.name}</div>
                     <div class="spacer"></div>
                 {/if}
         {:else}
@@ -42,6 +45,18 @@
         height: var(--toolbar-height);
         background-color: var(--background);
         z-index: 1000;
+    }
+
+    .logo {
+        width: var(--toolbar-height);
+        padding: 0;
+    }
+
+    .icon {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
+        color: var(--color-black);
     }
 
 
