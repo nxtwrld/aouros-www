@@ -58,5 +58,6 @@
         border: none;
         line-height: 1.3rem;
         resize: none;
+        font-family: var(--font-face-print);
     }
 </style>

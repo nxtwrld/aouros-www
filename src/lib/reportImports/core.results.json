@@ -1,12 +1,12 @@
 {
     "type": "array",
-    "description": "If there are any lab results and values presented in the text, extract them here or leave empty array",
+    "description": "If there are any medical measurements like temprature, heart rate or specific lab results resented in the text, extract them here. If there was nothing mentioned, leave the array empty.",
     "items": {
         "type": "object",
         "properties": {
             "test": {
                 "type": "string",
-                "description": "Name of the lab test."
+                "description": "Name of the lab test. If the test is a combination of multiple tests, list them all. If the test is a general. Select a property from the provided enum."
             },
             "value": {
                 "type": "string",

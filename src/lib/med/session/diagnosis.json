@@ -1,76 +1,13 @@
 {
     "name": "extractor",
-    "description": "You a medical professional assistent. You have transcript of doctor patient conversation and you provide deailed assessment of the conversation. We want to extract symptoms and diagnosis and potentially suggest alternatives. Assume the conversation take place today. Provide all answers in [LANGUAGE] language.",
+    "description": "You are aprofessional medical assistent with deep knowledge like Doctor House. Your input is a JSON  ith doctor/patient conversation and extracted symptoms. Your task is to extract any diagnosis, treatment, medication mentioned by the doctor and also suggest other relevant alternatives. All information mentioned by the doctor should have the origin set to DOCTOR. Suggestion and alternatives based on context should set the origin as SUGGESTION. Provide all answers in [LANGUAGE] language.",
     "parameters": {
         "type": "object",
         "properties": {
 
-            "conversation": {
-                "type": "array",
-                "description": "The transcript of the conversation between the doctor and the patient. Use the original text and try to split it into a meaningfull conversation where patients and doctors have their separate lines.",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "speaker": {
-                            "type": "string",
-                            "enum": ["doctor", "patient", "nurse"],
-                            "description": "The speaker of the conversation"
-                        },
-                        "text": {
-                            "type": "string",
-                            "description": "The text of the conversation. Make sure to split the conversation into separate lines for the doctor and the patient. If there are any obvious mistakes in the text created by the speech to text model, correct them according to context."
-                        },
-                        "stress": {
-                            "type": "string",
-                            "enum": ["low", "medium", "high"],
-                            "description": "The stress level of the speaker"
-                        },
-                        "urgency": {
-                            "type": "string",
-                            "enum": ["low", "medium", "high"],
-                            "description": "The urgency of the speaker"
-                        }
-                    }
-                }   
 
-            },
-            "symptoms": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                            "description": "The name of the symptom. Provide answer in [LANGUAGE] language."
-                        },
-                        "duration": {
-                            "type": "string",
-                            "enum": ["hours", "days", "weeks", "months", "years"],
-                            "description": "The duration of the symptom"
-                        },
-                        "severity": {
-                            "type": "string",
-                            "enum": ["mild", "moderate", "severe"],
-                            "description": "The severity of the symptom"
-                        },
-                        "bodyParts": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "description": "The body part where the symptom is located. Selecte a matching item from the enum list.",
-                                "enum": []
-                            }
-
-                        }
-                    }
-                },
-                "description": "A list of symptoms the patient is experiencing. Provide answer in [LANGUAGE] language."
-            },
-            "complaint": {
-                "type": "string",
-                "description": "The main complaint of the patient. Provide answer in [LANGUAGE] language."
-            },
             "diagnosis": {
+                "description": "A list of possible diagnoses. Extract the diagnosis mentioned by the doctor and mark the origin as DOCTOR. Provide further diagnosis that was not mentioned but could be relvant suggestion and mark the origin as suggestion. Provide answers in [LANGUAGE] language.",
                 "type": "array",
                 "items": {
                     "type": "object",
@@ -79,10 +16,14 @@
                             "type": "string",
                             "description": "The name of the diagnosis. Provide answer in [LANGUAGE] language."
                         },
+                        "code": {
+                            "type": "string",
+                            "description": "The ICD-10 code of the diagnosis"
+                        },
                         "origin": {
                             "type": "string",
-                            "description": "The origin of the diagnosis. Select Specialist if the doctor mentioned its in conversation, select Test if it is implied by the provided test results, selecte Symptoms if if is implied from the patient symptoms description. Provide answer in [LANGUAGE] language.",
-                            "enum": ["symptoms", "tests", "specialist"]
+                            "description": "The origin of the diagnosis. Select Doctor if the doctor explicitly suggested this diagnosis in  the conversation, otherwise select suggestion. Provide answer in [LANGUAGE] language.",
+                            "enum": ["suggestion", "doctor"]
                         },
                         "basis": {
                             "type": "string",
@@ -92,11 +33,12 @@
                             "type": "number",
                             "description": "The probability of the diagnosis"
                         }
-                    }
-                },
-                "description": "A list of possible diagnoses. Provide answers in [LANGUAGE] language."
+                    },
+                    "required": [ "name", "origin", "basis", "probability"]
+                }
             },
             "treatment": {
+                "description": "Treatment plan suggestions. Extract any treatment plan mentioned by the doctor in the conversation and mark theim in origin as doctor. Provide further alternative suggestions for treatment that can be considered. Provide answer in [LANGUAGE] language.",
                 "type": "array",
                 "items": {
                     "type": "object",
@@ -107,43 +49,46 @@
                         },
                         "origin": {
                             "type": "string",
-                            "description": "The origin of the treatment or counter messages. Select Specialist if the doctor mentioned or suggested it in conversation, select Test if it is implied by the provided test results, selecte Symptoms if if is implied from the patient symptoms description. Provide answer in [LANGUAGE] language.",
-                            "enum": ["symptoms", "tests", "specialist"]
+                            "description": "The origin of the treatment or counter messages.  Select Doctor only if the doctor explicitely mentioned this diagnosis in conversation, otherwise select suggestion. Provide answer in [LANGUAGE] language.",
+                            "enum": ["suggestion", "doctor"]
                         }
-                    }
 
-                },
-                "description": "A list of counter meassures to prevent the disease. Provide answer in [LANGUAGE] language.. Provide answer in [LANGUAGE] language."
+                    },
+                    "required": [ "description", "origin"]
+
+                }
             },
             "followUp": {
+                "description": "Based on the diagnosis we want to recommend further follow up tests to be done or specialist visit recommendation.   Provide answers in [LANGUAGE] language.",
                 "type": "array",
                 "items": {
                     "type": "object",
                     "properties": {
                         "type": {
                             "type": "string",
-                            "enum": ["test", "specialist"],
-                            "description": "The type of follow up or specialist visit recommendation"
+                            "enum": ["test", "doctor"],
+                            "description": "The type of follow up or doctor visit recommendation"
                         },
                         "name": {
                             "type": "string",
-                            "description": "The name of the follow up or specialist visit recommendation. Provide answer in [LANGUAGE] language."
+                            "description": "The name of the follow up or doctor visit recommendation. Provide answer in [LANGUAGE] language."
                         },
                         "reason": {
                             "type": "string",
-                            "description": "The reason for the follow up or specialist visit recommendation. Provide answer in [LANGUAGE] language."
+                            "description": "The reason for the follow up or doctor visit recommendation. Provide answer in [LANGUAGE] language."
                         },
                         "origin": {
                             "type": "string",
-                            "description": "The origin of the counterMeassures. Select Specialist if the doctor mentioned it in conversation, select Test if it is implied by the provided test results, selecte Symptoms if if is implied from the patient symptoms description. Provide answer in [LANGUAGE] language.",
-                            "enum": ["symptoms", "tests", "specialist"]
+                            "description": "The origin of the follow up. Select Doctor only if the doctor explicitely mentioned this follow up in conversation, otherwise select suggestion. Provide answer in [LANGUAGE] language.",
+                            "enum": ["suggestion", "doctor"]
                         }
-                    }
-                },
-                "description": "Based on the diagnosis we want to recommend further follow up tests to be done or specialists visit recommendation. List possible tests and specialists to visit. Provide answers in [LANGUAGE] language."
+                    },
+                    "required": [ "type", "name", "reason", "origin"]
+                }
             },
             "medication": {
                 "type": "array",
+                "description": "A list of medications the patient should take. If the medication was mentioned by the doctor, mark as Doctor in the origin field. Provide further medication suggestion and alternatives no mentioned that could be considered and mark them as suggestion in the origin field. Provide answer in [LANGUAGE] language.",
                 "items": {
                     "type": "object",
                     "properties": {
@@ -174,13 +119,14 @@
                         },
                         "origin": {
                             "type": "string",
-                            "description": "The origin of the counterMeassures. Select Specialist if the doctor mentioned it in conversation, select Test if it is implied by the provided test results, selecte Symptoms if if is implied from the patient symptoms description. Provide answer in [LANGUAGE] language.",
-                            "enum": ["symptoms", "tests", "specialist"]
+                            "description": "The origin of the medication. Select Doctor only if the doctor explicitely mentioned this medication in conversation, otherwise select suggestion. Provide answer in [LANGUAGE] language.",
+                            "enum": ["suggestion", "doctor"]
                         }
-                    }
+                    },
+                    "required": [ "name", "dosage", "days", "days_of_week", "time_of_day", "origin"]
                 }
             }
         },
-        "required": [ "conversation", "complaint", "symptoms", "diagnosis", "counterMeasures", "chat_response"]
+        "required": [ "results",  "diagnosis", "treatment", "followUp", "medication"]
     }
 }

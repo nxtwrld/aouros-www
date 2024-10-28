@@ -1,6 +1,8 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import FinalizeReportBlock from "./FinalizeReportBlock.svelte";
+    import { patient } from '$slib/med/patients';
+    import FinalizeReportHeader from "./FinalizeReportHeader.svelte";
     //import Markdown from '$components/ui/Markdown.svelte';
     /*interface Report {
         findings: string;
@@ -42,16 +44,6 @@
     export let report: Report;
     export let finalReport: ReportFinal = {};
     
-    console.log(report)
-
-    $: {
-        finalReport = {};
-        template.forEach(b => {
-            if (report[b.name]) {
-                finalReport[b.name] = report[b.name];
-            }
-        })
-    }
 
 
     let template =  [
@@ -80,6 +72,18 @@
             name: ReportComponent.Doctor,
         }
     ]
+
+    console.log(report)
+
+    $: {
+        finalReport = {};
+        template.forEach(b => {
+            if (report && report[b.name]) {
+                finalReport[b.name] = report[b.name];
+            }
+        })
+    }
+
     function deleteBlock(id: string) {
         template = [...template.filter(b => b.id !== id)]
     }
@@ -112,34 +116,37 @@
 
 
 <div class="report">
+
+    <FinalizeReportHeader bind:report={report} />
+
     {#each template as block, index (block.id)}
-    {#if report[block.name] || report[block.id] != undefined}
-    <div out:slide class="block">
-        <div class="title">{block.name}</div>
-        
-        {#if report[block.id] != undefined}
-        <FinalizeReportBlock bind:value={report[block.id]} />
-        {:else}
-        <FinalizeReportBlock bind:value={report[block.name]} />
-        {/if}
-        <div class="actions">
-            <button on:click={() => deleteBlock(block.id)} class="danger"><svg>
-                <use href="/icons.svg#minus">
-            </svg></button>
-            <button on:click={() => moveBlock(block.id, -1)}><svg>
-                <use href="/icons.svg#arrow-round-up">
-            </svg></button>
-            <button on:click={() => moveBlock(block.id, 1)}><svg>
-                <use href="/icons.svg#arrow-round-down">
-            </svg></button>
+        {#if report[block.name] || report[block.id] != undefined}
+        <div out:slide class="block">
+            <div class="title">{block.name}</div>
+
+            {#if report[block.id] != undefined}
+            <FinalizeReportBlock bind:value={report[block.id]} />
+            {:else}
+            <FinalizeReportBlock bind:value={report[block.name]} />
+            {/if}
+            <div class="actions">
+                <button on:click={() => deleteBlock(block.id)} class="danger"><svg>
+                    <use href="/icons.svg#minus">
+                </svg></button>
+                <button on:click={() => moveBlock(block.id, -1)}><svg>
+                    <use href="/icons.svg#arrow-round-up">
+                </svg></button>
+                <button on:click={() => moveBlock(block.id, 1)}><svg>
+                    <use href="/icons.svg#arrow-round-down">
+                </svg></button>
+            </div>
         </div>
-    </div>
-    <button class="add" on:click={() => addBlock(index+1)}>
-        <svg>
-            <use href="/icons.svg#plus">
-        </svg>
-    </button>
-    {/if}
+        <button class="add" on:click={() => addBlock(index+1)}>
+            <svg>
+                <use href="/icons.svg#plus">
+            </svg>
+        </button>
+        {/if}
     {/each}
 
 </div>

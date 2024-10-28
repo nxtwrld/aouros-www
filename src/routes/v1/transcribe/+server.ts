@@ -1,7 +1,7 @@
 
 import { error, json } from '@sveltejs/kit';
 import { transcribeAudio } from '$slib/audio/whisper';
-import fs from "fs";
+
 
 /** @type {import('./$types.d').RequestHandler} */
 export async function POST({ request }) {

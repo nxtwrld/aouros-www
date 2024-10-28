@@ -107,16 +107,16 @@ export async function getAudioVAD(options: AudioOptions  =  {
         mvad.start();
     }
     controls.stop = () => {
-        if (controls.state != AudioState.speaking) {
-            stop();
+        //if (controls.state != AudioState.speaking) {
             mvad.pause();
+            stop();
             controls.state = AudioState.stopped;
-        } else {
-            stop();
-            mvad.pause();
+        //} else {
+         //   mvad.pause();
+            //stop();
             controls.state = AudioState.stopped;
             //controls.state = AudioState.stopping;
-        }
+        //}
 
      
 
@@ -125,6 +125,8 @@ export async function getAudioVAD(options: AudioOptions  =  {
     return controls as AudioControlsVad;
 }
 
+
+let userMedia: MediaStream | null = null;
 
 export async function getAudio(options: AudioOptions =  {
     dataSize: 250,
@@ -138,6 +140,7 @@ export async function getAudio(options: AudioOptions =  {
         analyzer: false,
         bufferSize: 512,
     }, options);
+
 
     return await navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
@@ -166,6 +169,15 @@ export async function getAudio(options: AudioOptions =  {
                     if (analyzer) analyzer.stop();
                     mediaRecorder.stop();
                     controls.state = AudioState.stopped;
+
+                    stream.getTracks().forEach(track => {
+                        track.stop();
+                        stream!.removeTrack(track);
+                    });
+                    delete controls.stream;
+                    delete controls.mediaRecorder;
+                    delete controls.audioContext;
+                    delete controls.source;
                 },
                 start: () => {
                     mediaRecorder.start(options.dataSize);

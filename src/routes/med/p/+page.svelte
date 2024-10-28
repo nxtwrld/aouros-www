@@ -1,17 +1,24 @@
 <script lang="ts">
-    import { type Profile, SexEnum } from '$slib/med/types.d';
+    import { type Patient, SexEnum } from '$slib/med/types.d';
     import { patient } from '$slib/med/patients';
-    
+    import Patients from '$scomponents/Patients.svelte';
+
     patient.set(null);
     export let data: {
-        profiles: Profile[];
+        patients: Patient[];
     }
-    const profiles = data.profiles;
+    const patients = data.patients;
 </script>
+<div class="p-page -scroll">
+    <div class="p-title">
+        <h3 class="h3">Patients</h3>
+    </div>
 
-Profiles
-<ul>
-{#each profiles as profile}
-    <li><a href="{profile.uid}">{profile.name}</a></li>
-{/each}
-</ul>
+    <Patients {patients} />
+
+</div>
+
+<style>
+
+
+</style>

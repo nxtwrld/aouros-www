@@ -1,6 +1,6 @@
 
 import type { PageLoad } from './$types';
-import { profileList } from '$slib/med/patients/patients';
+import { patients } from '$slib/med/patients/patients';
 
 
 
@@ -19,7 +19,7 @@ export const load = (async ({ params}) => {
 */
 
     return { 
-        profiles   : profileList
+        patients
     };
 
 }) satisfies PageLoad;

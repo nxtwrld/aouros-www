@@ -13,7 +13,7 @@ import { sleep } from "$slib/utils";
  * - gtp-4o (7k) vs gpt-4o-mini (40k) -
  * - test multi-model setups for GP, PT, etc. medical configurations.
  */
-const DEBUG = true; //env.DEBUG || false;
+const DEBUG = false; //env.DEBUG || false;
 
 
 
@@ -128,7 +128,7 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
 
 
 const TEST_DATA = [{
-    "findings": "Patient trpí bolavým krkem a horečkou, nemožnost polykání, bolestí hlavy, zhoršujícím se zrakem a bílým povlakem na jazyku. Na základě těchto příznaků byla diagnostikována angína s průměrnou pravděpodobností 85 %. Teplota pacienta byla 37,6 °C, což je mírně nad normou.",
+    "findings": "Pacient trpí bolavým krkem a horečkou, nemožnost polykání, bolestí hlavy, zhoršujícím se zrakem a bílým povlakem na jazyku. Na základě těchto příznaků byla diagnostikována angína s průměrnou pravděpodobností 85 %. Teplota pacienta byla 37,6 °C, což je mírně nad normou.",
     "treatment": "Doporučuje se vyhýbat kontaktu s nemocnými lidmi a místům s velkou koncentrací osob. Tento plán ošetření byl vytvořen na základě doporučení specialisty.",
     "medication": "Pacient bude užívat Paracetamol v dávce 500 mg ráno, odpoledne a večer po dobu 3 až 5 dnů. Každodenní užívání léku je doporučeno. Tento lékový plán byl vytvořen na základě odborného názoru specialisty.",
     "follow-up": "Je doporučeno provést krevní test, který by mohl potvrdit mononukleózu nebo jinou infekci. Krevní test je navrhován na základě pozorovaných symptomů.",

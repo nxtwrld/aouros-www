@@ -1,9 +1,20 @@
 <script lang="ts">
     import { getSortForEnum, sortbyProperty } from '$slib/array';
+    import { ANALYZE_STEPS } from '$slib/med/types.d';
     import ValueTile from '../ValueTile.svelte';
 
 
     export let analysis: any;
+
+    export let step: ANALYZE_STEPS = ANALYZE_STEPS.transcript;
+
+
+    enum Origin {
+        doctor = 'doctor',
+        symptoms = 'symptoms',
+        test = 'test',
+        diagnosis = 'diagnosis'
+    }
 
     const severityEnum = {
         mild: 0,
@@ -25,7 +36,35 @@
         Weekdays = 'Weekdays',
         EveryTwoDays = 'EveryTwoDays'
     }   
-    function getFrequency(days: DaysOfWeek[]): Frequency[] | DaysOfWeek[] {
+
+
+
+    $: {
+        if (analysis.diagnosis) {
+            pinSpecialist(analysis.diagnosis);
+        }
+        if (analysis.treatment) {
+            pinSpecialist(analysis.treatment);
+        }
+        if (analysis.followUp) {
+            pinSpecialist(analysis.followUp);
+        }
+        if (analysis.medication) {
+            pinSpecialist(analysis.medication);
+        }
+    }
+
+
+    function pinSpecialist(ar : {
+        pinned: boolean,
+        origin: Origin
+    }[]) {
+        ar.forEach((d) => {
+            d.pinned = (d.origin == Origin.doctor);
+        })
+    }
+
+    function getFrequency(days: DaysOfWeek[] = []): Frequency[] | DaysOfWeek[] {
         if (days.length === 7) {
             return [Frequency.Daily];
         }
@@ -92,12 +131,13 @@
 
 {#if analysis.diagnosis}
 <div class="block block-diagnosis">
-    <h4 class="h4">Diagnosis</h4>
+    <h4 class="h4">Diagnostic results</h4>
     {#each analysis.diagnosis.sort(sortbyProperty('probability')).reverse() as diagnosis}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="list-item" class:-pinned={diagnosis.pinned}  on:click={() => togglePin(diagnosis)}>
-        <div>{diagnosis.origin}</div>
+
+        <div>{#if diagnosis.code}{diagnosis.code}{:else}&nbsp;&nbsp;&nbsp;{/if}</div>
         <div class="list-title">{diagnosis.name}</div>
         <div>{diagnosis.basis}</div>
         <div>{diagnosis.probability}</div>
@@ -120,13 +160,12 @@
 
 {#if analysis.treatment}
 <div class="block block-recommendations">
-    <h4 class="h4">Treatment</h4>
+    <h4 class="h4">Treatment Plan</h4>
     {#each analysis.treatment as treatment}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="list-item" class:-pinned={treatment.pinned}  on:click={() => togglePin(treatment)}>
-        <div>{treatment.description}</div>
-        <div>{treatment.origin}</div>
+        <div class="list-title">{treatment.description}</div>
         <div class="actions">
             <button class="list-action pin" on:click|stopPropagation={() => togglePin(treatment)}>
                 <svg>
@@ -151,10 +190,9 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="list-item" class:-pinned={followUp.pinned} on:click={() => togglePin(followUp)}>
-        <div>{followUp.type}</div>
-        <div>{followUp.name}</div>
-        <div>{followUp.reason}</div>
-        <div>{followUp.origin}</div>
+        <!--div>{followUp.type}</div-->
+        <div class="list-title">{followUp.name}</div>
+        <div class="list-description">{followUp.reason}</div>
         <div class="actions">
             <button class="list-action pin" on:click|stopPropagation={() => togglePin(followUp)}>
                 <svg>
@@ -179,14 +217,11 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="list-item" class:-pinned={medication.pinned} on:click={() => togglePin(medication)}>
-        <div>
+        <div class="list-title">
             {medication.name} {medication.dosage}
-            <div>{getFrequency(medication.days_of_week)} - {medication.days}</div>
-            <div>{medication.time_of_day}</div>
+            <div class="sub">{getFrequency(medication.days_of_week)} - {medication.days}</div>
+            <div class="sub">{medication.time_of_day}</div>
         </div>
-
-        
-        <div>{medication.origin}</div>
         <div class="actions">
             <button class="list-action pin" on:click|stopPropagation={() => togglePin(medication)}>
                 <svg>
@@ -268,8 +303,12 @@
     .list-item.-pinned .pin {
         color: var(--color-neutral);
     }
-    .list-title {
+    .list-title ,
+    .list-description {
         flex-grow: 1;
+    }
+    .list-description {
+        font-weight: 300;
     }
     .list-action {
         width: 1.3rem;
@@ -279,6 +318,11 @@
         width: 100%;
         height: 100%;
         fill: currentColor;
+    }
+
+    .sub {
+        font-size: 0.9rem;
+        font-weight: 200;
     }
 
 

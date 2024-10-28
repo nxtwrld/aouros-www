@@ -10,8 +10,13 @@
     import Report from '$scomponents/patient/Session/FinalizeReport.svelte';
     import doctor, { getDoctorSignature } from '$slib/med/doctor';
     import { patient } from '$slib/med/patients';
- 
-
+    import { float32Flatten } from '$slib/array';
+    import { ANALYZE_STEPS } from '$slib/med/types.d';
+  
+    
+    const MIN_AUDIO_SIZE: number = 100000 * 2;
+    const MIN_TEXT_LENGTH: number = 100;
+    const DEFAULT_WAIT_TIME: number = 15000;
     // UI Session States
     enum Views {
         "start",
@@ -45,88 +50,189 @@
     let texts: string[] = [];
     let audioState: AudioState = AudioState.ready;
 
-    let lastAnalyzedTextLength: number = 0;
-    let analysis: any = undefined;
 
- 
+    let analysis: any = {};
+
+    let silenceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
     let speechChunks: Float32Array[] =[];
 
 
-    $: hasResults = analysis;// || texts.length > 0;
+    $: hasResults = view !== Views.start;
 
 
-    let results: Promise<{
-        text: string;
-        confidence: number;
-    }>[] = [];
+    let newSpeech: boolean = false;
+
+    function speechStart() {
+        newSpeech = true;
+        console.log('Speech started');
+        if (silenceTimer) {
+            // cancel waiting for silence
+            clearTimeout(silenceTimer);
+        }
+        if (analysisTimer) {
+            // cancel waiting for silence
+            clearTimeout(analysisTimer);
+        }
+    }
 
 
 
     let processingStatus = 'idle';
-    async function processData() {
+    let waitingRequest: boolean = false;
+    async function processData(forceTranscription: boolean = false) {
+
+        if (silenceTimer) {
+            clearTimeout(silenceTimer);
+        }
+
+        // we are already processing a batch
         if (processingStatus === 'processing') {
+            waitingRequest = true;
+            console.log('Already processing previous batch');
             return;
         }
-        processingStatus = 'processing';
-        //return;
-        while (speechChunks.length > 0) {
-            const chunk: Float32Array = speechChunks.shift();
-            const index = results.length;
-            texts[index] = '...';
-            results = [...results, new Promise(async (resolve, reject) =>{
 
-                const mp3Blob = await convertFloat32ToMp3(chunk, 16000);
-                //const mp3Blob = await convertBlobToMp3(new Blob(audioChunks));
-                
-                const formData = new FormData();
-                formData.append('file', mp3Blob, 'audio.mp3')
-                formData.append('instructions', JSON.stringify({
-                    lang: 'cs'
-                }));
-
-                try {
-                    const results = await fetch('/v1/transcribe', {
-                        method: 'POST',
-                        /*headers: {
-                            'Content-Type': 'application/json'
-                        },*/
-                        body: formData
-                    });
-                    const transcript = await results.json();
-                    console.log('Transcript', transcript);
-                    resolve(transcript);
-                    texts[index] = transcript.text;
-                } catch (e) {
-                    reject(e);
-                }
-            })];
+        // no data to process
+        if (speechChunks.length === 0) {
+            console.log('No data to process');
+            return;
         }
-        processingStatus = 'idle';
+
+        // we are not ready to transcribe - we want to wait for more data
+        if (!shouldWeTranscript() && !forceTranscription) {
+            console.log('Not enough data to process');
+            silenceTimer = setTimeout(() => {
+                // force the transcription after 10 seconds of silence
+                console.log('Forcing transcription');
+                processData(true);
+            }, DEFAULT_WAIT_TIME);
+            return;
+        }
+        waitingRequest = false;
+        processingStatus = 'processing';
+        console.log('Processing audio data');
+
+        const chunk: Float32Array = float32Flatten(speechChunks);
+        speechChunks = [];
+
+    
+        const mp3Blob = await convertFloat32ToMp3(chunk, 16000);
+        //const mp3Blob = await convertBlobToMp3(new Blob(audioChunks));
+        
+        const formData = new FormData();
+        formData.append('file', mp3Blob, 'audio.mp3')
+        formData.append('instructions', JSON.stringify({
+            lang: 'cs'
+        }));
+
+        try {
+            const results = await fetch('/v1/transcribe', {
+                method: 'POST',
+                /*headers: {
+                    'Content-Type': 'application/json'
+                },*/
+                body: formData
+            });
+            const transcript = await results.json();
+            console.log('Transcript result', transcript);
+            
+            texts = [...texts, transcript.text];
+            processingStatus = 'idle';
+            analyzeTranscription(ANALYZE_STEPS.transcript, forceTranscription);
+
+        } catch (e) {
+            console.error(e);
+            processingStatus = 'idle';
+        }
+       
+
     }
 
+    function shouldWeTranscript(): boolean {
+        const size = speechChunks.reduce((acc, chunk) => acc + chunk.length, 0);
+        console.log('Audio size: ', size, size > MIN_AUDIO_SIZE);
+
+        if (size > MIN_AUDIO_SIZE) {
+            return true;
+        }
+        return false;
+    }
+
+    let lastAnalyzedTextLength: number = 0;
     let activeModels: string[] = [];
-    async function analyzeTranscription() {
-        let text = texts.join('\r\n');
-        if (text.length === lastAnalyzedTextLength + 100) {
+    let analysisTimer: ReturnType<typeof setTimeout> | undefined = undefined;  
+
+
+    //console.log(Object.keys(ANALYZE_STEPS).filter(key => isNaN(Number(key))))
+
+    async function analyzeTranscription(type: ANALYZE_STEPS = ANALYZE_STEPS.transcript, forceAnalysis: boolean = false) {
+        
+
+        if (processingStatus === 'processing') {
+            console.log('Already processing next batch - wait for it to finish');
             return;
         }
+
+        if (analysisTimer) {
+            clearTimeout(analysisTimer);
+        }
+
+        let text = texts.join('\r\n');
+
+        if (type == ANALYZE_STEPS.transcript && text.length === lastAnalyzedTextLength) {
+            console.log('No new data to analyze');
+            return;
+        }
+
+        if (type == ANALYZE_STEPS.transcript && text.length === lastAnalyzedTextLength + MIN_TEXT_LENGTH && !forceAnalysis) {
+            console.log('Not enough data to analyze');
+            analysisTimer = setTimeout(() => {
+                console.log('Forcing analysis');
+                analyzeTranscription(type, true);
+            }, DEFAULT_WAIT_TIME);
+            return;
+        }
+
+        console.log('Analyzing', type);
+
+        // currently running models
         activeModels = models.filter(m => m.active).map(m => m.name);
         lastAnalyzedTextLength = text.length;
-        const result = await fetch('/v1/med/session', {
+
+        const response = await fetch('/v1/med/session', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 language: 'czech',
+                type,
                 models: activeModels,
-                text
+                text : (type === ANALYZE_STEPS.transcript) ? text : JSON.stringify(analysis)
             })
         });
-        analysis = await result.json();
-        view = Views.analysis;
+        const result = await response.json();
+
+        newSpeech = false;
         activeModels = [];
-        console.log(analysis);
+
+        // check if the conversation is medical - if not, end the analysis
+        if (result.hasOwnProperty('isMedicalConversation') && result.isMedicalConversation === false) {
+            console.log('Not a medical conversation. Ending analysis.');
+            return;
+        }
+        
+        analysis = Object.assign(analysis || {}, result);
+        view = Views.analysis;
+
+        console.log('Analysis complete', analysis);
+        
+        // if the analysis is complete, start the next step, if we are not already processing a new batch, wait for it to finish
+        if (type == ANALYZE_STEPS.transcript && processingStatus === 'idle' && !waitingRequest) {
+            // analysis second step (only when no newer batch is being processed)
+            analyzeTranscription(ANALYZE_STEPS.diagnosis);
+        }
+
     }
 
     function testAnalyze() {
@@ -143,7 +249,15 @@
             'Tak se změříme teď hned. Vyrdžte mi.',
             'Třicet sedm šest. To je dost.',
             'Ukažte mi jazyk.',
-            'Máte na něm bílý povlak.',
+            'Máte na něm bílý povlak. To vypadá na angínu',
+            'Počkejte chvíli, ještě vám vezmu tlak. Máme se svélknout? Ne to je zbytečný, stačí, když si vyhrnete rukáv Jasně.',
+            'sto dvacet sedm na osmdesát. To je v pořádku. Máte zánět hltanu a angínu. Dostanete antibiotika a budete muset zůstat doma.',
+            'Dobře, děkuji. A co s tím zrakem?',
+            'To je zřejmě způsobeno horečkou. Po vyléčení by to mělo ustoupit. Pokud ne, tak se vraťte.',
+            'Doporučuji vám také hodně pít a odpočívat a předepíšu vám aspirin. Máte nějaké otázky? asi teď ne',
+            'Kdyby se to zhoršilo, tak se hned vraťte. Případně mě můžete kontaktovat telefonicky. Když se to nezlepší do týdbe, tak se vraťte.',
+            'Tak. jo. Děkuji. Na shledanou.',
+            'Na shledanou.'
             
         ];
         analyzeTranscription();
@@ -233,7 +347,7 @@
 
     onMount(() => {
         //socket.emit('eventFromClient', 'Hello from client')
-        testAnalyze();
+        //testAnalyze();
     })
 
 
@@ -241,7 +355,9 @@
 
 
 {#if view !== Views.report}
-<AudioButton bind:state={audioState} {hasResults} bind:speechChunks={speechChunks} on:speech-end={processData} />
+    <div class="audio-recorder" class:-running={view != Views.start}>
+        <AudioButton bind:state={audioState} {hasResults} bind:speechChunks={speechChunks} on:speech-end={() => processData()} on:speech-start={speechStart} />
+    </div>
 {/if}
 <div class="models">
 <Models bind:models={models} {activeModels} />
@@ -249,13 +365,22 @@
 
 {#if view === Views.start}
     <div class="canvas canvas-start">
-        Start
+        <div>
+            <div class="uhint" on:click={testAnalyze}>
+                {#if audioState === AudioState.listening || audioState === AudioState.speaking}
+                    Listening...
+                {:else}
+                    Start recording your session by clicking the microphone button.
+                {/if}
+            </div>
+
+        </div>
     </div>
 {:else if view === Views.analysis}
     <div class="canvas canvas-analysis">
         {#if hasResults}
             <div class="session">
-                <div class="title">
+                <div class="p-title">
                         <svg>
                             <use href="/icons-o.svg#diagnosis"></use>
                         </svg>
@@ -276,8 +401,8 @@
                 </div>
             </div>
 
-            <div>
-                <div class="title">
+            <div class="transcript">
+                <div class="p-title">
                     <svg>
                         <use href="/icons-o.svg#transcript"></use>
                     </svg>
@@ -285,7 +410,7 @@
                 </div>
 
                 {#if analysis && analysis.conversation}
-                    <Transcript conversation={analysis.conversation} />
+                    <Transcript conversation={analysis.conversation} {newSpeech}/>
                 {/if}
 
 
@@ -296,7 +421,7 @@
 {:else if view == Views.report}
     <div class="canvas canvas-report">
         <div>
-            <div class="title">
+            <div class="p-title">
                 <svg>
                     <use href="/icons-o.svg#report"></use>
                 </svg>
@@ -317,8 +442,25 @@
 {/if}
 <style>
 
-
-
+    .audio-recorder {
+        position: fixed;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        bottom: calc(40% + 3rem);
+        width: 60vw;
+        height: 60vw;
+        left: 50%;
+        transform: translate(-50%, calc(50% - 3rem));
+        z-index: 1001;
+        pointer-events: none;
+        transition: bottom .3s, left .3s;
+        transition-timing-function: ease-in;
+    }
+    .audio-recorder.-running {
+        left: calc(100% / 6 * 5);
+        bottom: 1.5rem;
+    }
 
     .canvas-analysis {
         display: grid;
@@ -333,40 +475,11 @@
         padding-bottom: 2rem;
         overflow: auto;
     }
-
-    .title {
-        position: sticky;
-        top: 0;
-        padding: 0 1rem;
-        background-color: inherit;
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        border-bottom: .1rem solid var(--color-gray-500);
-        height: var(--toolbar-height);
-        z-index: 2;
-    }
-    .title h3 {
-        flex-grow: 1;
-        margin: 0;
+    .transcript {
+        overflow: hidden;
     }
 
-    .title svg {
-        width: 1.5rem;
-        height: 1.5rem;
-        fill: currentColor;
-    }
 
-    .title .loader {
-        --color: var(--color-neutral);
-        height: 1.5rem;
-        
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        flex-wrap: nowrap;
-
-    }
     .report-background {
         padding: 1rem;
         min-height: 100%;
@@ -390,7 +503,8 @@
     }
 
     .dashboard {
-
+        margin-top: 1rem;
+        column-gap: 0;
     }
     
     @container session (min-width: 800px) {
@@ -407,22 +521,35 @@
         }
     }
 
+
+    .canvas-start > * {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2rem;
+    }
+    .canvas-start .uhint {
+        padding-top: 12rem;
+        color: var(--color-blue);
+    }
+
     @media print {
         @page  {
             size: auto;   /* auto is the initial value */
             margin: 0mm;  /* this affects the margin in the printer settings */
         }
         :global(body) {
-            background-color: #FFF;
-            margin: 1.6cm; 
+            background-color: #FFF !important;
+            margin: 1.6cm !important; 
         }
         :global(header),
         :global(footer),
         .models,
-        .canvas .title{ 
-            display: none;
+        .canvas .p-title { 
+            display: none !important;
         }
         :global(main),
+        .report-background,
         .canvas > * {
             padding: 0 !important;
             margin: 0 !important;

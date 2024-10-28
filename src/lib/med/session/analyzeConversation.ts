@@ -1,6 +1,7 @@
 
 import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
 import { error } from '@sveltejs/kit';
+import transcript from './transcript.json';
 import diagnosis from './diagnosis.json';
 import tags from '../../reportImports/tags.json';
 import testPropserties from '$data/lab.synonyms.json';
@@ -9,12 +10,13 @@ import { type Content, type TokenUsage } from '$slib/ai/types.d';
 import resultsSchema from '$slib/reportImports/core.results.json'
 import { updateLanguage } from "$slib/ai/schema";
 import { sleep } from "$slib/utils";
+import { ANALYZE_STEPS as Types } from '$slib/med/types.d';
 /**
  * TODO:
  * - gtp-4o (7k) vs gpt-4o-mini (40k) -
  * - test multi-model setups for GP, PT, etc. medical configurations.
  */
-const DEBUG = true; //env.DEBUG || false;
+const DEBUG = false; //env.DEBUG || false;
 
 
 
@@ -55,27 +57,28 @@ export interface Analysis {
 
     
 }
-enum Types {
-    diagnosis = 'diagnosis'
-}
+
 
 
 
 type Input = {
     audio?: string[];
     text?: string;
+    type: Types;
     language?: string;
 };
 
 
-
+(resultsSchema.items.properties.test.enum as string[]) = testPropserties.map((item: any) => item[0]);
 diagnosis.parameters.properties.results = resultsSchema;
+
 
 
 const schemas: {
     [key: string]: FunctionDefinition
 } = {
-    diagnosis: diagnosis as FunctionDefinition
+    diagnosis: diagnosis as FunctionDefinition,
+    transcript: transcript as FunctionDefinition
 
 };
 
@@ -84,7 +87,7 @@ let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 // extend common schemas
 
 
-(diagnosis.parameters.properties.symptoms.items.properties.bodyParts.items.enum as string[]) = [...tags];
+(transcript.parameters.properties.symptoms.items.properties.bodyParts.items.enum as string[]) = [...tags];
 
 
 
@@ -101,19 +104,20 @@ export async function analyze(input : Input): Promise<Analysis> {
 
     localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLanguage);
 
-    console.log('Schema updated...', typeof input.text)
+
+    console.log('Schema updated...', input.type)
   
     if (DEBUG) {
-        await sleep(500);
-        return Promise.resolve(TEST_DATA[Math.floor(Math.random() * TEST_DATA.length)]);
+        await sleep(1500);
+        return Promise.resolve(TEST_DATA[input.type][Math.floor(Math.random() * TEST_DATA[input.type].length)]);
     }
 
-
+    console.log('evaluating...')
     // get basic item info
     let data = await evaluate([{
         type: 'text',
         text: input.text
-    }] , Types.diagnosis, tokenUsage) as Analysis;
+    }] , input.type, tokenUsage) as Analysis;
     console.log('input assesed...');
 
 /*
@@ -136,8 +140,9 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
 
 
   const schema = localizedSchemas[type];
+  console.log('Schema', type)
 
-  if (!schema) error(500, { message: 'Invalid type' });
+  if (!schema) error(500, { message: 'Invalid type ' + type });
 
 
   return await fetchGpt(content, schema, tokenUsage) as Analysis;;
@@ -149,439 +154,273 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
 
 
 
-const TEST_DATA = [{
-    "conversation": [
-        {
-            "speaker": "patient",
-            "text": "Dobrý den, pane doktore. Mám bolesti v krku a horečku.",
-            "stress": "medium",
-            "urgency": "medium"
-        },
-        {
-            "speaker": "doctor",
-            "text": "Co mi můžete doporučit?",
-            "stress": "low",
-            "urgency": "medium"
-        },
-        {
-            "speaker": "doctor",
-            "text": "Od kdy pociťujete bolesti? Jak dlouho trvá horečka? Máte nějaké další příznaky?",
-            "stress": "low",
-            "urgency": "medium"
-        },
-        {
-            "speaker": "patient",
-            "text": "Nemohu polykat a mám bolesti hlavy už několik dní. Měřil jsem se předevčírem, když mi bylo už hodně blbě a měl jsem třicet sedm devět. To už trochu polevilo, ale stále se necítím dobře. Teplota je stále vysoká a mám pocit, že se mi zhoršuje zrak.",
-            "stress": "high",
-            "urgency": "high"
-        },
-        {
-            "speaker": "doctor",
-            "text": "Tak se změříme teď hned. Vydržte mi.",
-            "stress": "low",
-            "urgency": "medium"
-        },
-        {
-            "speaker": "doctor",
-            "text": "Třicet sedm šest. To je dost. Ukažte mi jazyk. Máte na něm bílý povlak.",
-            "stress": "medium",
-            "urgency": "medium"
+const TEST_DATA = {
+    transcript: [{
+        "conversation": [
+            {
+                "speaker": "patient",
+                "text": "Dobrý den, pane doktore. Mám bolesti v krku a horečku.",
+                "stress": "medium",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "doctor",
+                "text": "Co mi můžete doporučit?",
+                "stress": "low",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "doctor",
+                "text": "Od kdy pociťujete bolesti? Jak dlouho trvá horečka? Máte nějaké další příznaky?",
+                "stress": "low",
+                "urgency": "high"
+            },
+            {
+                "speaker": "patient",
+                "text": "Nemohu polykat a mám bolesti hlavy už několik dní. Měřil jsem se předevčírem, když mi bylo už hodně špatně a měl jsem třicet sedm devět.",
+                "stress": "high",
+                "urgency": "high"
+            },
+            {
+                "speaker": "patient",
+                "text": "To už trochu polevilo, ale stále se necítím dobře. Teplota je stále vysoká a mám pocit, že se mi zhoršuje zrak.",
+                "stress": "high",
+                "urgency": "high"
+            },
+            {
+                "speaker": "nurse",
+                "text": "Tak se změříme teď hned. Vydržte mi.",
+                "stress": "low",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "nurse",
+                "text": "Třicet sedm šest. To je dost. Ukažte mi jazyk.",
+                "stress": "medium",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "doctor",
+                "text": "Máte na něm bílý povlak. To vypadá na angínu. Počkejte chvíli, ještě vám vezmu tlak.",
+                "stress": "low",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "patient",
+                "text": "Máme se svléknout?",
+                "stress": "medium",
+                "urgency": "low"
+            },
+            {
+                "speaker": "nurse",
+                "text": "Ne to je zbytečný, stačí, když si vyhrnete rukáv.",
+                "stress": "low",
+                "urgency": "low"
+            },
+            {
+                "speaker": "patient",
+                "text": "Jasně.",
+                "stress": "low",
+                "urgency": "low"
+            },
+            {
+                "speaker": "nurse",
+                "text": "Sto dvacet sedm na osmdesát. To je v pořádku.",
+                "stress": "low",
+                "urgency": "low"
+            },
+            {
+                "speaker": "doctor",
+                "text": "Máte zánět hltanu a angínu. Dostanete antibiotika a budete muset zůstat doma.",
+                "stress": "medium",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "patient",
+                "text": "Dobře, děkuji. A co s tím zrakem?",
+                "stress": "medium",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "doctor",
+                "text": "To je zřejmě způsobeno horečkou. Po vyléčení by to mělo ustoupit. Pokud ne, tak se vraťte.",
+                "stress": "low",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "doctor",
+                "text": "Doporučuji vám také hodně pít a odpočívat a předepíšu vám aspirin. Máte nějaké otázky?",
+                "stress": "low",
+                "urgency": "medium"
+            },
+            {
+                "speaker": "patient",
+                "text": "Asi teď ne.",
+                "stress": "low",
+                "urgency": "low"
+            },
+            {
+                "speaker": "doctor",
+                "text": "Kdyby se to zhoršilo, tak se hned vraťte. Případně mě můžete kontaktovat telefonicky. Když se to nezlepší do týdne, tak se vraťte.",
+                "stress": "medium",
+                "urgency": "high"
+            },
+            {
+                "speaker": "patient",
+                "text": "Tak. Jo. Děkuji. Na shledanou.",
+                "stress": "low",
+                "urgency": "low"
+            },
+            {
+                "speaker": "doctor",
+                "text": "Na shledanou.",
+                "stress": "low",
+                "urgency": "low"
+            }
+        ],
+        "symptoms": [
+            {
+                "name": "Bolest v krku",
+                "duration": "days",
+                "severity": "moderate",
+                "bodyParts": [
+                    "throat"
+                ]
+            },
+            {
+                "name": "Horečka",
+                "duration": "days",
+                "severity": "severe",
+                "bodyParts": [
+                    "body"
+                ]
+            },
+            {
+                "name": "Bolest hlavy",
+                "duration": "days",
+                "severity": "moderate",
+                "bodyParts": [
+                    "head"
+                ]
+            },
+            {
+                "name": "Problémy s polykáním",
+                "duration": "days",
+                "severity": "moderate",
+                "bodyParts": [
+                    "throat"
+                ]
+            },
+            {
+                "name": "Zhoršený zrak",
+                "duration": "days",
+                "severity": "mild",
+                "bodyParts": [
+                    "eyes"
+                ]
+            }
+        ],
+        "complaint": "Pacient má zánět hltanu a angínu, což způsobuje bolest v krku, horečku a problémy s polykáním. Má také bolesti hlavy a mírné zhoršení zraku, pravděpodobně kvůli horečce.",
+        "tokenUsage": {
+            "total": 3251,
+            "You are aprofessional medical assistent. Your input is a JSON  with doctor/patient conversation and extracted symptoms. Your task is to extract any diagnosis, treatment, medication mentioned by the doctor and potentially suggest alternatives. All information mentioned by the doctor should have the origin set to DOCTOR. Provide all answers in [LANGUAGE] language.": 3251
         }
-    ],
-    "symptoms": [
-        {
-            "name": "bolesti v krku",
-            "duration": "days",
-            "severity": "severe",
-            "bodyParts": [
-                "throat"
-            ]
-        },
-        {
-            "name": "horečka",
-            "duration": "days",
-            "severity": "moderate",
-            "bodyParts": [
-                "body"
-            ]
-        },
-        {
-            "name": "nemožnost polykání",
-            "duration": "days",
-            "severity": "severe",
-            "bodyParts": [
-                "throat"
-            ]
-        },
-        {
-            "name": "bolesti hlavy",
-            "duration": "days",
-            "severity": "moderate",
-            "bodyParts": [
-                "head"
-            ]
-        },
-        {
-            "name": "zhoršující se zrak",
-            "duration": "days",
-            "severity": "moderate",
-            "bodyParts": [
-                "eyes"
-            ]
-        },
-        {
-            "name": "bílý povlak na jazyku",
-            "duration": "days",
-            "severity": "mild",
-            "bodyParts": [
-                "tongue"
-            ]
-        }
-    ],
-    "complaint": "Bolesti v krku a horečka.",
-    "diagnosis": [
-        {
-            "name": "angína",
-            "origin": "symptoms",
-            "basis": "bolesti v krku, horečka, nemožnost polykání, bílý povlak na jazyku",
-            "probability": 0.85
-        },
-        {
-            "name": "faryngitida",
-            "origin": "symptoms",
-            "basis": "bolesti v krku, horečka, nemožnost polykání",
-            "probability": 0.75
-        },
-        {
-            "name": "infekční mononukleóza",
-            "origin": "symptoms",
-            "basis": "bolesti v krku, horečka, bílý povlak na jazyku, bolesti hlavy",
-            "probability": 0.65
-        }
-    ],
-    "treatment": [
-        {
-            "description": "Vyhýbat se kontaktu s nemocnými lidmi a místům s velkou koncentrací osob.",
-            "origin": "specialist"
-        },
-        {
-            "description": "Řádná hygiena rukou a úst, pravidelné umývání rukou a používání dezinfekčních prostředků.",
-            "origin": "specialist"
-        }
-    ],
-    "followUp": [
-        {
-            "type": "test",
-            "name": "Krevní test",
-            "reason": "potvrzení mononukleózy nebo jiné infekce",
-            "origin": "symptoms"
-        },
-        {
-            "type": "specialist",
-            "name": "ORL specialista",
-            "reason": "vyšetření krku a posouzení potřeby antibiotik",
-            "origin": "specialist"
-        }
-    ],
-    "medication": [
-        {
-            "name": "Paracetamol",
-            "dosage": 500,
-            "days": "3-5 days",
-            "days_of_week": [
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-                "Sunday"
-            ],
-            "time_of_day": "ráno, odpoledne, večer",
-            "origin": "specialist"
-        }
-    ],
-    "results": [
-        {
-            "test": "Měření teploty",
-            "value": "37.6",
-            "unit": "C",
-            "reference": "36.5-37.5",
-            "urgency": 3
-        }
-    ],
-    "tokenUsage": {
-        "total": 6436,
-        "You a medical professional assistent. You have transcript of doctor patient conversation and you provide deailed assessment of the conversation. We want to extract symptoms and diagnosis and potentially suggest alternatives. Assume the conversation take place today. Provide all answers in czech language.": 6436
-    }
-},/*{
-  "conversation": [
-      {
-          "speaker": "patient",
-          "text": "Dobrý den, pane doktore. Mám bolesti v krku a horečku."
-      },
-      {
-          "speaker": "doctor",
-          "text": "Co mi můžete doporučit?"
-      },
-      {
-          "speaker": "doctor",
-          "text": "Od kdy pociťujete bolesti? Jak dlouho trvá horečka? Máte nějaké další příznaky?"
-      },
-      {
-          "speaker": "patient",
-          "text": "Nemohu polykat a mám bolesti hlavy už několik dní. Měřil jsem se předevčírem, když mi bylo už hodně blbě a měl jsem třicet sedm devět."
-      },
-      {
-          "speaker": "patient",
-          "text": "To už trochu polevilo, ale stále se necítím dobře. Teplota je stále vysoká a mám pocit, že se mi zhoršuje zrak."
-      },
-      {
-          "speaker": "doctor",
-          "text": "Tak se změříme teď hned. Vydržte mi."
-      },
-      {
-          "speaker": "doctor",
-          "text": "Třicet sedm šest. To je dost. Ukažte mi jazyk."
-      },
-      {
-          "speaker": "doctor",
-          "text": "Máte na něm bílý povlak."
-      }
-  ],
-  "symptoms": [
-      {
-          "name": "bolest v krku",
-          "duration": "days",
-          "severity": "moderate",
-          "bodyParts": [
-              "throat"
-          ]
-      },
-      {
-          "name": "horečka",
-          "duration": "days",
-          "severity": "moderate",
-          "bodyParts": [
-              "body"
-          ]
-      },
-      {
-          "name": "bolesti hlavy",
-          "duration": "days",
-          "severity": "moderate",
-          "bodyParts": [
-              "head"
-          ]
-      },
-      {
-          "name": "zhoršený zrak",
-          "duration": "days",
-          "severity": "mild",
-          "bodyParts": [
-              "eyes"
-          ]
-      },
-      {
-          "name": "bílý povlak na jazyku",
-          "duration": "days",
-          "severity": "moderate",
-          "bodyParts": [
-              "mouth"
-          ]
-      }
-  ],
-  "complaint": "Bolest v krku a horečka",
-  "diagnosis": [
-      {
-          "name": "zánět hltanu",
-          "origin": "symptoms",
-          "basis": "bolest v krku, bílý povlak na jazyku, horečka",
-          "probability": 0.75
-      },
-      {
-          "name": "angína",
-          "origin": "symptoms",
-          "basis": "bolest v krku, bílý povlak na jazyku, horečka",
-          "probability": 0.6
-      }
-  ],
-  "treatment": [
-      {
-          "description": "vyhýbat se chlazeným nápojům a ledovým potravinám",
-          "origin": "specialist"
-      },
-      {
-          "description": "zůstat doma v teple a hodně pít",
-          "origin": "specialist"
-      }
-  ],
-  "followUp": [
-      {
-          "type": "specialist",
-          "name": "ORL specialista",
-          "reason": "přetrvávající bolest v krku a horečka",
-          "origin": "symptoms"
-      }
-  ],
-  "medication": [
-      {
-          "name": "paracetamol",
-          "dosage": 500,
-          "days": "5-7 days",
-          "days_of_week": [
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday",
-              "Saturday",
-              "Sunday"
-          ],
-          "time_of_day": "každých 6 hodin",
-          "origin": "specialist"
-      }
-  ],
-  "tokenUsage": {
-      "total": 5965,
-      "You a medical professional assistent. You have transcript of doctor patient conversation and you provide deailed assessment of the conversation. We want to extract symptoms and diagnosis and potentially suggest alternatives. Provide all answers in czech language.": 5965
-  }
-},  {
-    "conversation": [
-        {
-            "speaker": "patient",
-            "text": "Dobrý den, pane doktore. Mám bolesti v krku a horečku. Co mi můžete doporučit?"
-        },
-        {
-            "speaker": "doctor",
-            "text": "Od kdy pociťujete bolesti? Jak dlouho trvá horečka? Máte nějaké další příznaky?"
-        },
-        {
-            "speaker": "patient",
-            "text": "Nemohu polykat a mám bolesti hlavy už několik dní. Měřil jsem se předevčírem, když mi bylo už hodně špatně a měl jsem třicet sedm devět. To už trochu polevilo, ale stále se necítím dobře. Teplota je stále vysoká a mám pocit, že se mi zhoršuje zrak."
-        },
-        {
-            "speaker": "nurse",
-            "text": "Tak se změříme teď hned. Vydržte mi."
-        },
-        {
-            "speaker": "nurse",
-            "text": "Třicet sedm šest. To je dost."
-        },
-        {
-            "speaker": "doctor",
-            "text": "Ukažte mi jazyk. Máte na něm bílý povlak."
-        }
-    ],
-    "symptoms": [
-        {
-            "name": "bolest v krku",
-            "duration": "days",
-            "severity": "moderate",
-            "bodyParts": [
-                "throat"
-            ]
-        },
-        {
-            "name": "horečka",
-            "duration": "days",
-            "severity": "moderate",
-            "bodyParts": [
-                "body"
-            ]
-        },
-        {
-            "name": "bolest při polykání",
-            "duration": "days",
-            "severity": "moderate",
-            "bodyParts": [
-                "throat"
-            ]
-        },
-        {
-            "name": "bolest hlavy",
-            "duration": "days",
-            "severity": "moderate",
-            "bodyParts": [
-                "skull"
-            ]
-        },
-        {
-            "name": "zhoršení zraku",
-            "duration": "days",
-            "severity": "moderate",
-            "bodyParts": [
-                "eyes"
-            ]
-        },
-        {
-            "name": "bílý povlak na jazyku",
-            "duration": "days",
-            "severity": "mild",
-            "bodyParts": [
-                "tongue"
-            ]
-        }
-    ],
-    "complaint": "Bolest v krku a horečka.",
-    "diagnosis": [
-        {
-            "name": "bakteriální tonzilitida",
-            "origin": "symptoms",
-            "basis": "Bolest v krku a bílý povlak na jazyku.",
-            "probability": 0.8
-        },
-        {
-            "name": "virová infekce",
-            "origin": "symptoms",
-            "basis": "Horečka a celková slabost.",
-            "probability": 0.6
-        }
-    ],
-    "treatment": [
-        {
-            "description": "Zajistit dostatečný příjem tekutin a odpočinek.",
-            "origin": "symptoms"
-        },
-        {
-            "description": "Vyhýbat se dráždivým jídlům a nápojům, které mohou zhoršovat bolest v krku.",
-            "origin": "symptoms"
-        }
-    ],
-    "followUp": [
-        {
-            "type": "test",
-            "name": "výtěr z krku",
-            "reason": "Potvrzení bakteriální infekce.",
-            "origin": "symptoms"
-        },
-        {
-            "type": "specialist",
-            "name": "ORL specialista",
-            "reason": "Přetrvávající bolesti v krku a zhoršení zraku.",
-            "origin": "symptoms"
-        }
-    ],
-    "medication": [
-        {
-            "name": "Paracetamol",
-            "dosage": 500,
-            "days": "3-5 days",
-            "days_of_week": [
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday"
-            ],
-            "time_of_day": "ráno a večer",
-            "origin": "symptoms"
-        }
-    ],
-    "tokenUsage": {
-        "total": 6011,
-        "You a medical professional assistent. You have transcript of doctor patient conversation and you provide deailed assessment of the conversation. We want to extract symptoms and diagnosis and potentially suggest alternatives. Provide all answers in czech language.": 6011
-    }
-}*/
-]
-
+        
+    }],
+    diagnosis: [{
+        "diagnosis": [
+            {
+                "name": "Angína",
+                "code": "J03.9",
+                "origin": "doctor",
+                "basis": "bílé povlaky na jazyku, horečka, bolest v krku",
+                "probability": 0.9
+            },
+            {
+                "name": "Zánět hltanu",
+                "code": "J02.9",
+                "origin": "doctor",
+                "basis": "bílé povlaky na jazyku, horečka, bolest v krku",
+                "probability": 0.9
+            }
+        ],
+        "treatment": [
+            {
+                "description": "Zůstat doma, odpočívat a hodně pít tekutiny",
+                "origin": "doctor"
+            },
+            {
+                "description": "Užívat antibiotika k léčbě angíny a zánětu hltanu",
+                "origin": "doctor"
+            },
+            {
+                "description": "Užívat aspirin pro snížení horečky",
+                "origin": "doctor"
+            }
+        ],
+        "followUp": [
+            {
+                "type": "doctor",
+                "name": "Oční lékař",
+                "reason": "Pokud zrakové potíže po vyléčení neustoupí, je potřeba konzultace s očním specialistou",
+                "origin": "doctor"
+            }
+        ],
+        "medication": [
+            {
+                "name": "Antibiotics",
+                "dosage": 500,
+                "days": "7-10 days",
+                "days_of_week": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                    "Sunday"
+                ],
+                "time_of_day": "ráno a večer",
+                "origin": "doctor"
+            },
+            {
+                "name": "Aspirin",
+                "dosage": 300,
+                "days": "3-5 days",
+                "days_of_week": [
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday"
+                ],
+                "time_of_day": "po jídle",
+                "origin": "doctor"
+            }
+        ],
+        "results": [
+            {
+                "test": "temperature",
+                "value": "37.6",
+                "unit": "°C",
+                "reference": "36.1-37.2",
+                "urgency": 3,
+                "date": ""
+            },
+            {
+                "test": "systolic blood pressure",
+                "value": "127",
+                "unit": "mmHg",
+                "reference": "90-120",
+                "urgency": 1,
+                "date": ""
+            },
+            {
+                "test": "diastolic blood pressure",
+                "value": "80",
+                "unit": "mmHg",
+                "reference": "60-80",
+                "urgency": 1,
+                "date": ""
+            }
+        ]
+    }]
+}

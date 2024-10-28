@@ -10,8 +10,6 @@ export const load = (async ({ params}) => {
 
     const patient: Patient = patients.find(patient => patient.uid === params.patient);
 
-
-
     if (!patient) {
         return {
             status: 404,

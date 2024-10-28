@@ -1,7 +1,8 @@
 <script lang="ts">
     import { AudioState, getAudio, getAudioVAD, convertBlobToMp3, convertFloat32ToMp3, type AudioControlsVad} from '$slib/audio/microphone';
     import { throttle } from 'throttle-debounce';
-    import { onDestroy, createEventDispatcher } from 'svelte';
+    import { onDestroy, createEventDispatcher, onMount } from 'svelte';
+    import shortcuts from '$slib/shortcuts';
 
     const dispatch = createEventDispatcher();
 
@@ -22,7 +23,7 @@
         });
         tickElement.style.opacity = `${Math.min(Math.max(energy, .1),.8)}`;
         tickElement.classList.add(state);
-        micAnimationContainer.appendChild(tickElement);
+        if (micAnimationContainer) micAnimationContainer.appendChild(tickElement);
         tickElement.classList.add('animate');
         
     });
@@ -78,12 +79,19 @@
         if (state === AudioState.stopping) {
             return;
         } else if (state === AudioState.listening || state === AudioState.speaking) {  
+            console.log('stopping audio session');
             stopSession();
         } else {
+            console.log('starting audio session');
             startSession();            
         }
     }
 
+    onMount(() => {
+        return shortcuts.on('Space', () => {
+            toggleSession();
+        });
+    });
 
     onDestroy(() => {
         stopSession();
@@ -93,8 +101,8 @@
 
 
 
-<div class="record-audio" class:-has-results={hasResults} bind:this={micAnimationContainer}>
-    <button class="control {state}" class:-running={isRunning} on:click={toggleSession}>
+<div class="record-audio {state}" class:-has-results={hasResults} bind:this={micAnimationContainer}>
+    <button class="control {state}" class:-running={isRunning} on:click|stopPropagation={toggleSession}>
         {#if state == AudioState.stopping}
         ....
         {:else if state === AudioState.listening ||  state === AudioState.speaking}
@@ -117,27 +125,26 @@
 <style>
 
 .record-audio {
-        --sound-color: var(--color-interactivity);
-        --sound-color-text: var(--color-interactivity-text);
-        --speech-color: var(--color-purple);
-        position: fixed;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        bottom: calc(40% + 3rem);
-        width: 60vw;
-        height: 60vw;
-        left: 50%;
-        transform: translate(-50%, calc(50% - 3rem));
-        z-index: 1001;
-        pointer-events: none;
-        transition: bottom .3s, left .3s;
-        transition-timing-function: ease-in;
+        --idle-color: var(--color-interactivity);
+        --idle-color-text: var(--color-interactivity-text);
+        --speech-color: var(--color-positive);
+        --listen-color: var(--color-purple);
+        --sound-color: var(--idle-color);
+        --sound-color-text: var(--idle-color-text);
+        width: 100%;
+        height: 100%;
     }
-    .record-audio.-has-results {
-        left: calc(100% / 6 * 5);
-        bottom: 1.5rem;
+
+    .record-audio.speaking {
+        --sound-color: var(--speech-color);
     }
+    .record-audio.stopping {
+        --sound-color: var(--color-negative);
+    }
+    .record-audio.listening {
+        --sound-color: var(--listen-color);
+    }
+
     .record-audio :global(> *) {
         position: absolute;
         left: 50%;
@@ -174,9 +181,11 @@
         background-color: var(--color-white);
         color: var(--sound-color);
     }
-    .record-audio .control.-running.speaking {
-        color: var(--speech-color);
-        border-color: var(--speech-color);
+
+
+    .record-audio.speaking .control.-running {
+        color: var(--sound-color);
+        border-color: var(--sound-color);
     }
     
     .record-audio .control.-running:hover,

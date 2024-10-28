@@ -5,7 +5,7 @@
         patient: Patient;
     }
 
-    patient.set(data.patient);
+    $: patient.set(data.patient);
 
 
 </script>

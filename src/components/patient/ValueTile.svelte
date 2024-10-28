@@ -1,29 +1,30 @@
 <script lang="ts">
     export let result: {
-        test: string;
+        title?: string;
+        test?: string;
         value: number;
-        unit: string;
-        reference: string;
+        unit?: string;
+        reference?: string;
     }
-
-    $: referenceRange = result.reference.split('-').map(Number)
-
+    
+    $: referenceRange = result.reference?.split('-').map(Number)
+    $: title = result.title || result.test
     $: unit = getUnit(result.unit)
 
-    function getUnit(u: string) {
+    function getUnit(u: string = '') {
         switch (u) {
             case 'C':
                 return '&#8451;'
             case 'F':
                 return '&#8457;'
             default:
-                return u
+                return encodeURIComponent(u)
         }
     }
 </script>
 
-<div class="grid-tile" class:-danger={result.value < referenceRange[0] || result.value > referenceRange[1]} >
-    <div class="title">{result.test}</div>
+<div class="grid-tile" class:-danger={referenceRange && (result.value < referenceRange[0] || result.value > referenceRange[1])} >
+    <div class="title">{title}</div>
     <div class="value"><strong>{result.value}</strong> <span class="unit">{@html unit} </span></div>
 </div>
 

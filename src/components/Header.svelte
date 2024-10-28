@@ -1,17 +1,18 @@
 <script lang="ts">
     import { patient } from "$slib/med/patients";
     import { page } from "$app/stores";
+    import { emit } from "$slib/shortcuts";
 
     function isActive(path: string, currentPath: string) {
-        console.log(path, $page.url.pathname, $page.url.pathname.startsWith(path));
         return currentPath.startsWith(path);
     }
+    import Search from "./Search.svelte";
 </script>
 
 <header>
     <nav class="toolbar">
-        <a href="/med/p/" class="logo">
-            <svg class="icon">
+        <a href="/med/p/" class="icon logo">
+            <svg>
                 <use href="/logo.svg#icon"></use>
             </svg>
         </a>
@@ -33,9 +34,12 @@
             <div class="spacer"></div>
             <a href="/med/p/newpatient/">Create new patient</a>
         {/if}
+        <button on:click={() => emit('find')} class="icon"><svg >
+            <use href="/icons.svg#search"></use>
+        </svg></button>
 </nav>
 </header>
-
+<Search />
 <style>
     header {
         position: fixed;
@@ -47,12 +51,15 @@
         z-index: 1000;
     }
 
-    .logo {
+    .icon {
         width: var(--toolbar-height);
+        padding: .5rem;
+    }
+    .icon.logo {
         padding: 0;
     }
 
-    .icon {
+    .icon svg {
         width: 100%;
         height: 100%;
         fill: currentColor;
