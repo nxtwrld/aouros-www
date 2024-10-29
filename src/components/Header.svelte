@@ -2,11 +2,21 @@
     import { patient } from "$slib/med/patients";
     import { page } from "$app/stores";
     import { emit } from "$slib/shortcuts";
+    import user from "$slib/user";
+    import doctor from "$slib/med/doctor";
+
 
     function isActive(path: string, currentPath: string) {
         return currentPath.startsWith(path);
     }
     import Search from "./Search.svelte";
+    import { goto } from "$app/navigation";
+
+
+    async function logout () {
+        const r = await user.logout();
+        goto('/auth?redirect=/med');
+    }
 </script>
 
 <header>
@@ -16,6 +26,25 @@
                 <use href="/logo.svg#icon"></use>
             </svg>
         </a>
+        {#if $user}
+        <div class="menu icon">
+            <button><svg>
+                <use href="/icons.svg#doctor"></use>
+                </svg>
+            </button>
+            <ul class="menu">
+                <li>
+                    <div class="user">
+                        <h3 class="h3">{$doctor.fn}</h3>
+                        <p>{$doctor.specialty?.join(',')}</p>
+                        <p>{$user.email}</p>
+
+                    </div>
+                </li>
+                <li><button class="user-menu" on:click={logout}>Logout</button></li>
+            </ul>
+        </div>
+        {/if}
         <a href="/med/p/" class:-active={$page.url.pathname == '/med/p/'}>Patients</a>
         {#if $patient}
 
@@ -87,4 +116,56 @@
         padding-right: calc(var(--radius) / 1.5);
     }
 */
+
+    .menu {
+        position: relative;
+    }
+    .menu button {
+        background-color: transparent;
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+    .menu > ul.menu {
+        position: absolute;
+        top: calc(100% + var(--gap));
+        left: 0;
+        max-height: 0;
+        min-width: 10rem;
+        background-color: var(--color-gray-500);
+        border-radius: var(--radius);
+        box-shadow: 0 1rem 1rem -.5rem var(--color-gray-800);
+        transition: max-height .5s;
+        overflow: hidden;
+    }
+    .menu:hover {
+        background-color: var(--color-white);
+    }
+    .menu:hover > ul.menu {
+        max-height: 100vh;
+    }
+    .menu > ul.menu li {
+    
+        margin-top: var(--gap);
+    }
+
+    .menu > ul.menu li button {
+        background-color: var(--color-gray-300);
+        border: none;
+        padding: .5rem;
+        width: 100%;
+        margin: 0;
+        text-align: left;
+    }
+    .menu > ul.menu li button:hover {
+        background-color: var(--color-white);
+    }
+
+
+    .user {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+        padding: .5rem;
+    }
 </style>

@@ -1,61 +1,54 @@
+<!-- src/routes/+page.svelte -->
 <script lang="ts">
-    import { onMount } from "svelte";
+	import { enhance } from '$app/forms'
+	import type { ActionData, SubmitFunction } from './$types.js'
 
+	export let form: ActionData;
 
-		/** @type {import('./$types').PageData} */
-		export let data;
+	let loading = false
 
-		/** @type {import('./$types').ActionData} */
-		export let form;
-
-		let redirect = '/';
-		//console.log(data);
-		//console.log(form);
-		let action =  form?.action || 'login';
-
-		onMount(() => {
-			redirect = data?.redirect || new URLSearchParams(location?.search).get('redirect') || '/';
-		});
+	const handleSubmit: SubmitFunction = () => {
+		loading = true
+		return async ({ update }) => {
+			update()
+			loading = false
+		}
+	}
 </script>
 
-<h1>Authentication {action}</h1>
+<svelte:head>
+	<title>Authentication</title>
+</svelte:head>
 
-{#if form && form.error}
-	<p>{form.error}</p>
-{/if}
-
-{#if action == 'login'}
-<form method="POST" action="?/login&redirect={redirect}">
-	<label>
-		Email
-		<input name="email" type="email" autocomplete="email" />
-	</label>
-	<label>
-		Password
-		<input name="password" type="password" autocomplete="current-password" />
-	</label>
-	<button>Login</button>
-	<button on:click={() => action = 'signup'}>Sign up</button>
+<form class="row flex flex-center" method="POST" use:enhance={handleSubmit}>
+	<div class="col-6 form-widget">
+		<h1 class="h1">Authentication</h1>
+		<p class="description">Sign in via magic link with your email below</p>
+		{#if form?.message !== undefined}
+		<div class="success {form?.success ? '' : 'fail'}">
+			{form?.message}
+		</div>
+		{/if}
+		<div class="input">
+			<label for="email">Email address</label>
+			<input
+				id="email"
+				name="email"
+				class="inputField"
+				type="email"
+				placeholder="Your email"
+				value={form?.email ?? ''}
+			/>
+		</div>
+		{#if form?.errors?.email}
+		<span class="flex items-center text-sm error">
+			{form?.errors?.email}
+		</span>
+		{/if}
+		<div>
+			<button class="button -primary -block">
+				{ loading ? 'Loading' : 'Send magic link' }
+			</button>
+		</div>
+	</div>
 </form>
-
-{:else if action == 'signup'}
-
-
-<form method="POST" action="?/signup&redirect={redirect}">
-	<label>
-		Email
-		<input name="email" type="email" autocomplete="email" />
-	</label>
-	<label>
-		Password
-		<input name="password" type="password" autocomplete="new-password" />
-	</label>
-	<label>
-		Repeat Password
-		<input name="password2" type="password" autocomplete="new-password" />
-	</label>
-	<button>Sign Up</button>
-
-	<button on:click={() => action = 'login'}>Login</button>
-</form>
-{/if}

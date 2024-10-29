@@ -1,6 +1,8 @@
-<header>
-	<nav>
-		<a href="/">Home</a>
-	</nav>
-</header>
-<slot />
+
+<div class="centered">
+
+	<section>
+	<slot />
+	</section>
+
+</div>

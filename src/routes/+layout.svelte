@@ -1,29 +1,25 @@
 <script>
 	import { goto, invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { setClient } from '$slib/supabase';
+	import './styles.css';
 
 	export let data;
-	$: ({ session, supabase } = data);
+	$: ({ session, supabase, user } = data);
+
+
 
 	onMount(() => {
-		const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
-            //console.log('newSession', newSession, _);
-			if (!newSession) {
-				/**
-				 * Queue this as a task so the navigation won't prevent the
-				 * triggering function from completing
-				 */
-				setTimeout(() => {
-                    //console.log('Redirecting to /');
-					//goto('/', { invalidateAll: true });
-				});
-			}
-			if (newSession?.expires_at !== session?.expires_at) {
-				invalidate('supabase:auth');
-			}
-		});
+		setClient(supabase);
 
+		console.log('supabase:auth', session, user);
+		const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
+			if (newSession?.expires_at !== session?.expires_at) {
+				invalidate('supabase:auth')
+			}
+		})
 		return () => data.subscription.unsubscribe();
 	});
 </script>
+
 <slot />

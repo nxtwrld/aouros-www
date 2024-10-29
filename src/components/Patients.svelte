@@ -20,7 +20,11 @@
         <td class="title">{patient.name}</td>
         <td class="age">{getAge(patient.birthdate)}</td>
         <td class="dob">{patient.birthdate}</td>
-        <td class="tel">{patient.phone}</td>
+        <td class="tel">
+            {#if patient.tel?.[0]?.value}
+            <a href="tel:{patient.tel?.[0]?.value}" on:click|stopPropagation>{patient.tel?.[0]?.value}</a>
+            {/if}
+        </td>
     </tr>
 {/each}
 </table>

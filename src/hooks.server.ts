@@ -52,6 +52,7 @@ const supabase: Handle = async ({ event, resolve }) => {
    */
   event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
+
       get: (key) => event.cookies.get(key),
       /**
        * SvelteKit's cookies API requires `path` to be explicitly set in
@@ -73,7 +74,6 @@ const supabase: Handle = async ({ event, resolve }) => {
    * JWT before returning the session.
    */
   event.locals.safeGetSession = async () => {
-
     const {
       data: { session },
     } = await event.locals.supabase.auth.getSession()
@@ -103,7 +103,7 @@ const supabase: Handle = async ({ event, resolve }) => {
     },
   })
 
-  if (event.url.pathname.startsWith('/api')) {
+  if (event.url.pathname.startsWith('/v1')) {
         response.headers.append('Access-Control-Allow-Origin', `*`);
   }
 
@@ -115,7 +115,9 @@ const authGuard: Handle = async ({ event, resolve }) => {
   event.locals.session = session
   event.locals.user = user
 
-  if (!event.locals.session && event.url.pathname.startsWith('/protected')) {
+
+
+  if (!event.locals.session && event.url.pathname.startsWith('/med')) {
     return new Response(null, {
       status: 303,
       headers: { location: '/auth?redirect='+ event.url.pathname }
