@@ -5,6 +5,7 @@ import { env } from '$env/dynamic/private';
 
 const getURL = (redirect: string = '/') => {
   let url =
+    env?.NEXT_PUBLIC_VERCEL_URL ??
     env?.VERCEL_URL ?? // Automatically set by Vercel.
     'http://localhost:5174/'
   // Make sure to include `https://` when not localhost.
