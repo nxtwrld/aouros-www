@@ -11,19 +11,20 @@ const getURL = (redirect: string = '/') => {
   url = url.startsWith('http') ? url : `https://${url}`
   // Make sure to include a trailing `/`.
   url = url.endsWith('/') ? url : `${url}/`
+
   url = `${url}auth/confirm?next=${encodeURIComponent(redirect)}`
-  //console.log('url', url)
+  console.log('url', url)
   return url
 }
 
 
 export const load: PageServerLoad = async ({ url, locals: { safeGetSession } }) => {
   const { session } = await safeGetSession()
-
+  const redirectPath = new URL(url).searchParams.get('redirect') || '/account'
   // if the user is already logged in return them to the account page
   if (session) {
     console.log('session', session)
-    redirect(303, '/account')
+    redirect(303, redirectPath)
   }
 
   return { url: url.origin }
@@ -40,7 +41,7 @@ export const actions: Actions = {
     } = event;
 
 
-    const redirectPath = new URL(request.url).searchParams.get('redirect') || '/'
+    const redirectPath = new URL(request.url).searchParams.get('redirect') || '/account'
     const formData = await request.formData()
     const email = formData.get('email') as string
     const validEmail = /^[\w-\.+]+@([\w-]+\.)+[\w-]{2,8}$/.test(email)
