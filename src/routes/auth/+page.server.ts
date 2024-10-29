@@ -1,7 +1,7 @@
 // src/routes/+page.server.ts
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import env from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 const getURL = (redirect: string = '/') => {
   let url =
@@ -12,7 +12,7 @@ const getURL = (redirect: string = '/') => {
   // Make sure to include a trailing `/`.
   url = url.endsWith('/') ? url : `${url}/`
   url = `${url}auth/confirm?next=${encodeURIComponent(redirect)}`
-  console.log('url', url)
+  //console.log('url', url)
   return url
 }
 
