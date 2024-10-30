@@ -10,7 +10,6 @@
         ({ session, supabase, user } = data);
 
         if (user) {
-            console.log('User is logged in');
             if (user && user.email && user.id) {
                 userStore.set({
                     id: user?.id,
@@ -18,7 +17,6 @@
                 })
             }
         } else {
-            console.log('User is not logged in');
             userStore.set(null);
         }
     }

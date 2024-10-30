@@ -14,9 +14,6 @@ const getURL = (redirect: string = '/') => {
   url = url.endsWith('/') ? url : `${url}/`
 
   url = `${url}auth/confirm?next=${encodeURIComponent(redirect)}`
-  console.log('url', url);
-  console.log('SITE URL', env?.SITE_URL);
-  console.log('VERCEL URL', env?.VERCEL_URL);
   return url
 }
 
@@ -26,7 +23,6 @@ export const load: PageServerLoad = async ({ url, locals: { safeGetSession } }) 
   const redirectPath = new URL(url).searchParams.get('redirect') || '/account'
   // if the user is already logged in return them to the account page
   if (session) {
-    console.log('session', session)
     redirect(303, redirectPath)
   }
 
