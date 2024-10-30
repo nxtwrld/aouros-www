@@ -1,8 +1,14 @@
 
-<div class="centered">
+<div class="flex -center">
 
-	<section>
 	<slot />
-	</section>
 
 </div>
+
+
+
+<style>
+	.flex.-center {
+		background-color: var(--color-blue);
+	}
+</style>

@@ -1,0 +1,22 @@
+
+.-block {
+    display: block;
+}
+
+
+.flex {
+    display: flex;
+}
+
+.flex.-column {
+    flex-direction: column;
+}
+
+
+.flex.-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}

@@ -2,7 +2,7 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { setClient } from '$slib/supabase';
-	import './styles.css';
+	import '../css/index.css';
 
 	export let data;
 	$: ({ session, supabase, user } = data);

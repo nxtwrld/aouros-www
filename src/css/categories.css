@@ -1,0 +1,16 @@
+.-mild {
+    background-color: var(--color-white);
+    color: var(--text);
+}
+.-warning,
+.-moderate {
+    background-color: var(--color-warning) !important;
+    color: var(--color-warning-text) !important;
+    font-weight: 500 !important;
+}
+.-danger,
+.-severe {
+    background-color: var(--color-negative) !important;
+    color: var(--color-negative-text) !important;
+    font-weight: 500 !important;
+}

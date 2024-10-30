@@ -1,0 +1,12 @@
+/**
+    Modal
+
+    */
+
+	.modal {
+		background-color: var(--color-background);
+		border-radius: var(--radius-24);
+		box-shadow: var(--shadow-modal);
+		border: 1px solid var(--color-border);
+		padding: 2rem;
+	}

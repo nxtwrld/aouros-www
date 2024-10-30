@@ -5,14 +5,18 @@
 
 	export let form: ActionData;
 
-	let loading = false
+	let loading: boolean = false;
 
 	const handleSubmit: SubmitFunction = () => {
-		loading = true
+		loading = true;
 		return async ({ update }) => {
 			update()
-			loading = false
+			loading = false;
 		}
+	}
+
+	function resetForm() {
+		form = {};
 	}
 </script>
 
@@ -20,35 +24,64 @@
 	<title>Authentication</title>
 </svelte:head>
 
-<form class="row flex flex-center" method="POST" use:enhance={handleSubmit}>
-	<div class="col-6 form-widget">
+<form class="flex -column form modal" method="POST" use:enhance={handleSubmit}>
+		<img src="/icon.svg" alt="Aouros app" class="logo" />
+
 		<h1 class="h1">Authentication</h1>
-		<p class="description">Sign in via magic link with your email below</p>
-		{#if form?.message !== undefined}
-		<div class="success {form?.success ? '' : 'fail'}">
-			{form?.message}
+		{#if form?.success}
+		<div class="success">
+			<p class="form-instructions -success">{form?.message}</p>
+			<div class="form-actions">
+				<button class="button -block" on:click={resetForm}>Send again</button>
+			</div>
 		</div>
+		{:else}
+			<p class="form-instructions">Sign in via magic link with your email below</p>
+
+			{#if form?.message !== undefined}
+			<div class="{form?.success ? '' : 'fail'}">
+				<p class="form-instructions -error">{form?.message}</p>
+			</div>
+			{/if}
+
+
+			<div class="input">
+				<label for="email">Email address</label>
+				<input
+					id="email"
+					name="email"
+					class="inputField"
+					type="email"
+					placeholder="Your email"
+					value={form?.email ?? ''}
+				/>
+			</div>
+			{#if form?.errors?.email}
+			<span class="flex items-center text-sm error">
+				{form?.errors?.email}
+			</span>
+			{/if}
+			<div class="form-actions">
+				<button class="button -primary -block" disabled={loading}>
+					{ loading ? 'Loading' : 'Send magic link' }
+				</button>
+			</div>
 		{/if}
-		<div class="input">
-			<label for="email">Email address</label>
-			<input
-				id="email"
-				name="email"
-				class="inputField"
-				type="email"
-				placeholder="Your email"
-				value={form?.email ?? ''}
-			/>
-		</div>
-		{#if form?.errors?.email}
-		<span class="flex items-center text-sm error">
-			{form?.errors?.email}
-		</span>
-		{/if}
-		<div>
-			<button class="button -primary -block">
-				{ loading ? 'Loading' : 'Send magic link' }
-			</button>
-		</div>
-	</div>
 </form>
+
+
+<style>
+
+	.logo {
+		width: 8rem;
+		margin: 0 auto;
+		display: block;
+	}
+	.form {
+		
+	}
+
+
+
+
+</style>

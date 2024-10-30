@@ -1,0 +1,119 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --toolbar-height: 3rem;
+    --font-face-print: "Verdana", sans-serif;
+    --font-face: "Mulish", sans-serif;
+    --font-face-system: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-face-monospace: 'Fira Code', 'Courier New', monospace;
+    --font-face-cursive: 'Caveat', cursive;
+    --color-blue: #3571FF;
+    --color-purple: #A989EE;
+    --color-red: #FB104A;
+    --color-yellow: #FEC400;
+    --color-green: #29CC97;
+
+    --color-black: #252733;
+    --color-gray-800: #9FA2B4;
+    --color-gray-800-o: #6263687c;
+    --color-gray-500: #d0d1d7;
+    --color-gray-400: #e0e0e3;
+    --color-gray-300: #E6E7EA;
+    --color-white: #FFFFFF;
+
+
+    --color-background: var(--color-gray-300);
+    --color-border: var(--color-white);
+
+    --color-positive: var(--color-green);
+    --color-positive-text: var(--color-white);
+
+    --color-negative: var(--color-red);
+    --color-negative-text: var(--color-white);
+
+    --color-neutral: var(--color-blue);
+    --color-neutral-text: var(--color-white);
+
+    --color-warning: var(--color-yellow);
+    --color-warning-text: var(--color-black);
+
+    --color-info: var(--color-purple);
+    --color-info-text: var(--color-white);
+
+    --color-interactivity: var(--color-blue);
+    --color-interactivity-text: var(--color-white);
+   
+    --color-highlight: var(--color-purple);
+    --color-highlight-text: var(--color-white);
+
+    --background: var(--color-gray-500);
+    --text: var(--color-black);
+    --text-bold: 700;
+
+
+    --radius-24: 2rem;
+    --radius-16: 1rem;
+    --radius-8: .5rem;
+
+
+    --button-color: var(--color-gray-300);
+    --button-border-color: var(--color-gray-800);
+    --button-text-color: var(--color-black);
+
+    --button-color-primary: var(--color-blue);
+    --button-border-color-primary: var(--color-blue);
+    --button-text-color-primary: var(--color-white);
+
+    --gap: .1rem;
+
+
+    --shadow-modal: 0 2rem 2rem -.75rem rgba(0,0,0,.2);
+
+}
+
+html, body {
+    height: 100%;
+    font-family: var(--font-face);
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-style: normal;
+    background-color: var(--background);
+    text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overflow: hidden;
+}
+
+@media print {
+    * {
+        font-family: var(--font-face-print) !important;
+    }
+}
+
+main {
+    padding: var(--toolbar-height) 0 0 0;
+    height: 100vh;
+}
+
+input, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+
+}
+
+button, a {
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    background-color: transparent;
+}
