@@ -1,8 +1,10 @@
 
 .-block {
-    display: block;
+    display: block !important;
 }
-
+.-none {
+    display: none !important;
+}
 
 .flex {
     display: flex;

@@ -3,11 +3,11 @@ import type { FunctionDefinition } from "@langchain/core/dist/language_models/ba
 import { error } from '@sveltejs/kit';
 import transcript from './transcript.json';
 import diagnosis from './diagnosis.json';
-import tags from '../../reportImports/tags.json';
+import tags from '../../import.server/tags.json';
 import testPropserties from '$data/lab.synonyms.json';
 import { fetchGpt } from '$slib/ai/gpt';
 import { type Content, type TokenUsage } from '$slib/ai/types.d';
-import resultsSchema from '$slib/reportImports/core.results.json'
+import resultsSchema from '$slib/import.server/core.results.json'
 import { updateLanguage } from "$slib/ai/schema";
 import { sleep } from "$slib/utils";
 import { ANALYZE_STEPS as Types } from '$slib/med/types.d';

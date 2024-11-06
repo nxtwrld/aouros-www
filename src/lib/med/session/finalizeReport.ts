@@ -3,7 +3,7 @@ import type { FunctionDefinition } from "@langchain/core/dist/language_models/ba
 
 import { error } from '@sveltejs/kit';
 import report from './report.json';
-import tags from '../../reportImports/tags.json';
+import tags from '../../import.server/tags.json';
 import { fetchGpt } from '$slib/ai/gpt';
 import { type Content, type TokenUsage } from '$slib/ai/types.d';
 import { updateLanguage } from "$slib/ai/schema";

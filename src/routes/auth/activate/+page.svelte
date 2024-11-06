@@ -1,1 +1,0 @@
-Check your email for activation link

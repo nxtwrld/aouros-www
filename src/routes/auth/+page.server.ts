@@ -14,6 +14,7 @@ const getURL = (redirect: string = '/') => {
   url = url.endsWith('/') ? url : `${url}/`
 
   url = `${url}auth/confirm?next=${encodeURIComponent(redirect)}`
+  //console.log('getURL', url)
   return url
 }
 

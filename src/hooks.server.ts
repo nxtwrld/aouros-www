@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-
+import { setClient } from '$slib/supabase';
 
 
 
@@ -68,6 +68,8 @@ const supabase: Handle = async ({ event, resolve }) => {
     },
   })
 
+  setClient(event.locals.supabase);
+
   /**
    * Unlike `supabase.auth.getSession()`, which returns the session _without_
    * validating the JWT, this function also calls `getUser()` to validate the
@@ -112,8 +114,9 @@ const supabase: Handle = async ({ event, resolve }) => {
 
 const authGuard: Handle = async ({ event, resolve }) => {
   const { session, user } = await event.locals.safeGetSession()
-  event.locals.session = session
-  event.locals.user = user
+
+  event.locals.session = session;
+  event.locals.user = user;
 
 
 
@@ -127,7 +130,7 @@ const authGuard: Handle = async ({ event, resolve }) => {
   if (event.locals.session && event.url.pathname === '/auth') {
     return new Response(null, {
       status: 303,
-      headers: { location: '/' }
+      headers: { location: '/account' }
     })
   }
 

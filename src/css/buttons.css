@@ -1,36 +1,59 @@
 
 .button {
     --radius: var(--radius-8);
-    display: flex;
+    --color: var(--button-color);
+    --color-hover: var(--color-gray-400);
+    --color-text:  var(--button-text-color);
+    --color-text-hover: var(--button-text-color);
+    --color-border: var(--button-border-color);
+    --color-border-hover: var(--button-border-color-hover);
+    display: inline-flex;
     justify-content: center;
     align-items: center;
     padding: .5rem 1rem;
-    background-color: var(--button-color);
-    color: var(--button-text-color);
+    background-color: var(--color);
+    color: var(--color-text);
     font-weight: 700;
     border-width: .1rem;
     border-style: solid;
     transform: scale(1.01);
-    border-color: var(--button-border-color);
+    border-color: var(--color-border);
     border-radius: var(--radius);
     box-shadow: 0 .3rem .2rem -.2rem rgba(0,0,0,.1);
     transition: all .2s;
+    cursor: pointer;
 }
-.button:hover {
-    background-color: var(--color-gray-400);
-    border-color: var(--color-gray-400);
-    transform: scale(1.03);
-    box-shadow: 0 1rem .4rem -.7rem rgba(0,0,0,.2);
-    border-color: var(--button-border-color-primary-hover);
+
+.button.-large {
+    padding: 1rem 2rem;
+    font-size: 1.25rem;
 }
 
 .button.-primary {
-    background-color: var(--button-color-primary);
-    border-color: var(--button-border-color-primary);
-    color: var(--button-text-color-primary);
+    --color: var(--button-color-primary);
+    --color-hover: var(--button-color-primary);
+    --color-border: var(--button-border-color-primary);
+    --color-border-hover: var(--button-border-color-primary-hover);
+    --color-text: var(--button-text-color-primary);
+    --color-text-hover: var(--button-text-color-primary);
     box-shadow: 0 .3rem .2rem -.2rem rgba(0,0,0,.3);
 }
 
-.button.-primary:hover {    
+.button.-primary:hover:not(:disabled) {    
     box-shadow: 0 1rem .4rem -.7rem rgba(0,0,0,.3);
+}
+
+.button:hover:not(:disabled) {
+    background-color: var(--color-hover);
+    color: var(--color-text-hover);
+    transform: scale(1.03);
+    box-shadow: 0 1rem .4rem -.7rem rgba(0,0,0,.2);
+    border-color: var(--color-border-hover);
+}
+
+
+.button:disabled {
+    filter : grayscale(.5);
+    opacity: .7;
+    cursor: not-allowed;
 }

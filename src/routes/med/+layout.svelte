@@ -1,23 +1,23 @@
 <script lang="ts">
-    import Header from '$scomponents/Header.svelte';
+    import Header from '$scomponents/layout/Header.svelte';
     import { emitShortcut } from '$slib/shortcuts';
-    import { default as userStore } from '$slib/user';
-
+    import user, { loadUser, clearUser } from '$slib/user';
+    import DropFiles from '$scomponents/import/DropFiles.svelte';   
+    import Unlock from '$scomponents/layout/Unlock.svelte';
+    import { setClient } from '$slib/supabase.js';
+    
     export let data;
-    let { session, supabase, user } = data
+
+    setClient(data.supabase);
 
     $: {
-        ({ session, supabase, user } = data);
+        
 
-        if (user) {
-            if (user && user.email && user.id) {
-                userStore.set({
-                    id: user?.id,
-                    email: user?.email
-                })
-            }
+        if (data.user) {
+                if (!$user) loadUser();
         } else {
-            userStore.set(null);
+            console.log('no profile');
+            clearUser()
         }
     }
 
@@ -25,9 +25,10 @@
 
 
 <svelte:window on:keypress={emitShortcut}></svelte:window>
-<Header></Header>
 
-
-<main>
-    <slot/>
-</main>
+<Unlock>
+    <DropFiles>
+        <Header></Header>
+        <main><slot/></main>
+    </DropFiles>
+</Unlock>

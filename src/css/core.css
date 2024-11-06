@@ -62,11 +62,15 @@
 
     --button-color: var(--color-gray-300);
     --button-border-color: var(--color-gray-800);
+    --button-border-color-hover: var(--color-black);
     --button-text-color: var(--color-black);
 
     --button-color-primary: var(--color-blue);
     --button-border-color-primary: var(--color-blue);
+    --button-border-color-primary-hover: var(--color-blue);
     --button-text-color-primary: var(--color-white);
+
+    --input-height: 2.5rem;
 
     --gap: .1rem;
 

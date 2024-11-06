@@ -1,0 +1,33 @@
+<script lang="ts">
+    import type { SupabaseClient } from '@supabase/supabase-js';
+    export let supabase: SupabaseClient;
+    export const ready: boolean = true;
+    export let data: {};
+    
+    export let profileForm: HTMLFormElement;
+</script>
+
+
+    <h2 class="h2">You are all set!</h2>
+<div class="result-icon">
+<svg>
+    <use href="/icons-o.svg#checked" />
+</svg>
+</div>
+
+<style>
+
+
+    .result-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-grow: 1;
+        margin: 5rem 0;
+    }
+    .result-icon svg {
+        width: 15rem;
+        height: 15rem;
+        fill: var(--color-positive);
+    }
+</style>

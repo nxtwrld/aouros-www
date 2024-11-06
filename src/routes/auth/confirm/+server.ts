@@ -1,13 +1,13 @@
 // src/routes/auth/confirm/+server.ts
 import type { EmailOtpType } from '@supabase/supabase-js'
-import { redirect } from '@sveltejs/kit'
+import { error, redirect } from '@sveltejs/kit'
 
 import type { RequestHandler } from './$types'
 
 export const GET: RequestHandler = async ({ url, locals: { supabase } }) => {
   const token_hash = url.searchParams.get('token_hash')
   const type = 'email'; //url.searchParams.get('type') as EmailOtpType | null
-  const next = url.searchParams.get('next') ?? '/account'
+  const next = url.searchParams.get('next') ?? '/med'
 
  /**
    * Clean up the redirect URL by deleting the Auth flow parameters.
@@ -20,15 +20,30 @@ export const GET: RequestHandler = async ({ url, locals: { supabase } }) => {
   redirectTo.searchParams.delete('type')
 
   if (token_hash && type) {
-    console.log('verifyOtp', type, token_hash)
+
     const { error } = await supabase.auth.verifyOtp({ type, token_hash })
-    console.log('error', error);
+
     if (!error) {
-      redirectTo.searchParams.delete('next')
-      redirect(303, redirectTo)
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // check profiles table if the user is already exists
+      if (user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select(`email, avatar_url, vcard, role, status, created_at, last_seen_at`)
+          .eq('id', user.id)
+          .single()
+
+        if (profileError) {
+          redirectTo.pathname = '/account'
+        }
+        redirectTo.searchParams.delete('next')
+        redirect(303, redirectTo)
+      }
     }
   }
 
-  redirectTo.pathname = '/auth/error'
+  redirectTo.pathname = '/auth/error';
   redirect(303, redirectTo)
 }

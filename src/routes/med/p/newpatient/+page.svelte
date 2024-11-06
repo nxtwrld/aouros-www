@@ -1,10 +1,10 @@
 <script lang="ts">
     
     import { type Patient, SexEnum } from "$slib/med/types.d";
-    import { patient } from "$slib/med/patients";
-    let newPatient: Patient = {
-        uid: "NEW",
-        name: "",
+    import { profile } from "$slib/med/profiles";
+    let newProfile: Patient = {
+        id: "NEW",
+        fullName: "",
         sex: SexEnum.male,
         birthdate: new Date(),
         location: "",
@@ -12,7 +12,8 @@
         email: ""
     }
 
-    async function createNewPatient() {
+    async function createNewProfile() {
+        /*
         const res = await fetch("/api/med/p/newpatient", {
             method: "POST",
             headers: {
@@ -23,7 +24,7 @@
         if (res.ok) {
             const patient = await res.json();
             patient.set(patient);
-        }
+        }*/
     }
 
 </script>
@@ -31,5 +32,5 @@
 Create new patient
 
 
-<input type="text" bind:value={newPatient.name} on:click={createNewPatient} />
+<input type="text" bind:value={newProfile.fullName} on:click={createNewProfile} />
 <button>Create</button>

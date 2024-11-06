@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-import { env } from '$env/dynamic/public'
+//import { createClient } from "@supabase/supabase-js";
+//import { env } from '$env/dynamic/public'
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const clients = new Map<string, SupabaseClient>();

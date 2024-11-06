@@ -33,4 +33,21 @@
 
 .p {
     line-height: 1.3rem;
+    margin: .5rem 0;
+}
+
+.p > svg {
+    margin-right: 1rem;
+    width: 4rem;
+    height: 4rem;
+    float: left;
+}
+
+strong {
+    font-weight: 700;
+}
+
+.a {
+    font-weight: 600;
+    color: var(--color-interactivity);
 }
