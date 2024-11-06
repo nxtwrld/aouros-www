@@ -9,7 +9,7 @@
     import LoaderThinking from '$scomponents/ui/LoaderThinking.svelte';
     import Report from '$scomponents/profile/Session/FinalizeReport.svelte';
     import doctor, { getDoctorSignature } from '$slib/med/doctor';
-    import { profile } from '$slib/med/profile';
+    import { profile } from '$slib/med/profiles';
     import { float32Flatten } from '$slib/array';
     import { ANALYZE_STEPS } from '$slib/med/types.d';
   

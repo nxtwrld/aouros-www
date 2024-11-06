@@ -1,7 +1,7 @@
 <script lang="ts">
     import { profile} from '$slib/med/profiles';
     import { getAge } from '$slib/med/datetime';
-    import ValueTile from '../ValueTile.svelte';
+    import ValueTile from './ValueTile.svelte';
 
 
     $: values = ($profile) ?[

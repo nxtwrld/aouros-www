@@ -49,7 +49,7 @@ export const actions: Actions = {
     if (!validEmail) {
       return fail(400, { errors: { email: 'Please enter a valid email address' }, email })
     }
-
+    console.log('email', email)
     const { error } = await supabase.auth.signInWithOtp({ 
       email,
       options: {
@@ -58,6 +58,7 @@ export const actions: Actions = {
      })
 
     if (error) {
+      console.log('error', error)
       return fail(400, {
         success: false,
         email,
