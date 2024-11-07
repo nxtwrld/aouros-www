@@ -1,6 +1,6 @@
 
 import type { PageServerLoad } from './$types';
-import store from '$slib/med/profiles/profiles';
+import { profiles as store }  from '$slib/med/profiles';
 import { loadProfiles } from '$slib/med/profiles';
 import { setClient } from '$slib/supabase';
 

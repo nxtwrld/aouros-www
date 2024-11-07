@@ -2,6 +2,12 @@
     import type { SupabaseClient } from '@supabase/supabase-js';
 	import Avatar from './Avatar.svelte';
 
+    enum Languages {
+        en = 'en',
+        cs = 'cs',
+        de = 'de'
+    }
+
     export let supabase: SupabaseClient;
     export let ready: boolean = false;
     export let data: {
@@ -11,6 +17,7 @@
             birthDate: string;
             avatar: string;
             avatarUrl: string;
+            language: Languages;
         }
     }
     export let profileForm: HTMLFormElement;
@@ -30,7 +37,7 @@
     bind:url={data.bio.avatarUrl}
     size={10}
     on:upload={() => {
-    profileForm.requestSubmit();
+        profileForm.requestSubmit();
     }}
 />
 </div>
@@ -50,4 +57,13 @@
 <div class="input">
     <label for="birth_date">Birth date</label>
     <input id="birth_date" name="birth_date" type="date" bind:value={data.bio.birthDate} />
+</div>
+
+<div class="input">
+    <label for="avatar">Language</label>
+    <select id="language" name="language" bind:value={data.bio.language}>
+        <option value="en">English</option>
+        <option value="cs">Čeština</option>
+        <option value="de">Deutsch</option>
+    </select>
 </div>

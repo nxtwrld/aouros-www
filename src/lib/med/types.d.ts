@@ -5,14 +5,19 @@ export enum SexEnum {
     female
 }
 
-export interface Patient extends VCard {
-    uid: string;
-    name: string;
-    sex : SexEnum,
-    birthdate: Date;
-    location: string;
-}
 
+export interface Profile {
+    id: string;
+    langauge: string;
+    vcard: any;
+    health: any;
+    fullName: string;
+    birthDate: string;
+    insurance: any;
+    publicKey: string;
+    avatarUrl: string;
+    status: string;
+}
 
 
 export enum ANALYZE_STEPS {

@@ -1,5 +1,5 @@
 import { encryptString } from './passphrase';
-
+const crypto = globalThis.crypto;
 
 export class KeyPair {
     
@@ -39,7 +39,7 @@ export class KeyPair {
 
 // Generate a key pair (public/private) for encryption
 async function generateKeyPair(): Promise<CryptoKeyPair> {
-    return await window.crypto.subtle.generateKey(
+    return await crypto.subtle.generateKey(
         {
             name: 'RSA-OAEP',
             modulusLength: 2048, // Key size in bits
@@ -55,7 +55,7 @@ async function generateKeyPair(): Promise<CryptoKeyPair> {
 // Encrypt data using a public key
 export async function encrypt(publicKey: CryptoKey, data: string): Promise<string> {
     const encodedData = new TextEncoder().encode(data);
-    const encrypted = await window.crypto.subtle.encrypt(
+    const encrypted = await crypto.subtle.encrypt(
         {
             name: 'RSA-OAEP'
         },
@@ -68,7 +68,7 @@ export async function encrypt(publicKey: CryptoKey, data: string): Promise<strin
 // Decrypt data using a private key
 export async function decrypt(privateKey: CryptoKey, encryptedData: string): Promise<string> {
     const decodedData = new Uint8Array(atob(encryptedData).split('').map(char => char.charCodeAt(0)));
-    const decrypted = await window.crypto.subtle.decrypt(
+    const decrypted = await crypto.subtle.decrypt(
         {
             name: 'RSA-OAEP'
         },
@@ -80,7 +80,7 @@ export async function decrypt(privateKey: CryptoKey, encryptedData: string): Pro
 
 // Convert a public/private key to a PEM string format
 export async function keyToPEM(key: CryptoKey, isPrivate: boolean): Promise<string> {
-    const exported = await window.crypto.subtle.exportKey(
+    const exported = await crypto.subtle.exportKey(
         isPrivate ? 'pkcs8' : 'spki',
         key
     );
@@ -96,7 +96,7 @@ export async function pemToKey(pem: string, isPrivate: boolean): Promise<CryptoK
     const pemFooter = isPrivate ? '-----END PRIVATE KEY-----' : '-----END PUBLIC KEY-----';
     const pemContents = pem.replace(pemHeader, '').replace(pemFooter, '').replace(/\n/g, '');
     const binaryDer = Uint8Array.from(atob(pemContents), char => char.charCodeAt(0));
-    return await window.crypto.subtle.importKey(
+    return await crypto.subtle.importKey(
         isPrivate ? 'pkcs8' : 'spki',
         binaryDer.buffer,
         {

@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { type Patient, SexEnum } from '$slib/med/types.d';
+    import { type Profile, SexEnum } from '$slib/med/types.d';
     import { profiles } from '$slib/med/profiles';
-    import Patients from '$scomponents/profile/Profiles.svelte';
+    import Profiles from '$scomponents/profile/Profiles.svelte';
     import shortcuts from '$slib/shortcuts';
     import { onMount } from 'svelte';
     import Select from '$components/forms/Select.svelte';
@@ -23,7 +23,7 @@
         }
     ];
     
-    let results: Patient[] = [];
+    let results: Profile[] = [];
     let inputValue: string = '';
     let inputElement: HTMLInputElement;
     
@@ -42,7 +42,7 @@
             results = [];
             return;
         }
-        results = $profiles.filter((p: Patient) => {
+        results = $profiles.filter((p: Profile) => {
             return p.name.toLowerCase().includes(str.toLowerCase());
         });
         if (results.length > 0) {

@@ -1,3 +1,5 @@
+const crypto = globalThis.crypto;
+
 // encrypt string with passphrase
 export async function encryptString(message: string, passphrase: string): Promise<string> {
     // Convert message and passphrase to ArrayBuffer
@@ -6,7 +8,7 @@ export async function encryptString(message: string, passphrase: string): Promis
     const encodedPassphrase = encoder.encode(passphrase);
 
     // Derive a key from the passphrase using PBKDF2
-    const keyMaterial = await window.crypto.subtle.importKey(
+    const keyMaterial = await crypto.subtle.importKey(
         'raw',
         encodedPassphrase,
         { name: 'PBKDF2' },
@@ -14,8 +16,8 @@ export async function encryptString(message: string, passphrase: string): Promis
         ['deriveKey']
     );
 
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
-    const derivedKey = await window.crypto.subtle.deriveKey(
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const derivedKey = await crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
             salt: salt,
@@ -29,8 +31,8 @@ export async function encryptString(message: string, passphrase: string): Promis
     );
 
     // Encrypt the message using AES-GCM
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await window.crypto.subtle.encrypt(
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await crypto.subtle.encrypt(
         {
             name: 'AES-GCM',
             iv: iv
@@ -64,7 +66,7 @@ export async function decryptString(encryptedData: string, passphrase: string): 
     const encodedPassphrase = encoder.encode(passphrase);
 
     // Derive a key from the passphrase using PBKDF2
-    const keyMaterial = await window.crypto.subtle.importKey(
+    const keyMaterial = await crypto.subtle.importKey(
         'raw',
         encodedPassphrase,
         { name: 'PBKDF2' },
@@ -72,7 +74,7 @@ export async function decryptString(encryptedData: string, passphrase: string): 
         ['deriveKey']
     );
 
-    const derivedKey = await window.crypto.subtle.deriveKey(
+    const derivedKey = await crypto.subtle.deriveKey(
         {
             name: 'PBKDF2',
             salt: salt,
@@ -86,7 +88,7 @@ export async function decryptString(encryptedData: string, passphrase: string): 
     );
 
     // Decrypt the message using AES-GCM
-    const decrypted = await window.crypto.subtle.decrypt(
+    const decrypted = await crypto.subtle.decrypt(
         {
             name: 'AES-GCM',
             iv: iv

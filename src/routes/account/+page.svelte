@@ -70,7 +70,8 @@
 			email: session.user.email,
 			fullName: form?.fullName ?? profile?.fullName ?? '',
 			avatarUrl: profile?.avatarUrl ?? '',
-			birthDate: form?.birthDate ?? profile?.birthDate ?? ''
+			birthDate: form?.birthDate ?? profile?.birthDate ?? '',
+			language: form?.language ?? profile?.language ?? 'en'
 		},
 		subscription: profile?.subscription ?? 'individual',
 		vcard: JSON.parse(profile?.vcard ?? '{}'),
@@ -94,6 +95,7 @@
 		formData.append('fullName', editData.bio.fullName);
 		formData.append('avatarUrl', editData.bio.avatarUrl);
 		formData.append('birthDate', editData.bio.birthDate);
+		formData.append('language', editData.bio.language);
 		formData.append('vcard', JSON.stringify(editData.vcard));
 		formData.append('subscription', editData.subscription);
 		formData.append('insurance', JSON.stringify(editData.insurance));

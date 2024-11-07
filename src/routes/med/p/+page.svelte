@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { type Patient, SexEnum } from '$slib/med/types.d';
+    import { type Profile, SexEnum } from '$slib/med/types.d';
     import { profile } from '$slib/med/profiles';
     import profiles from '$slib/med/profiles/profiles';
     import Profiles  from '$scomponents/profile/Profiles.svelte';
 
     profile.set(null);
     export let data: {
-        profiles: Patient[]
+        profiles: Profile[]
     }
     profiles.set(data.profiles);
     

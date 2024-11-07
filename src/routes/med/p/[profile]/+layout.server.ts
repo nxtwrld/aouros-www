@@ -7,13 +7,13 @@ export const load: LayoutServerLoad = async ({ locals: { supabase }, params }) =
     
  
   const profile = await loadProfile(params.profile);
-  const documents = await loadDocuments(params.profile);
   
-  
-  if (!profile) {
+    console.log(profile); 
+  if (!profile || profile.status != 'approved') {
     redirect(303, '/med/p')
   }
   //console.log(profile)
+  const documents = await loadDocuments(params.profile);
 
     return { profile, documents };
  

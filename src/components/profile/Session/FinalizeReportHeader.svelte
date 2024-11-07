@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type Patient } from '$slib/med/types.d';
+    import { type Profile } from '$slib/med/types.d';
     import { profile } from '$slib/med/profiles';
 
     

@@ -2,7 +2,7 @@
     import { type Profile } from '$slib/med/types.d';
 
     export let data: {
-        profile
+        profile: Profile
     }
     const profile: Profile = data.profile;
 </script>

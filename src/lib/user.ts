@@ -23,7 +23,7 @@ type User = {
     privateKey: string;
     publicKey: string;
     key_hash: string;
-    unlocked: boolean;
+    unlocked: boolean | undefined;
 }
 
 const keys : {
@@ -57,13 +57,13 @@ export async function loadUser(): Promise<User | null> {
     .single()
 
     console.log('loadUser');
-    if (profile) {
+    if (profile && profile.fullName) {
         user.set({
             ...profile,
             health: JSON.parse(profile.health),
             insurance: JSON.parse(profile.insurance),
             vcard: JSON.parse(profile.vcard),
-            unlocked: false,
+            unlocked: undefined,
             isMedical: (profile.subscription === 'medical' || profile.subscription === 'gp'),
             email: userSession.email,
         })

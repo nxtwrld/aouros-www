@@ -1,6 +1,8 @@
+const crypto = globalThis.crypto;
+
 // Function to export an AES key to a Base64 string
 export async function exportKey(key: CryptoKey): Promise<string> {
-    const exportedKey = await window.crypto.subtle.exportKey('raw', key);
+    const exportedKey = await crypto.subtle.exportKey('raw', key);
     const exportedKeyArray = new Uint8Array(exportedKey);
     return btoa(String.fromCharCode(...exportedKeyArray));
 }
@@ -8,7 +10,7 @@ export async function exportKey(key: CryptoKey): Promise<string> {
 // Function to import a Base64-encoded AES key string back to a CryptoKey
 export async function importKey(keyString: string): Promise<CryptoKey> {
     const keyBytes = Uint8Array.from(atob(keyString), char => char.charCodeAt(0));
-    return await window.crypto.subtle.importKey(
+    return await crypto.subtle.importKey(
         'raw',
         keyBytes.buffer,
         { name: 'AES-GCM', length: 256 },
@@ -25,10 +27,10 @@ export async function encrypt(aesKey: CryptoKey, message: string): Promise<strin
     const encodedMessage = encoder.encode(message);
 
     // Generate a random IV (Initialization Vector)
-    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
 
     // Encrypt the message
-    const encryptedBuffer = await window.crypto.subtle.encrypt(
+    const encryptedBuffer = await crypto.subtle.encrypt(
         {
             name: 'AES-GCM',
             iv: iv
@@ -57,7 +59,7 @@ export async function decrypt(aesKey: CryptoKey, encryptedData: string): Promise
     const encryptedBytes = combinedData.slice(12); // Remaining bytes are the encrypted message
 
     // Decrypt the message
-    const decryptedBuffer = await window.crypto.subtle.decrypt(
+    const decryptedBuffer = await crypto.subtle.decrypt(
         {
             name: 'AES-GCM',
             iv: iv
@@ -72,7 +74,7 @@ export async function decrypt(aesKey: CryptoKey, encryptedData: string): Promise
 
 
 export async function prepareKey(): Promise<CryptoKey> {
-    const key = await window.crypto.subtle.generateKey(
+    const key = await crypto.subtle.generateKey(
         {
             name: 'AES-GCM',
             length: 256

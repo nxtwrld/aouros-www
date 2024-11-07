@@ -1,8 +1,8 @@
 <script lang="ts">
     
-    import { type Patient, SexEnum } from "$slib/med/types.d";
+    import { type Profile, SexEnum } from "$slib/med/types.d";
     import { profile } from "$slib/med/profiles";
-    let newProfile: Patient = {
+    let newProfile: Profile = {
         id: "NEW",
         fullName: "",
         sex: SexEnum.male,

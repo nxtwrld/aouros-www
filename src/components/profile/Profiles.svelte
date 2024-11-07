@@ -1,10 +1,25 @@
 <script lang="ts">
-    import { type Patient } from '$slib/med/types.d';
+    import { type Profile } from '$slib/med/types.d';
     import { getAge } from '$slib/med/datetime';
     import { goto } from '$app/navigation';
-    import profiles from '$slib/med/profiles/profiles';
+    import { profiles, removeLinkedProfile } from '$slib/med/profiles/';
+    import user from '$slib/user';
     
     const ROOT_PATH = '/med/p/';
+
+    function openProfile(profile: Profile) {
+        
+        if(profile.status == 'approved') goto(ROOT_PATH + profile.id);
+    }
+
+    async function deleteUser(id: string) {
+        try {
+            await removeLinkedProfile(id);
+            await profiles.update();
+        } catch (e) {
+            console.error(e);
+        }
+    }
 
 </script>
 <table class="table-list">
@@ -13,15 +28,26 @@
         <th>Age</th>
         <th>Brith date</th>
         <th>Phone</th>
+        <th>Status</th>
+        <th></th>
     </tr>
-{#each $profiles as patient}
-    <tr class="table-row -click" on:click={() => goto(ROOT_PATH + patient.id)}>
-        <td class="title">{patient.fullName}</td>
-        <td class="age">{getAge(patient.birthDate)}</td>
-        <td class="dob">{patient.birthDate}</td>
+{#each $profiles as profile}
+    <tr class="table-row -click -{profile.status}" on:click={() => openProfile(profile)}>
+        <td class="title">{profile.fullName}</td>
+        <td class="age">{getAge(profile.birthDate)}</td>
+        <td class="dob">{profile.birthDate}</td>
         <td class="tel">
-            {#if patient.tel?.[0]?.value}
-            <a href="tel:{patient.tel?.[0]?.value}" on:click|stopPropagation>{patient.tel?.[0]?.value}</a>
+            {#if profile.tel?.[0]?.value}
+            <a href="tel:{profile.tel?.[0]?.value}" on:click|stopPropagation>{profile.tel?.[0]?.value}</a>
+            {/if}
+        </td>
+        <td>{profile.status}</td>
+        <td>
+            {#if profile.status == 'approved'}
+            <a href={ROOT_PATH + profile.id} class="button">Open</a>
+            {/if}
+            {#if profile.id != $user.id}
+            <button on:click={() => deleteUser(profile.id)} class="button -danger">Delete</button>
             {/if}
         </td>
     </tr>
@@ -69,5 +95,12 @@
     }
     .table-list .age {
         width: 5rem;
+    }
+    .-request td {
+        background-color: var(--color-gray-500) !important;
+        cursor: not-allowed !important;
+    }
+    .-denied {
+        color: var(--color-negative);
     }
 </style>

@@ -51,11 +51,15 @@ export const actions: Actions = {
       key_hash: key_hash,
       updated_at: new Date(),
     })
-
-    const { data: link, error: linkError } = await supabase.from('profile-connect').upsert({
+/*
+    const { data: link, error: linkError } = await supabase.from('profileLinks').upsert({
       user_id: session?.user.id,
       profile_id: session?.user.id,
     }).single()
+
+    if (linkError) {
+      console.log('linkError', linkError)
+    }*/
 
     if (error) {
       return fail(500, {

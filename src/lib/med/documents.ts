@@ -76,7 +76,7 @@ export async function loadDocuments(profile_id: string | undefined = undefined):
     return documents;
 }
     
-export async function importDocuments(documentsEncrypted: DocumentEncrypted[]) {
+export async function importDocuments(documentsEncrypted: DocumentEncrypted[] = []) {
 
     const documentsPreload: DocumentPreload[] = await Promise.all(documentsEncrypted.map(async document => {
         const key = document.keys[0].key;
