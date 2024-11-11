@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
     import user from '$slib/user';
+    import Loading from "$components/ui/Loading.svelte";
 
     let passphrase = '';
 
@@ -34,25 +35,29 @@
 
 <slot/>
 {:else}
-<div class="overlay" transition:fade>
-    <div class="flex -center">
-        <div class="form">
-            <h2 class="h2">Unlock</h2>
-            {#if error}{error}{/if}
-            <form on:submit|preventDefault={unlock} autocomplete="on">
-                <div class="input -none">
-                    <input type="text" name="email" id="email" value={email} placeholder="Email" autocomplete="email" />
+    {#if unlocked === false}
+        <div class="overlay" transition:fade>
+            <div class="flex -center">
+                <div class="form">
+                    <h2 class="h2">Unlock</h2>
+                    {#if error}{error}{/if}
+                    <form on:submit|preventDefault={unlock} autocomplete="on">
+                        <div class="input -none">
+                            <input type="text" name="email" id="email" value={email} placeholder="Email" autocomplete="email" />
+                        </div>
+                        <div class="input">
+                            <input type="password" name="password" id="password" bind:value={passphrase} placeholder="Passphrase" autocomplete="current-password" />
+                        </div>
+                        <div class="form-actions">
+                            <button class="button -primary" >Unlock</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="input">
-                    <input type="password" name="password" id="password" bind:value={passphrase} placeholder="Passphrase" autocomplete="current-password" />
-                </div>
-                <div class="form-actions">
-                    <button class="button -primary" >Unlock</button>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
-</div>
+    {:else}
+        <Loading/>
+    {/if}
 {/if}
 
 

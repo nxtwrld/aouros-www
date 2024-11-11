@@ -16,7 +16,7 @@
     flex-grow: 1;
 }
 
-.toolbar > * {
+.toolbar > *:not(.toolbar) {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -26,6 +26,15 @@
     border-style: solid;
     border-bottom-width:  2px;
     border-color: var(--button-color);
+    min-width: var(--toolbar-height);
+}
+
+.toolbar > .toolbar {
+    flex-grow: 1;
+    padding: 0;
+    margin: 0;
+    border-width: 0px;
+    border-radius: 0;
 }
 
 .toolbar a,

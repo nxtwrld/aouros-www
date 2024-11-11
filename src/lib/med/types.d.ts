@@ -17,6 +17,7 @@ export interface Profile {
     publicKey: string;
     avatarUrl: string;
     status: string;
+    publicKey: string;
 }
 
 

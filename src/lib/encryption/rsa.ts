@@ -91,7 +91,7 @@ export async function keyToPEM(key: CryptoKey, isPrivate: boolean): Promise<stri
 }
 
 // Convert a PEM string to a CryptoKey object
-export async function pemToKey(pem: string, isPrivate: boolean): Promise<CryptoKey> {
+export async function pemToKey(pem: string, isPrivate: boolean = false): Promise<CryptoKey> {
     const pemHeader = isPrivate ? '-----BEGIN PRIVATE KEY-----' : '-----BEGIN PUBLIC KEY-----';
     const pemFooter = isPrivate ? '-----END PRIVATE KEY-----' : '-----END PUBLIC KEY-----';
     const pemContents = pem.replace(pemHeader, '').replace(pemFooter, '').replace(/\n/g, '');

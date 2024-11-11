@@ -1,0 +1,63 @@
+<script lang="ts">
+    export let prop : {
+        key: string,
+        type: string,
+        unit?: string,
+        options?: string[]
+    };
+
+    let id: string = Math.random().toString(36).substring(7);
+
+    export let data: any;
+</script>
+<div class="input">
+    {#if prop.key != "value"}
+    <label for={id}>{prop.key}</label>
+    {/if}
+    {#if prop.type === 'select' && prop.options}
+            <select id={id} bind:value={data}>
+                {#each prop.options as option}
+                <option value={option}>{option}</option>
+                {/each}
+            </select>
+    {/if}
+
+    <div class="field">
+    {#if prop.type === 'text'}
+            <input type="text" id={id} bind:value={data} />
+    {/if}
+
+
+
+    {#if prop.type === 'number'}
+        <input type="number" id={id} bind:value={data}  data-unit={prop.unit}/>
+    {/if}
+        
+    {#if prop.type == 'date'}
+        <input type="date" id={id} bind:value={data}/>
+    {/if}
+    {#if prop.unit}
+        <span class="unit">{prop.unit}</span>
+    {/if}
+    </div>
+</div>
+
+<style>
+    .field {
+        position: relative;
+        width: 100%;
+    }
+    .field input {
+        width: 100%;
+    }
+    .field:has(.unit) input {
+        padding-right: 4rem;
+    }
+    .field .unit {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 1rem;
+    }   
+</style>

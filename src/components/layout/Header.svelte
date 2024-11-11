@@ -5,7 +5,7 @@
     import user from "$slib/user";
     import Search from "./Search.svelte";
     import { goto } from "$app/navigation";
-
+    import MenuBurger from "$scomponents/ui/MenuBurger.svelte";
 
 
     function isActive(path: string, currentPath: string) {
@@ -16,7 +16,36 @@
         const r = await user.logout();
         goto('/auth?redirect=/med');
     }
+
+    enum Menu {
+        'user',
+        'tools',
+        'none'
+    }
+
+
+    let isSearchOpen: boolean = false;
+
+    $: {
+        if (isSearchOpen) {
+            activeMenu = Menu.none;
+        }
+    }
+
+    let activeMenu: Menu = Menu.none;
+    function toggleMenu(menu: Menu) {
+        if (activeMenu == menu) {
+            activeMenu = Menu.none;
+        } else {
+            activeMenu = menu;
+        }
+    }
+
 </script>
+
+<svelte:window on:click={() => {
+    activeMenu = Menu.none;
+}} />
 
 <header>
     <nav class="toolbar">
@@ -25,9 +54,42 @@
                 <use href="/logo.svg#icon"></use>
             </svg>
         </a>
+        <div class="navigation-mobile toolbar">
+            <div class="spacer"></div>
+            <button class="mobile-menu" on:click|stopPropagation={() => toggleMenu(Menu.tools)}><MenuBurger open={activeMenu == Menu.tools} /></button>
+        </div>
+        
+        <div class="navigation toolbar" class:-open={activeMenu == Menu.tools}>
+
+            
+            {#if $user.subscription != 'individual'}
+                <a href="/med/p/" class:-active={$page.url.pathname == '/med/p/'}>Profiles</a>
+            {/if}
+
+            {#if $profile}
+                {#if $profile.id}
+                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname)}>{$profile.fullName}</a>
+                    <!--div class="spacer"></div-->
+                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname)}>Documents</a>
+                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>History</a>
+                    {#if $user.isMedical}
+                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>New Session</a>
+                    {/if}
+                {:else}
+                    <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{$profile.name}</div>
+                    <div class="spacer"></div>
+                {/if}
+            {:else}
+                <div class="spacer"></div>
+                {#if $user.subscription != 'individual'}
+                <a href="/med/p/addprofile/">Add profile</a>
+                {/if}
+            {/if}
+            <a href="/med/import" class:-active={$page.url.pathname == '/med/import/'}>Import</a>
+        </div>
         {#if $user}
-        <div class="menu icon">
-            <button><svg>
+        <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
+            <button on:click|stopPropagation={() => toggleMenu(Menu.user)}><svg>
                 <use href="/icons.svg#doctor"></use>
                 </svg>
             </button>
@@ -38,41 +100,17 @@
 
                     </div>
                 </li>
-                <li><button class="user-menu" on:click={logout}>Logout</button></li>
+                <li><button on:click={logout}>Logout</button></li>
             </ul>
         </div>
-        {/if}
-        {#if $user.subscription != 'individual'}
-            <a href="/med/p/" class:-active={$page.url.pathname == '/med/p/'}>Profiles</a>
-        {/if}
-        {#if $profile}
-
-
-
-                {#if $profile.id}
-                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname)}>{$profile.fullName}</a>
-                    <!--div class="spacer"></div-->
-                    <a href="/med/p/{$profile.id}/documents" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname)}>Documents</a>
-                    <a href="/med/p/{$profile.id}/history" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>History</a>
-                    {#if $user.isMedical}
-                    <a href="/med/p/{$profile.id}/session" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>New Session</a>
-                    {/if}
-                {:else}
-                    <div class="profile" class:-active={$page.url.pathname == '/med/p/newpatient/'}>{$profile.name}</div>
-                    <div class="spacer"></div>
-                {/if}
-        {:else}
-            <div class="spacer"></div>
-            {#if $user.subscription != 'individual'}
-            <a href="/med/p/newpatient/">Add profile</a>
-            {/if}
         {/if}
         <button on:click={() => emit('find')} class="icon"><svg >
             <use href="/icons.svg#search"></use>
         </svg></button>
+
 </nav>
 </header>
-<Search />
+<Search bind:isSearchOpen={isSearchOpen} />
 <style>
     header {
         position: fixed;
@@ -82,6 +120,7 @@
         height: var(--toolbar-height);
         background-color: var(--background);
         z-index: 1000;
+        --menu-shadow: 0 1rem 1rem -.5rem var(--color-gray-800);
     }
 
     .icon {
@@ -130,24 +169,27 @@
         padding: 0;
         margin: 0;
     }
+   
+
     .menu > ul.menu {
         position: absolute;
         top: calc(100% + var(--gap));
-        left: 0;
+        right: 0;
         max-height: 0;
         min-width: 10rem;
         background-color: var(--color-gray-500);
         border-radius: var(--radius);
-        box-shadow: 0 1rem 1rem -.5rem var(--color-gray-800);
+        box-shadow: var(--menu-shadow);
         transition: max-height .5s;
         overflow: hidden;
     }
-    .menu:hover {
+    .menu.-open {
         background-color: var(--color-white);
     }
-    .menu:hover > ul.menu {
+    .menu.-open > ul.menu {
         max-height: 100vh;
     }
+   
     .menu > ul.menu li {
     
         margin-top: var(--gap);
@@ -174,5 +216,65 @@
     }
     .user .h3 {
         white-space: nowrap;
+    }
+
+
+    .toolbar > .navigation-mobile {
+            display: none;
+    }
+
+    .mobile-menu {
+        padding: .6rem;
+    }
+    @media screen and (max-width: 768px) {
+        .toolbar .navigation-mobile {
+            display: flex;
+        }
+        .toolbar > .navigation {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+            position: fixed;
+            width: 100%;
+            height: calc(100vh - var(--toolbar-height));
+            top: var(--toolbar-height);
+            background-color: var(--color-gray-500);
+            padding-top: var(--gap);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .5s;
+        }
+        .toolbar > .navigation.-open {
+            max-height: calc(100vh - var(--toolbar-height));
+            box-shadow: var(--menu-shadow);
+
+        }
+        .toolbar > .navigation .spacer {
+            display: none;
+        }
+        .toolbar > .navigation > a {
+            display: block;
+            padding: 1rem;
+            margin-bottom: var(--gap);
+            flex-grow: 0;
+        }
+        .toolbar > .navigation > a.sub-item {
+            padding-left: 2rem;
+        }
+        .toolbar > .navigation > a.-active {
+            background-color: var(--color-white);
+            border-bottom-color: var(--color-interactivity);
+        }
+
+        .menu > ul.menu {
+            position: fixed;
+            top: var(--toolbar-height);
+            left: 0;
+            width: 100%;
+            height: calc(100vh - var(--toolbar-height));
+
+        }
+
     }
 </style>

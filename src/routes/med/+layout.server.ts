@@ -1,8 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
-import { loadUser } from '$slib/user';
 
-export const load: LayoutServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
+export const load: LayoutServerLoad = async ({ locals: { safeGetSession } }) => {
     
   const { session } = await safeGetSession()
 
@@ -10,7 +9,13 @@ export const load: LayoutServerLoad = async ({ locals: { supabase, safeGetSessio
     redirect(303, '/auth')
   }
 
-  const user = await loadUser();
+
+  
+  /*
+  console.log('loading.user...')
+  const user = await loadUser(supabase);
+  
+
   if (!user) {
     redirect(303, '/account')
   }
@@ -18,7 +23,7 @@ export const load: LayoutServerLoad = async ({ locals: { supabase, safeGetSessio
   if (user.subscription == 'individual') {
     redirect(303, '/med/p/'+user.id)
   }
-
-  return { session, user };
+*/
+  return { session };
  
 }

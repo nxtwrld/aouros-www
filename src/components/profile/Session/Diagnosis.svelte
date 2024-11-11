@@ -1,7 +1,7 @@
 <script lang="ts">
     import { getSortForEnum, sortbyProperty } from '$slib/array';
     import { ANALYZE_STEPS } from '$slib/med/types.d';
-    import ValueTile from '../ValueTile.svelte';
+    import PropertyTile from '../PropertyTile.svelte';
 
 
     export let analysis: any;
@@ -100,7 +100,7 @@
     <h4 class="h4">Results</h4>
     <div class="block-grid">
         {#each analysis.results as result}
-            <ValueTile {result} />
+            <PropertyTile property={result} />
 
         {/each}
     </div>

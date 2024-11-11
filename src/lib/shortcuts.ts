@@ -56,14 +56,14 @@ export function emitShortcut(event: KeyboardEvent): void {
         code += 'Alt+';
     }
     code += event.code;
-    console.log('Emitting', code, event);
+    //console.log('Emitting', code, event);
     
     Object.keys(defaultShortcuts).forEach((key) => {
         if (key === code) {
             eventEmitter.emit(defaultShortcuts[key]);
         }
     });
-
+    eventEmitter.emit('shortcut', code);
     eventEmitter.emit(code);
 }
 

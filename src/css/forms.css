@@ -1,3 +1,14 @@
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
 
 
 .form {
@@ -32,6 +43,7 @@
 
 
 .input {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: .5rem;
@@ -90,6 +102,9 @@
     border-radius: var(--radius-8);
     color: transparent;
     transition: background-color .2s;
+}
+.input input[type="number"] {
+    text-align: right;
 }
 .input input[type="checkbox"]:checked::before {
     background-color: var(--color-interactivity);

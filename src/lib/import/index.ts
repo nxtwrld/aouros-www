@@ -21,6 +21,8 @@ export interface Document {
         image?: string;
         thumbnail?: string;
     }[];
+    type: 'application/pdf' | 'images';
+    files: string | ArrayBuffer | string[];
 }
 
 export async function processDocument(document: Document) {

@@ -1,0 +1,62 @@
+{
+    "birthDate": {
+        "key": "birthDate",
+        "type": "date"
+    },
+    "age": {
+        "key": "age",
+        "type": "number",
+        "unit": "years"
+    },
+    "biologicalSex": {
+        "key": "biologicalSex",
+        "type": "enum",
+        "options": ["male", "female", "intersex"]
+    },
+    "bloodType": {
+        "key": "bloodType",
+        "type": "enum",
+        "options": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+    },
+    "weight": {
+        "key": "weight",
+        "type": "number",
+        "unit": "kg"
+    },
+    "height": {
+        "key": "height",
+        "type": "number",
+        "unit": "cm"
+    },
+    "systolic": {
+        "key": "systolic",
+        "type": "number",
+        "unit": "mmHg"
+    },
+    "diastolic": {
+        "key": "diastolic",
+        "type": "number",
+        "unit": "mmHg"
+    },
+    "heartRate": {
+        "key": "heartRate",
+        "type": "number",
+        "unit": "bpm"
+    },
+    "temperature": {
+        "key": "temperature",
+        "type": "number",
+        "unit": "°C"
+    },
+    "oxygenSaturation": {
+        "key": "oxygenSaturation",
+        "type": "number",
+        "unit": "%"
+    },
+    "bloodSugar": {
+        "key": "bloodSugar",
+        "type": "number",
+        "unit": "mg/dL"
+    }
+
+}

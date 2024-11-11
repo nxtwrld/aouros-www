@@ -3,6 +3,8 @@ import mixpanel from 'mixpanel-browser';
 import { createBrowserClient, createServerClient, isBrowser, parse } from '@supabase/ssr'
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public'
 import type { LayoutLoad } from './$types'
+import { setClient } from '$slib/supabase'
+import { session } from "$slib/user";
 
 mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: true });
 
@@ -10,12 +12,13 @@ mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: true });
 export const trailingSlash = 'always';
 
 export const load: LayoutLoad = async ({ data, depends, fetch }) => {
+  console.log('loading.auth...')
   /**
    * Declare a dependency so the layout can be invalidated, for example, on
    * session refresh.
    */
   depends('supabase:auth')
-
+  
   const supabase = isBrowser()
     ? createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         global: {
@@ -38,6 +41,8 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
           },
         },
       })
+    
+  setClient(supabase)
 
   /**
    * It's fine to use `getSession` here, because on the client, `getSession` is
@@ -45,12 +50,14 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
    * safely checked the session using `safeGetSession`.
    */
   const {
-    data: { session },
+    data: { session: currentSession },
   } = await supabase.auth.getSession()
 
   const {
     data: { user }
   } = await supabase.auth.getUser()
 
-  return { supabase, session, user }
+  session.set(currentSession);
+
+  return { supabase, session: currentSession, user }
 }

@@ -92,11 +92,11 @@ export async function processTask(task: Task): Promise<Document[]> {
     switch (task.type) {
         case 'application/pdf':
             return await processPDF(task.data as ArrayBuffer).then((assessment) => {
-                return processMultipageAssessmentToDocumnets(assessment, []);
+                return processMultipageAssessmentToDocumnets(assessment, [], task);
             });
         case 'images':
             return await processImages(task.data as string[]).then((assessment) => {
-                return processMultipageAssessmentToDocumnets(assessment, []);
+                return processMultipageAssessmentToDocumnets(assessment, [], taks);
             });
         default:
             return Promise.reject('Unsupported task type');
@@ -179,7 +179,7 @@ export function processFiles(files: File[]): Promise<Document[]> {
 */
 
 
-function processMultipageAssessmentToDocumnets(assessment: AssessmentClient, documents: Document[]): Document[] {
+function processMultipageAssessmentToDocumnets(assessment: AssessmentClient, documents: Document[], taks: Task): Document[] {
     assessment.documents.forEach((doc) => {
         
         const pages = doc.pages.map((page, index) => {
@@ -200,7 +200,9 @@ function processMultipageAssessmentToDocumnets(assessment: AssessmentClient, doc
         documents.push({
             ...doc,
             state: DocumentState.NEW,
-            pages
+            pages,
+            type: taks.type,
+            files: taks.data,
         })
     });
     return documents;

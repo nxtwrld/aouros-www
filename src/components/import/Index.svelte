@@ -4,7 +4,8 @@
     import { processDocument } from '$slib/import';
     import { type Document, DocumentState } from '$slib/import';
     import { files, type Task, TaskState } from '$slib/files';
-    import { addDocument, loadDocuments } from '$slib/med/documents';
+    import { addDocument } from '$slib/med/documents';
+    import  user from '$slib/user';
 
     let documents: Document[] = [];
     let results: any = [];
@@ -13,6 +14,8 @@
 
     let currentFiles: File[] = [];
     let processingFiles: File[] = [];
+    let processedCount: number = 0;
+    $: remainingScans = ($user?.subscriptionStats?.scans || 0) - processedCount;
 
     enum AssessingState {
         IDLE = 'IDLE',
@@ -31,6 +34,7 @@
         files.set([...$files, ...e.target.files]);
     }
 
+    
     files.subscribe(value => {
         if (value.length > 0) {
             console.log('subscribed', value);
@@ -88,7 +92,7 @@
         documents = [...documents, ...valid];
         invalids = [...invalids, ...invalid];
         process();
-
+        processedCount++;
         assessingState = AssessingState.IDLE;
         //documents = await processFiles(files);
 
@@ -136,8 +140,16 @@
 
 </script>
 
+{#if $user.subscriptionStats?.scans <= 0}
+    <div class="alert -warning">
+        You have reached your monthly limit of 10 scans. Please upgrade your subscription to continue.
+    </div>
+{:else}
+
+    
+
     <input type="file" id="upload-file" class="-none" accept=".pdf" on:change={fileInput} />
-    <label for="upload-file" class="button">Select File</label>
+    
 
     <div class="imports">
         {#each [...results, ...documents] as doc}
@@ -177,13 +189,24 @@
                 {task.state}
             </div>
         {/each}
+        <label for="upload-file" class="button report">
+            <div class="preview">
+                <svg>
+                    <use href="/icons.svg#add-file" />
+                </svg>
+            </div>
+            Add files
+
+        </label>
     </div>
 
+    <div class="controls">
+        <p>You still have {remainingScans} scans in your yearly subscription.</p>
+        <button on:click={assess} class="button -primary" disabled={tasks.length == 0}>Analyze reports</button>
+        <button class="button" on:click={add}>Save</button>
+    </div>
 
-    <button on:click={assess} class="button -primary" disabled={tasks.length == 0}>Analyze reports</button>
-    <button class="button" on:click={add}>Save</button>
-    <button class="button" on:click={() => loadDocuments()}>Load</button>  
-
+{/if}
 <style>
     .thumbmail {
         max-width: 6rem;
@@ -197,6 +220,7 @@
     .imports {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 1rem;
         padding: 1rem;
 
@@ -208,7 +232,7 @@
         align-items: center;
         width: 8rem;
         padding: 1rem;
-        background-color: var(--color-white);
+        background-color: var(--color-gray-300);
         border: .2rem solid var(--color-gray-500);
         overflow: hidden;
         border-radius: var(--radius-8);
@@ -232,7 +256,18 @@
         height: 7rem;
         overflow: hidden;
     }
+    .report .preview svg {
+        width: 100%;
+        height: 100%;
+        fill: var(--color-interactivity);
+    }
 
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem;
+    }
 
 
 </style>

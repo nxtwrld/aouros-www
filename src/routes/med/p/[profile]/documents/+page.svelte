@@ -1,7 +1,10 @@
 <script lang="ts">
-    import documents from '$slib/med/documents';
+    import { byUser } from '$slib/med/documents';
     import { profile } from '$slib/med/profiles';
 
+
+    const documents = byUser($profile.id);
+    console.log(documents, $documents);
 </script>
 
 <div class="page">
@@ -13,8 +16,9 @@
     <div class="document">
         <a href="/med/p/{$profile.id}/documents/{doc.id}">
 
-            {doc.title} - 
-            {doc.tags}
+            {doc.metadata.title} - 
+            {doc.type} -
+            {doc.metadata.tags.join(', ')}
         </a>
     </div>
 {/each}

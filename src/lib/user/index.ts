@@ -2,9 +2,17 @@ import { writable, type Writable, get, type Updater} from "svelte/store";
 import { getClient } from "$slib/supabase";
 import type { VCard } from '$lib/contact/types.d';
 import auth from '$slib/auth';
-import { decryptString } from "./encryption/passphrase";
-import { verifyHash } from "./encryption/hash";
-import { KeyPair, pemToKey } from "./encryption/rsa";
+import { decryptString } from "../encryption/passphrase";
+import { verifyHash } from "../encryption/hash";
+import { KeyPair, pemToKey } from "../encryption/rsa";
+import { loadSubscription } from "./subscriptions";
+
+type UserFirstTime = {
+    email: string;
+    id: string;
+    auth_id: string;
+    unlocked: boolean | undefined;
+}
 
 type User = {
     email: string;
@@ -12,18 +20,17 @@ type User = {
     auth_id: string;
     fullName: string;
     avatarUrl: string;
-    birthDate: string;
-    vcard: VCard;
-    health: Record<string, any>;
     subscription: string;
-    insurance:{
-        number: string;
-        provider: string;
-    };
+    subscriptionStats: {
+        profiles: number;
+        scans: number;
+    }
     privateKey: string;
     publicKey: string;
     key_hash: string;
+    key_pass: string;
     unlocked: boolean | undefined;
+    isMedical: boolean;
 }
 
 const keys : {
@@ -33,7 +40,7 @@ const keys : {
 
 let keyPair: KeyPair = new KeyPair();
 
-const user: Writable<User | null> = writable(null);
+const user: Writable<User |  UserFirstTime | null> = writable(null);
 
 user.subscribe((value) => {
     if (!value) {
@@ -42,43 +49,62 @@ user.subscribe((value) => {
     }
 });
 
-export async function loadUser(): Promise<User | null> {
-    const supabase = getClient();
 
+const userSession = writable(null);
+export const session = {
+    subscribe: userSession.subscribe,
+    set: userSession.set,
+    update: userSession.update,
+    get : () => get(userSession)
+
+}
+
+
+export async function setUser(profile: UserFirstTime | User) {
+    const supabase = getClient();
+    
     const { data: { user: userSession }, error: userError } = await supabase.auth.getUser();
     if (userError || !userSession) {
         throw userError;
     }
 
-    const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select(`fullName, birthDate, vcard, health, insurance, subscription, privateKey, publicKey, avatarUrl, key_hash, auth_id, id`)
-    .eq('auth_id', userSession?.id)
-    .single()
+    if (!userSession) {
+        throw new Error('No user session');
+    }
 
-    console.log('loadUser');
     if (profile && profile.fullName) {
+        const subscriptionStats = await loadSubscription();
+        
+
+        profile.privateKey = profile.private_keys.privateKey;
+        profile.key_hash = profile.private_keys.key_hash;
+        const key_pass = profile.private_keys.key_pass;
+
+        delete profile.private_keys;
+
+
         user.set({
             ...profile,
-            health: JSON.parse(profile.health),
-            insurance: JSON.parse(profile.insurance),
-            vcard: JSON.parse(profile.vcard),
             unlocked: undefined,
             isMedical: (profile.subscription === 'medical' || profile.subscription === 'gp'),
-            email: userSession.email,
+            email: userSession.email as string,
+            subscriptionStats
         })
 
-        unlock(userSession.id);
+        await unlock(key_pass);
+
+        return get(user);
     } else {
         user.set({
             id: userSession.id,
-            email: userSession.email,
+            auth_id: userSession.id,
+            email: userSession.email as string,
+            unlocked: undefined
         })
+        return null;
     }
-
-    return profile;
-
 }
+
 
 export function clearUser() {
     console.log('Clearing user');
@@ -91,7 +117,7 @@ function getId(): string | null {
     return $user ? $user.id : null;
 }
 
-async function unlock(passphrase: string): Promise<boolean> {
+async function unlock(passphrase: string | null): Promise<boolean> {
     const { update } = user;
     const $user = get(user);
     if (!$user) {
@@ -99,7 +125,8 @@ async function unlock(passphrase: string): Promise<boolean> {
     }
     const { key_hash } = $user;
     // check if key matches our hash
-    const unlocked = await verifyHash(passphrase, key_hash);
+
+    const unlocked = (passphrase) ? await verifyHash(passphrase, key_hash) : false;
 
     console.log('Unlocking', unlocked);
 
@@ -183,5 +210,6 @@ export default {
     getId,
     ...user,
     ...auth,
+    set: setUser,
     unlock
 };

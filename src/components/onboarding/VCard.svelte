@@ -140,7 +140,7 @@
 
 <h2 class="h2">Contact information (optional)</h2>
 
-<div class="tabhead">
+<div class="tab-heads">
 {#each Object.keys(formSets) as key}
     <button  on:click={() => currentSet = key} class:-active={currentSet == key}>{key}</button>
 {/each}
@@ -224,51 +224,7 @@
         margin: 1rem 0;
     }
 
-    .tabhead {
-        --radius: 0;
-        display: flex;
-        width: 100%;
-        justify-content: stretch;
-        align-items: stretch;
-        gap: var(--gap);
-    }
-    .tabhead > button,
-    .tabhead > a {
-        flex-grow: 1;
-        padding: .5rem;
-        background-color: var(--color-white);
-        border-top: 3px solid var(--color-gray-800);
-        transition: background-color .5s, color .5s, border-color .5s;
-    }
-
-    .tabhead > button:first-child,
-    .tabhead > a:first-child {
-        border-top-left-radius: var(--radius);
-    }
-
-    .tabhead > button:last-child,
-    .tabhead > a:last-child {
-        border-right: none;
-        border-top-right-radius: var(--radius);
-    }
-
-    .tabhead > button:hover,
-    .tabhead > a:hover {
-        background-color: var(--color-interactivity);
-        border-color: var(--color-interactivity);
-        color: var(--color-interactivity-text);
-        font-weight: 700;
-    }
-
-    .tabhead > button.-active,
-    .tabhead > a.-active {
-        font-weight: 700;
-        border-color: var(--color-interactivity);
-        color: var(--color-interactivity);
-        background-color: transparent;
-    }
-
-    .tabhead {
+    .tabs-head {
         margin-bottom: 1rem;
     }
 </style>

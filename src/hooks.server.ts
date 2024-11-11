@@ -2,7 +2,6 @@ import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-import { setClient } from '$slib/supabase';
 
 
 
@@ -68,7 +67,6 @@ const supabase: Handle = async ({ event, resolve }) => {
     },
   })
 
-  setClient(event.locals.supabase);
 
   /**
    * Unlike `supabase.auth.getSession()`, which returns the session _without_

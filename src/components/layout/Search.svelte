@@ -6,24 +6,72 @@
     import { onMount } from 'svelte';
     import Select from '$components/forms/Select.svelte';
     import { goto } from '$app/navigation';
+    import user from '$slib/user';
+    import { searchOptimize } from '$slib/strings';
     
-    
-    const commands = [
+    type Command = {
+        command: string;
+        translation?: string;
+        path?: string;
+        action?: () => void;
+    }
+
+    let commands: Command[] = [
         {
             command: 'view',
+            translation: 'View profile',
             path: '/med/p/[UID]/'
         },
+
         {
-            command: 'session',
-            path: '/med/p/[UID]/session'
+            command: 'documents',
+            translation: 'View documents',
+            path: '/med/p/[UID]/documents'
         },
         {
             command: 'history',
+            translation: 'View history',
             path: '/med/p/[UID]/history'
         }
     ];
+
+    let systemCommands: Command[] = [
+        {
+            command: 'profiles',
+            translation: 'Profiles',
+            path: '/med/p'
+        },
+        {
+            command: 'logout',
+            translation: 'Logout',
+            action: () => {
+                user.logout();
+                goto('/auth');
+            }
+        },
+        {
+            command: 'import',
+            translation: 'Import files',
+            path: '/med/import'
+        }
+    ]
+
+    $: {
+        if ($user) {
+            if ($user.isMedical) {
+                commands = [
+                    ...commands,
+                    {
+                        command: 'session',
+                        translation: 'Start an interview session',
+                        path: '/med/p/[UID]/session'
+                    }
+                ]
+            }
+        }
+    }   
     
-    let results: Profile[] = [];
+    let results: (Profile | Command)[] = [];
     let inputValue: string = '';
     let inputElement: HTMLInputElement;
     
@@ -35,21 +83,34 @@
     }
 
     function search (str: string = '') {
-        console.log(str);
+
         selectedResult = -1;
         selectedCommand = -1;
         if (str === '') {
             results = [];
             return;
         }
-        results = $profiles.filter((p: Profile) => {
-            return p.name.toLowerCase().includes(str.toLowerCase());
-        });
+        results = [
+            ...$profiles.filter((p: Profile) => {
+                const isInName = (p.fullName) ? searchOptimize(p.fullName).includes(searchOptimize(str)) : false;
+                return isInName;
+            }),
+            ...systemCommands.filter((c) => {
+                let isInCommnad = c.command.toLowerCase().includes(str.toLowerCase())
+                let isInTranslation = c.translation ? searchOptimize(c.translation).includes(searchOptimize(str)) : false;
+                return isInCommnad || isInTranslation;
+            })
+
+        ];
+
+
+
         if (results.length > 0) {
             selectedResult = 0;
         }
+
     }
-    let isSearchOpen: boolean = false;
+    export let isSearchOpen: boolean = false;
     let blurTimer: ReturnType<typeof setTimeout>;
 
     function showSearch() {
@@ -67,7 +128,6 @@
     }
 
     function handleKeyDown(e: KeyboardEvent) {
-        console.log(e.code);
         if (e.code === 'Escape') {
             hideSearch();
         }
@@ -85,8 +145,20 @@
         }
         if (e.code === 'Enter') {
             if (results[selectedResult]) {
+
+                if (results[selectedResult].hasOwnProperty('action')) {
+                    results[selectedResult].action();
+                    hideSearch();
+                    return;
+                }
+                if (results[selectedResult].hasOwnProperty('path')) {
+                    goto(results[selectedResult].path);
+                    hideSearch();
+                    return;
+                }
+
                 if (selectedCommand === -1) selectedCommand = 0;
-                goto(commands[selectedCommand].path.replace('[UID]', results[selectedResult].uid));
+                goto(commands[selectedCommand].path.replace('[UID]', results[selectedResult].id));
 
                 hideSearch();
             }
@@ -96,14 +168,24 @@
     function pressTab () {
         inputElement.focus()
             if (results[selectedResult]) {
-                inputValue = results[selectedResult].name;
+                if (results[selectedResult].hasOwnProperty('id')) {
+                    inputValue = results[selectedResult].fullName;
+                                    // place carrer at the end of the input
+                    setTimeout(() => {
+                        if (selectedCommand + 1 <= commands.length -1) selectedCommand++;
+                        else selectedCommand = 0;
+                        focusInput();
+                    }, 10);
+                } else {
+                    inputValue = results[selectedResult].translation || results[selectedResult].command;
+                                    // place carrer at the end of the input
+                    setTimeout(() => {
+                        selectedCommand = -1;
+                        focusInput();
+                    }, 10);
+                }
 
-                // place carrer at the end of the input
-                setTimeout(() => {
-                    if (selectedCommand + 1 <= commands.length -1) selectedCommand++;
-                    else selectedCommand = 0;
-                    focusInput();
-                }, 10);
+
             }
     }
 
@@ -144,7 +226,7 @@
         <div class="hint">
             <span class="value">{inputValue}</span>
             {#if commands[selectedCommand]}
-                <span class="command">&nbsp; &gt;&gt; {commands[selectedCommand].command}</span>
+                <span class="command">&nbsp; &gt;&gt; {commands[selectedCommand].translation}</span>
             {/if}
         </div>
         <input type="search" 
@@ -164,8 +246,12 @@
     <div class="search-results">
         {#each results as result, i}
             <div class="search-result" class:-selected={i === selectedResult}>
-                 <div class="search-result-name">{result.name}</div>
-                <div class="search-result-id">{result.uid}</div>
+                {#if result.hasOwnProperty('id')}
+                    <div class="search-result-name">{result.fullName}</div>
+                    <div class="search-result-id">{result.id}</div>
+                {:else}
+                 <div class="search-result-name">{result.translation}</div>
+                {/if}
             </div>
         {/each}
     </div> 

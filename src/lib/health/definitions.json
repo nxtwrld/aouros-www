@@ -1,0 +1,183 @@
+[
+    {
+        "key": "birthDate",
+        "type": "date"
+    },
+    {
+        "key": "biologicalSex",
+        "type": "select",
+        "options": ["male", "female", "intersex"]
+    },
+    {
+        "key": "bloodType",
+        "type": "select",
+        "options": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+    },
+    {
+        "key": "weight",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "date",
+                "type": "date"
+            },
+            {
+                "key": "weight",
+                "type": "number",
+                "unit": "kg"
+            }
+        ]
+    },
+    {
+        "key": "height",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "date",
+                "type": "date"
+            },
+            {
+                "key": "height",
+                "type": "number",
+                "unit": "cm"
+            }
+        ]
+    },
+    {
+        "key": "smokingStatus",
+        "type": "select",
+        "options": ["Never smoked", "Former smoker", "Current smoker"]
+    },
+    {
+        "key": "alcoholConsumption",
+        "type": "select",
+        "options": ["None", "Occasional", "Moderate", "Heavy"]
+    },
+    {
+        "key": "physicalActivity",
+        "type": "select",
+        "options": ["Sedentary", "Light", "Moderate", "Active", "Very active"]
+    },
+    {
+        "key": "diet",
+        "type": "select",
+        "options": ["Vegetarian", "Vegan", "Pescatarian", "Keto", "Paleo", "Mediterranean", "Low-carb", "Low-fat", "Low-sodium", "Low-sugar", "Gluten-free", "Dairy-free", "Nut-free", "Soy-free", "None"]
+    },
+    {
+        "key": "vaccinations",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "vaccine",
+                "type": "text"
+            },
+            {
+                "key": "dateOfApplication",
+                "type": "date"
+            }
+        ]
+    },
+    {
+        "key": "allergies",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "allergen",
+                "type": "text"
+            },
+            {
+                "key": "reaction",
+                "type": "text"
+            }
+        ]
+    },
+
+    {
+        "key": "chronicConditions",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "condition",
+                "type": "text"
+            },
+            {
+                "key": "diagnosisDate",
+                "type": "date"
+            }
+        ]
+    },
+    {
+        "key": "bloodPressure",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "date",
+                "type": "date"
+            },
+            {
+                "key": "systolic",
+                "type": "number",
+                "unit": "mmHg"
+            },
+            {
+                "key": "diastolic",
+                "type": "number",
+                "unit": "mmHg"
+            }
+        ]
+    },
+    {
+        "key": "heartRate",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "date",
+                "type": "date"
+            },
+            {
+                "key": "heartRate",
+                "type": "number",
+                "unit": "bpm"
+            }
+        ]
+    },
+    {
+        "key": "temperature",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "date",
+                "type": "date"
+            },
+            {
+                "key": "temperature",
+                "type": "number",
+                "unit": "°C"
+            }
+        ]
+    },
+    {
+        "key": "oxygenSaturation",
+        "type": "time-series",
+        "mode": "add",
+        "fields": [
+            {
+                "key": "date",
+                "type": "date"
+            },
+            {
+                "key": "oxygenSaturation",
+                "type": "number",
+                "unit": "%"
+            }
+        ]
+    }
+]

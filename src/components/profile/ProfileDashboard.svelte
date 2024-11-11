@@ -1,66 +1,130 @@
 <script lang="ts">
     import { profile} from '$slib/med/profiles';
     import { getAge } from '$slib/med/datetime';
-    import ValueTile from './ValueTile.svelte';
+    import PropertyTile from './PropertyTile.svelte';
+    import { properties } from '$slib/health/dataTypes';
+    import ui from '$slib/ui';
 
+    interface Property {
+        key: string;
+        value: string;
+        editable?: string;
+        label: string;
+        unit: string;
+        icon: string;
+    }
 
-    $: values = ($profile) ?[
+    //console.log('profile', $profile);
+    $: props = (($profile) ?[
         {
-            title: 'Age',
-            value: getAge($profile.birthDate)
+            key: 'age',
+            value: getAge($profile.health.birthDate),
+            source: $profile.health.birthDate,
+            editable: 'birthDate'
         },
         {
-            title: 'Blood Type',
+            key: 'bloodType',
+            source: $profile?.health?.bloodType,
             value: $profile?.health?.bloodType
         },
         {
-            title: 'Sex',
-            value: $profile?.health?.sex
+            key: 'biologicalSex',
+            source: $profile?.health?.biologicalSex,
+            value: $profile?.health?.biologicalSex
+        },
+        {
+            key: 'height',
+            source: $profile?.health?.height,
+            value: $profile?.health?.height?.height,
+        },
+        {
+            key: 'weight',
+            source: $profile?.health?.weight,
+            value: $profile?.health?.weight?.weight,
+        },
+        {
+            key: 'bloodPressure',
+            source: $profile?.health?.bloodPressure,
+            value: $profile?.health?.bloodPressure?.systolic + '/' + $profile?.health?.bloodPressure?.diastolic,
         }
-    ] : []
 
-    console.log($profile)
+    ] : []).map(p => {
+        return {
+            ...(properties[p.key] || {}),
+            ...p,
+
+        } as Property;
+    })
+
+    function openTile(prop: Property) {
+        console.log('openTile', prop.key || prop.editable, prop);
+        ui.emit('modal.healthForm', {
+            keys: [prop.editable || prop.key],
+            values: [prop.value]
+        });
+    }
+
 </script>
 
+<div class="page -empty">
 {#if $profile}
-<div class="page">
-    <div class="patient-header">
-
-        {#if $profile.avatarUrl}
-        <img src="{$profile.avatarUrl}" alt="{$profile.fullName}" class="avatar" />
-        {/if}
-        <h1 class="h1">{$profile.fullName}</h1>
-
-        {#if $profile.insurance}
-        <div>{$profile.insurance.provider} - {$profile.insurance.number}</div>
-        {/if}
-
-        <div>{$profile.birthDate}</div>
-        <div>{$profile.vcard?.email?.[0].value}</div>
-
-        {#if $profile.vcard}
-            {#if $profile.vcard.tel}
-                {#each $profile.vcard.tel as tel}
-                <div><a href="tel:{tel.value}" class="a">{tel.value} ({tel.type})</a></div>
-                {/each}
+    <div class="profile-header">
+        <div class="avatar">
+            {#if $profile.avatarUrl}
+                <img src="{$profile.avatarUrl}" alt="{$profile.fullName}" class="avatar" />
+            {:else}
+            Add Image
             {/if}
+        </div>
+        
 
-        {/if}
+        <div class="profile-details">
+            <h1 class="h1">{$profile.fullName}</h1>
+            <div class="rest">
+                
+                <div class="profile">
+
+        
+                    <div>Date of birth: {$profile.health.birthDate}</div>
+        
+                    {#if $profile.insurance}
+                    <div>Insurance: {$profile.insurance.provider} - {$profile.insurance.number}</div>
+                    {/if}                
+                </div>
+
+                <div class="contacts">
+                    <div>{$profile.vcard?.email?.[0].value}</div>
+                    {#if $profile.vcard}
+                        {#if $profile.vcard.tel}
+                            {#each $profile.vcard.tel as tel}
+                            <div>Phone: <a href="tel:{tel.value}" class="a">{tel.value} ({tel.type || 'default'})</a></div>
+                            {/each}
+                        {/if}
+
+                    {/if}
+                </div>
+            </div>
+        </div>
     </div>
+
     <div class="tiles">
 
-        {#each values as result}
-        {#if result.value}
-        <div class="tile">
-            <ValueTile {result} />
-        </div>
+        {#each props as prop}
+        {#if prop.value}
+        <button class="tile" on:click={() => openTile(prop)}>
+            <PropertyTile property={prop} />
+        </button>
         {/if}
         {/each}
+        <div class="tile">
+            <button class="button --large" on:click={() => ui.emit('modal.healthForm')}>
+                Open Health Form
+            </button>
+        </div>
     </div>
 
-    <h1>Dashboard</h1>
     <ul>
-        <li>Latest Lab results in charts</li>
+        <li>Latest Lab results document + charts</li>
         <li>Medical History
             <ul>
                 <li>Latest prescriptions</li>
@@ -70,14 +134,65 @@
             </ul>
         </li>
     </ul>
-</div>
-{/if}
-<style>
 
-    div.tiles {
+{/if}
+
+</div>
+
+<style>
+    .profile-header {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: 10rem 1fr;
+        margin-bottom: var(--gap);
+        background-color: var(--color-gray-300);
+        padding: 1rem 0;
+    }
+    .profile-header > * {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .profile-header .rest {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
         gap: 1rem;
-        margin: 1rem 0;
+    }
+    .profile-header .rest > * {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+    }
+    .profile-header .h1 {
+        width: 100%;
+    }
+
+
+
+    .tiles {
+        --background-color: var(--color-gray-300);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: var(--gap);
+        margin-bottom: var(--gap);
+        text-align: left;
+    }
+    .tile {
+        background-color: var(--background-color);
+        min-height: 6rem;
+        min-width: 12rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .tile:last-child {
+        grid-column: auto / -1; 
+        --background-color: var(--color-highlight);
+    }
+    button.tile:hover {
+        --background-color: var(--color-white);
+
     }
 </style>

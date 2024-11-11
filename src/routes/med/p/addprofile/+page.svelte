@@ -1,7 +1,10 @@
 <script lang="ts">
     
     import { type Profile, SexEnum } from "$slib/med/types.d";
-    import { profile } from "$slib/med/profiles";
+    import user from "$slib/user";
+
+    console.log("user", $user);
+
     let newProfile: Profile = {
         id: "NEW",
         fullName: "",
@@ -29,8 +32,16 @@
 
 </script>
 
-Create new patient
+<div class="page">
+    <h1 class="h1">Add new profile</h1>
+    {#if $user.subscriptionStats.profiles == 0}
+        <p class="p">You have reached the maximum number of profiles.</p>
+        <a href="/med/upgrade" class="button -primary -large">Upgrade</a>
+    {:else}
+        <p class="p">You can add {$user?.subscriptionStats?.profiles} more profiles.</p>
 
 
-<input type="text" bind:value={newProfile.fullName} on:click={createNewProfile} />
-<button>Create</button>
+        <input type="text" bind:value={newProfile.fullName} on:click={createNewProfile} />
+        <button>Create</button>
+    {/if}
+</div>
