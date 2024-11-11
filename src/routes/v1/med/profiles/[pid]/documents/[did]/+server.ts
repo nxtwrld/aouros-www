@@ -92,3 +92,4 @@ export async function DELETE({ request, params, locals: { supabase, safeGetSessi
     }
 
     return json(documentDelete);
+}
