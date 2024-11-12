@@ -2,13 +2,19 @@
 <script lang="ts">
     import user from '$slib/user';
     import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
 
-    $: {
+  /*  $: {
         if ($user && $user.subscription == 'individual') {
             goto('/med/p/'+$user.id);
         }
     }
-
+*/
+    onMount(() => {
+        if ($user && $user.subscription == 'individual') {
+            goto('/med/p/'+$user.id);
+        }
+    });
 
     </script>
 

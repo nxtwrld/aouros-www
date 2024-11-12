@@ -1,10 +1,8 @@
 <script lang="ts">
     import { type Profile, SexEnum } from '$slib/med/types.d';
     import { profiles } from '$slib/med/profiles';
-    import Profiles from '$scomponents/profile/Profiles.svelte';
     import shortcuts from '$slib/shortcuts';
     import { onMount } from 'svelte';
-    import Select from '$components/forms/Select.svelte';
     import { goto } from '$app/navigation';
     import user from '$slib/user';
     import { searchOptimize } from '$slib/strings';

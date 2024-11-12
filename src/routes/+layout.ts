@@ -5,13 +5,23 @@ import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/publi
 import type { LayoutLoad } from './$types'
 import { setClient } from '$slib/supabase'
 import { session } from "$slib/user";
-
+import '$slib/i18n' // Import to initialize. Important :)
+import { locale, waitLocale } from 'svelte-i18n';
 mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: true });
 
 
 export const trailingSlash = 'always';
 
 export const load: LayoutLoad = async ({ data, depends, fetch }) => {
+  // setting up locale
+  if (!import.meta.env.SSR) {
+    //await setDefaultLocale(window.navigator.language)
+    locale.set(window.navigator.language)
+  } else {
+      locale.set('en-US')
+  }
+
+
   console.log('loading.auth...')
   /**
    * Declare a dependency so the layout can be invalidated, for example, on
@@ -49,6 +59,16 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
    * safe, and on the server, it reads `session` from the `LayoutData`, which
    * safely checked the session using `safeGetSession`.
    */
+
+  const tasks = await Promise.all([
+    supabase.auth.getSession(),
+    supabase.auth.getUser(),
+    waitLocale()
+  ])
+
+  const currentSession = tasks[0].data.session
+  const user = tasks[1].data.user
+  /*
   const {
     data: { session: currentSession },
   } = await supabase.auth.getSession()
@@ -57,7 +77,10 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
     data: { user }
   } = await supabase.auth.getUser()
 
+  console.log(tasks);*/
   session.set(currentSession);
+
+
 
   return { supabase, session: currentSession, user }
 }

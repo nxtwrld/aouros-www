@@ -1,0 +1,13 @@
+{
+    "app": {
+        "name": "mediqom",
+        "nav": {
+            "profiles": "Profiles",
+            "documents": "Documents",
+            "add_profile": "Add Profile",
+            "import": "Import",
+            "history": "History",
+            "logout": "Logout"
+        }
+    }
+}

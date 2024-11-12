@@ -12,8 +12,7 @@
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
 		"test:integration": "playwright test",
-		"test:unit": "vitest",
-		"vercel-install": "./vercel-submodule-workaround.sh && yarn --ignore-scripts --production=false"
+		"test:unit": "vitest"
 	},
 	"devDependencies": {
 		"@auth/core": "^0.24.0",
@@ -67,6 +66,7 @@
 		"openai": "^4.46.1",
 		"pdfjs-dist": "^4.0.189",
 		"svelte-file-dropzone": "^2.0.9",
+		"svelte-i18n": "^4.0.1",
 		"sveltekit-io": "^1.0.11",
 		"vite-plugin-static-copy": "^2.0.0"
 	}

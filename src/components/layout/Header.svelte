@@ -8,6 +8,7 @@
     import MenuBurger from "$scomponents/ui/MenuBurger.svelte";
     import ui from "$slib/ui";
     import { state, Overlay } from "$slib/ui";
+    import { t } from "$slib/i18n";
 
     function isActive(path: string, currentPath: string, state: any) {
         if ($state.overlay !== Overlay.none) return false;
@@ -55,6 +56,7 @@
             <svg>
                 <use href="/logo.svg#icon"></use>
             </svg>
+            <h1>{$t('app.name')}</h1>
         </a>
         <div class="navigation-mobile toolbar">
             <div class="spacer"></div>
@@ -65,17 +67,17 @@
 
             
             {#if $user.subscription != 'individual'}
-                <a href="/med/p/" class:-active={$page.url.pathname == '/med/p/'}>Profiles</a>
+                <a href="/med/p/" class:-active={$page.url.pathname == '/med/p/'}>{ $t('app.nav.profiles') }</a>
             {/if}
 
             {#if $profile}
                 {#if $profile.id}
                     <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname, $state)}>{$profile.fullName}</a>
                     <!--div class="spacer"></div-->
-                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname, $state)}>Documents</a>
-                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname, $state)}>History</a>
+                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname, $state)}>{ $t('app.nav.documents') }</a>
+                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname, $state)}>{ $t('app.nav.history') }</a>
                     {#if $user.isMedical}
-                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname, $state)}>New Session</a>
+                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname, $state)}>{ $t('app.nav.new-session') }</a>
                     {/if}
                 {:else}
                     <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{$profile.name}</div>
@@ -84,11 +86,11 @@
             {:else}
                 <div class="spacer"></div>
                 {#if $user.subscription != 'individual'}
-                <a href="/med/p/addprofile/">Add profile</a>
+                <a href="/med/p/addprofile/">{ $t('app.nav.add-profile') }</a>
                 {/if}
             {/if}
             <!--a href="/med/import" class:-active={$page.url.pathname == '/med/import/'}>Import</a-->
-            <button on:click={() => ui.emit('overlay.import')} class:-active={$state.overlay == Overlay.import}>Import</button>
+            <button on:click={() => ui.emit('overlay.import')} class:-active={$state.overlay == Overlay.import}>{ $t('app.nav.import') }</button>
         </div>
         {#if $user}
         <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
@@ -103,7 +105,7 @@
 
                     </div>
                 </li>
-                <li><button on:click={logout}>Logout</button></li>
+                <li><button on:click={logout}>{ $t('app.nav.logout') }</button></li>
             </ul>
         </div>
         {/if}
@@ -132,6 +134,9 @@
     }
     .icon.logo {
         padding: 0;
+    }
+    .logo h1 {
+        display: none;
     }
 
     .icon svg {
