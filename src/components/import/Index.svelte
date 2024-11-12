@@ -7,6 +7,7 @@
     import { addDocument } from '$lib/med/documents';
     import  user from '$lib/user';
     import { onMount } from 'svelte';
+    import { t } from '$lib/i18n';
 
     let documents: Document[] = [];
     let results: any = [];
@@ -16,6 +17,7 @@
     let currentFiles: File[] = [];
     let processingFiles: File[] = [];
     let processedCount: number = 0;
+
     $: remainingScans = ($user?.subscriptionStats?.scans || 0) - processedCount;
 
     enum AssessingState {
@@ -165,11 +167,13 @@
 
 {#if $user.subscriptionStats?.scans <= 0}
     <div class="alert -warning">
-        You have reached your monthly limit of 10 scans. Please upgrade your subscription to continue.
+        { $t('app.import.maxium_scans_reached', { values: {
+            limit: $user.subscriptionStats?.default_scans
+        }}) } { $t('app.upgrade.please-upgrade-your-subscription-to-continue') }
     </div>
 {:else}
 
-    
+    <h2 class="h2">{ $t('app.import.import-reports-scan-or-images') }</h2>
 
     <input type="file" id="upload-file" class="-none" accept=".pdf" on:change={fileInput} />
     
@@ -218,15 +222,15 @@
                     <use href="/icons.svg#add-file" />
                 </svg>
             </div>
-            Add files
+            { $t('app.import.add-files') }
 
         </label>
     </div>
 
     <div class="controls">
-        <p>You still have {remainingScans} scans in your yearly subscription.</p>
-        <button on:click={assess} class="button -primary" disabled={tasks.length == 0}>Analyze reports</button>
-        <button class="button" on:click={add}>Save</button>
+        <p>{ $t('app.import.you-still-have-scans-in-your-yearly-subscription', { values: { scans: remainingScans} }) }</p>
+        <button on:click={assess} class="button -primary" disabled={tasks.length == 0}>{ $t('app.import.analyze-reports') }</button>
+        <button class="button" on:click={add}>{ $t('app.import.save') }</button>
     </div>
 
 {/if}

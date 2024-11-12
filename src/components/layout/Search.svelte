@@ -6,6 +6,7 @@
     import { goto } from '$app/navigation';
     import user from '$lib/user';
     import { searchOptimize } from '$lib/strings';
+    import { t } from '$lib/i18n';
     
     type Command = {
         command: string;
@@ -17,18 +18,18 @@
     let commands: Command[] = [
         {
             command: 'view',
-            translation: 'View profile',
+            translation: $t('app.search.commands.view-profile'),
             path: '/med/p/[UID]/'
         },
 
         {
             command: 'documents',
-            translation: 'View documents',
+            translation: $t('app.search.commands.view-documents'),
             path: '/med/p/[UID]/documents'
         },
         {
             command: 'history',
-            translation: 'View history',
+            translation: $t('app.search.commands.view-history'),
             path: '/med/p/[UID]/history'
         }
     ];
@@ -36,12 +37,12 @@
     let systemCommands: Command[] = [
         {
             command: 'profiles',
-            translation: 'Profiles',
+            translation: $t('app.nav.profiles'),
             path: '/med/p'
         },
         {
             command: 'logout',
-            translation: 'Logout',
+            translation: $t('app.nav.logout'),
             action: () => {
                 user.logout();
                 goto('/auth');
@@ -49,7 +50,7 @@
         },
         {
             command: 'import',
-            translation: 'Import files',
+            translation: $t('app.search.commands.import-files'),
             path: '/med/import'
         }
     ]
@@ -61,7 +62,7 @@
                     ...commands,
                     {
                         command: 'session',
-                        translation: 'Start an interview session',
+                        translation: $t('app.search.commands.start-an-interview-session'),
                         path: '/med/p/[UID]/session'
                     }
                 ]
@@ -238,7 +239,7 @@
     </div>
     {#if results.length == 0 && inputValue.length > 0}
         <div class="search-results-empty">
-                <div>No results</div>
+                <div>{ $t('app.search.no-results') }</div>
         </div>
     {:else if results.length > 0}
     <div class="search-results">

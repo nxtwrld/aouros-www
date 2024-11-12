@@ -7,7 +7,7 @@
     import { profiles, removeLinkedProfile } from '$lib/med/profiles/';
     import user from '$lib/user';
     import { addDocument, DocumentType } from '$lib/med/documents';
-    
+    import { t } from '$lib/i18n';
     const ROOT_PATH = '/med/p/';
 
     function openProfile(profile: Profile) {
@@ -127,13 +127,16 @@
     }
 
 </script>
+
+<h2 class="h2">{ $t('app.headings.profiles') }</h2>
+
 <table class="table-list">
     <thead>
     <tr>
-        <th>Name</th>
-        <th>Age</th>
-        <th>Brith date</th>
-        <th>Phone</th>
+        <th>{ $t('app.profiles.name') }</th>
+        <th>{ $t('app.profiles.age') }</th>
+        <th>{ $t('date-of-birth') }</th>
+        <th>{ $t('app.profiles.phone') }</th>
         <th></th>
     </tr>
 </thead>
@@ -151,12 +154,12 @@
         <td class="actions">
             <div class="table-actions">
                 {#if profile.status == 'approved'}
-                <a href={ROOT_PATH + profile.id} class="button">Open</a>
+                <a href={ROOT_PATH + profile.id} class="button">{ $t('app.profiles.open') }</a>
                 {:else}
-                <button class="button -request" on:click|stopPropagation={() => requestAccess(profile.id)}>Request Access</button>
+                <button class="button -request" on:click|stopPropagation={() => requestAccess(profile.id)}>{ $t('app.profiles.request-access') }</button>
                 {/if}
                 {#if profile.id != $user.id}
-                <button on:click|stopPropagation={() => deleteUser(profile.id)} class="button -danger">Delete</button>
+                <button on:click|stopPropagation={() => deleteUser(profile.id)} class="button -danger">{ $t('app.profiles.delete') }</button>
                 {/if}
             </div>
         </td>

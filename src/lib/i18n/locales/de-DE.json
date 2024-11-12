@@ -1,3 +1,57 @@
 {
-
+  "app": {
+    "headings": {
+      "documents": "",
+      "profiles": ""
+    },
+    "import": {
+      "add-files": "",
+      "analyze-reports": "",
+      "drop-files-here": "",
+      "file-drop-area": "",
+      "import-reports-scan-or-images": "",
+      "maxium_scans_reached": "",
+      "save": "",
+      "you-still-have-scans-in-your-yearly-subscription": ""
+    },
+    "name": "",
+    "nav": {
+      "add_profile": "",
+      "documents": "",
+      "history": "",
+      "import": "",
+      "logout": "",
+      "new-session": "",
+      "profiles": ""
+    },
+    "profiles": {
+      "age": "",
+      "delete": "",
+      "name": "",
+      "open": "",
+      "phone": "",
+      "request-access": ""
+    },
+    "search": {
+      "commands": {
+        "import-files": "",
+        "profiles": "",
+        "start-an-interview-session": "",
+        "view-documents": "",
+        "view-history": "",
+        "view-profile": ""
+      },
+      "no-results": ""
+    },
+    "unlock": {
+      "invalid-passphrase": "",
+      "passphrase": "",
+      "passphrase-is-required": "",
+      "unlock": ""
+    },
+    "upgrade": {
+      "please-upgrade-your-subscription-to-continue": ""
+    }
+  },
+  "date-of-birth": ""
 }

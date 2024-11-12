@@ -1,5 +1,5 @@
 <script lang="ts">
-
+    import { t } from '$lib/i18n';
     type Result = {
         key?: string;
         test?: string;
@@ -13,8 +13,8 @@
 
     
     $: referenceRange = property.reference?.split('-').map(Number)
-    $: title = property.title || property.test
-    $: unit = getUnit(property.unit)
+    $: title = property.key || property.test
+//    $: unit = getUnit(property.unit)
 
     let icon: string = getResultIcon(property)
 
@@ -28,16 +28,16 @@
         }
     }
 
-    function getUnit(u: string = '') {
-        switch (u) {
-            case 'C':
-                return '&#8451;'
-            case 'F':
-                return '&#8457;'
-            default:
-                return encodeURIComponent(u)
-        }
+    function showUnit(unit: string) {
+        if (!unit) return '';
+        const localized = $t(`medical.units.${property.unit}`)
+        if (localized 
+            && localized !== `medical.units.${property.unit}`) {
+            return localized
+        } 
+        return unit;
     }
+
 </script>
 
 
@@ -47,9 +47,9 @@
     </svg>
     <div class="grid-tile prop-{property.key} prop-value-{property.value}" class:-danger={referenceRange && (property.value < referenceRange[0] || property.value > referenceRange[1])} >
 
-        <div class="title">{property.key}</div>
+        <div class="title">{ $t(`medical.props.${title}`)}</div>
 
-        <div class="value"><strong>{property.value}</strong> <span class="unit">{@html unit} </span></div>
+        <div class="value"><strong>{property.value}</strong> <span class="unit">{@html  showUnit(property.unit)  } </span></div>
 
     </div>
 </div>
