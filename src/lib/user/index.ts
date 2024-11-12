@@ -5,7 +5,7 @@ import auth from '$lib/auth';
 import { decryptString } from "../encryption/passphrase";
 import { verifyHash } from "../encryption/hash";
 import { KeyPair, pemToKey } from "../encryption/rsa";
-import { loadSubscription } from "./subscriptions";
+//import { loadSubscription } from "./subscriptions";
 
 type UserFirstTime = {
     email: string;
@@ -73,7 +73,8 @@ export async function setUser(profile: UserFirstTime | User) {
     }
 
     if (profile && profile.fullName) {
-        const subscriptionStats = await loadSubscription();
+        // move to server
+        //const subscriptionStats = await loadSubscription();
         
 
         profile.privateKey = profile.private_keys.privateKey;
@@ -88,7 +89,7 @@ export async function setUser(profile: UserFirstTime | User) {
             unlocked: undefined,
             isMedical: (profile.subscription === 'medical' || profile.subscription === 'gp'),
             email: userSession.email as string,
-            subscriptionStats
+            //subscriptionStats
         })
 
         await unlock(key_pass);

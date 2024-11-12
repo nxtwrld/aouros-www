@@ -1,13 +1,81 @@
 {
-    "app": {
-        "name": "mediqom",
-        "nav": {
-            "profiles": "Profiles",
-            "documents": "Documents",
-            "add_profile": "Add Profile",
-            "import": "Import",
-            "history": "History",
-            "logout": "Logout"
-        }
+  "app": {
+    "headings": {
+      "documents": "Documents",
+      "profiles": "Profiles"
+    },
+    "import": {
+      "add-files": "Add files",
+      "analyze-reports": "Analyze reports",
+      "drop-files-here": "Drop files here",
+      "file-drop-area": "File drop area",
+      "import-reports-scan-or-images": "Import reports, scan or images",
+      "maxium_scans_reached": "You have reached your monthly limit of {limit} scans.",
+      "save": "Save",
+      "you-still-have-scans-in-your-yearly-subscription": "You still have {scans} scans in your yearly subscription."
+    },
+    "name": "mediqom",
+    "nav": {
+      "add_profile": "Add Profile",
+      "documents": "Documents",
+      "history": "History",
+      "import": "Import",
+      "logout": "Logout",
+      "new-session": "New Session",
+      "profiles": "Profiles"
+    },
+    "profiles": {
+      "age": "Age",
+      "delete": "Delete",
+      "name": "Name",
+      "open": "Open",
+      "phone": "Phone",
+      "date-of-birth": "Date of Birth",
+      "request-access": "Request Access"
+    },
+    "search": {
+      "commands": {
+        "import-files": "Import files",
+        "profiles": "Profiles",
+        "start-an-interview-session": "Start an interview session",
+        "view-documents": "View documents",
+        "view-history": "View history",
+        "view-profile": "View profile"
+      },
+      "no-results": "No results"
+    },
+    "unlock": {
+      "invalid-passphrase": "Invalid passphrase",
+      "passphrase": "Passphrase",
+      "passphrase-is-required": "Passphrase is required",
+      "unlock": "Unlock"
+    },
+    "upgrade": {
+      "please-upgrade-your-subscription-to-continue": "Please upgrade your subscription to continue."
     }
+  },
+  "medical": {
+    "units": {
+      "C": "&#8451;",
+      "F": "&#8457;",
+      "cm": "cm",
+      "kg": "kg",
+      "years": "years",
+      "mmHg": "mmHg",
+      "mg/dL": "mg/dL"
+
+    },
+    "props": {
+      "age": "Age",
+      "date-of-birth": "Date of Birth",
+      "bloodType": "Blood Type",
+      "bloodPressure": "Blood Pressure",
+      "bloodSugar": "Blood Sugar",
+      "biologicalSex": "Sex",
+      "height": "Height",
+      "weight": "Weight"
+
+    }
+  }
+
 }
