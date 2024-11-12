@@ -5,12 +5,12 @@ import transcript from './transcript.json';
 import diagnosis from './diagnosis.json';
 import tags from '../../import.server/tags.json';
 import testPropserties from '$data/lab.synonyms.json';
-import { fetchGpt } from '$slib/ai/gpt';
-import { type Content, type TokenUsage } from '$slib/ai/types.d';
-import resultsSchema from '$slib/import.server/core.results.json'
-import { updateLanguage } from "$slib/ai/schema";
-import { sleep } from "$slib/utils";
-import { ANALYZE_STEPS as Types } from '$slib/med/types.d';
+import { fetchGpt } from '$lib/ai/gpt';
+import { type Content, type TokenUsage } from '$lib/ai/types.d';
+import resultsSchema from '$lib/import.server/core.results.json'
+import { updateLanguage } from "$lib/ai/schema";
+import { sleep } from "$lib/utils";
+import { ANALYZE_STEPS as Types } from '$lib/med/types.d';
 /**
  * TODO:
  * - gtp-4o (7k) vs gpt-4o-mini (40k) -

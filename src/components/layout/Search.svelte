@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { type Profile, SexEnum } from '$slib/med/types.d';
-    import { profiles } from '$slib/med/profiles';
-    import shortcuts from '$slib/shortcuts';
+    import { type Profile, SexEnum } from '$lib/med/types.d';
+    import { profiles } from '$lib/med/profiles';
+    import shortcuts from '$lib/shortcuts';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import user from '$slib/user';
-    import { searchOptimize } from '$slib/strings';
+    import user from '$lib/user';
+    import { searchOptimize } from '$lib/strings';
     
     type Command = {
         command: string;

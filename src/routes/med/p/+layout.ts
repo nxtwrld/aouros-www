@@ -1,9 +1,9 @@
 
 import type { LayoutLoad } from './$types';
-import { profiles }  from '$slib/med/profiles';
-import { importDocuments } from '$slib/med/documents';
-import { mapProfileData } from '$slib/med/profiles';
-import { loadProfiles } from '$slib/med/profiles';
+import { profiles }  from '$lib/med/profiles';
+import { importDocuments } from '$lib/med/documents';
+import { mapProfileData } from '$lib/med/profiles';
+import { loadProfiles } from '$lib/med/profiles';
 
 export const prerender = false;
  

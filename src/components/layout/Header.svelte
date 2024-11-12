@@ -1,14 +1,14 @@
 <script lang="ts">
-    import { profile } from "$slib/med/profiles";
+    import { profile } from "$lib/med/profiles";
     import { page } from "$app/stores";
-    import { emit } from "$slib/shortcuts";
-    import user from "$slib/user";
+    import { emit } from "$lib/shortcuts";
+    import user from "$lib/user";
     import Search from "./Search.svelte";
     import { goto } from "$app/navigation";
-    import MenuBurger from "$scomponents/ui/MenuBurger.svelte";
-    import ui from "$slib/ui";
-    import { state, Overlay } from "$slib/ui";
-    import { t } from "$slib/i18n";
+    import MenuBurger from "$components/ui/MenuBurger.svelte";
+    import ui from "$lib/ui";
+    import { state, Overlay } from "$lib/ui";
+    import { t } from "$lib/i18n";
 
     function isActive(path: string, currentPath: string, state: any) {
         if ($state.overlay !== Overlay.none) return false;

@@ -1,7 +1,7 @@
 <script>
 	import { goto, invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { setClient } from '$slib/supabase';
+	import { setClient } from '$lib/supabase';
 	import '../css/index.css';
 
 	export let data;

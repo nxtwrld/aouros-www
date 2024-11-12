@@ -1,6 +1,6 @@
 
 import { error, json } from '@sveltejs/kit';
-import { analyze } from '$slib/med/session/analyzeConversation';
+import { analyze } from '$lib/med/session/analyzeConversation';
 
 /** @type {import('./$types.d').RequestHandler} */
 export async function POST({ request }) {

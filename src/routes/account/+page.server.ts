@@ -1,7 +1,7 @@
 import { fail, redirect, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { verifyHash } from '$slib/encryption/hash';
-//import { loadUser } from '$slib/user/server';
+import { verifyHash } from '$lib/encryption/hash';
+//import { loadUser } from '$lib/user/server';
 
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession }, fetch }) => {
   const { session } = await safeGetSession()

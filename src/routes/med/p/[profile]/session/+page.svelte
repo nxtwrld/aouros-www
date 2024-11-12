@@ -1,17 +1,17 @@
 <script lang="ts">
-    //import { type Profile } from '$slib/med/types.d';
-    import { AudioState, convertFloat32ToMp3} from '$slib/audio/microphone';
+    //import { type Profile } from '$lib/med/types.d';
+    import { AudioState, convertFloat32ToMp3} from '$lib/audio/microphone';
     import { onMount} from 'svelte';
-    import Diagnosis from '$scomponents/profile/Session/Diagnosis.svelte';
-    import Models from '$scomponents/profile/Session/Models.svelte';
-    import Transcript from '$scomponents/profile/Session/Transcript.svelte';
-    import AudioButton from '$scomponents/profile/Session/AudioButton.svelte';
-    import LoaderThinking from '$scomponents/ui/LoaderThinking.svelte';
-    import Report from '$scomponents/profile/Session/FinalizeReport.svelte';
-    import doctor, { getDoctorSignature } from '$slib/med/doctor';
-    import { profile } from '$slib/med/profiles';
-    import { float32Flatten } from '$slib/array';
-    import { ANALYZE_STEPS } from '$slib/med/types.d';
+    import Diagnosis from '$components/profile/Session/Diagnosis.svelte';
+    import Models from '$components/profile/Session/Models.svelte';
+    import Transcript from '$components/profile/Session/Transcript.svelte';
+    import AudioButton from '$components/profile/Session/AudioButton.svelte';
+    import LoaderThinking from '$components/ui/LoaderThinking.svelte';
+    import Report from '$components/profile/Session/FinalizeReport.svelte';
+    import doctor, { getDoctorSignature } from '$lib/med/doctor';
+    import { profile } from '$lib/med/profiles';
+    import { float32Flatten } from '$lib/array';
+    import { ANALYZE_STEPS } from '$lib/med/types.d';
   
     
     const MIN_AUDIO_SIZE: number = 100000 * 2;

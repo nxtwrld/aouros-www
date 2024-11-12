@@ -2,9 +2,9 @@
 import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
 import { error } from '@sveltejs/kit';
 
-import { fetchGpt } from '$slib/ai/gpt';
-import { type Content, type TokenUsage } from '$slib/ai/types.d';
-import { sleep } from "$slib/utils";
+import { fetchGpt } from '$lib/ai/gpt';
+import { type Content, type TokenUsage } from '$lib/ai/types.d';
+import { sleep } from "$lib/utils";
 
 
 const DEBUG = true;

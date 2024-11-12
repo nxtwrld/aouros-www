@@ -1,6 +1,6 @@
 import profiles from './profiles';
 import profile from './profile';
-import { importDocuments } from '$slib/med/documents';
+import { importDocuments } from '$lib/med/documents';
 
 /** 
  *  Removes links between a parent and a profile

@@ -1,7 +1,7 @@
 <script lang="ts">
     
-    import { type Profile, SexEnum } from "$slib/med/types.d";
-    import user from "$slib/user";
+    import { type Profile, SexEnum } from "$lib/med/types.d";
+    import user from "$lib/user";
 
     console.log("user", $user);
 

@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import { HumanMessage } from "@langchain/core/messages";
 import { env } from '$env/dynamic/private';
-import { type Content, type TokenUsage } from '$slib/ai/types.d';
+import { type Content, type TokenUsage } from '$lib/ai/types.d';
 
 
 export async function fetchGpt(content: Content[], schema: any, tokenUsage: TokenUsage): Promise<object> {

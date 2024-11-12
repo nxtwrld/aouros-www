@@ -1,15 +1,15 @@
 <script lang="ts">
-    import Header from '$scomponents/layout/Header.svelte';
-    import DropFiles from '$scomponents/import/DropFiles.svelte';   
-    import Modal from '$scomponents/ui/Modal.svelte';
+    import Header from '$components/layout/Header.svelte';
+    import DropFiles from '$components/import/DropFiles.svelte';   
+    import Modal from '$components/ui/Modal.svelte';
     import HealthForm from '../profile/HealthForm.svelte';
-    import Import from '$scomponents/import/Index.svelte';
-    import ui from '$slib/ui';
+    import Import from '$components/import/Index.svelte';
+    import ui from '$lib/ui';
     import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
     import { beforeNavigate } from '$app/navigation';
-    import { Overlay, state } from '$slib/ui';
-    import shortcuts from '$slib/shortcuts';
+    import { Overlay, state } from '$lib/ui';
+    import shortcuts from '$lib/shortcuts';
 
     const dialogs = {
         healthForm: false

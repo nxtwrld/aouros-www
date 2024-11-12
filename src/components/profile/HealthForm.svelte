@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { definitions as FORM_DEFINITION } from '$slib/health/dataTypes';
+    import { definitions as FORM_DEFINITION } from '$lib/health/dataTypes';
     import HealthFormField from './HealthFormField.svelte';
     import { createEventDispatcher } from 'svelte';
-    import { profile } from '$slib/med/profiles';
+    import { profile } from '$lib/med/profiles';
     const dispatch = createEventDispatcher();
 
     export let config: {

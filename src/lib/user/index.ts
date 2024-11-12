@@ -1,7 +1,7 @@
 import { writable, type Writable, get, type Updater} from "svelte/store";
-import { getClient } from "$slib/supabase";
+import { getClient } from "$lib/supabase";
 import type { VCard } from '$lib/contact/types.d';
-import auth from '$slib/auth';
+import auth from '$lib/auth';
 import { decryptString } from "../encryption/passphrase";
 import { verifyHash } from "../encryption/hash";
 import { KeyPair, pemToKey } from "../encryption/rsa";

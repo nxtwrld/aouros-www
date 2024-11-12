@@ -15,14 +15,12 @@ const config = {
 			strict: false
 		}),
 		files : {
-			lib: 'src/core/lib',
+			//lib: 'src/core/lib',
 		},
 		alias : {
-			'$slib': 'src/lib',
-			'$components': 'src/core/components',
-			'$data': 'src/core/data',
-			'$media': 'src/core/media',
-			'$scomponents': 'src/components',
+			'$components': 'src/components',
+			'$data': 'src/data',
+			'$media': 'src/media',
 		},
 	}
 };

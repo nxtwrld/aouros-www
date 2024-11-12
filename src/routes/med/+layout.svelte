@@ -1,9 +1,9 @@
 <script lang="ts">
 
-    import { emitShortcut } from '$slib/shortcuts';
+    import { emitShortcut } from '$lib/shortcuts';
 
-    import Unlock from '$scomponents/layout/Unlock.svelte';
-    import UI from '$scomponents/layout/UI.svelte';
+    import Unlock from '$components/layout/Unlock.svelte';
+    import UI from '$components/layout/UI.svelte';
 
 
 

@@ -3,9 +3,9 @@ import mixpanel from 'mixpanel-browser';
 import { createBrowserClient, createServerClient, isBrowser, parse } from '@supabase/ssr'
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public'
 import type { LayoutLoad } from './$types'
-import { setClient } from '$slib/supabase'
-import { session } from "$slib/user";
-import '$slib/i18n' // Import to initialize. Important :)
+import { setClient } from '$lib/supabase'
+import { session } from "$lib/user";
+import '$lib/i18n' // Import to initialize. Important :)
 import { locale, waitLocale } from 'svelte-i18n';
 mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: true });
 

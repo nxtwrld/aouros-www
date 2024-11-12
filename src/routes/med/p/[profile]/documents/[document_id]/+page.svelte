@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getDocument, type Document } from '$slib/med/documents';
+    import { getDocument, type Document } from '$lib/med/documents';
     import Loading from '$components/ui/Loading.svelte';
     import { onMount } from 'svelte';
 

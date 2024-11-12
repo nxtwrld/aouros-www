@@ -1,7 +1,7 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import FinalizeReportBlock from "./FinalizeReportBlock.svelte";
-    import { profile } from '$slib/med/profiles';
+    import { profile } from '$lib/med/profiles';
     import FinalizeReportHeader from "./FinalizeReportHeader.svelte";
     //import Markdown from '$components/ui/Markdown.svelte';
     /*interface Report {

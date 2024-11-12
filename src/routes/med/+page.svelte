@@ -1,6 +1,6 @@
 
 <script lang="ts">
-    import user from '$slib/user';
+    import user from '$lib/user';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
 

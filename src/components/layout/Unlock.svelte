@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade } from "svelte/transition";
-    import user from '$slib/user';
-    import Loading from "$scomponents/ui/Loading.svelte";
+    import user from '$lib/user';
+    import Loading from "$components/ui/Loading.svelte";
 
     let passphrase = '';
 

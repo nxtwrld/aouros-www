@@ -16,9 +16,9 @@ import performer from './core.performer.json';
 import results from './core.results.json'
 //import { extractText } from "./gemini";
 import testPropserties from '$data/lab.synonyms.json';
-import { fetchGpt } from '$slib/ai/gpt';
-import { type Content, type TokenUsage } from '$slib/ai/types.d';
-import { sleep } from "$slib/utils";
+import { fetchGpt } from '$lib/ai/gpt';
+import { type Content, type TokenUsage } from '$lib/ai/types.d';
+import { sleep } from "$lib/utils";
 /**
  * TODO:
  * - Add support for multiple images

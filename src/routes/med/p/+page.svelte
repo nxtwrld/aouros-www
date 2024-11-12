@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Profiles  from '$scomponents/profile/Profiles.svelte';
+    import Profiles  from '$components/profile/Profiles.svelte';
 </script>
 <div class="p-page -scroll">
     <div class="p-title">

@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { status } from "$components/ui/SpeakCore.svelte";
-    import LoaderThinking from "$scomponents/ui/LoaderThinking.svelte";
+    import LoaderThinking from "$components/ui/LoaderThinking.svelte";
 
     type Model = {
         name: string;

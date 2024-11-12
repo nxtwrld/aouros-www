@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { profile} from '$slib/med/profiles';
-    import { getAge } from '$slib/med/datetime';
+    import { profile} from '$lib/med/profiles';
+    import { getAge } from '$lib/med/datetime';
     import PropertyTile from './PropertyTile.svelte';
-    import { properties } from '$slib/health/dataTypes';
-    import user from '$slib/user';
-    import ui from '$slib/ui';
-    import Avatar from '$scomponents/onboarding/Avatar.svelte';
-    import Documents from '$scomponents/documents/Index.svelte';
+    import { properties } from '$lib/health/dataTypes';
+    import user from '$lib/user';
+    import ui from '$lib/ui';
+    import Avatar from '$components/onboarding/Avatar.svelte';
+    import Documents from '$components/documents/Index.svelte';
 
     interface Property {
         key: string;

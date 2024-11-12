@@ -1,10 +1,10 @@
-import Profile from '$scomponents/onboarding/Profile.svelte';
-import VCard from '$scomponents/onboarding/VCard.svelte';
-import Subscription from '$scomponents/onboarding/Subscription.svelte';
-import Privacy from '$scomponents/onboarding/Privacy.svelte';
-import Insurance from '$scomponents/onboarding/Insurance.svelte';
-import Health from '$scomponents/onboarding/Health.svelte';
-import AllSet from '$scomponents/onboarding/AllSet.svelte';
+import Profile from '$components/onboarding/Profile.svelte';
+import VCard from '$components/onboarding/VCard.svelte';
+import Subscription from '$components/onboarding/Subscription.svelte';
+import Privacy from '$components/onboarding/Privacy.svelte';
+import Insurance from '$components/onboarding/Insurance.svelte';
+import Health from '$components/onboarding/Health.svelte';
+import AllSet from '$components/onboarding/AllSet.svelte';
 
 export type Step = {
     description: string;

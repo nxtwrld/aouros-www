@@ -1,11 +1,11 @@
 
 <script lang="ts">
-    import { createTasks, processTask } from '$slib/files';
-    import { processDocument } from '$slib/import';
-    import { type Document, DocumentState } from '$slib/import';
-    import { files, type Task, TaskState } from '$slib/files';
-    import { addDocument } from '$slib/med/documents';
-    import  user from '$slib/user';
+    import { createTasks, processTask } from '$lib/files';
+    import { processDocument } from '$lib/import';
+    import { type Document, DocumentState } from '$lib/import';
+    import { files, type Task, TaskState } from '$lib/files';
+    import { addDocument } from '$lib/med/documents';
+    import  user from '$lib/user';
     import { onMount } from 'svelte';
 
     let documents: Document[] = [];

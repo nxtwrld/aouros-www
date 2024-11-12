@@ -2,8 +2,8 @@
     import type { SupabaseClient } from '@supabase/supabase-js';
 	import Avatar from './Avatar.svelte';
     import { onMount } from 'svelte';
-    import Languages, { type LanguageType } from '$slib/languages';
-    import user from '$slib/user';
+    import Languages, { type LanguageType } from '$lib/languages';
+    import user from '$lib/user';
 
 
     export let supabase: SupabaseClient;

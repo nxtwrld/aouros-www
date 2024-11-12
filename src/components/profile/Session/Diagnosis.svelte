@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { getSortForEnum, sortbyProperty } from '$slib/array';
-    import { ANALYZE_STEPS } from '$slib/med/types.d';
+    import { getSortForEnum, sortbyProperty } from '$lib/array';
+    import { ANALYZE_STEPS } from '$lib/med/types.d';
     import PropertyTile from '../PropertyTile.svelte';
 
 

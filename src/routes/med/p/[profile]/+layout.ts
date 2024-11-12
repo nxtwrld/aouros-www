@@ -1,8 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit'
 import type { LayoutLoad } from './$types'
-import type { Profile } from '$slib/med/types.d';
-import { profiles, profile} from '$slib/med/profiles';
-import { importDocuments } from '$slib/med/documents';
+import type { Profile } from '$lib/med/types.d';
+import { profiles, profile} from '$lib/med/profiles';
+import { importDocuments } from '$lib/med/documents';
 
 export const load: LayoutLoad = async ({ parent, params, fetch }) => {
   await parent();

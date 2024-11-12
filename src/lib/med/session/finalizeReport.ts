@@ -4,10 +4,10 @@ import type { FunctionDefinition } from "@langchain/core/dist/language_models/ba
 import { error } from '@sveltejs/kit';
 import report from './report.json';
 import tags from '../../import.server/tags.json';
-import { fetchGpt } from '$slib/ai/gpt';
-import { type Content, type TokenUsage } from '$slib/ai/types.d';
-import { updateLanguage } from "$slib/ai/schema";
-import { sleep } from "$slib/utils";
+import { fetchGpt } from '$lib/ai/gpt';
+import { type Content, type TokenUsage } from '$lib/ai/types.d';
+import { updateLanguage } from "$lib/ai/schema";
+import { sleep } from "$lib/utils";
 /**
  * TODO:
  * - gtp-4o (7k) vs gpt-4o-mini (40k) -

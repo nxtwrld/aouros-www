@@ -1,6 +1,6 @@
 import type FileProcessor from "./processor";
 import type { ProcessedFile } from "./types.d";
-import { resizeImage } from "$slib/images";
+import { resizeImage } from "$lib/images";
 import { THUMBNAIL_SIZE, PROCESS_SIZE } from "./CONFIG";
 const DEFAULT_DELAY = 20;
 

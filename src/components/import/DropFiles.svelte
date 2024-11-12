@@ -1,10 +1,10 @@
 <script lang="ts">
-    //import { ACCEPTED_FILES} from '$slib/files/CONFIG';
+    //import { ACCEPTED_FILES} from '$lib/files/CONFIG';
     import { goto } from '$app/navigation';
     import { fade } from 'svelte/transition';
-    import { files } from '$slib/files';
+    import { files } from '$lib/files';
     import { fromEvent } from 'file-selector'; 
-    import ui from '$slib/ui';
+    import ui from '$lib/ui';
 
     let dragover: boolean = false;
     let dragTimer: any;

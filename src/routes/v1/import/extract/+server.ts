@@ -1,7 +1,7 @@
 
 import { error, json } from '@sveltejs/kit';
-import assess from '$slib/import.server/assessInputs';
-import { loadSubscription, updateSubscription } from '$slib/user/subscriptions.server.js';
+import assess from '$lib/import.server/assessInputs';
+import { loadSubscription, updateSubscription } from '$lib/user/subscriptions.server.js';
 
 /** @type {import('./$types.d').RequestHandler} */
 export async function POST({ request, locals: { supabase, safeGetSession }}) {

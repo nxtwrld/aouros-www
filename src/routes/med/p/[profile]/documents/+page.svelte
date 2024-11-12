@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { byUser } from '$slib/med/documents';
-    import { profile } from '$slib/med/profiles';
+    import { byUser } from '$lib/med/documents';
+    import { profile } from '$lib/med/profiles';
 
 
     const documents = byUser($profile.id);

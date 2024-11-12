@@ -1,6 +1,6 @@
 
 import { error, json } from '@sveltejs/kit';
-import { transcribeAudio } from '$slib/audio/whisper';
+import { transcribeAudio } from '$lib/audio/whisper';
 
 
 /** @type {import('./$types.d').RequestHandler} */

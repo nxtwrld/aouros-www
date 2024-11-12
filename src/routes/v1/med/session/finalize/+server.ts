@@ -1,6 +1,6 @@
 
 import { error, json } from '@sveltejs/kit';
-import { finalize } from '$slib/med/session/finalizeReport';
+import { finalize } from '$lib/med/session/finalizeReport';
 
 /** @type {import('./$types.d').RequestHandler} */
 export async function POST({ request }) {

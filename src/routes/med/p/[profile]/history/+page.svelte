@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type Profile } from '$slib/med/types.d';
+    import { type Profile } from '$lib/med/types.d';
 
     export let data: {
         profile: Profile

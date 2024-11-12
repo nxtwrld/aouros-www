@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { type Profile } from '$slib/med/types.d';
-    import { profile } from '$slib/med/profiles';
+    import { type Profile } from '$lib/med/types.d';
+    import { profile } from '$lib/med/profiles';
 
     
     export let report: any;

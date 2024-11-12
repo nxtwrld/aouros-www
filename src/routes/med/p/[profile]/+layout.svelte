@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { profile } from '$slib/med/profiles';
+    import { profile } from '$lib/med/profiles';
     import { onDestroy } from 'svelte';
 
     onDestroy(() => {

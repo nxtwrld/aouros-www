@@ -1,10 +1,10 @@
-import  user from "$slib/user";
+import  user from "$lib/user";
 import { writable, type Writable , type Readable, derived, get } from 'svelte/store';
-import { importKey, exportKey, encrypt as encryptAES, decrypt as decryptAES, prepareKey } from "$slib/encryption/aes";
-import { pemToKey, encrypt as encryptRSA } from "$slib/encryption/rsa";
-import { profiles } from '$slib/med/profiles';
-import Errors from '$slib/Errors';
-import type { Profile } from "$slib/med/types.d";
+import { importKey, exportKey, encrypt as encryptAES, decrypt as decryptAES, prepareKey } from "$lib/encryption/aes";
+import { pemToKey, encrypt as encryptRSA } from "$lib/encryption/rsa";
+import { profiles } from '$lib/med/profiles';
+import Errors from '$lib/Errors';
+import type { Profile } from "$lib/med/types.d";
 
 
 export enum DocumentType {

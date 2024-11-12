@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { AudioState, getAudio, getAudioVAD, convertBlobToMp3, convertFloat32ToMp3, type AudioControlsVad} from '$slib/audio/microphone';
+    import { AudioState, getAudio, getAudioVAD, convertBlobToMp3, convertFloat32ToMp3, type AudioControlsVad} from '$lib/audio/microphone';
     import { throttle } from 'throttle-debounce';
     import { onDestroy, createEventDispatcher, onMount } from 'svelte';
-    import shortcuts from '$slib/shortcuts';
+    import shortcuts from '$lib/shortcuts';
 
     const dispatch = createEventDispatcher();
 

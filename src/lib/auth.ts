@@ -1,4 +1,4 @@
-import { getClient} from '$slib/supabase';
+import { getClient} from '$lib/supabase';
 
 async function logout() {
     const supabase = getClient();

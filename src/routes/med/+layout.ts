@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { LayoutLoad } from './$types';
-import { setUser } from '$slib/user';
+import { setUser } from '$lib/user';
 
 
 export const load: LayoutLoad = async ({ fetch, parent }) => {

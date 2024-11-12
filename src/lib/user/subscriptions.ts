@@ -1,4 +1,4 @@
-import { getClient } from "$slib/supabase";
+import { getClient } from "$lib/supabase";
 
 export async function loadSubscription(): Promise<{
     profiles: number;

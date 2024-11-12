@@ -1,8 +1,8 @@
 <script lang="ts">
 
-    import { profile } from '$slib/med/profiles';
-    import userStore from '$slib/user';
-    import { byUser} from '$slib/med/documents';
+    import { profile } from '$lib/med/profiles';
+    import userStore from '$lib/user';
+    import { byUser} from '$lib/med/documents';
 
 
     export let user: string = $profile?.id || $userStore?.id as string;

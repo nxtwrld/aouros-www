@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import steps from '$scomponents/onboarding/steps';
+	import steps from '$components/onboarding/steps';
     import { onMount } from 'svelte';
 	import type { VCard } from '$lib/contact/types.d';
     import { goto } from '$app/navigation';

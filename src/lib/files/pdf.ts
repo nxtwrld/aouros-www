@@ -3,7 +3,7 @@ import type { PDFPageProxy, PDFDocumentProxy } from 'pdfjs-dist';
 import type FileProcessor from "./pProcessor";
 import FileProcessorClass from './processor';
 import { processImages } from './image';
-import { merge as mergeImages } from '$slib/images';
+import { merge as mergeImages } from '$lib/images';
 import { THUMBNAIL_SIZE, PROCESS_SIZE } from "./CONFIG";
 
 

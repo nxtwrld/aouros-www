@@ -1,5 +1,5 @@
 <script lang="ts">
-    import PatientDashboard from "$scomponents/profile/ProfileDashboard.svelte";
+    import PatientDashboard from "$components/profile/ProfileDashboard.svelte";
 </script>
 
 
