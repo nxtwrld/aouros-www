@@ -1,8 +1,8 @@
 {
   "app": {
     "headings": {
-      "documents": "",
-      "profiles": ""
+      "documents": "Dokumenty",
+      "profiles": "Profily"
     },
     "import": {
       "add-files": "",
@@ -16,20 +16,26 @@
     },
     "name": "",
     "nav": {
-      "add_profile": "",
-      "documents": "",
-      "history": "",
-      "import": "",
-      "logout": "",
-      "new-session": "",
-      "profiles": ""
+      "add_profile": "Přidat profil",
+      "documents": "Dokumenty",
+      "history": "Historie",
+      "import": "Importovat",
+      "logout": "Odhlášení",
+      "new-session": "Nové sezení",
+      "profiles": "Profily"
+    },
+    "profile": {
+      "age": "Věk",
+      "date-of-birth": "Datum narození",
+      "edit-health-profile": "Upravit zdravotní profil",
+      "insurance": "Pojištění",
+      "name": "Jméno",
+      "phone": "Telefon",
+      "setup-profile": "Nastavit profil"
     },
     "profiles": {
-      "age": "",
-      "delete": "",
-      "name": "",
-      "open": "",
-      "phone": "",
+      "delete": "Smazat",
+      "open": "Otevřít",
       "request-access": ""
     },
     "search": {
@@ -41,17 +47,45 @@
         "view-history": "",
         "view-profile": ""
       },
-      "no-results": ""
+      "no-results": "Žádné výsledky"
     },
     "unlock": {
-      "invalid-passphrase": "",
-      "passphrase": "",
-      "passphrase-is-required": "",
-      "unlock": ""
+      "invalid-passphrase": "Neplatná přístupová fráze",
+      "passphrase": "Přístupová fráze",
+      "passphrase-is-required": "Je vyžadována přístupová fráze",
+      "unlock": "Odemknout"
     },
     "upgrade": {
-      "please-upgrade-your-subscription-to-continue": ""
+      "please-upgrade-your-subscription-to-continue": "Chcete-li pokračovat, upgradujte své předplatné."
     }
   },
-  "date-of-birth": ""
+  "date-of-birth": "",
+  "medical": {
+    "prop-values": {
+      "biologicalSex": {
+        "female": "Žena",
+        "intersex": "Intersex",
+        "male": "Muž"
+      }
+    },
+    "props": {
+      "age": "Věk",
+      "biologicalSex": "Sex",
+      "bloodPressure": "Krevní tlak",
+      "bloodSugar": "Krevní cukr",
+      "bloodType": "Krevní skupina",
+      "date-of-birth": "",
+      "height": "Výška",
+      "weight": "Váha"
+    },
+    "units": {
+      "C": "",
+      "F": "",
+      "cm": "",
+      "kg": "",
+      "mg/dL": "",
+      "mmHg": "",
+      "years": "let"
+    }
+  }
 }

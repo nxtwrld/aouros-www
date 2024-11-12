@@ -133,10 +133,10 @@
 <table class="table-list">
     <thead>
     <tr>
-        <th>{ $t('app.profiles.name') }</th>
-        <th>{ $t('app.profiles.age') }</th>
-        <th>{ $t('date-of-birth') }</th>
-        <th>{ $t('app.profiles.phone') }</th>
+        <th>{ $t('app.profile.name') }</th>
+        <th>{ $t('app.profile.age') }</th>
+        <th>{ $t('app.profile.date-of-birth') }</th>
+        <th>{ $t('app.profile.phone') }</th>
         <th></th>
     </tr>
 </thead>

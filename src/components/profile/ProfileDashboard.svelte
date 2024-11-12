@@ -7,7 +7,8 @@
     import ui from '$lib/ui';
     import Avatar from '$components/onboarding/Avatar.svelte';
     import Documents from '$components/documents/Index.svelte';
-
+    import { t } from '$lib/i18n';
+    
     interface Property {
         key: string;
         value: string;
@@ -90,14 +91,16 @@
             <div class="rest">
                 
                 <div class="profile">
-
+                    {#if $profile.health}
                     {#if isHealthSet && $profile.health.birthDate}
-                    <div>Date of birth: {$profile.health.birthDate}</div>
+                    <div>{ $t('app.profile.date-of-birth') }: {$profile.health.birthDate}</div>
                     {/if}
                     {#if isInsuranceSet}
-                    <div>Insurance: {$profile.insurance.provider} - {$profile.insurance.number}</div>
+                    <div>{ $t('app.profile.insurance') }: {$profile.insurance.provider} - {$profile.insurance.number}</div>
                     {:else}
-                    <button class="button">Set up insurance details</button>
+                    <button class="button">{ $t('app.profile.setup-profile') }</button>
+                    {/if}
+                    
                     
                     {/if}                
                 </div>
@@ -106,16 +109,14 @@
                     {#if isVcardSet}
 
                     <div>{$profile.vcard?.email?.[0].value}</div>
-                    {#if $profile.vcard}
-                        {#if $profile.vcard.tel}
-                            {#each $profile.vcard.tel as tel}
-                            <div>Phone: <a href="tel:{tel.value}" class="a">{tel.value} ({tel.type || 'default'})</a></div>
-                            {/each}
-                        {/if}
+                        {#if $profile.vcard}
+                            {#if $profile.vcard.tel}
+                                {#each $profile.vcard.tel as tel}
+                                <div>{$t('app.profile.phone')}: <a href="tel:{tel.value}" class="a">{tel.value} ({tel.type || 'default'})</a></div>
+                                {/each}
+                            {/if}
 
-                    {/if}
-                    {:else}
-                    <button class="button">Set up contact details</button>
+                        {/if}
                     {/if}
                 </div>
             </div>
@@ -133,7 +134,7 @@
         {/each}
         <div class="tile">
             <button class="button --large" on:click={() => ui.emit('modal.healthForm')}>
-                Add Health Profile
+                {$t('app.profile.edit-health-profile')}
             </button>
         </div>
     </div>

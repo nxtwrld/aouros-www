@@ -24,13 +24,18 @@
       "new-session": "New Session",
       "profiles": "Profiles"
     },
-    "profiles": {
+    "profile": {
       "age": "Age",
-      "delete": "Delete",
+      "date-of-birth": "Date of birth",
+      "edit-health-profile": "Edit Health Profile",
+      "insurance": "Insurance",
       "name": "Name",
-      "open": "Open",
       "phone": "Phone",
-      "date-of-birth": "Date of Birth",
+      "setup-profile": "Setup profile"
+    },
+    "profiles": {
+      "delete": "Delete",
+      "open": "Open",
       "request-access": "Request Access"
     },
     "search": {
@@ -54,28 +59,33 @@
       "please-upgrade-your-subscription-to-continue": "Please upgrade your subscription to continue."
     }
   },
+  "date-of-birth": "",
   "medical": {
+    "props": {
+      "age": "Age",
+      "biologicalSex": "Sex",
+      "bloodPressure": "Blood Pressure",
+      "bloodSugar": "Blood Sugar",
+      "bloodType": "Blood Type",
+      "date-of-birth": "Date of Birth",
+      "height": "Height",
+      "weight": "Weight"
+    },
+    "prop-values": {
+      "biologicalSex": {
+        "male": "Male",
+        "female": "Female",
+        "intersex": "Intersex"
+      }
+    },
     "units": {
       "C": "&#8451;",
       "F": "&#8457;",
       "cm": "cm",
       "kg": "kg",
-      "years": "years",
+      "mg/dL": "mg/dL",
       "mmHg": "mmHg",
-      "mg/dL": "mg/dL"
-
-    },
-    "props": {
-      "age": "Age",
-      "date-of-birth": "Date of Birth",
-      "bloodType": "Blood Type",
-      "bloodPressure": "Blood Pressure",
-      "bloodSugar": "Blood Sugar",
-      "biologicalSex": "Sex",
-      "height": "Height",
-      "weight": "Weight"
-
+      "years": "years"
     }
   }
-
 }

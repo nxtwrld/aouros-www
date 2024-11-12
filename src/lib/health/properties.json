@@ -11,6 +11,7 @@
     "biologicalSex": {
         "key": "biologicalSex",
         "type": "enum",
+        "localize": true,
         "options": ["male", "female", "intersex"]
     },
     "bloodType": {

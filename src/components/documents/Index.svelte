@@ -10,7 +10,7 @@
     let documents = byUser(user);
 
 
-    console.log('documents', user, documents, $documents);
+    console.log('documents', $documents);
 
 </script>
 

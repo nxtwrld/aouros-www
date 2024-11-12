@@ -18,7 +18,7 @@ export async function GET({ request, locals: { supabase, safeGetSession }}) {
     }
     const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select(`fullName, subscription, publicKey, avatarUrl, auth_id, id, private_keys(privateKey, key_hash, key_pass)`)
+    .select(`fullName, subscription, publicKey, avatarUrl, auth_id, id, language, private_keys(privateKey, key_hash, key_pass)`)
     .eq('auth_id', userSession?.id)
     .single()
 

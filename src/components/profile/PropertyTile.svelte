@@ -1,5 +1,7 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
+    import { properties } from '$lib/health/dataTypes';
+
     type Result = {
         key?: string;
         test?: string;
@@ -13,18 +15,18 @@
 
     
     $: referenceRange = property.reference?.split('-').map(Number)
-    $: title = property.key || property.test
+    $: title = property.key || property.test as string;
 //    $: unit = getUnit(property.unit)
 
     let icon: string = getResultIcon(property)
 
     function getResultIcon(property: Result) {
-        switch (property.key) {
+        switch (title) {
             case 'biologicalSex':
                 return 'biologicalSex-' + property.value
 
             default:
-                return property.key
+                return title
         }
     }
 
@@ -49,7 +51,13 @@
 
         <div class="title">{ $t(`medical.props.${title}`)}</div>
 
-        <div class="value"><strong>{property.value}</strong> <span class="unit">{@html  showUnit(property.unit)  } </span></div>
+        <div class="value"><strong>
+            {#if properties[title]?.localize}
+                { $t(`medical.prop-values.${title}.${property.value}`) }
+            {:else}
+                {property.value}
+            {/if}
+        </strong> <span class="unit">{@html  showUnit(property.unit)  } </span></div>
 
     </div>
 </div>

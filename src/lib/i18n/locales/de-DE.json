@@ -1,8 +1,8 @@
 {
   "app": {
     "headings": {
-      "documents": "",
-      "profiles": ""
+      "documents": "Unterlagen",
+      "profiles": "Profile"
     },
     "import": {
       "add-files": "",
@@ -16,20 +16,26 @@
     },
     "name": "",
     "nav": {
-      "add_profile": "",
-      "documents": "",
-      "history": "",
-      "import": "",
-      "logout": "",
-      "new-session": "",
-      "profiles": ""
+      "add_profile": "Profil hinzufügen",
+      "documents": "Unterlagen",
+      "history": "Geschichte",
+      "import": "Import",
+      "logout": "Abmelden",
+      "new-session": "Neue Sitzung",
+      "profiles": "Profile"
+    },
+    "profile": {
+      "age": "Alter",
+      "date-of-birth": "Geburtsdatum",
+      "edit-health-profile": "Gesundheitsprofil bearbeiten",
+      "insurance": "Versicherung",
+      "name": "Name",
+      "phone": "Telefon",
+      "setup-profile": "Setup-Profil"
     },
     "profiles": {
-      "age": "",
-      "delete": "",
-      "name": "",
-      "open": "",
-      "phone": "",
+      "delete": "Löschen",
+      "open": "Offen",
       "request-access": ""
     },
     "search": {
@@ -41,17 +47,45 @@
         "view-history": "",
         "view-profile": ""
       },
-      "no-results": ""
+      "no-results": "Keine Ergebnisse"
     },
     "unlock": {
-      "invalid-passphrase": "",
-      "passphrase": "",
-      "passphrase-is-required": "",
-      "unlock": ""
+      "invalid-passphrase": "Ungültige Passphrase",
+      "passphrase": "Passphrase",
+      "passphrase-is-required": "Passphrase ist erforderlich",
+      "unlock": "Entsperren"
     },
     "upgrade": {
-      "please-upgrade-your-subscription-to-continue": ""
+      "please-upgrade-your-subscription-to-continue": "Bitte aktualisieren Sie Ihr Abonnement, um fortzufahren."
     }
   },
-  "date-of-birth": ""
+  "date-of-birth": "",
+  "medical": {
+    "prop-values": {
+      "biologicalSex": {
+        "female": "Weiblich",
+        "intersex": "Intersexuell",
+        "male": "Männlich"
+      }
+    },
+    "props": {
+      "age": "Alter",
+      "biologicalSex": "Sex",
+      "bloodPressure": "Blutdruck",
+      "bloodSugar": "Blutzucker",
+      "bloodType": "Blutgruppe",
+      "date-of-birth": "",
+      "height": "Höhe",
+      "weight": "Gewicht"
+    },
+    "units": {
+      "C": "",
+      "F": "",
+      "cm": "",
+      "kg": "",
+      "mg/dL": "",
+      "mmHg": "",
+      "years": "Jahre"
+    }
+  }
 }
