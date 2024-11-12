@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
-	import steps from '../../components/onboarding/steps';
+	import steps from '$scomponents/onboarding/steps';
     import { onMount } from 'svelte';
 	import type { VCard } from '$lib/contact/types.d';
+    import { goto } from '$app/navigation';
+
+
 	let STEP = 0;
 
 	interface EditData {
@@ -25,6 +28,7 @@
 			key_hash?: string;
 			publicKey?: string;
 			privateKey?: string;
+			passphrase?: string;
 		}
 	}
 
@@ -36,6 +40,7 @@
 	let readyNext: boolean = false;
 	let hash = '';
 	let global: any = undefined;
+;
 
 	let { session, supabase, profile } = data;
 	$: ({ session, supabase, profile } = data);
@@ -63,7 +68,8 @@
 	})
 
 	let profileForm: HTMLFormElement
-	let loading = false
+	let loading = false;
+	let error: string | null = null;
 
 	let editData: EditData = {
 		bio: {
@@ -81,13 +87,10 @@
 			enabled: (profile?.privateKey && profile?.publicKey) ?? false,
 			key_hash: profile?.key_hash ?? undefined,
 			privateKey: profile?.privateKey ?? undefined,
-			publicKey: profile?.publicKey ?? undefined	
+			publicKey: profile?.publicKey ?? undefined,
+			passphrase: profile?.passphrase ?? undefined
 		}
 	}
-
-
-
-
 
 	const handleSubmit: SubmitFunction = ({formElement, formData, action, cancel}) => {
 		console.log('editData', editData);
@@ -100,20 +103,28 @@
 		formData.append('subscription', editData.subscription);
 		formData.append('insurance', JSON.stringify(editData.insurance));
 		formData.append('health', JSON.stringify(editData.health));
+		formData.append('passphrase', !editData.privacy.enabled ? editData.privacy.passphrase : undefined);
+
 		formData.append('publicKey', editData.privacy.publicKey);
 		formData.append('privateKey', editData.privacy.privateKey);
 		formData.append('key_hash', editData.privacy.key_hash);
 
-		// TODO
-		if (editData.privacy.enabled) {
-			//formData.append('publicKey', editData.privacy.publicKey);
-			//formData.append('privateKey', editData.privacy.privateKey);
-		}
-
 
 
 		loading = true
-		return async () => {
+		return async ({ update, result }) => {
+			console.log('result', result);
+			if (result.type === 'success') {
+				loading = false;
+				console.log('should go to /med');
+				goto('/med');
+				return;
+			}
+			if (result.type === 'failure') {
+				error = result.data.error;
+				setStep(0);
+				loading = false
+			}
 			loading = false
 		}
 	}
@@ -135,7 +146,9 @@
 <div class="flex -center view-dark">
 
 	<div class="form modal">
-
+		{#if error}
+			<div class="form-instructions -error">{error}</div>
+		{/if}
 		<div class="form-contents">
 		<svelte:component this={steps[STEP].component} bind:data={editData} {profileForm} {supabase} bind:ready={readyNext} />
 		</div>
@@ -163,7 +176,7 @@
 			{#if STEP === steps.length - 1}
 				<input
 					type="submit"
-					class="button -block -primary"
+					class="button -block -primary -large"
 					value={loading ? 'Loading...' : 'Save'}
 					disabled={!readyNext || loading}
 				/>

@@ -1,12 +1,10 @@
 <script lang="ts">
     import type { SupabaseClient } from '@supabase/supabase-js';
 	import Avatar from './Avatar.svelte';
+    import { onMount } from 'svelte';
+    import Languages, { type LanguageType } from '$slib/languages';
+    import user from '$slib/user';
 
-    enum Languages {
-        en = 'en',
-        cs = 'cs',
-        de = 'de'
-    }
 
     export let supabase: SupabaseClient;
     export let ready: boolean = false;
@@ -14,10 +12,8 @@
         bio: {
             email: string;
             fullName: string;
-            birthDate: string;
-            avatar: string;
             avatarUrl: string;
-            language: Languages;
+            language: LanguageType;
         }
     }
     export let profileForm: HTMLFormElement;
@@ -28,14 +24,27 @@
             ready = true;
         }
      }
+
+     onMount(() => {
+        // load browser language and set it as default if available
+        if (Languages[navigator.language as LanguageType]) {
+            data.bio.language = navigator.language as LanguageType;
+        } else {
+            const lang = navigator.language.split('-')[0];
+            if (Languages[lang as LanguageType]) {
+                data.bio.language = lang as LanguageType;
+            }
+        }
+     })
 </script>
 
 
 <div class="flex -center">
     <Avatar
-    {supabase}
     bind:url={data.bio.avatarUrl}
+    id={$user?.id}
     size={10}
+    editable={true}
     on:upload={() => {
         profileForm.requestSubmit();
     }}
@@ -52,11 +61,6 @@
 <div class="input">
     <label for="fullName">Full Name</label>
     <input id="fullName" name="fullName" type="text" bind:value={data.bio.fullName} required />
-</div>
-
-<div class="input">
-    <label for="birth_date">Birth date</label>
-    <input id="birth_date" name="birth_date" type="date" bind:value={data.bio.birthDate} />
 </div>
 
 <div class="input">

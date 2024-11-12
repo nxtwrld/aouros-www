@@ -1,32 +1,34 @@
 <!-- src/routes/account/Avatar.svelte -->
 <script lang="ts">
-	import type { SupabaseClient } from '@supabase/supabase-js'
-	import { createEventDispatcher } from 'svelte'
+	import { onMount, createEventDispatcher } from 'svelte'
 
 	export let size = 10;
-	export let url: string
-	export let supabase: SupabaseClient
+	export let url: string;
+	export let id: string;
+	export let editable: boolean = false;
+	//export let supabase: SupabaseClient
 
 	let avatarUrl: string | null = null
 	let uploading = false
 	let files: FileList
+	let loaded: boolean = false;
 
 	const dispatch = createEventDispatcher()
 
 	const downloadImage = async (path: string) => {
 		try {
-			const { data, error } = await supabase.storage.from('avatars').download(path)
 
-			if (error) {
-				throw error
+			const data = await fetch(`/v1/med/profiles/${id}/avatar?path=${path}`).then((res) => res.blob())
+
+			// blob data to base64
+			const reader = new FileReader();
+			reader.readAsDataURL(data);
+			reader.onloadend = function() {
+				const base64data = reader.result;
+				avatarUrl = base64data as string;
 			}
-
-			const url = URL.createObjectURL(data)
-			avatarUrl = url
 		} catch (error) {
-			if (error instanceof Error) {
-				console.log('Error downloading image: ', error.message)
-			}
+			console.log('Error downloading image: ', error)
 		}
 	}
 
@@ -40,15 +42,25 @@
 
 			const file = files[0]
 			const fileExt = file.name.split('.').pop()
-			const filePath = `${Math.random()}.${fileExt}`
+			const filenameNew = `${Math.random()}.${fileExt}`
 
+			const base64 = await toBase64(file)
+
+			const { filename } = await fetch(`/v1/med/profiles/${id}/avatar`, {
+				method: 'POST',
+				body: JSON.stringify({ file: base64, filename: filenameNew, type: file.type }),
+			})
+			.then((res) => res.json())
+			.catch((error) => {
+				console.log('error', error)
+			})
+			/*
 			const { error } = await supabase.storage.from('avatars').upload(filePath, file)
 
 			if (error) {
 				throw error
-			}
-
-			url = filePath
+			}*/
+			url = filename;
 			setTimeout(() => {
 				dispatch('upload')
 			}, 100)
@@ -60,11 +72,23 @@
 			uploading = false
 		}
 	}
+	async function toBase64(file: File) {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.readAsDataURL(file);
+			reader.onload = () => resolve(reader.result);
+			reader.onerror = reject;
+		});
+	}
 
-	$: if (url) downloadImage(url)
+	$: if (loaded && url) downloadImage(url)
+
+	onMount(() => {
+		loaded = true;
+	})
 </script>
 
-<div>
+<div class="container">
 	{#if avatarUrl}
 		<img
 			src={avatarUrl}
@@ -79,6 +103,7 @@
 			</svg>
 		</div>
 	{/if}
+	{#if editable}
 	<input type="hidden" name="avatarUrl" value={url} />
 
 	<div class="upload" style="width: {size}em;">
@@ -96,12 +121,23 @@
 			disabled={uploading}
 		/>
 	</div>
+	{/if}
 </div>
 
 
 <style>
+	.container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		position: relative;
+		width: 100%;
+		height: 100%;
+	}
 	.avatar {
 		border-radius: 50%;
+		width: 100%;
+		height: 100%;
 	}
 
 	.avatar svg {
@@ -116,6 +152,13 @@
 	}
 
 	.upload {
+		position: absolute;
 		margin-top: 1em;
+		bottom: .2rem;
+		left: 50%;
+		transform: translatex(-50%);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 </style>

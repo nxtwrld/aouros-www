@@ -4,8 +4,8 @@
     import { prepareKeys } from '$slib/encryption/rsa';
     import { createHash } from '$slib/encryption/hash';
     import { onMount } from 'svelte';
+    import { ChatConversationalAgentOutputParser } from 'langchain/agents';
 
-    export let supabase: SupabaseClient;
     export const ready: boolean = true;
     export let data: {
         bio: {
@@ -16,6 +16,7 @@
             key_hash?: string;
             privateKey?: string;
             publicKey?: string;
+            passphrase?: string;
         };
     };
 
@@ -25,11 +26,9 @@
 
     $: strength = passwordStrength(passphrase).value;
 
-    $: {
 
-    }
-
-    function generatePassphrase(length: number =  6): string {
+    function generatePassphrase(length: number =  10): string {
+        console.log('generatePassphrase', length);
         const regx = new RegExp(/\d/, "g");
         let p = window.crypto.getRandomValues(new BigUint64Array(length)).reduce(
                 (prev, curr, index) => (
@@ -66,7 +65,7 @@
 
     async function setAutomaticPassword() {
         await setKeys();
-        passphrase = generatePassphrase();
+        //passphrase = generatePassphrase();
         autoPassphrase = 'create';
         isCustomPassphrase = false;
     }
@@ -79,16 +78,20 @@
 
     async function setKeys(privateKey: string | undefined = undefined, publicKey: string | undefined = undefined, key_hash: string | undefined = undefined) : Promise<void> {
         if (!privateKey || !publicKey || !key_hash) {
-            let userId = (await supabase.auth.getUser())?.data?.user.id;
-            console.log('userId', userId);
-            let keys = await prepareKeys(userId);
-            let key_hash = await createHash(userId);
+            passphrase = generatePassphrase();
+            let keys = await prepareKeys(passphrase);
+            let key_hash = await createHash(passphrase);
             return await setKeys(keys.encryptedPrivateKey, keys.publicKeyPEM, key_hash);
         } 
-
         data.privacy.key_hash = key_hash;
         data.privacy.privateKey = privateKey;
         data.privacy.publicKey = publicKey;
+
+        if (data.privacy.enabled) {
+            data.privacy.passphrase = undefined;
+        } else {
+            data.privacy.passphrase = passphrase;
+        }
         return;
     }
 
@@ -124,6 +127,7 @@
     }
 
     async function resetAll() {
+        console.log('resetAll');
         await setKeys();
         autoPassphrase = automaticSavingCapable ? 'create' : 'custom';
         passphrase = generatePassphrase();

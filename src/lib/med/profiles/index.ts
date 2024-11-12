@@ -34,11 +34,12 @@ export async function removeLinkedProfile(profile_id: string) {
  *  Load
 */  
 export async function loadProfiles(fetch: any = undefined, force: boolean = false) {
-
+/*
     if (!force && profiles.get().length > 0) {
+        console.log('profiles already loaded', profiles.get());
         return;
     }
-
+*/
     if (!fetch) fetch = window.fetch;
     // fetch basic profile data
     const profilesLoaded = await fetch('/v1/med/profiles').then(r => r.json()).catch(e => {

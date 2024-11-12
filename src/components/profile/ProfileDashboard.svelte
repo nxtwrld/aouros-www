@@ -3,7 +3,10 @@
     import { getAge } from '$slib/med/datetime';
     import PropertyTile from './PropertyTile.svelte';
     import { properties } from '$slib/health/dataTypes';
+    import user from '$slib/user';
     import ui from '$slib/ui';
+    import Avatar from '$scomponents/onboarding/Avatar.svelte';
+    import Documents from '$scomponents/documents/Index.svelte';
 
     interface Property {
         key: string;
@@ -45,7 +48,7 @@
         {
             key: 'bloodPressure',
             source: $profile?.health?.bloodPressure,
-            value: $profile?.health?.bloodPressure?.systolic + '/' + $profile?.health?.bloodPressure?.diastolic,
+            value: ($profile?.health?.bloodPressure) ? $profile?.health?.bloodPressure?.systolic + '/' + $profile?.health?.bloodPressure?.diastolic : undefined,
         }
 
     ] : []).map(p => {
@@ -55,6 +58,12 @@
 
         } as Property;
     })
+
+    $: isHealthSet  = Object.keys($profile?.health || {}).length > 0;
+    $: isVcardSet  = Object.keys($profile?.vcard || {}).length > 0;
+    $: isInsuranceSet  = Object.keys($profile?.insurance || {}).length > 0;
+
+
 
     function openTile(prop: Property) {
         console.log('openTile', prop.key || prop.editable, prop);
@@ -70,11 +79,9 @@
 {#if $profile}
     <div class="profile-header">
         <div class="avatar">
-            {#if $profile.avatarUrl}
-                <img src="{$profile.avatarUrl}" alt="{$profile.fullName}" class="avatar" />
-            {:else}
-            Add Image
-            {/if}
+
+            <Avatar id={$profile.id} bind:url={$profile.avatarUrl} editable={$user.id == $profile.id} />
+
         </div>
         
 
@@ -84,15 +91,20 @@
                 
                 <div class="profile">
 
-        
+                    {#if isHealthSet && $profile.health.birthDate}
                     <div>Date of birth: {$profile.health.birthDate}</div>
-        
-                    {#if $profile.insurance}
+                    {/if}
+                    {#if isInsuranceSet}
                     <div>Insurance: {$profile.insurance.provider} - {$profile.insurance.number}</div>
+                    {:else}
+                    <button class="button">Set up insurance details</button>
+                    
                     {/if}                
                 </div>
 
                 <div class="contacts">
+                    {#if isVcardSet}
+
                     <div>{$profile.vcard?.email?.[0].value}</div>
                     {#if $profile.vcard}
                         {#if $profile.vcard.tel}
@@ -101,6 +113,9 @@
                             {/each}
                         {/if}
 
+                    {/if}
+                    {:else}
+                    <button class="button">Set up contact details</button>
                     {/if}
                 </div>
             </div>
@@ -118,12 +133,14 @@
         {/each}
         <div class="tile">
             <button class="button --large" on:click={() => ui.emit('modal.healthForm')}>
-                Open Health Form
+                Add Health Profile
             </button>
         </div>
     </div>
 
-    <ul>
+    <Documents user={$profile.id} />
+
+    <!--ul>
         <li>Latest Lab results document + charts</li>
         <li>Medical History
             <ul>
@@ -133,7 +150,7 @@
                 <li>Latest reports</li>  
             </ul>
         </li>
-    </ul>
+    </ul-->
 
 {/if}
 
@@ -145,7 +162,8 @@
         grid-template-columns: 10rem 1fr;
         margin-bottom: var(--gap);
         background-color: var(--color-gray-300);
-        padding: 1rem 0;
+        padding: 1rem;
+        grid-gap: 1rem;
     }
     .profile-header > * {
         display: flex;
@@ -169,21 +187,11 @@
     }
 
 
+    .avatar {
+        width: 10rem;
+        height: 10rem;
 
-    .tiles {
-        --background-color: var(--color-gray-300);
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-        gap: var(--gap);
-        margin-bottom: var(--gap);
-        text-align: left;
-    }
-    .tile {
-        background-color: var(--background-color);
-        min-height: 6rem;
-        min-width: 12rem;
         display: flex;
-        flex-direction: column;
         justify-content: center;
         align-items: center;
     }

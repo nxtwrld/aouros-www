@@ -6,6 +6,7 @@
     import { files, type Task, TaskState } from '$slib/files';
     import { addDocument } from '$slib/med/documents';
     import  user from '$slib/user';
+    import { onMount } from 'svelte';
 
     let documents: Document[] = [];
     let results: any = [];
@@ -36,6 +37,8 @@
 
     
     files.subscribe(value => {
+        prepareFiles(value);
+        /*
         if (value.length > 0) {
             console.log('subscribed', value);
             currentFiles = mergeFiles(value);
@@ -46,7 +49,27 @@
                 analyze(toBeProcessed);
             }
             files.set([]);
+        }*/
+    });
+
+    function prepareFiles(value: File[]) {
+        if (value.length > 0) {
+            console.log('preparing....', value);
+            currentFiles = mergeFiles(value);
+            const toBeProcessed = currentFiles.filter(file => !processingFiles.includes(file));
+            console.log('toBeProcessed', toBeProcessed);
+            if (toBeProcessed.length > 0) {
+                processingFiles = [...processingFiles, ...toBeProcessed];
+                analyze(toBeProcessed);
+            }
+            console.log('processingFiles', processingFiles);
+            files.set([]);
         }
+    }
+
+    onMount(() => {
+        //files.set([]);
+        //prepareFiles($files);
     });
 
 

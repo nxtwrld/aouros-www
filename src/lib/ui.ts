@@ -1,4 +1,16 @@
 import EventEmitter from 'eventemitter3';
+import { writable, type Writable, get } from "svelte/store";
+
+export enum Overlay {
+    none = 'none',
+    import = 'import'
+}
+
+export const state: Writable<{
+    overlay: Overlay;
+}> = writable({
+    overlay: Overlay.none,
+});
 
 class UIEvents  extends EventEmitter {
     context: string | null = null;
@@ -64,6 +76,7 @@ class UIEvents  extends EventEmitter {
 const ui = new UIEvents();
 
 export default ui;
+
 
 export const confirm = ui.confirm.bind(ui);
 export const prompt = ui.prompt.bind(ui);

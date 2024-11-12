@@ -10,7 +10,7 @@
 </script>
 
 
-<svelte:window on:keypress={emitShortcut}></svelte:window>
+<svelte:window on:keydown={emitShortcut}></svelte:window>
 
 <Unlock>
     <UI><slot /></UI>

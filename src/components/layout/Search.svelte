@@ -210,9 +210,9 @@
     onMount(() => {
 
         const off = [
-            shortcuts.on('find', showSearch),
-            shortcuts.on('KeyF', showSearch),
-            shortcuts.on('Escape', hideSearch)
+            shortcuts.listen('find', showSearch),
+            shortcuts.listen('KeyF', showSearch),
+            shortcuts.listen('Escape', hideSearch)
         ]
 
         return () => {

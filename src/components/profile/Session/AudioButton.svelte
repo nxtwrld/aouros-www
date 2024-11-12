@@ -88,7 +88,7 @@
     }
 
     onMount(() => {
-        return shortcuts.on('Space', () => {
+        return shortcuts.listen('Space', () => {
             toggleSession();
         });
     });

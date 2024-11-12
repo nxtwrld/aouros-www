@@ -6,9 +6,11 @@
     import Search from "./Search.svelte";
     import { goto } from "$app/navigation";
     import MenuBurger from "$scomponents/ui/MenuBurger.svelte";
+    import ui from "$slib/ui";
+    import { state, Overlay } from "$slib/ui";
 
-
-    function isActive(path: string, currentPath: string) {
+    function isActive(path: string, currentPath: string, state: any) {
+        if ($state.overlay !== Overlay.none) return false;
         return currentPath.startsWith(path);
     }
 
@@ -68,12 +70,12 @@
 
             {#if $profile}
                 {#if $profile.id}
-                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname)}>{$profile.fullName}</a>
+                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname, $state)}>{$profile.fullName}</a>
                     <!--div class="spacer"></div-->
-                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname)}>Documents</a>
-                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>History</a>
+                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname, $state)}>Documents</a>
+                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname, $state)}>History</a>
                     {#if $user.isMedical}
-                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>New Session</a>
+                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname, $state)}>New Session</a>
                     {/if}
                 {:else}
                     <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{$profile.name}</div>
@@ -85,7 +87,8 @@
                 <a href="/med/p/addprofile/">Add profile</a>
                 {/if}
             {/if}
-            <a href="/med/import" class:-active={$page.url.pathname == '/med/import/'}>Import</a>
+            <!--a href="/med/import" class:-active={$page.url.pathname == '/med/import/'}>Import</a-->
+            <button on:click={() => ui.emit('overlay.import')} class:-active={$state.overlay == Overlay.import}>Import</button>
         </div>
         {#if $user}
         <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
@@ -138,11 +141,12 @@
         color: var(--color-black);
     }
 
-
+    .profile {
+        flex-grow: 1;
+    }
     .profile.-active {
         color: var(--color-black);
         font-weight: bold;
-        flex-grow: 1;
         border-color: var(--button-color);
         border-bottom-width: 2px;
     }

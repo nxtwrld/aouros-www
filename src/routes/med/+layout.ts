@@ -13,16 +13,16 @@ export const load: LayoutLoad = async ({ fetch, parent }) => {
         console.error('Error loading user', e);
         redirect(303, '/account')
     });
+    
+    if (userData && userData.fullName && userData.private_keys && userData.publicKey) {
+    
+      await setUser(userData);
+    
+      return {  };
+    } else {
+      redirect(303, '/account')
+    }
 
-
-  // for individual users, redirect directly to their profile
-  if (userData.subscription == 'individual') {
-    redirect(303, '/med/p/'+userData.id)
-  }
-
-  await setUser(userData);
-
-  return {  };
 
 }
 

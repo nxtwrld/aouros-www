@@ -167,7 +167,7 @@
 
 
 
-<button on:click={addProfileData}>Add Profile</button>
+<!--button on:click={addProfileData}>Add Profile</button-->
 
 <style> 
 

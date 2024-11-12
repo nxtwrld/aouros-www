@@ -4,7 +4,7 @@
     import { fade } from 'svelte/transition';
     import { files } from '$slib/files';
     import { fromEvent } from 'file-selector'; 
-    
+    import ui from '$slib/ui';
 
     let dragover: boolean = false;
     let dragTimer: any;
@@ -28,7 +28,8 @@
         if (newFiles.length >  0) {
             console.log('Files dropped', newFiles, $files);
             files.set([ ...$files,  ...newFiles ]);
-            goto('/med/import');
+            //goto('/med/import');
+            ui.emit('overlay.import');
         }
         // Process the files
 
@@ -47,7 +48,7 @@
 </script>
 
 
-    <div class="droparea" on:drop={handleDrop} on:dragover={handleDragOver} on:dragleave={handleDragEnd} on:dragend={handleDragEnd}>
+    <div class="droparea" role="region" aria-label="File drop area" on:drop={handleDrop} on:dragover={handleDragOver} on:dragleave={handleDragEnd} on:dragend={handleDragEnd}>
         <slot />
         {#if dragover}
         <div class="drag-active overlay" transition:fade>

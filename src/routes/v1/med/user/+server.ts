@@ -18,13 +18,17 @@ export async function GET({ request, locals: { supabase, safeGetSession }}) {
     }
     const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select(`fullName, subscription, privateKey, publicKey, avatarUrl, auth_id, id, private_keys(privateKey, key_hash, key_pass)`)
+    .select(`fullName, subscription, publicKey, avatarUrl, auth_id, id, private_keys(privateKey, key_hash, key_pass)`)
     .eq('auth_id', userSession?.id)
     .single()
 
 
     if (profileError) {
-        throw profileError;
+        if (profileError.code === 'PGRST116') {
+            return error(404, { message: 'Profile not found' });
+        } else {
+            throw profileError;
+        }
     }
 
 

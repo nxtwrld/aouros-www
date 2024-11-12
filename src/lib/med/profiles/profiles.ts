@@ -10,6 +10,7 @@ function getCustom(id: string| undefined = undefined): Profile[] | Profile{
         return get(profilesStore);
     }
     const profile =  get(profilesStore).find(p => p.id === id);
+
     if (!profile) {
         throw new Error('Profile not found');
     }

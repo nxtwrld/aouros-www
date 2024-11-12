@@ -15,7 +15,7 @@ export type Step = {
 
 const steps: Step[] = [ 
     {
-        description: "Name",
+        description: "Basic information",
         dataset: "bio",
         component: Profile
     }, {
@@ -24,6 +24,10 @@ const steps: Step[] = [
         component: Subscription
 
     },{
+        description: "Privacy",
+        dataset: "privacy",
+        component: Privacy
+    }/*,{
         description: "Contact information",
         dataset: "vcard",
         component: VCard
@@ -33,11 +37,7 @@ const steps: Step[] = [
         dataset: "insurance",
         component: Insurance
 
-    },{
-        description: "Privacy",
-        dataset: "privacy",
-        component: Privacy
-    }/*,{
+    }*//*,{
         description: "Health information",
         dataset: "health",
         component: Health

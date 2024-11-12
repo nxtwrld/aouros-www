@@ -1,5 +1,5 @@
 import  user from "$slib/user";
-import { writable, type Writable , derived, get } from 'svelte/store';
+import { writable, type Writable , type Readable, derived, get } from 'svelte/store';
 import { importKey, exportKey, encrypt as encryptAES, decrypt as decryptAES, prepareKey } from "$slib/encryption/aes";
 import { pemToKey, encrypt as encryptRSA } from "$slib/encryption/rsa";
 import { profiles } from '$slib/med/profiles';
@@ -72,15 +72,13 @@ export interface DocumentNew {
 
 const documents: Writable<(DocumentPreload | Document)[]> = writable([])
 
-export function byUser(id: string) {
-    //console.log('byUser', id, get(documents));
-    return derived([documents, user], ([$documents, $user], set) => {
-        set($documents.filter(doc => 
-            doc.user_id === id
-            && doc.type === 'document'
-        ));
-    });
+export function byUser(id: string): Readable<(DocumentPreload | Document)[]> {
+    return profileStores[id];
 }
+
+export const profileStores: {
+    [key: string]: Readable<(DocumentPreload | Document)[]>
+} = {};
 
 export default {
     subscribe: documents.subscribe,
@@ -96,9 +94,20 @@ const byID: {
 } = {};
 
 
+
 function updateIndex() {
     get(documents).forEach(doc => {
         byID[doc.id] = doc;
+        if (!profileStores[doc.user_id]) {
+            profileStores[doc.user_id] = derived(documents, ($documents, set) => {
+                const userDocuments = $documents.filter(doc => 
+                    doc.user_id === doc.user_id
+                    && doc.type === 'document'
+                );
+                set(userDocuments);
+            });
+        }
+
     })
 }
 

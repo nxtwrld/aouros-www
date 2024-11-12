@@ -10,11 +10,12 @@ export const load: LayoutLoad = async ({ parent, params, fetch }) => {
   console.log('loading.profile...')
   // profiles are already preloaded - just select it
   const p = profiles.get(params.profile) as Profile;
-
+  
   if (!p) {
     // profile not found
     redirect(303, '/med/p')
   }
+
   // set the profile
   profile.set(p);
 

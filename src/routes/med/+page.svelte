@@ -1,6 +1,15 @@
 
 <script lang="ts">
-    
+    import user from '$slib/user';
+    import { goto } from '$app/navigation';
+
+    $: {
+        if ($user && $user.subscription == 'individual') {
+            goto('/med/p/'+$user.id);
+        }
+    }
+
+
     </script>
 
 <h1 class="h1">Omphilos - Electronic Health Records</h1>

@@ -9,8 +9,11 @@ import EventEmitter from "eventemitter3";
 
 
 class ShortCutEmitter extends EventEmitter {
-    on(eventName: string, listener: (...args: any[]) => void, context?: any): () => void {
-        super.on(eventName, listener, context);
+    constructor() {
+        super();
+    }
+    listen(eventName: string, listener: (...args: any[]) => void, context?: any): () => void {
+        this.on(eventName, listener, context);
         return () => {
             this.removeListener(eventName, listener, context);
         };
@@ -56,13 +59,13 @@ export function emitShortcut(event: KeyboardEvent): void {
         code += 'Alt+';
     }
     code += event.code;
-    //console.log('Emitting', code, event);
     
     Object.keys(defaultShortcuts).forEach((key) => {
         if (key === code) {
             eventEmitter.emit(defaultShortcuts[key]);
         }
     });
+
     eventEmitter.emit('shortcut', code);
     eventEmitter.emit(code);
 }
