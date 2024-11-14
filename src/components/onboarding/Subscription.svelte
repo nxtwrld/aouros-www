@@ -1,7 +1,5 @@
 <script lang="ts">
-    import type { SupabaseClient } from '@supabase/supabase-js';
 	
-    export let supabase: SupabaseClient;
     export const ready: boolean = true;
     export let data: {
         subscription: string;

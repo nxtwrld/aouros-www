@@ -1,9 +1,7 @@
 <script lang="ts">
-    import type { SupabaseClient } from '@supabase/supabase-js';
+
     import type { VCard } from '$lib/contact/types.d';
-    import { text } from '@sveltejs/kit';
 	
-    export let supabase: SupabaseClient;
     export const ready: boolean = true;
     export let data: {
         vcard: VCard

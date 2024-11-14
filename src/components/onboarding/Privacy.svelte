@@ -1,10 +1,8 @@
 <script lang="ts">
-    import type { SupabaseClient } from '@supabase/supabase-js';
 	import { passwordStrength } from 'check-password-strength';
     import { prepareKeys } from '$lib/encryption/rsa';
     import { createHash } from '$lib/encryption/hash';
     import { onMount } from 'svelte';
-    import { ChatConversationalAgentOutputParser } from 'langchain/agents';
 
     export const ready: boolean = true;
     export let data: {

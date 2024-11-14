@@ -1,12 +1,12 @@
 <!-- src/routes/account/Avatar.svelte -->
 <script lang="ts">
-	import { onMount, createEventDispatcher } from 'svelte'
+	import { onMount, createEventDispatcher } from 'svelte';
+	import { t } from '$lib/i18n';
 
 	export let size = 10;
 	export let url: string;
 	export let id: string;
 	export let editable: boolean = false;
-	//export let supabase: SupabaseClient
 
 	let avatarUrl: string | null = null
 	let uploading = false
@@ -54,12 +54,7 @@
 			.catch((error) => {
 				console.log('error', error)
 			})
-			/*
-			const { error } = await supabase.storage.from('avatars').upload(filePath, file)
 
-			if (error) {
-				throw error
-			}*/
 			url = filename;
 			setTimeout(() => {
 				dispatch('upload')
@@ -108,7 +103,7 @@
 
 	<div class="upload" style="width: {size}em;">
 		<label class="button primary block" for="single">
-			{uploading ? 'Uploading ...' : 'Upload'}
+			{uploading ? $t('app.profile.uploading') : $t('app.profile.upload')}
 		</label>
 		<input
 			style="visibility: hidden; position:absolute;"

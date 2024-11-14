@@ -1,6 +1,6 @@
 <script lang="ts">
-    import type { SupabaseClient } from '@supabase/supabase-js';
-    export let supabase: SupabaseClient;
+    import { t } from '$lib/i18n';
+
     export const ready: boolean = true;
     export let data: {};
     
