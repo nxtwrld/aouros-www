@@ -196,9 +196,16 @@
         justify-content: center;
         align-items: center;
     }
+    .tiles {
+        grid-template-rows: auto;
+    }
     .tile:last-child {
         grid-column: auto / -1; 
         --background-color: var(--color-highlight);
+        padding: 1rem;
+    }
+    .tile:last-child:first-child {
+        grid-column: 1 / -1;
     }
     button.tile:hover {
         --background-color: var(--color-white);
