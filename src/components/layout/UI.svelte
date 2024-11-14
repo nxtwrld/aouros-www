@@ -7,7 +7,7 @@
     import ui from '$lib/ui';
     import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
-    import { beforeNavigate } from '$app/navigation';
+    import { beforeNavigate, afterNavigate } from '$app/navigation';
     import { Overlay, state } from '$lib/ui';
     import shortcuts from '$lib/shortcuts';
 
@@ -17,9 +17,18 @@
 
 
     // close all dialogs on navigation
-    beforeNavigate(() => {
-        $state.overlay = Overlay.none;
+    afterNavigate(() => {
+        manageOverlay();
     });
+
+    function manageOverlay() {
+        if (location.hash.indexOf('#overlay-') == 0) {
+            const overlay = location.hash.replace('#overlay-', '');
+            if (Object.values(Overlay).includes(overlay as Overlay)) $state.overlay = overlay as Overlay;
+        } else {
+            $state.overlay = Overlay.none;
+        }
+    }
 
     onMount(() => {
         console.log('UI mounted');
@@ -30,13 +39,18 @@
             }),
             ui.listen('overlay.import', () => {
                 console.log('import');
-                $state.overlay = Overlay.import;
+                location.hash = '#overlay-import';
+                //$state.overlay = Overlay.import;
             }),
             shortcuts.listen('Escape', () => {
-                $state.overlay = Overlay.none;
+                if (location.hash.indexOf('#overlay-') == 0) {
+                    history.back();
+                }
+                //$state.overlay = Overlay.none;
             })
         ]
 
+        manageOverlay();
         return () => {
             offs.forEach(off => off());
         }
@@ -44,6 +58,8 @@
     });
 
 </script>
+<svelte:window on:hashchange={manageOverlay} />
+
 <DropFiles>
     <Header></Header>
     <main><slot/></main>
