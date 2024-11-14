@@ -6,17 +6,17 @@
     },
     "import": {
       "add-files": "Add files",
-      "analyze-reports": "Analyze reports",
+      "analyze-reports": "Analyze",
       "drop-files-here": "Drop files here",
       "file-drop-area": "File drop area",
       "import-reports-scan-or-images": "Import reports, scan or images",
-      "maxium_scans_reached": "You have reached your monthly limit of {limit} scans.",
+      "maxium-scans-reached": "You have reached your monthly limit of {limit} imports.",
       "save": "Save",
-      "you-still-have-scans-in-your-yearly-subscription": "You still have {scans} scans in your yearly subscription."
+      "you-still-have-scans-in-your-yearly-subscription": "You still have {scans} imports in your yearly subscription."
     },
     "name": "mediqom",
     "nav": {
-      "add_profile": "Add Profile",
+      "add-profile": "Add Profile",
       "documents": "Documents",
       "history": "History",
       "import": "Import",
@@ -31,7 +31,9 @@
       "insurance": "Insurance",
       "name": "Name",
       "phone": "Phone",
-      "setup-profile": "Setup profile"
+      "setup-profile": "Setup profile",
+      "upload": "Upload",
+      "uploading": "Uploading ..."
     },
     "profiles": {
       "delete": "Delete",
@@ -59,8 +61,14 @@
       "please-upgrade-your-subscription-to-continue": "Please upgrade your subscription to continue."
     }
   },
-  "date-of-birth": "",
   "medical": {
+    "prop-values": {
+      "biologicalSex": {
+        "female": "Female",
+        "intersex": "Intersex",
+        "male": "Male"
+      }
+    },
     "props": {
       "age": "Age",
       "biologicalSex": "Sex",
@@ -70,13 +78,6 @@
       "date-of-birth": "Date of Birth",
       "height": "Height",
       "weight": "Weight"
-    },
-    "prop-values": {
-      "biologicalSex": {
-        "male": "Male",
-        "female": "Female",
-        "intersex": "Intersex"
-      }
     },
     "units": {
       "C": "&#8451;",

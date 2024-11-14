@@ -5,18 +5,18 @@
       "profiles": "Profile"
     },
     "import": {
-      "add-files": "",
-      "analyze-reports": "",
-      "drop-files-here": "",
-      "file-drop-area": "",
-      "import-reports-scan-or-images": "",
-      "maxium_scans_reached": "",
-      "save": "",
-      "you-still-have-scans-in-your-yearly-subscription": ""
+      "add-files": "Dateien hinzufügen",
+      "analyze-reports": "Analysieren",
+      "drop-files-here": "Legen Sie die Dateien hier ab",
+      "file-drop-area": "Bereich zum Ablegen von Dateien",
+      "import-reports-scan-or-images": "Importieren Sie Berichte, Scans oder Bilder",
+      "maxium-scans-reached": "Sie haben Ihr monatliches Limit von {limit} Importen erreicht.",
+      "save": "Speichern",
+      "you-still-have-scans-in-your-yearly-subscription": "Ihr Jahresabonnement enthält noch {scans}-Importe."
     },
-    "name": "",
+    "name": "mediqom",
     "nav": {
-      "add_profile": "Profil hinzufügen",
+      "add-profile": "Profil hinzufügen",
       "documents": "Unterlagen",
       "history": "Geschichte",
       "import": "Import",
@@ -31,21 +31,23 @@
       "insurance": "Versicherung",
       "name": "Name",
       "phone": "Telefon",
-      "setup-profile": "Setup-Profil"
+      "setup-profile": "Setup-Profil",
+      "upload": "Hochladen",
+      "uploading": "Hochladen ..."
     },
     "profiles": {
       "delete": "Löschen",
       "open": "Offen",
-      "request-access": ""
+      "request-access": "Zugriff anfordern"
     },
     "search": {
       "commands": {
-        "import-files": "",
-        "profiles": "",
-        "start-an-interview-session": "",
-        "view-documents": "",
-        "view-history": "",
-        "view-profile": ""
+        "import-files": "Dateien importieren",
+        "profiles": "Profile",
+        "start-an-interview-session": "Starten Sie eine Interviewsitzung",
+        "view-documents": "Dokumente ansehen",
+        "view-history": "Verlauf anzeigen",
+        "view-profile": "Profil ansehen"
       },
       "no-results": "Keine Ergebnisse"
     },
@@ -59,7 +61,6 @@
       "please-upgrade-your-subscription-to-continue": "Bitte aktualisieren Sie Ihr Abonnement, um fortzufahren."
     }
   },
-  "date-of-birth": "",
   "medical": {
     "prop-values": {
       "biologicalSex": {
@@ -74,17 +75,17 @@
       "bloodPressure": "Blutdruck",
       "bloodSugar": "Blutzucker",
       "bloodType": "Blutgruppe",
-      "date-of-birth": "",
+      "date-of-birth": "Geburtsdatum",
       "height": "Höhe",
       "weight": "Gewicht"
     },
     "units": {
-      "C": "",
-      "F": "",
-      "cm": "",
-      "kg": "",
-      "mg/dL": "",
-      "mmHg": "",
+      "C": "&#8451;",
+      "F": "&#8457;",
+      "cm": "cm",
+      "kg": "kg",
+      "mg/dL": "mg/dL",
+      "mmHg": "mmHg",
       "years": "Jahre"
     }
   }

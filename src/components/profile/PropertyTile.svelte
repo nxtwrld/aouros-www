@@ -23,19 +23,17 @@
     function getResultIcon(property: Result) {
         switch (title) {
             case 'biologicalSex':
-                return 'biologicalSex-' + property.value
-
+                return 'biologicalSex-' + property.value;
             default:
-                return title
+                return title;
         }
     }
 
     function showUnit(unit: string) {
         if (!unit) return '';
-        const localized = $t(`medical.units.${property.unit}`)
-        if (localized 
-            && localized !== `medical.units.${property.unit}`) {
-            return localized
+        const localized = $t(`medical.units.${property.unit}`);
+        if (localized && localized !== `medical.units.${property.unit}`) {
+            return localized;
         } 
         return unit;
     }

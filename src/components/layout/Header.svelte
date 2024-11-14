@@ -72,7 +72,14 @@
 
             {#if $profile}
                 {#if $profile.id}
-                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname, $state)}>{$profile.fullName}</a>
+                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname, $state)}>
+                        {#if $profile.avatarUrl}
+                        <div class="icon profile-image">
+                            <img src="/v1/med/profiles/{$profile.id}/avatar?path={$profile.avatarUrl}" alt="avatar" />
+                        </div>
+                        {/if}
+                        {$profile.fullName}
+                    </a>
                     <!--div class="spacer"></div-->
                     <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname, $state)}>{ $t('app.nav.documents') }</a>
                     <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname, $state)}>{ $t('app.nav.history') }</a>
@@ -94,9 +101,15 @@
         </div>
         {#if $user}
         <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
-            <button on:click|stopPropagation={() => toggleMenu(Menu.user)}><svg>
+            <button on:click|stopPropagation={() => toggleMenu(Menu.user)}>
+                {#if $user.avatarUrl}
+                <img class="" src="/v1/med/profiles/{$user.id}/avatar?path={$user.avatarUrl}" alt="avatar" />
+                {:else}
+                <svg>
                 <use href="/icons.svg#doctor"></use>
                 </svg>
+
+                {/if}
             </button>
             <ul class="menu">
                 <li>
@@ -145,6 +158,15 @@
         fill: currentColor;
         color: var(--color-black);
     }
+    .icon img {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 1px solid var(--color-gray-800);
+    }
+
 
     .profile {
         flex-grow: 1;

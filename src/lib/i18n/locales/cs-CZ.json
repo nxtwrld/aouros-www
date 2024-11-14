@@ -5,18 +5,18 @@
       "profiles": "Profily"
     },
     "import": {
-      "add-files": "",
-      "analyze-reports": "",
-      "drop-files-here": "",
-      "file-drop-area": "",
-      "import-reports-scan-or-images": "",
-      "maxium_scans_reached": "",
-      "save": "",
-      "you-still-have-scans-in-your-yearly-subscription": ""
+      "add-files": "Přidat soubory",
+      "analyze-reports": "Analyzovat",
+      "drop-files-here": "Sem přetáhněte soubory",
+      "file-drop-area": "Oblast umístění souboru",
+      "import-reports-scan-or-images": "Importujte zprávy, skeny nebo obrázky",
+      "maxium-scans-reached": "Dosáhli jste měsíčního limitu {limit} importů.",
+      "save": "Uložit",
+      "you-still-have-scans-in-your-yearly-subscription": "Ve svém ročním předplatném stále máte {scans} importů."
     },
-    "name": "",
+    "name": "mediqom",
     "nav": {
-      "add_profile": "Přidat profil",
+      "add-profile": "Přidat profil",
       "documents": "Dokumenty",
       "history": "Historie",
       "import": "Importovat",
@@ -31,21 +31,23 @@
       "insurance": "Pojištění",
       "name": "Jméno",
       "phone": "Telefon",
-      "setup-profile": "Nastavit profil"
+      "setup-profile": "Nastavit profil",
+      "upload": "Nahrát",
+      "uploading": "Nahrávání ..."
     },
     "profiles": {
       "delete": "Smazat",
       "open": "Otevřít",
-      "request-access": ""
+      "request-access": "Žádost o přístup"
     },
     "search": {
       "commands": {
-        "import-files": "",
-        "profiles": "",
-        "start-an-interview-session": "",
-        "view-documents": "",
-        "view-history": "",
-        "view-profile": ""
+        "import-files": "Importovat soubory",
+        "profiles": "Profily",
+        "start-an-interview-session": "Zahajte sezení",
+        "view-documents": "Zobrazit dokumenty",
+        "view-history": "Zobrazit historii",
+        "view-profile": "Zobrazit profil"
       },
       "no-results": "Žádné výsledky"
     },
@@ -59,7 +61,6 @@
       "please-upgrade-your-subscription-to-continue": "Chcete-li pokračovat, upgradujte své předplatné."
     }
   },
-  "date-of-birth": "",
   "medical": {
     "prop-values": {
       "biologicalSex": {
@@ -74,17 +75,17 @@
       "bloodPressure": "Krevní tlak",
       "bloodSugar": "Krevní cukr",
       "bloodType": "Krevní skupina",
-      "date-of-birth": "",
+      "date-of-birth": "Datum narození",
       "height": "Výška",
       "weight": "Váha"
     },
     "units": {
-      "C": "",
-      "F": "",
-      "cm": "",
-      "kg": "",
-      "mg/dL": "",
-      "mmHg": "",
+      "C": "&#8451;",
+      "F": "&#8457;",
+      "cm": "cm",
+      "kg": "kg",
+      "mg/dL": "mg/dl",
+      "mmHg": "mmHg",
       "years": "let"
     }
   }

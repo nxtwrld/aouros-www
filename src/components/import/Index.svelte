@@ -165,15 +165,16 @@
 
 </script>
 
+<div class="page -empty">
 {#if $user.subscriptionStats?.scans <= 0}
     <div class="alert -warning">
-        { $t('app.import.maxium_scans_reached', { values: {
+        { $t('app.import.maxium-scans-reached', { values: {
             limit: $user.subscriptionStats?.default_scans
         }}) } { $t('app.upgrade.please-upgrade-your-subscription-to-continue') }
     </div>
 {:else}
 
-    <h2 class="h2">{ $t('app.import.import-reports-scan-or-images') }</h2>
+    <h3 class="h3 heading">{ $t('app.import.import-reports-scan-or-images') }</h3>
 
     <input type="file" id="upload-file" class="-none" accept=".pdf" on:change={fileInput} />
     
@@ -229,11 +230,12 @@
 
     <div class="controls">
         <p>{ $t('app.import.you-still-have-scans-in-your-yearly-subscription', { values: { scans: remainingScans} }) }</p>
-        <button on:click={assess} class="button -primary" disabled={tasks.length == 0}>{ $t('app.import.analyze-reports') }</button>
-        <button class="button" on:click={add}>{ $t('app.import.save') }</button>
+        <button on:click={assess} class="button -primary -large" disabled={tasks.length == 0}>{ $t('app.import.analyze-reports') }</button>
+        <button class="button -large" on:click={add}>{ $t('app.import.save') }</button>
     </div>
 
 {/if}
+</div>
 <style>
     .thumbmail {
         max-width: 6rem;
@@ -248,8 +250,11 @@
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+        justify-content: center;
+        height: calc(100vh - var(--heading-height) - var(--toolbar-height) - 10rem);
         gap: 1rem;
         padding: 1rem;
+        overflow-y: auto;
 
     }
     .report {
@@ -292,8 +297,11 @@
     .controls {
         display: flex;
         justify-content: center;
+        align-items: center;
         gap: 1rem;
         padding: 1rem;
+        height: 10rem;
+        background-color: var(--color-background);
     }
 
 
