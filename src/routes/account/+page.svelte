@@ -42,8 +42,8 @@
 	let global: any = undefined;
 ;
 
-	let { session, supabase, profile } = data;
-	$: ({ session, supabase, profile } = data);
+	let { session, profile } = data;
+	$: ({ session, profile } = data);
 
 	$: {
 		if (hash == '') {
@@ -150,7 +150,7 @@
 			<div class="form-instructions -error">{error}</div>
 		{/if}
 		<div class="form-contents">
-		<svelte:component this={steps[STEP].component} bind:data={editData} {profileForm} {supabase} bind:ready={readyNext} />
+		<svelte:component this={steps[STEP].component} bind:data={editData} {profileForm}  bind:ready={readyNext} />
 		</div>
 
 		<form
