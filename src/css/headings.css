@@ -1,0 +1,75 @@
+
+.heading {
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    vertical-align: middle;
+    background-color: var(--color-gray-400);
+    margin: 0 0 var(--gap) 0;
+    gap: var(--gap);
+    height: var(--heading-height);
+}
+.heading.-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.heading:has(h1),
+.heading:has(h2),
+.heading:has(h3),
+.heading:has(h4) {
+    background-color: transparent;
+    padding: 0;
+}
+.heading > h1,
+.heading > h2,
+.heading > h3 {
+    margin: 0;
+    padding: 0 1rem;
+    background-color: var(--color-background);
+    flex-grow: 2;
+}
+.heading > .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--gap);
+    margin: 0;
+}
+.heading > .actions > button,
+.heading > .actions > a{
+    background-color: var(--color-background);
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    height: var(--heading-height);
+    min-width: var(--heading-height);
+}
+.heading > .actions svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: currentColor;
+}
+
+.heading > .actions > button:hover,
+.heading > .actions > a:hover,
+.heading > .actions > button:active,
+.heading > .actions > a:active  {
+    background-color: var(--color-interactivity);
+    color: var(--color-interactivity-text);
+}
+
+.heading > .actions > button.-danger:hover,
+.heading > .actions > a.-danger:hover,
+.heading > .actions > button.-danger:active,
+.heading > .actions > a.-danger:active,
+.heading > .actions > button.-close:hover,
+.heading > .actions > a.-close:hover,
+.heading > .actions > button.-close:active,
+.heading > .actions > a.-close:active {
+    background-color: var(--color-negative);
+    color: var(--color-negative-text);
+}
+

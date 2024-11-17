@@ -75,6 +75,6 @@
             }
             
         },
-        "required": [ "category", "observation", "title", "summary", "teeth"]
+        "required": [ "category", "observation", "title", "summary", "teeth", "performer", "patient"]
     }
 }

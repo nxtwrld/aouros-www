@@ -59,6 +59,7 @@ input[type=number] {
     padding: .5rem;
     height: var(--input-height);
     border: .1rem solid var(--color-gray-500);
+    background-color: var(--input-color);
     border-radius: var(--radius-8);
     font-size: 1rem;
 }
@@ -68,6 +69,7 @@ input[type=number] {
     background-repeat: no-repeat;
     background-position: right .7em top 50%;
     background-size: .65em auto;
+    padding-right: 2rem;
 }
 .input:has( > input[type="checkbox"]) {
     display: flex;

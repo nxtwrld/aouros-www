@@ -297,7 +297,7 @@
         display: flex;
         gap: .5rem;
         flex-wrap: nowrap;
-        color: var(--color-gray-800-o);
+        color: var(--color-gray-800-alpha);
         mix-blend-mode: multiply;
     }
     .list-item.-pinned .pin {

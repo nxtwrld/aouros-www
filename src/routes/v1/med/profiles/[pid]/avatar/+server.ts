@@ -10,13 +10,13 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
     const url = new URL(request.url);
     const path = url.searchParams.get('path');
     const storagePath = params.pid + '_' + path;
-    console.log('downloading', storagePath)
+
     const { data, error : errorDownload } = await supabase.storage.from('avatars').download(storagePath)
     
     if (errorDownload) {    
         throw errorDownload;
     }
-    console.log('downloaded', data)
+
     return new Response(data);
 }
 
@@ -31,7 +31,6 @@ export async function POST({ request, params, locals: { supabase, safeGetSession
 
 
     const { file: base64, filename, type } = await request.json();
-    console.log('uploading', filename, type)
     // conver base64 to file
     const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
     const buffer = new Buffer(base64Data, 'base64');

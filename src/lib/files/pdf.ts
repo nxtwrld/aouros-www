@@ -1,10 +1,10 @@
 import type { ProcessedFile,  ProcessedPage } from './types.d';
 import type { PDFPageProxy, PDFDocumentProxy } from 'pdfjs-dist';
-import type FileProcessor from "./pProcessor";
-import FileProcessorClass from './processor';
+import { PDFDocument } from 'pdf-lib';
 import { processImages } from './image';
-import { merge as mergeImages } from '$lib/images';
+import { merge as mergeImages, getImageMimeTypeFromBuffer } from '$lib/images';
 import { THUMBNAIL_SIZE, PROCESS_SIZE } from "./CONFIG";
+import { typedArrayToBuffer } from '$lib/arrays';
 
 
 export enum CODES {
@@ -41,6 +41,79 @@ export async function processPDF(arrayBuffer: ArrayBuffer, password: string | un
       }
     }
   }
+  
+
+
+
+export async function splitPdf(
+    sourcePdfArrayBuffer: ArrayBuffer,
+    pagesForFirstPdf: number[],
+    pagesForSecondPdf: number[]
+  ): Promise<{ firstPdfBytes: ArrayBuffer; secondPdfBytes: ArrayBuffer }> {
+    // Load the source PDF document from the ArrayBuffer
+    const sourcePdf = await PDFDocument.load(sourcePdfArrayBuffer);
+  
+    // Create new PDF documents for the split PDFs
+    const firstPdf = await PDFDocument.create();
+    const secondPdf = await PDFDocument.create();
+  
+    // Copy selected pages to the first PDF
+    const firstPdfPages = await firstPdf.copyPages(
+      sourcePdf,
+      pagesForFirstPdf.map((pageNumber) => pageNumber - 1) // Convert to zero-based index
+    );
+    firstPdfPages.forEach((page) => firstPdf.addPage(page));
+  
+    // Copy selected pages to the second PDF
+    const secondPdfPages = await secondPdf.copyPages(
+      sourcePdf,
+      pagesForSecondPdf.map((pageNumber) => pageNumber - 1)
+    );
+    secondPdfPages.forEach((page) => secondPdf.addPage(page));
+  
+    // Save the new PDFs as Uint8Array
+    const firstPdfBytes = typedArrayToBuffer(await firstPdf.save());
+    const secondPdfBytes = typedArrayToBuffer(await secondPdf.save());
+  
+    return { firstPdfBytes, secondPdfBytes };
+  }
+
+
+
+export async function createPdfFromImageBuffers(imageBuffers: ArrayBuffer[]): Promise<ArrayBuffer> {
+  // Create a new PDFDocument
+  const pdfDoc = await PDFDocument.create();
+
+  for (const imageBuffer of imageBuffers) {
+    let img;
+    const mimeType = getImageMimeTypeFromBuffer(imageBuffer);
+
+    if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
+      img = await pdfDoc.embedJpg(imageBuffer);
+    } else if (mimeType === 'image/png') {
+      img = await pdfDoc.embedPng(imageBuffer);
+    } else {
+      throw new Error(`Unsupported image type: ${mimeType}`);
+    }
+
+    const imgDims = img.scale(1);
+
+    // Add a page with dimensions matching the image
+    const page = pdfDoc.addPage([imgDims.width, imgDims.height]);
+
+    // Draw the image onto the page
+    page.drawImage(img, {
+      x: 0,
+      y: 0,
+      width: imgDims.width,
+      height: imgDims.height,
+    });
+  }
+
+  // Serialize the PDFDocument to bytes (a Uint8Array)
+  const pdfBytes = await pdfDoc.save();
+  return typedArrayToBuffer(pdfBytes);
+}
   
 
 

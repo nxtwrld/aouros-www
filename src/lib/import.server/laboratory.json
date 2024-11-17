@@ -23,6 +23,6 @@
 
             
         },
-        "required": [ "isLab", "results", "test_date", "sample_date", "patient", "lab"]
+        "required": [ "title", "summary", "date", "sample_date", "signals"]
     }
 }

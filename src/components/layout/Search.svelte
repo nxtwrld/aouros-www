@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type Profile, SexEnum } from '$lib/med/types.d';
+    import { type Profile } from '$lib/med/types.d';
     import { profiles } from '$lib/med/profiles';
     import shortcuts from '$lib/shortcuts';
     import { onMount } from 'svelte';

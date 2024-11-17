@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { type Profile } from '$lib/med/types.d';
     import { profile } from '$lib/med/profiles';
 
     

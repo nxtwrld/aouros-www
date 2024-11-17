@@ -1,5 +1,5 @@
 .page {
-    margin: var(--gap) 0 0 0;
+    margin: 0 0 var(--gap) 0;
     padding: 1rem;
     width: 100%;
     height: 100%;
@@ -11,6 +11,15 @@
     padding: 0;
 
 }
+
+.page.-block {
+    height: auto;
+    overflow: hidden;
+}
+.page.-raw {
+    padding: 0;
+}
+
 
 
  .p-page {

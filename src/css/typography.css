@@ -51,13 +51,3 @@ strong {
     font-weight: 600;
     color: var(--color-interactivity);
 }
-
-.heading {
-    padding: 0 1rem;
-    display: flex;
-    align-items: center;
-    vertical-align: middle;
-    background-color: var(--color-background);
-    margin: 0 0 var(--gap) 0;
-    height: var(--heading-height);
-}

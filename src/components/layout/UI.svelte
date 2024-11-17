@@ -10,7 +10,7 @@
     import { beforeNavigate, afterNavigate } from '$app/navigation';
     import { Overlay, state } from '$lib/ui';
     import shortcuts from '$lib/shortcuts';
-
+    import Sounds from '$components/ui/Sounds.svelte';
     const dialogs = {
         healthForm: false
     };
@@ -78,10 +78,11 @@
     {/if}
 
 </DropFiles>
+<Sounds />
 <style>
     .virtual-page {
         position: fixed;
-        top: var(--toolbar-height);
+        top: calc(var(--toolbar-height) + var(--gap));
         left: 0;
         right: 0;
         bottom: 0;

@@ -1,12 +1,11 @@
 <script lang="ts">
-    import type { fromBase64Util } from 'pdfjs-dist/types/src/shared/util';
-
     import { type Profile } from '$lib/med/types.d';
     import { getAge } from '$lib/med/datetime';
     import { goto } from '$app/navigation';
     import { profiles, removeLinkedProfile } from '$lib/med/profiles/';
     import user from '$lib/user';
-    import { addDocument, DocumentType } from '$lib/med/documents';
+    import { addDocument } from '$lib/med/documents';
+    import { DocumentType } from '$lib/med/documents/types.d';
     import { t } from '$lib/i18n';
     const ROOT_PATH = '/med/p/';
 

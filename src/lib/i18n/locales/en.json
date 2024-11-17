@@ -12,7 +12,8 @@
       "import-reports-scan-or-images": "Import reports, scan or images",
       "maxium-scans-reached": "You have reached your monthly limit of {limit} imports.",
       "save": "Save",
-      "you-still-have-scans-in-your-yearly-subscription": "You still have {scans} imports in your yearly subscription."
+      "you-still-have-scans-in-your-yearly-subscription": "You still have {scans} imports in your yearly subscription.",
+      "preview-disabled": "All interactions are disabled in preview mode."
     },
     "name": "mediqom",
     "nav": {
@@ -36,9 +37,14 @@
       "uploading": "Uploading ..."
     },
     "profiles": {
+      "add": "Add Profile",
       "delete": "Delete",
       "open": "Open",
       "request-access": "Request Access"
+    },
+    "report": {
+      "anatomy": {
+      }
     },
     "search": {
       "commands": {
@@ -60,6 +66,15 @@
     "upgrade": {
       "please-upgrade-your-subscription-to-continue": "Please upgrade your subscription to continue."
     }
+  },
+  "languages": {
+    "ar": "Arabic",
+    "cs": "Czech",
+    "de": "German",
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "it": "Italian"
   },
   "medical": {
     "prop-values": {
@@ -88,5 +103,22 @@
       "mmHg": "mmHg",
       "years": "years"
     }
+  },
+  "report": {
+    "anatomy": {
+      "body": "Anatomy",
+      "body-part": "Body Part",
+      "status": "Status",
+      "status-and-diagnosis": "Status and Diagnosis",
+      "treatment": "Treatment"
+    },
+    "attachments": "Attachments",
+    "diagnosis": "Diagnosis",
+    "performer": "Provided by",
+    "recommendations": "Recommendations",
+    "report": "Report",
+    "toggle-original-contents": "Toggle original contents",
+    "translated-from": "Translated from {language}.",
+    "vitals-and-amp-results": "Vitals &amp; Results"
   }
 }

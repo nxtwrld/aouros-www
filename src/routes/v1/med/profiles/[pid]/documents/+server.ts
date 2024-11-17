@@ -15,10 +15,9 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
     if (!session) {
       return error(401, { message: 'Unauthorized' });
     }
-
     const query = full 
-        ? 'id, metadata, type, user_id, content, attachments, keys!inner(*)(key, owner_id)' 
-        : 'id, metadata, type, user_id, keys!inner(*)(key, owner_id)';
+        ? 'id, metadata, type, user_id, content, attachments, author_id, keys!inner(*)(key, owner_id)' 
+        : 'id, metadata, type, user_id, author_id, keys!inner(*)(key, owner_id)';
 
     const { data: documentsLoad, error: documentsError } = await supabase.from('documents').select(query)
         .eq('user_id', params.pid)

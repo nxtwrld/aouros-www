@@ -1,0 +1,276 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 24.04.2019 10:31:26
+
+newmtl wire_028089177
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.1098 0.3490 0.6941
+	Kd 0.1098 0.3490 0.6941
+	Ks 0.3500 0.3500 0.3500
+
+newmtl wire_006134006
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.0235 0.5255 0.0235
+	Kd 0.0235 0.5255 0.0235
+	Ks 0.3500 0.3500 0.3500
+
+newmtl wire_229166215
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.8980 0.6510 0.8431
+	Kd 0.8980 0.6510 0.8431
+	Ks 0.3500 0.3500 0.3500
+
+newmtl wire_224198087
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.8784 0.7765 0.3412
+	Kd 0.8784 0.7765 0.3412
+	Ks 0.3500 0.3500 0.3500
+
+newmtl wire_134006006
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.5255 0.0235 0.0235
+	Kd 0.5255 0.0235 0.0235
+	Ks 0.3500 0.3500 0.3500
+
+newmtl transverse_muscle
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.4000 0.4000 0.4000
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/larynx_transverse_CM.bmp
+	map_Kd ../textures/male/larynx_transverse_CM.bmp
+
+newmtl thyroid_cartilage
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.4000 0.4000 0.4000
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/larynx_thyroid_cartilage_CM.bmp
+	map_Kd ../textures/male/larynx_thyroid_cartilage_CM.bmp
+
+newmtl larynx
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.0000 0.0000 0.0000
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/larynx_CM.BMP
+	map_Kd ../textures/male/larynx_CM.BMP
+	map_bump ../textures/male/larynx_CM.BMP
+	bump ../textures/male/larynx_CM.BMP
+
+newmtl hyoid_bone
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.4000 0.4000 0.4000
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/larynx_hyoid_bone_CM.bmp
+	map_Kd ../textures/male/larynx_hyoid_bone_CM.bmp
+
+newmtl epiglottis
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.4000 0.4000 0.4000
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/larynx_epiglottis_CM.bmp
+	map_Kd ../textures/male/larynx_epiglottis_CM.bmp
+
+newmtl cricoid_cartilage
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.4000 0.4000 0.4000
+	Kd 0.0000 0.0000 0.0000
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/larynx_cricoid_cartilage_CM.bmp
+	map_Kd ../textures/male/larynx_cricoid_cartilage_CM.bmp
+
+newmtl wire_134110008
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.5255 0.4314 0.0314
+	Kd 0.5255 0.4314 0.0314
+	Ks 0.3500 0.3500 0.3500
+
+newmtl wire_224086086
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.8784 0.3373 0.3373
+	Kd 0.8784 0.3373 0.3373
+	Ks 0.3500 0.3500 0.3500
+
+newmtl wire_087224198
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.3412 0.8784 0.7765
+	Kd 0.3412 0.8784 0.7765
+	Ks 0.3500 0.3500 0.3500
+
+newmtl pancreas_duct
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5500 0.5500 0.5500
+	Kd 0.5500 0.5500 0.5500
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/galdblader_pancreas_duct_CM.bmp
+	map_Kd ../textures/male/galdblader_pancreas_duct_CM.bmp
+
+newmtl cartilage_02
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5490 0.5059 0.4157
+	Kd 0.5490 0.5059 0.4157
+	Ks 0.1710 0.1710 0.1710
+	Ke 0.0000 0.0000 0.0000
+
+newmtl wire_177028149
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.6941 0.1098 0.5843
+	Kd 0.6941 0.1098 0.5843
+	Ks 0.3500 0.3500 0.3500
+
+newmtl ejaculatory_duct
+	Ns 30.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5500 0.5500 0.5500
+	Kd 0.5500 0.5500 0.5500
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/ejaculator_duct_CM.bmp
+	map_Kd ../textures/male/ejaculator_duct_CM.bmp
+
+newmtl MMSS_lambert_17
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.9961 0.8000 0.7373
+	Kd 0.9961 0.8000 0.7373
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+
+newmtl wire_204204204
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.8000 0.8000 0.8000
+	Kd 0.8000 0.8000 0.8000
+	Ks 0.3500 0.3500 0.3500
+
+newmtl MMSS_lambert_14
+	Ns 54.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.8824 0.8588 0.8196
+	Kd 0.8824 0.8588 0.8196
+	Ks 0.2790 0.2790 0.2790
+	Ke 0.0000 0.0000 0.0000
+
+newmtl thyroid
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5880 0.5880 0.5880
+	Kd 0.5880 0.5880 0.5880
+	Ks 0.0000 0.0000 0.0000
+	Ke 0.0000 0.0000 0.0000
+	map_Ka ../textures/male/healthy_thyroid_CM.tif
+	map_Kd ../textures/male/healthy_thyroid_CM.tif
+
+newmtl wire_143224087
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.5608 0.8784 0.3412
+	Kd 0.5608 0.8784 0.3412
+	Ks 0.3500 0.3500 0.3500

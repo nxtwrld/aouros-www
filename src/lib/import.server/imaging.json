@@ -41,6 +41,6 @@
             }
             
         },
-        "required": [ "observation_type", "observation", "results", "date", "patient"]
+        "required": [ "observation_type", "observation", "results", "date", "patient", "performer"]
     }
 }

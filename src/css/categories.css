@@ -23,3 +23,69 @@
     color: var(--color-negative-text) !important;
     font-weight: 600 !important;
 }
+
+
+
+
+
+.severity-low {
+    --color: var(--color-background) !important;
+
+}
+.severity-moderate,
+.severity-medium {
+    --color: var(--color-white) !important;
+}
+.severity-severe,
+.severity-high {
+    --color: var(--color-negative) !important;
+}
+
+
+
+.urgency-1 {
+    --color-urgency: var(--color-positive);
+}
+.urgency-2 {
+    --color-urgency: var(--color-urgency-low);
+}
+.urgency-3 {
+    --color-urgency: var(--color-urgency-medium);
+}
+.urgency-4 {
+    --color-urgency: var(--color-urgency-high);
+}
+.urgency-5 {
+    --color-urgency: var(--color-urgency-high);
+}
+
+
+
+.category-none {
+    --color-category: var(--color-terciary);
+}
+.category-MEDICAL_APPOINTMENT {
+    --color-category: var(--color-primary);
+}
+.category-OTHER {
+    --color-category: var(--color-secondary);
+}
+.category-TELEMEDICINE {
+    --color-category: #003b7e;
+}
+.category-GROUP_THERAPY {
+    --color-category: #7700ff;
+}
+.category-PHYSICAL_THERAPY {
+    --color-category: #ff8000;
+}
+.category-COUNSELING {
+    --color-category: #ae00ff;
+}
+.category-CHECKUP {
+    --color-category: var(--color-primary);
+}
+.category-HOME_CARE {
+    --color-category: #ee20b7;
+}
+

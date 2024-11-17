@@ -1,3 +1,20 @@
+import langauges from '$data/languages.iso.json';
+
+export enum TaskState {
+    'NEW' = 'NEW',
+    'ASSESSING' = 'ASSESSING',
+    'ASSESSED' = 'ASSESSED',
+}
+
+export interface Task {
+    name: string;
+    type: 'application/pdf' | 'images';
+    icon: string;
+    data: string | ArrayBuffer | string[];
+    state: TaskState;
+}
+
+
 
 export enum DocumentState {
     NEW = 'NEW',
@@ -23,11 +40,18 @@ export interface Document {
     }[];
     type: 'application/pdf' | 'images';
     files: string | ArrayBuffer | string[];
+    task: Task;
+    attachments: {
+        file: ArrayBuffer;
+        type: string;
+        thumbnail: string;
+    }[];
 }
 
-export async function processDocument(document: Document) {
+export async function processDocument(document: Document, lanaguage: string = 'en'): Promise<any> {
     const payload = {
-        text: document.pages.reduce((acc, page) => acc + page.text, '')
+        text: document.pages.reduce((acc, page) => acc + page.text, ''),
+        language: langauges.find((l) => l.code === lanaguage)?.name || 'English',
     };
     console.log('Processing document', document.title);
 

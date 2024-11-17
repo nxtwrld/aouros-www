@@ -1,0 +1,23 @@
+/** TAGS **/
+
+.tags {
+    display: inline-block;
+}
+.tag {
+    display: inline-block;
+    padding: .2rem .5rem;
+    margin-right: .2rem;
+    margin-bottom: .2rem;
+    border-radius: var(--border-radius);
+    font-size : inherit;
+    background-color: var(--color-white);
+}
+.tag.-object {
+    background-color: var(--color-interactivity);
+    color: var(--color-interactivity-text);
+}
+
+.tag.-highlight {
+    background-color: var(--color-highlight);
+    color: var(--color-highlight-text);
+}

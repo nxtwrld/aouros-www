@@ -5,70 +5,7 @@ import { pemToKey, encrypt as encryptRSA } from "$lib/encryption/rsa";
 import { profiles } from '$lib/med/profiles';
 import Errors from '$lib/Errors';
 import type { Profile } from "$lib/med/types.d";
-
-
-export enum DocumentType {
-    'profile' = 'profile',
-    'document' = 'document',
-    'health' ='health',
-}
-
-export interface DocumentPreload {
-    id: string;
-    key: string;
-    type: DocumentType;
-    user_id: string;
-    metadata: {
-        title: string;
-        tags: string[];
-        [key: string]: any;
-    }
-    content?: string | undefined;
-}
-
-export interface DocumentEncrypted {
-    id: string;
-    metadata: string;
-    content?: string;
-    attachments?: string[];
-    type: DocumentType;
-    user_id: string;
-    keys: { key: string, owner_id: string }[];
-    
-}
-
-export interface Document {
-    type: DocumentType;
-    id: string;
-    key: string;
-    user_id: string;
-    metadata: {
-        title: string;
-        tags: string[];
-        [key: string]: any;
-    }
-    content: {
-        title: string;
-        tags: string[];
-        [key: string]: any;
-    }
-    attachments: string[];
-
-}
-
-export interface DocumentNew {
-    type: DocumentType;
-    metadata?: {
-        [key: string]: any;
-    }
-    content: {
-        title: string;
-        tags: string[];
-        [key: string]: any;
-    },
-    attachments?: string[];
-    user_id?: string;
-}
+import { DocumentType, type DocumentPreload, type DocumentEncrypted, type Document, type DocumentNew } from '$lib/med/documents/types.d';
 
 const documents: Writable<(DocumentPreload | Document)[]> = writable([])
 
@@ -149,6 +86,8 @@ export async function importDocuments(documentsEncrypted: DocumentEncrypted[] = 
                     type: document.type,
                     metadata: JSON.parse(enc[0]),
                     content: undefined,
+                    owner_id: document.keys[0].owner_id,
+                    author_id: document.author_id,
                     attachments: document.attachments || []
 
                 }

@@ -4,23 +4,11 @@ import { processImages } from "./image";
 import type { Assessment, AssessmentDocument, AssessmentPage} from "../import.server/assessInputs";
 import { type Document, DocumentState } from "../import/index";
 import { writable, type Writable } from "svelte/store";
-
-
+import { splitPdf, createPdfFromImageBuffers } from '$lib/files/pdf';
+import { type Task, TaskState } from "../import/index";
 
 export const files: Writable<File[]> = writable([]);
 
-export enum TaskState {
-    'NEW' = 'NEW',
-    'ASSESSING' = 'ASSESSING',
-    'ASSESSED' = 'ASSESSED',
-}
-
-export interface Task {
-    name: string;
-    type: 'application/pdf' | 'images';
-    data: string | ArrayBuffer | string[];
-    state: TaskState;
-}
 
 
 interface AssessmentPagesClient extends AssessmentPage {
@@ -61,6 +49,7 @@ export async function createTasks(files: File[]): Promise<Task[]> {
                     tasks.push({
                         name: file.name,
                         type: 'application/pdf',
+                        icon: 'pdf',
                         data: await readAsArrayBuffer(file),
                         state: TaskState.NEW
                     })                    
@@ -79,6 +68,7 @@ export async function createTasks(files: File[]): Promise<Task[]> {
             tasks.push({
                 name: 'Images',
                 type: 'images',
+                icon: groupped.images[0].type.split('/')[1],
                 data: await Promise.all(groupped.images.map(async (file) => {
                     return await readAsBase64(file);          
                 })),
@@ -96,7 +86,7 @@ export async function processTask(task: Task): Promise<Document[]> {
             });
         case 'images':
             return await processImages(task.data as string[]).then((assessment) => {
-                return processMultipageAssessmentToDocumnets(assessment, [], taks);
+                return processMultipageAssessmentToDocumnets(assessment, [], task);
             });
         default:
             return Promise.reject('Unsupported task type');
@@ -179,14 +169,14 @@ export function processFiles(files: File[]): Promise<Document[]> {
 */
 
 
-function processMultipageAssessmentToDocumnets(assessment: AssessmentClient, documents: Document[], taks: Task): Document[] {
-    assessment.documents.forEach((doc) => {
+async function processMultipageAssessmentToDocumnets(assessment: AssessmentClient, documents: Document[], task: Task): Promise<Document[]> {
+    await Promise.all(assessment.documents.map(async (doc) => {
         
         const pages = doc.pages.map((page, index) => {
             const pageData = assessment.pages.find((p) => p.page === page);
             return {
                 page: index,
-                language: pageData?.language,
+                language: doc?.language,
                 type: pageData?.type,
                 text: pageData?.text,
                 image: pageData?.image,
@@ -197,13 +187,51 @@ function processMultipageAssessmentToDocumnets(assessment: AssessmentClient, doc
             language: string;
             text: string;
         }[];
+
+        let attachment: ArrayBuffer;
+        switch (task.type) {
+            case 'application/pdf':
+                // split orignal pdf into individual document pdf
+                const pdf = task.data as ArrayBuffer;
+                console.log('splitting pdf', pages.map((p) => p.page), pdf);
+
+                attachment = {
+                    thumbnail: pages[0].thumbnail,
+                    type: 'application/pdf',
+                    file: (await splitPdf(pdf, pages.map((p) => p.page+1), [])).firstPdfBytes
+                }
+/*
+                const a = document.createElement('a')
+                a.href = URL.createObjectURL(new Blob(
+                  [ attachment ],
+                  { type: 'application/pdf' }
+                ))
+                a.download = 'fileName.pdf'
+                a.click()*/
+                break;
+            case 'images':
+                // merge images into a single pdf
+                const imageBuffers = pages.map((p) => p.image);
+                attachment = {
+                    thumbnail: pages[0].thumbnail,
+                    type: 'application/pdf',
+                    file: await createPdfFromImageBuffers(imageBuffers)
+                }
+                break;
+            default:
+                throw new Error('Unsupported task type');
+        }
+
+
         documents.push({
             ...doc,
             state: DocumentState.NEW,
             pages,
-            type: taks.type,
-            files: taks.data,
+            type: task.type,
+            files: task.data,
+            attachments: [attachment],
+            task
         })
-    });
+    }));
     return documents;
 }

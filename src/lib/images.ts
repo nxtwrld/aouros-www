@@ -114,3 +114,25 @@ export async function merge(base64Images: string[]): Promise<string>  {
     });
 
 }
+
+
+
+
+
+// Helper function to get image MIME type from ArrayBuffer
+export function getImageMimeTypeFromBuffer(buffer: ArrayBuffer): string {
+    const arr = new Uint8Array(buffer).subarray(0, 4);
+    let header = '';
+    for (let i = 0; i < arr.length; i++) {
+      header += arr[i].toString(16);
+    }
+  
+    // Check the header bytes for common image formats
+    if (header.startsWith('ffd8ff')) {
+      return 'image/jpeg';
+    } else if (header.startsWith('89504e47')) {
+      return 'image/png';
+    } else {
+      throw new Error('Unsupported image type.');
+    }
+  }

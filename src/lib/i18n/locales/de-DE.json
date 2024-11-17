@@ -36,9 +36,14 @@
       "uploading": "Hochladen ..."
     },
     "profiles": {
+      "add": "Profil hinzufügen",
       "delete": "Löschen",
       "open": "Offen",
       "request-access": "Zugriff anfordern"
+    },
+    "report": {
+      "anatomy": {
+      }
     },
     "search": {
       "commands": {
@@ -60,6 +65,15 @@
     "upgrade": {
       "please-upgrade-your-subscription-to-continue": "Bitte aktualisieren Sie Ihr Abonnement, um fortzufahren."
     }
+  },
+  "languages": {
+    "ar": "Arabisch",
+    "cs": "tschechisch",
+    "de": "deutsch",
+    "en": "Englisch",
+    "es": "Spanisch",
+    "fr": "Französisch",
+    "it": "Italienisch"
   },
   "medical": {
     "prop-values": {
@@ -88,5 +102,22 @@
       "mmHg": "mmHg",
       "years": "Jahre"
     }
+  },
+  "report": {
+    "anatomy": {
+      "body": "",
+      "body-part": "",
+      "status": "",
+      "status-and-diagnosis": "",
+      "treatment": ""
+    },
+    "attachments": "Anhänge",
+    "diagnosis": "Diagnose",
+    "performer": "Bereitgestellt von",
+    "recommendations": "Empfehlungen",
+    "report": "Bericht",
+    "toggle-original-contents": "Originalinhalte umschalten",
+    "translated-from": "Übersetzt aus {Sprache}.",
+    "vitals-and-amp-results": "Vitalwerte"
   }
 }

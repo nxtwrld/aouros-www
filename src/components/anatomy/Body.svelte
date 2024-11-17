@@ -1,0 +1,1226 @@
+<script lang="ts">
+    import { goto } from '$app/navigation';
+    import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+    import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+    import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
+    import layoutState from '$lib/layoutState';
+    import objects3d, { isObject } from '$data/objects';
+    import Label from '$components/report/ReportLabel.svelte';
+    import { fade } from 'svelte/transition';
+    import TWEEN from '@tweenjs/tween.js';
+    import { isTouchDevice  } from '$lib/device';
+    import focused from '$lib/focused';
+    import profile from '$lib/user/profile';
+    import type { Figure } from '$lib/user/profile';
+    import { groupReportsByTag } from '$lib/report/utils';
+    import reports from '$lib/report/store';
+    //import shaders from './shaders';
+    import type { IContext } from './context/types.d';
+    import contexts from './context/index';
+	import store from './store';
+	import { linkPage } from '$lib/app';
+    import { addExperience } from '$lib/xp/store';
+	import { sounds } from '$components/ui/Sounds.svelte';
+    import { t } from '$lib/i18n';
+	//import Error from '../../../routes/+error.svelte';
+
+    const dispatch = createEventDispatcher();
+
+    type ViewState = {
+        position: THREE.Vector3;
+        rotation: THREE.Euler;
+        target: THREE.Vector3;
+    }
+    const DEFAULT_OPACITY = .9;
+    const UNFOCUSED_OPACITY = .3;
+
+/*
+
+    console.log('🧍', 'Body', Object.entries(objects3d).reduce((acc, [k,v]) => {
+        return [...acc, ...v.objects]
+    }, [])).reduce((acc, o) => {
+        return {...acc, [o]: o}
+    }, {});
+*/
+
+    let FOCUS_COLOR = 0x16d3dd;
+    let HIGHLIGHT_COLOR = 0xe9a642;
+
+    export let layout: 'mobile' | 'desk' = 'mobile';
+
+    export let model: Figure = $profile?.figure || 'male';
+
+    export let activeLayers: string[] = [];
+    export let activeTools: string[] = [];
+
+    export let showShade: boolean = true;
+    
+    export let selected: THREE.Object3D | null = null;
+
+    let shade: THREE.Group;
+
+    export function reset() {
+        previousViewState = initialViewState;
+        setViewState(initialViewState);
+    }
+
+
+    const originalMaterials = new Map<string, THREE.Material>();
+
+    const objectToFileMapping = Object.entries(objects3d).reduce((acc, [k,v]) => {
+        v.objects.forEach(f => {
+            acc[f] = k;
+        });
+        return acc;
+    }, {} as {
+        [key: string]: string
+    });
+    
+    const mapped: {
+        [key: string]: string
+    } = {
+        //'cholesterol': 'heart',
+    }
+//  TODO: switch offf
+    $: labels = getLabelsMap({});
+
+    function getLabelsMap($reports) {
+
+        return Object.entries(groupReportsByTag())
+        .filter(([k,v]) => {
+            if (mapped[k]) {
+                return isObject(mapped[k], 'anatomy')
+            } else {
+                return isObject(k, 'anatomy')
+            }
+        })
+        .map(([k,v]) => {
+            const id: string = mapped[k] || k;
+
+            if (!activeLayers.includes(objectToFileMapping[id])) activeLayers = [...activeLayers, objectToFileMapping[id]];
+
+            return {
+                type: v[0].metadata.category,
+                id,
+                tag: k,
+                count: v.length,
+                geometry: null,
+                object: null
+            }
+        });
+    }
+
+
+
+
+    let loadedLayers: string[] = [];
+    let loadedFiles: string[] = [];
+    let ready: boolean = false;
+
+    let container: HTMLDivElement;
+    let labelContainer: HTMLDivElement;
+    let resizeObserverListener: ResizeObserver;
+
+    let camera: THREE.PerspectiveCamera; 
+    let scene: THREE.Scene;
+    let renderer: THREE.WebGLRenderer;
+    let controls: THREE.OrbitControls;
+    let labelRenderer: THREE.CSS2DRenderer;
+    let raycaster: THREE.Raycaster;
+    let pointer: THREE.Vector2 = new THREE.Vector2();
+    let group: THREE.Group = new THREE.Group();
+    let dragged: boolean = false;
+
+    let objects: any[] = [];
+    let currentContext: IContext | null = null;
+
+
+
+
+    let initialViewState: ViewState;
+    let previousViewState: ViewState | null = null;
+
+
+/*
+    function applyShaderEffect(objectName: string, shaderName: string, options: any = {}): void {
+        const object = scene.getObjectByName(objectName);
+        //list all object in scene
+        console.log('scene', scene.children.map(c => c.name));
+        console.log('object', objectName, object);
+        if (object instanceof THREE.Mesh && shaders[shaderName]) {
+            // Store the original material
+            if (!originalMaterials.has(objectName)) {
+                originalMaterials.set(objectName, object.material);
+            }
+
+            const originalColor = (object.material as THREE.MeshBasicMaterial).color;
+            const shaderMaterial = new THREE.ShaderMaterial({
+                ...extras,
+                ...shaders[shaderName],
+                uniforms: {
+                    ...shaders[shaderName].uniforms,
+                    ...options,
+                    originalColor: { value: originalColor }
+                }
+            });
+
+            // Apply the shader material
+            object.material = shaderMaterial;
+            object.material.needsUpdate = true;
+        }
+    }
+
+    function removeShaderEffect(objectName: string): void {
+        const object = scene.getObjectByName(objectName);
+        const originalMaterial = originalMaterials.get(objectName);
+        if (object instanceof THREE.Mesh && originalMaterial) {
+            object.material = originalMaterial;
+            object.material.needsUpdate = true;
+            originalMaterials.delete(objectName); // Remove the entry from the map
+        }
+    }
+
+    */
+    $: defaultState = (model === 'female') ? {
+        minZoom : 150,
+        maxZoom : 0,
+        modelY : -95,
+        modelZ : 0,
+        cameraY : 35,
+        cameraX : 70
+    } : {
+        minZoom : 1500,
+        maxZoom : 300,
+        modelY : isTouchDevice() ? -1050 : -1000,
+        modelZ : isTouchDevice() ? 500 : 600,
+        cameraY : 500,
+        cameraX : 800
+    }
+
+    $: {
+
+        if (activeLayers != loadedLayers) {
+            let toLoad = activeLayers.filter(l => !loadedLayers.includes(l));
+            //console.log('toLoad', toLoad);
+            let filesToLoad = toLoad.reduce((acc, l) => {
+                return [...acc, ...objects3d[l].files]
+            }, [] as string[]).filter(f => !loadedFiles.includes(f));
+            let objectsToShow = activeLayers.reduce((acc, l) => {
+                return [...acc, ...objects3d[l].objects]
+            }, []);
+            loadedLayers = activeLayers;
+            updateModel(filesToLoad, objectsToShow);
+        }
+
+        toggleShade(showShade);
+
+    }
+
+    
+
+
+
+    function  setHighlight(name: string | null) {
+        if (name) {
+            if (name == selected?.name) return;
+            focusObject(mapped[name] || name);
+        } else {
+            if (previousViewState) {
+                setViewState(previousViewState);
+            }
+            highlight(null);
+            selected = null;
+        }
+    }
+    
+
+    function setViewState(state: ViewState) {
+        if (!state) return;
+        new TWEEN.Tween(camera.position)
+                    .to({ x: state.position.x, y: state.position.y, z: state.position.z }, 2000)
+                    .easing(TWEEN.Easing.Quadratic.Out)
+                    .start();
+                new TWEEN.Tween(controls.target)
+                    .to({ x: state.target.x, y: state.target.y, z: state.target.z }, 2000) // duration in milliseconds
+                    .easing(TWEEN.Easing.Cubic.Out)
+                    .onUpdate(() => {
+                        controls.update(); // Update the controls on each tween update
+                    })
+                    .start(); 
+    }
+
+
+    onMount(() => {
+        if (container) init();
+
+        const unsubscibeFocus = focused.subscribe((f) => {
+            if (!ready) return;
+            setHighlight(f.object);
+
+        });
+
+        const unsubscibeContext = store.subscribe((state) => {
+            if (!ready) return;
+           if (state.context) {
+               setContext(state.context);
+           } else {
+                clearContext();
+           }
+        });
+
+        return () => {
+            unsubscibeFocus();
+            unsubscibeContext();
+            
+            // clear all three.js objects from the scene
+            clearObjects(scene); 
+
+            renderer.forceContextLoss();
+            renderer.dispose();
+            renderer.context = null;
+            renderer.domElement = null;
+            renderer = null;
+
+            labelRenderer.context = null;
+            labelRenderer.domElement = null;
+            labelRenderer = null;
+
+
+            
+            clearContext();
+            if (resizeObserverListener) resizeObserverListener.disconnect();
+            if (labelContainer) {
+                for (const labelEl of labelContainer.children) {
+                    labelEl.removeEventListener('click', clickLabel);
+                    labelEl.removeEventListener('mouseup', mouseUpLabel);
+                };
+            }
+
+            loadedFiles = [];
+            loadedLayers = [];
+            console.log('🧍', 'Destroyed');
+        }
+
+    });
+
+
+    function clearObjects(scene) {
+
+        for(let i=scene.children.length-1; i>=0; i--){
+            let obj = scene.children[i];
+            //dispose all object geometries and materials
+            if (obj.geometry) obj.geometry.dispose();
+            if (obj.material) {
+                if (obj.material instanceof Array) {
+                    obj.material.forEach(m => m.dispose());
+                } else {
+                    obj.material.dispose();
+                }
+            }
+            scene.remove(obj);
+        }
+    }
+
+    async function updateModel(filesToLoad, objectsToShow) {
+        //console.log('updateModel', filesToLoad, objectsToShow);
+        let newObjects = await Promise.all(filesToLoad.map((f: string) => loadObj({
+            id: f,
+            name: f
+        })));
+
+
+        let labelIds = [... new Set(labels.map(l => l.id))];
+
+        insertObject(newObjects, objectsToShow, labelIds, group);
+
+        
+        objects.forEach(object => {
+            object.traverse( function ( child ) {
+                // mark labeled objects
+                checkObject(child, objectsToShow, labelIds);
+            } );
+        })
+        objects = [...objects, ...newObjects];
+
+        animate();
+        loadLabels();
+        setHighlight($focused.object);
+
+        if (!initialViewState) initialViewState = {
+            position: camera.position.clone(),
+            rotation: camera.rotation.clone(),
+            target: controls.target.clone()
+        }
+
+        dispatch('ready');
+    }
+
+    //let names = {}
+    function insertObject(o, objectsToShow, labelIds, group) {
+
+        //let onames = [];
+
+        o.forEach(object => {
+            //console.log(object);
+            object.traverse( function ( child ) {
+                // mark labeled objects
+                //onames.push(child.name);
+                //console.log('child', child.name, child)
+                
+                if (objectsToShow) checkObject(child, objectsToShow, labelIds);
+
+                if (object.name === 'integumentary_system' && child.name === 'body') {
+                    console.log('child...', child.name, child)
+                    child.visible = false;
+                }
+            } );
+            //console.log('onames', onames);
+            object.position.y = defaultState.modelY;
+            object.position.z = defaultState.modelZ;
+            object.layers.enableAll();
+
+            //console.log('object', object.name, object)
+            //names[o[0].name] = onames;
+
+            group.add( object );
+        })
+
+        
+        //console.log('names', JSON.stringify(names, null, 2))
+    }
+
+
+
+    function checkObject(child, objectsToShow, labelIds) {
+        if (!child.isMesh)  return;
+
+        if ( objectsToShow.includes(child.name)) {
+            //console.log('SHOW', child.name, labelIds);
+
+            if (child.name === 'body' && child.parent.name === 'integumentary_system') {                
+                child.visible = false;
+            } else {
+                //console.log('body', child)
+                child.visible = true;
+            }
+
+
+
+            if ( labelIds.includes(child.name)) {
+                // material needs to cloned to distinguish from original
+                child.material = updateMaterial(child.material , {
+                    color: FOCUS_COLOR
+                });
+                /*const material = child.material.clone();
+                material.color.set( FOCUS_COLOR );
+                child.material = material;*/
+                let label = labels.find(l => l.id === child.name)
+                label.geometry = child.geometry;
+                label.object = child;
+
+
+            }
+        } else {
+            //console.log('HIDE', child.name, labelIds);
+            child.visible = false;
+            if ( labelIds.includes(child.name)) {
+                let label = labels.find(l => l.id === child.name)
+                label.geometry = null;
+                label.object = null;
+            }
+
+        }
+
+    
+    }
+    // update material or material array with a given set of properties
+    function updateMaterial(material: THREE.Material,
+        options: {
+            color?: number,
+            transparent?: boolean,
+            opacity?: number
+        }
+    ): THREE.Material | THREE.Material[] {
+        if (Array.isArray(material )) {
+            return material.map((m: THREE.Material) => {
+                return updateMaterial(m, options);
+            });
+        } else {
+            const newMaterial = material.clone();
+            Object.keys(options).forEach(key => {
+                if (newMaterial[key] && newMaterial[key].set) {
+                    newMaterial[key].set(options[key]);
+                } else if (newMaterial[key]) {
+                    newMaterial[key] = options[key];
+                }
+            });
+            //options.color && newMaterial.color.set( options.color );
+            return newMaterial;
+        }
+
+        
+    }
+
+
+    function loadObj(setup: {
+            id: string,
+            name: string,
+            color?: number,
+            opacity?: number,
+            rename?: string,
+            material?: THREE.Material
+        }) {
+
+        return new Promise((resolve, reject) => {
+
+            setup = Object.assign({
+                opacity: DEFAULT_OPACITY,
+            }, setup);
+
+            function onProgress( xhr: any ) {
+                if ( xhr.lengthComputable ) {
+                    //const percentComplete = xhr.loaded / xhr.total * 100;
+                    //console.log( 'model ' + Math.round( percentComplete, 2 ) + '% downloaded' );
+                }
+            }
+
+            function onError(error: any) {
+                console.error('🧍', '3D model load error', error);
+                reject(error)
+            }
+
+            const mtlLoader = new MTLLoader();
+            mtlLoader.load('/models/' + model + '_' + setup.id + '_obj/' + setup.id + '.mtl', function(materials) {
+                materials.preload();     
+                const objLoader = new OBJLoader( );
+                if (setup.material) {
+                    //console.log('setup.material', setup.material)
+                    Object.keys(materials.materials).forEach(key => {
+                        materials.materials[key] = setup.material;
+                    });
+                    
+                }
+
+                objLoader.setMaterials( materials );
+            
+                
+                objLoader.load( '/models/' + model + '_' + setup.id + '_obj/' + setup.id + '.obj', function ( object ) {
+                        object.name = setup.rename || setup.name;
+
+
+                        if (setup.color) {
+                            object.traverse( function ( child ) {
+                                if ( child.isMesh ) {
+                                    //child.material.color.setHex( o.color );
+                                    // = setup.opacity || 1;
+                                }
+                            });
+                        }
+                        if (setup.opacity) {
+                            object.traverse( function ( child ) {
+                                if ( child.isMesh ) {
+                                    child.material.transparent = true;
+                                    child.material.opacity = setup.opacity;
+                                }
+                            });
+                        }
+                        loadedFiles.push(setup.rename || setup.id);
+                        resolve(object);
+                }, onProgress, onError );
+            });
+        });
+    }
+
+
+    function loadLabels() {
+        if (!labelContainer) return;
+//        console.log(labelContainer.children);
+        for (const [index, labelEl] of [...labelContainer.children].entries()) {
+            if(labels[index].geometry) {
+                const label = new CSS2DObject( labelEl );
+                label.position.set( ...labels[index].geometry.boundingSphere.center.toArray() );
+                label.center.set( 0, 1 );
+                labels[index].object.add( label );
+                label.layers.set( 0 );
+                labelEl.addEventListener('click', clickLabel, false);
+                labelEl.addEventListener('mousedown', mouseUpLabel, false);
+                labelEl.addEventListener('mouseup', mouseUpLabel, false);
+                labels[index].label = label;
+            }
+        };
+
+        labels.forEach(label => {
+            if (label.label){
+                if (label.geometry) {
+                    label.label.visible = true;
+                } else {
+                    label.label.visible = false;
+                }
+            }
+        });
+    }
+
+
+    async function init () {
+
+        resizeObserverListener = new ResizeObserver(resize).observe(container);
+        let w = container.offsetWidth;
+        let h = container.offsetHeight;
+        const minZoom = defaultState.minZoom;
+        const maxZoom = defaultState.maxZoom;
+
+        camera = new THREE.PerspectiveCamera( 70, w / h, 1, 10000 );
+        camera.position.z = minZoom;
+        camera.position.y = defaultState.cameraY;
+        camera.position.x =  defaultState.cameraX;
+
+        // scene
+
+        scene = new THREE.Scene();
+        raycaster = new THREE.Raycaster();
+
+        scene.add(group);
+
+        const ambientLight = new THREE.AmbientLight( 0xffffff, 0.3 );
+        scene.add( ambientLight );
+
+        const light = new THREE.PointLight( 0xffffff, .8 );
+        light.position.set( 1, 1, 1 ).normalize();
+        camera.add( light );
+        scene.add( camera );
+
+        // Renderer
+
+        renderer = new THREE.WebGLRenderer( { alpha: true, antialias: true } );
+        renderer.setClearColor( 0x000000, 0 ); // the default
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( container.offsetWidth, container.offsetHeight );
+        container.appendChild( renderer.domElement );
+
+        // CSS2DRenderer
+
+        labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize( container.offsetWidth, container.offsetHeight );
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        container.appendChild( labelRenderer.domElement );
+        labelRenderer.domElement.addEventListener('mouseup', onPointerClick, false);
+
+
+        // Controls
+        controls = new OrbitControls( camera, labelRenderer.domElement );
+        controls.listenToKeyEvents( container ); // optional
+
+        controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = true;
+        controls.zoomSpeed = (isTouchDevice()) ? 0.8 : 0.1;
+        //controls.minDistance = maxZoom;
+        controls.maxDistance = minZoom;
+
+        // Offset rotation center
+        controls.target.set( 
+            0,0,0
+        );
+
+        controls.addEventListener('start', () => {
+            //console.log('start');
+            dragged = true;
+        });
+        
+        /*
+        controls.addEventListener('change', (a) => {
+            console.log('change')
+        });
+        */
+
+        controls.addEventListener('end', () => {
+            //console.log('end');
+            dragged = false;
+        });
+
+        controls.maxPolarAngle = Math.PI / 2;
+
+        await loadShade();
+        animate();
+        //window.scene = scene;
+
+        console.log('🧍', 'Ready');
+        
+        // TODO: better way to handle this - more generic
+        /*
+        ui.on('context', (context) => {
+            setContext(context);
+        });
+        setContext(ui.context);
+        */
+
+        
+        ready = true;
+
+        
+
+        setContext($store.context);
+
+        //dispatch('ready');
+
+    };
+
+        /**
+         * Setting context for particular section or context passed
+         * @param context
+         */
+    let showContextInfo: boolean = false;
+
+    function toggleContextInfo() {
+        
+        showContextInfo = !showContextInfo;
+        if (showContextInfo) addExperience('curiosity');
+    }
+    
+    let originalState: any = {
+        layers : null
+    };
+
+    function setContext(context: string | IContext)  {
+        clearContext();
+        //console.log('🧍', 'Setting Context', context);
+
+        if (!context) return;
+        if (typeof context === 'string' && !contexts[context]) return;
+
+        const contextToRun = (typeof context === 'string') ? contexts[context] : context;
+        const storeState: boolean = currentContext == null
+
+        currentContext = {
+            name: contextToRun.name,
+        };
+
+        if (contextToRun.layers) {
+            if (storeState) originalState.layers = activeLayers;
+            activeLayers = contextToRun.layers;
+        }
+
+        if (contextToRun.shader) {
+            //applyShaderEffect(contexts[context].object, contexts[context].shader, contexts[context].options);
+        }
+        if (contextToRun.animation) {
+            currentContext.animation = new contextToRun.animation(scene);
+        }
+
+/*        if (contextToRun.focus) {
+            // TODO - support multiple objects
+            console.log('focus', contextToRun.focus[0]);
+            focusObject(contextToRun.focus[0]);
+        }*/
+
+        if (contextToRun.info) {
+            currentContext.info = contextToRun.info;
+        }
+        
+    }
+    function clearContext() {
+
+        if (currentContext) {
+            if (currentContext.shader) {
+                //removeShaderEffect(contexts[context].object);
+            }
+            if (currentContext.animation) {
+                currentContext.animation.destroy();
+            }
+
+            if (currentContext.info) {
+                currentContext.info = null;
+            }
+        }
+        if (originalState.layers) {
+            activeLayers = originalState.layers;
+            originalState.layers = null;
+        }
+        currentContext = null;
+    }
+
+
+
+
+
+    async function loadShade() {
+        insertObject([await loadObj({
+            id: 'integumentary_system',
+            name: 'integumentary_system',
+            color: 3,
+            opacity: .3,
+            rename: 'shade_skin',
+            material:  new THREE.MeshPhysicalMaterial({
+                metalness: 0.2,
+                roughness: 0.5,
+                //envMapIntensity: 0.9,
+                //clearcoat: 1,
+                //transparent: true,
+                transmission: .8,
+                color: 0x999999,
+                //opacity: .2,
+                reflectivity: 0.5,
+                //refractionRatio: 0.985,
+                //ior: 0.1,
+                side: THREE.BackSide,
+            })
+        })], ['body'], [], scene);
+        toggleShade(showShade);
+    }
+
+    function toggleShade(state: boolean) {
+        if (scene && !shade) shade = scene.getObjectByName('shade_skin');
+        if (shade) shade.visible = state;
+    }
+
+
+    function resize () {
+        if (!container || !renderer) return;
+        camera.aspect = container.offsetWidth / container.offsetHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( container.offsetWidth, container.offsetHeight );
+        labelRenderer.setSize( container.offsetWidth, container.offsetHeight );
+    }
+
+    function animate() {
+        if (!controls) return;
+
+        TWEEN.update();
+        controls.update();
+        resize();
+
+        /*Object.keys(shaders).forEach(shaderName => {
+            if (shaders[shaderName].uniforms.time) {
+                shaders[shaderName].uniforms.time.value += 0.05;
+            }
+        });*/
+
+        if (currentContext && currentContext.animation) {
+            currentContext.animation.update();
+        }
+
+        render();
+        if (renderer) requestAnimationFrame( animate );
+    }
+
+    function render() {
+        if (renderer) renderer.render( scene, camera );
+        if (labelRenderer) labelRenderer.render( scene, camera );
+    }
+
+
+    function clickLabel(event: MouseEvent) {
+        //console.log('clickLabel');
+        event.stopPropagation();
+        event.preventDefault();
+        console.log('click label')
+        sounds.focus.play();
+        $layoutState.focusView = false;
+    }
+
+    function mouseUpLabel(event: MouseEvent) {
+        $layoutState.focusView = true;
+        event.stopPropagation();
+        event.preventDefault();
+        const a = event.target.closest('a');
+        goto(a.getAttribute('href'));
+        focused.set({ object: a.dataset.id });
+    }
+
+
+
+
+    function focusObject (objects: string | THREE.Object3D | (string | THREE.Object3D)[] | null) {
+
+        const processObjects: THREE.Object3D[] = [];
+
+        if (!Array.isArray(objects)) objects = [objects];
+
+        objects.forEach(o => {
+            if (typeof o === 'string') {
+                const object = scene.getObjectByName(o);
+                if (object) processObjects.push(object);
+            } else {
+                processObjects.push(o);
+            }
+        });
+
+
+        if (processObjects.length === 0) return;
+        if (processObjects.length > 1) {
+            console.warn('Multiple objects to focus not supported yet');
+        }
+
+        const object = processObjects[0];
+       // console.log('Object', object);
+        // store original position and rotation
+        if (!selected) {
+            previousViewState = {
+                position: camera.position.clone(),
+                rotation: camera.rotation.clone(),
+                target: controls.target.clone()
+            }
+        }
+
+        //console.log('focusObject', object);
+        highlight(object);
+        selected = object;
+
+        // let's focus the object into view
+        
+
+        const aabb = new THREE.Box3().setFromObject(object);
+        const sphere = aabb.getBoundingSphere(new THREE.Sphere(new THREE.Vector3()));
+        //console.log('sphere', sphere);
+  
+        const center = sphere.center;
+        const radius = sphere.radius;
+
+        // Adjust the distance as needed
+        const fovInRadians = (camera.fov * Math.PI) / 180;
+        const distance = radius / Math.sin(fovInRadians / 2);
+
+
+        const targetPosition = new THREE.Vector3(
+            center.x,
+            center.y,
+            center.z + (distance * 2)
+        );
+
+
+
+        // Position the camera at this distance
+        camera.lookAt(center);
+        camera.updateProjectionMatrix();
+
+        new TWEEN.Tween(camera.position)
+            .to({ x: targetPosition.x, y: targetPosition.y, z: targetPosition.z }, 2000) // 2000 milliseconds
+            .easing(TWEEN.Easing.Quadratic.Out)
+            .start();
+
+
+        // twen the controls target to the center of the object
+        new TWEEN.Tween(controls.target)
+            .to({ x: center.x, y: center.y, z: center.z }, 2000) // duration in milliseconds
+            .easing(TWEEN.Easing.Cubic.Out)
+            .onUpdate(() => {
+                controls.update(); // Update the controls on each tween update
+            })
+            .start();
+
+
+    }
+
+    //let pointTimer: ReturnType<typeof setTimeout>;
+    let tap: number = 0;
+    function onPointerClick (event: MouseEvent) {
+
+            if (dragged) return;
+
+            let now = Date.now();
+            if (tap && (now - tap) < 300) {
+                    $layoutState.focusView = !$layoutState.focusView;
+                    tap = now;
+                return;
+            } else {
+                tap = now;
+            }
+
+            if (!activeTools.includes('selection')) return;
+
+
+            var rect = container.getBoundingClientRect();
+            var x = event.clientX - rect.left; //x position within the element.
+            var y = event.clientY - rect.top;  //y position within the element.
+            //pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+            //pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+            pointer.x = ( x / rect.width ) * 2 - 1;
+            pointer.y = - ( y / rect.height ) * 2 + 1;
+
+            raycaster.setFromCamera( pointer, camera );
+            //const intersects = raycaster.intersectObject( group, true );
+            const intersects = raycaster.intersectObjects( group.children, true);
+            if ( intersects.length > 0 ) {
+                while(intersects.length > 0 && !intersects[ 0 ].object?.visible) {
+                    intersects.shift();
+                }
+                if (intersects.length === 0) return;
+
+                const object = intersects[ 0 ].object;
+                if (object.name) {
+                    sounds.focus.play();
+                    addExperience('curiosity');
+                    //highlight(object);
+                    focused.set({ object: object.name });
+                    selected = object;
+                }
+            } else {
+                //highlight(null)
+                focused.set({ object: undefined });
+                selected = null;
+            }
+    }
+
+    function highlight (object: THREE.Object3D | null) {
+        if (selected) {
+            selected.traverse( function ( child: THREE.Mesh ) {
+                if ( child.isMesh ) {
+                    child.material = child.oldMaterial;
+                }
+            });
+        }
+
+        // traverse all object and set material opacity to .5
+        scene.traverse( function ( child: THREE.Mesh ) {
+            if ( child.isMesh && child.material) {
+                // material needs to cloned to distinguish from original
+                child.oldMaterial = child.material;
+                child.material = updateMaterial(child.material, { opacity: (object == null) ? DEFAULT_OPACITY : UNFOCUSED_OPACITY , transparent: true });
+
+            }
+        });
+
+
+
+        if (object) {
+            //ui.emit('highlight-object', object.name);
+            object.traverse( function ( child: THREE.Mesh ) {
+                if ( child.isMesh && child.material) {
+                    // material needs to cloned to distinguish from original
+                    child.oldMaterial = child.material;
+                    child.material = updateMaterial(child.material, { color: HIGHLIGHT_COLOR, opacity: 1 });
+
+                    //console.log('highlight', child.name, child.material);
+                    /*
+                    const material = child.material.clone();
+                    child.oldMaterial = child.material;
+                    material.color.set( HIGHLIGHT_COLOR );
+                    child.material = material;*/
+                }
+            });
+        } 
+    }
+
+    function resetFocus() {
+        focused.set({ object: undefined });
+        clearContext();
+        setViewState(initialViewState);
+    }   
+
+</script>
+
+<div class="labels" bind:this={labelContainer}>
+    {#each labels as label}
+    <div class="label" id="label-id-{label.id}">
+        <a href={linkPage('/report/tags', label.tag)} class="highlight" data-id={label.id}>
+            <Label type={label.type} />
+        </a>
+    </div>
+    {/each}
+</div>
+
+<div class="model" bind:this={container}></div>
+
+{#if selected}
+    {#key selected}
+    <div class="selected" transition:fade >
+        {$t('anatomy.'+ selected.name)}
+        <button on:click={resetFocus}>
+            <svg>
+                <use href="/sprite.svg#close"></use>
+            </svg>
+        </button>
+    </div>
+    {/key}
+{/if}
+
+
+{#if currentContext && currentContext.info}
+    <div class="context-info" transition:fade|local>
+        <button class="close" on:click={toggleContextInfo}>
+            {#if showContextInfo}
+            <svg>
+                <use href="/sprite.svg#close"></use>
+            </svg>
+            {:else}
+            <svg>
+                <use href="/sprite.svg#info"></use>
+            </svg>
+            {/if}
+
+        </button>
+        {#if showContextInfo}
+        <svelte:component this={currentContext.info} />
+        {/if}
+    </div>
+{/if}
+
+
+<style>
+    .model {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform: translateX(0);
+        /*background-image: radial-gradient(ellipse at center, rgba(102, 255, 196, 100)  0%, rgba(102, 255, 196, 0) 100%);*/
+    }
+    @media only screen and (min-width: 769px) {
+        .model {
+            width: 200%;
+            height: 100%;
+            transform: translateX(-40%);
+        }
+    }
+    .selected {
+        position: absolute;
+        top: calc(var(--top-offset) + 1rem);
+        right: calc(100% - var(--viewer-size) + 3rem);
+        padding: 0 0 0 1rem;
+        pointer-events: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.1rem;
+        background-color: rgba(0,0,0,.3);
+        color: #FFF;
+        border-radius: var(--border-radius);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        text-transform: uppercase;
+        pointer-events: all;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    .selected button {
+        margin-left: .5rem;
+        transition: background-color .2s ease-in-out;
+    }
+    @media (hover: hover) {
+    .selected button:hover {
+        background-color: var(--color-negative);
+    }
+    }
+    .selected button svg {
+        width: 2rem;
+        height: 2rem;
+        padding: .2rem;
+        fill: currentColor;
+    }
+    @media only screen and (max-width: 768px) { 
+        .selected {
+            display: none;
+        }
+        :global(.focus) .selected {
+            display: flex;
+            top: calc(var(--top-offset) + 1rem);
+            left: auto;
+            right: 1rem;
+            
+        }
+    }
+
+    .labels {
+        display: none;
+    }
+
+    .model :global(.label) {
+        left: 0;
+        top: 0;
+        width: 1px;
+        height: 1px;
+    }
+    .model :global(.highlight) {
+        display: block;
+        transform: translate(-50%, -50%);
+        width: 3rem;
+        height: 3rem;
+        border-radius: 100%;
+        border: 1px solid #FFF;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        background: transparent;
+        padding: .7rem;
+        transition: all .2s ease-in-out;
+    }
+    .model :global(.highlight .icon) {
+        display: block;
+        height: 100%;
+        width: 100%;
+        border-radius: 100%;
+        border: 1px solid var(--color-light);
+        background: var(--label-color);
+        box-shadow: 1px 1px 6px 0 rgba(0,0,0.3);
+        color: #FFF;
+        transform: scale(.5);
+        transition: transform .2s ease-in-out;
+    }
+    .model :global(.highlight .icon svg) {
+        width: 100%;
+        height: 100%;
+        transform: scale(.6);
+        opacity: 0;
+        transition: opacity .2s ease-in-out;
+    }
+
+    
+    .model :global(.highlight:hover) {
+        padding: .5rem;
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        width: 4rem;
+        height: 4rem;
+    }
+    .model :global(.highlight:hover .icon) {
+        transform: scale(1);
+    }
+    .model :global(.highlight:hover .icon svg) {
+        opacity: 1
+    }
+
+
+    .context-info {
+        position: absolute;
+
+        left: 3rem;
+        max-width: calc(var(--width) - 6rem);
+        min-width: 2.5rem;
+        max-height: calc(var(--height) - 2rem);
+        min-height: 2.5rem;;
+        bottom: 1rem;
+        background-color: rgba(var(--color-background-rgb), .6);
+        text-align: left;
+        backdrop-filter: blur(2px);
+        border-radius: var(--border-radius);
+        box-shadow: 2px 2px 10px rgba(0,0,0,.2);
+    }
+    .context-info :global(.close svg) {
+        width: 100%;
+        height: 100%;
+
+    }
+    .context-info .close {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: .5rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        cursor: pointer;
+    }
+    .context-info :global(.h2) {
+        padding: 1rem .5rem .5rem;
+    }
+    .context-info :global(.p) {
+        background-color: var(--color-background);
+        padding: 1rem;
+        margin: 0;
+        text-align: justify;
+    }
+</style>

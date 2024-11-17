@@ -36,9 +36,14 @@
       "uploading": "Nahrávání ..."
     },
     "profiles": {
+      "add": "Přidat profil",
       "delete": "Smazat",
       "open": "Otevřít",
       "request-access": "Žádost o přístup"
+    },
+    "report": {
+      "anatomy": {
+      }
     },
     "search": {
       "commands": {
@@ -60,6 +65,15 @@
     "upgrade": {
       "please-upgrade-your-subscription-to-continue": "Chcete-li pokračovat, upgradujte své předplatné."
     }
+  },
+  "languages": {
+    "ar": "arabština",
+    "cs": "čeština",
+    "de": "němčina",
+    "en": "angličtina",
+    "es": "španělština",
+    "fr": "francouzština",
+    "it": "italština"
   },
   "medical": {
     "prop-values": {
@@ -88,5 +102,22 @@
       "mmHg": "mmHg",
       "years": "let"
     }
+  },
+  "report": {
+    "anatomy": {
+      "body": "Anatomie",
+      "body-part": "Část těla",
+      "status": "Stav",
+      "status-and-diagnosis": "Stav a diagnóza",
+      "treatment": "Léčba"
+    },
+    "attachments": "Přílohy",
+    "diagnosis": "Diagnóza",
+    "performer": "Provedl",
+    "recommendations": "Doporučení",
+    "report": "Zpráva",
+    "toggle-original-contents": "Přepnout původní obsah",
+    "translated-from": "Přeloženo z {language}.",
+    "vitals-and-amp-results": "Měření a testy"
   }
 }

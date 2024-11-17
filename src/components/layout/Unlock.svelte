@@ -3,6 +3,8 @@
     import user from '$lib/user';
     import Loading from "$components/ui/Loading.svelte";
     import { t } from '$lib/i18n';
+    import { sounds } from '$components/ui/Sounds.svelte';
+
     let passphrase = '';
 
     $: unlocked = $user && $user.unlocked;
@@ -23,10 +25,12 @@
                 error = $t('app.unlock.invalid-passphrase');
              } else {
                 passphrase = '';
+                sounds.focus.play();    
              }
 
         }
     }
+
 
 
 </script>

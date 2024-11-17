@@ -1,0 +1,34 @@
+{
+    "type": "array",
+    "description": "If there are any medical measurements like temprature, heart rate or specific lab results resented in the text, extract them here. If there was nothing mentioned, leave the array empty.",
+    "items": {
+        "type": "object",
+        "properties": {
+            "test": {
+                "type": "string",
+                "description": "Name of the lab test. If the test is a combination of multiple tests, list them all. If the test is a general. Select a property from the provided enum."
+            },
+            "value": {
+                "type": "string",
+                "description": "Value of the lab test. If the it contains a numeric value, convert the decimals to a dot. If the value is a range, use a dash to separate the values. If the value is a text, leave it as is."
+            },
+            "unit": {
+                "type": "string",
+                "description": "Unit of the lab test."
+            },
+            "reference": {
+                "type": "string",
+                "description": "Reference range of the lab test NUMBER - NUMBER or an appropriate alternative. Convert the decimals to a dot."
+            },
+            "urgency": {
+                "type": "number",
+                "description": "Urgency of the result on a scale of 1-5. 1 - not severe, 5 - very severe. where 1 is non issue - just a general statement, 2 and up are issues detected, that need to be reflected upon."
+            },
+            "date": {
+                "type": "string",
+                "description": "Date of the measurement or lab test in the format YYYY-MM-DD. Derive date from context. If the date is not available, leave empty."
+            }
+        },
+        "required": [ "test", "value", "unit", "reference", "urgency"]
+    }
+}
