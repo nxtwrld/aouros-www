@@ -13,7 +13,7 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
     }
 
 
-    const { data: documentsLoad, error: documentsError } = await supabase.from('documents').select('id, metadata, content, type, attachments, user_id, keys!inner(*)(key, owner_id)')
+    const { data: documentsLoad, error: documentsError } = await supabase.from('documents').select('id, metadata, content, type, attachments, user_id, keys!inner(key, owner_id)')
         .eq('user_id', params.pid)
         .eq('id', params.did)
         .eq('keys.user_id', session.user.id).single();

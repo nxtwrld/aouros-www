@@ -1,5 +1,5 @@
 <script lang="ts">
-	
+	import insuranceProviders from '$data/insurance.providers.json';
     export const ready: boolean = true;
     export let data: {
         insurance: {
@@ -12,44 +12,7 @@
         code: string;
         country: string;
         name: string;
-    }[] = [
-        {
-            code: '111',
-            country: 'CZ',
-            name: 'VZP - Všeobecná zdravotní pojišťovna České republiky'
-        },
-        {
-            code: '201',
-            country: 'CZ',
-            name: ' Vojenská zdravotní pojišťovna České republiky'
-        },
-        {
-            code: '205',
-            country: 'CZ',
-            name: 'Oborová zdravotní pojišťovna zaměstnanců bank, pojišťoven a stavebnictví České republiky'
-        },
-        {
-            code: '207',
-            country: 'CZ',
-            name: 'Oborová zdravotní pojišťovna zaměstnanců bank, pojišťoven a stavebnictví'
-        },
-        {
-            code: '209',
-            country: 'CZ',
-            name: 'Zaměstnanecká pojišťovna Škoda'
-        },
-        {
-            code: '211',
-            country: 'CZ',
-            name: 'Zdravotní pojišťovna ministerstva vnitra České republiky'
-        },
-        {
-            code: '213',
-            country: 'CZ',
-            name: 'RBP - Revírní bratrská pokladna, zdravotní pojišťovna'
-        }
-
-    ]
+    }[] = [...insuranceProviders];
     
     export let profileForm: HTMLFormElement;
 </script>

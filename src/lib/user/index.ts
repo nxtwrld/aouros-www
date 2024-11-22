@@ -7,20 +7,22 @@ import { verifyHash } from "../encryption/hash";
 import { KeyPair, pemToKey } from "../encryption/rsa";
 //import { loadSubscription } from "./subscriptions";
 
-type UserFirstTime = {
+export type UserFirstTime = {
     email: string;
     id: string;
     auth_id: string;
+    language: string;
     unlocked: boolean | undefined;
 }
 
-type User = {
+export type User = {
     email: string;
     id: string;
     auth_id: string;
     fullName: string;
     avatarUrl: string;
     subscription: string;
+    language: string;
     subscriptionStats: {
         profiles: number;
         scans: number;
@@ -211,6 +213,9 @@ export default {
     getId,
     ...user,
     ...auth,
+    get: () => {
+        return get(user);
+    },
     set: setUser,
     unlock
 };

@@ -13,7 +13,7 @@ export async function POST({ request, locals: { supabase, safeGetSession }}) {
       return error(401, { message: 'Unauthorized' });
     }
     const subscription = await loadSubscription();
-    console.log('user', subscription);
+    //console.log('user', subscription);
     if (!subscription) {
         error(404, { message: 'Subscription not found' });
     }

@@ -7,7 +7,7 @@ import { setClient } from '$lib/supabase'
 import { session } from "$lib/user";
 import '$lib/i18n' // Import to initialize. Important :)
 import { locale, waitLocale } from 'svelte-i18n';
-mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: true });
+mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: false });
 
 
 export const trailingSlash = 'always';

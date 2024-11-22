@@ -6,7 +6,6 @@ import { locale, waitLocale } from 'svelte-i18n';
 export const load: LayoutLoad = async ({ fetch, parent }) => {
 
     await parent();
-    console.log('loading.user...')
 
     // fetch basic user data
     const userData = await fetch('/v1/med/user').then(r => r.json()).catch(e => {

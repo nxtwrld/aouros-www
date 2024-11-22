@@ -100,3 +100,21 @@ export async function decryptString(encryptedData: string, passphrase: string): 
     // Decode the decrypted ArrayBuffer to a string
     return new TextDecoder().decode(decrypted);
 }
+
+
+
+
+export function generatePassphrase(length: number =  10): string {
+    console.log('generatePassphrase', length);
+    const regx = new RegExp(/\d/, "g");
+    let p = window.crypto.getRandomValues(new BigUint64Array(length)).reduce(
+            (prev, curr, index) => (
+                !index ? prev : prev.toString(36)
+            ) + (
+                index % 2 ? curr.toString(36).toUpperCase().replace(regx, key => ".,:;-_()=*".charAt(parseInt(key))) : curr.toString(36)
+            )
+        , '').split('').sort(
+            () => 128 - window.crypto.getRandomValues(new Uint8Array(1))[0]
+        ).join('');
+    return p;
+}

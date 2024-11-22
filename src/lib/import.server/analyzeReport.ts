@@ -371,9 +371,9 @@ const TEST_DATA: ReportAnalysis[] = [{
             ]
         },
         "patient": {
-            "fullName": "Ing. Veronika Čenková",
+            "fullName": "Ing. Veronika Cenková",
             "identifier": "7559100010",
-            "dateOfBirth": "1975",
+            "birthDate": "1975",
             "insurance": {
                 "provider": "207 - Oborová zdravotní pojišťovna",
                 "number": "7559100010"
@@ -475,7 +475,7 @@ const TEST_DATA: ReportAnalysis[] = [{
             "title": []
         },
         "patient": {
-            "fullName": "Veronika ČENKOVÁ",
+            "fullName": "Veronika CENKOVÁ",
             "identifier": "75 59 10 / 0010",
             "insurance": {
                 "provider": "207"

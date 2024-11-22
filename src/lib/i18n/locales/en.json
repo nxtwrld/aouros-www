@@ -11,9 +11,9 @@
       "file-drop-area": "File drop area",
       "import-reports-scan-or-images": "Import reports, scan or images",
       "maxium-scans-reached": "You have reached your monthly limit of {limit} imports.",
+      "preview-disabled": "All interactions are disabled in preview mode.",
       "save": "Save",
-      "you-still-have-scans-in-your-yearly-subscription": "You still have {scans} imports in your yearly subscription.",
-      "preview-disabled": "All interactions are disabled in preview mode."
+      "you-still-have-scans-in-your-yearly-subscription": "You still have {scans} imports in your yearly subscription."
     },
     "name": "mediqom",
     "nav": {
@@ -102,6 +102,68 @@
       "mg/dL": "mg/dL",
       "mmHg": "mmHg",
       "years": "years"
+    }
+  },
+  "profile": {
+    "health": {
+      "health-form": "Health Profile",
+      "props": {
+        "alcoholConsumption": "Alcohol Consumption",
+        "allergen": "Allergen",
+        "biologicalSex": "Biological Sex",
+        "birthDate": "Date of Birth",
+        "bloodSugar": "Blood Sugar",
+        "bloodType": "Blood Type",
+        "condition": "Condition",
+        "dateOfApplication": "Date of Application",
+        "diagnosisDate": "Diagnosis Date",
+        "diastolic": "Diastolic Blood Pressure",
+        "diet": "Diet",
+        "heartRate": "Heart Rate",
+        "height": "Height",
+        "oxygenSaturation": "Oxygen Saturation",
+        "physicalActivity": "Physical Activity",
+        "reaction": "Reaction",
+        "smokingStatus": "Smoking Status",
+        "systolic": "Systolic Blood Pressure",
+        "temperature": "Temperature",
+        "vaccine": "Vaccine",
+        "weight": "Weight"
+      },
+      "tabs": {
+        "allergies": "Allergies",
+        "chronicConditions": "Chronic Conditions",
+        "lifeStyle": "Life Style",
+        "profile": "Profile",
+        "vaccinations": "Vaccinations",
+        "vitals": "Vitals"
+      }
+    },
+    "insurance": {
+      "health-insurance": "Health Insurance",
+      "identification": "Policy Number",
+      "provider": "Provider"
+    },
+    "vcard": {
+      "contact-information": "Contact information",
+      "fn" : "Friendly Name",
+      "family": "Family Name",
+      "given": "Given Name",
+      "middle": "Middle Name",
+      "prefix": "Prefix",
+      "suffix": "Suffix",
+      "title": "Title",
+      "role": "Role",
+      "street": "Street",
+      "city": "City",
+      "locality": "Locality",
+      "region": "Region",
+      "postal": "Postal Code",
+      "country": "Country",
+      "email": "Email",
+      "tel": "Phone"
+
+
     }
   },
   "report": {

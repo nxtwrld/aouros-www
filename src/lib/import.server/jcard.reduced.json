@@ -154,7 +154,7 @@
 					"items" : { "type" : "string" }
 				}
 			}
-		} ,
+		},
 
 
 		"org" :

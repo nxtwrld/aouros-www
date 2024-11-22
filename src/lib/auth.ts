@@ -3,7 +3,7 @@ import { getClient} from '$lib/supabase';
 async function logout() {
     const supabase = getClient();
     const { data : { user } } = await supabase.auth.getUser()
-    console.log(user);
+    
     if (!user) {
         return;
     }

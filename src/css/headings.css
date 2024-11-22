@@ -31,6 +31,10 @@
     background-color: var(--color-background);
     flex-grow: 2;
 }
+.heading > h1,
+.h1.heading {
+    height: calc(2 * var(--heading-height));
+}
 .heading > .actions {
     display: flex;
     align-items: center;
@@ -41,25 +45,48 @@
 .heading > .actions > a{
     background-color: var(--color-background);
     border: 0;
-    padding: 0;
+    padding: 0 1rem;
+    font-weight: 700;
     margin: 0;
     cursor: pointer;
     height: var(--heading-height);
     min-width: var(--heading-height);
 }
+.heading > .actions > button:has(svg:first-child:last-child),
+.heading > .actions > a:has(svg:first-child:last-child) {
+    padding: 0;
+}
+
 .heading > .actions svg {
     width: 1.5rem;
     height: 1.5rem;
     fill: currentColor;
 }
 
+
+
 .heading > .actions > button:hover,
 .heading > .actions > a:hover,
 .heading > .actions > button:active,
 .heading > .actions > a:active  {
+    color: var(--color-interactivity);
+}
+.heading > .actions > button.-primary,
+.heading > .actions > a.-primary {
+    color: var(--color-interactivity);
+}
+
+.heading > .actions > button.-primary:hover,
+.heading > .actions > a.-primary:hover {
     background-color: var(--color-interactivity);
     color: var(--color-interactivity-text);
 }
+
+.heading > .actions > button.-danger {
+    background-color: var(--color-background);
+    color: var(--color-negative);
+}
+
 
 .heading > .actions > button.-danger:hover,
 .heading > .actions > a.-danger:hover,

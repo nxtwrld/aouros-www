@@ -17,7 +17,7 @@
         "key": "weight",
         "type": "time-series",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "date",
                 "type": "date"
@@ -33,7 +33,7 @@
         "key": "height",
         "type": "time-series",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "date",
                 "type": "date"
@@ -67,9 +67,9 @@
     },
     {
         "key": "vaccinations",
-        "type": "time-series",
+        "type": "array",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "vaccine",
                 "type": "text"
@@ -82,9 +82,9 @@
     },
     {
         "key": "allergies",
-        "type": "time-series",
+        "type": "array",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "allergen",
                 "type": "text"
@@ -98,9 +98,9 @@
 
     {
         "key": "chronicConditions",
-        "type": "time-series",
+        "type": "array",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "condition",
                 "type": "text"
@@ -115,7 +115,7 @@
         "key": "bloodPressure",
         "type": "time-series",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "date",
                 "type": "date"
@@ -136,7 +136,7 @@
         "key": "heartRate",
         "type": "time-series",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "date",
                 "type": "date"
@@ -152,7 +152,7 @@
         "key": "temperature",
         "type": "time-series",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "date",
                 "type": "date"
@@ -168,7 +168,7 @@
         "key": "oxygenSaturation",
         "type": "time-series",
         "mode": "add",
-        "fields": [
+        "items": [
             {
                 "key": "date",
                 "type": "date"
@@ -177,6 +177,22 @@
                 "key": "oxygenSaturation",
                 "type": "number",
                 "unit": "%"
+            }
+        ]
+    },
+    {
+        "key": "bloodSugar",
+        "type": "time-series",
+        "mode": "add",
+        "items": [
+            {
+                "key": "date",
+                "type": "date"
+            },
+            {
+                "key": "bloodSugar",
+                "type": "number",
+                "unit": "mg/dL"
             }
         ]
     }

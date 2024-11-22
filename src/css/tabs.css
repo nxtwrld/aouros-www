@@ -6,15 +6,15 @@
     justify-content: stretch;
     align-items: stretch;
     gap: var(--gap);
-    margin-bottom: 1rem;
 }
 .tab-heads > button,
 .tab-heads > a {
     flex-grow: 1;
     padding: .5rem;
     background-color: var(--color-white);
-    border-top: 3px solid var(--color-gray-800);
+    border-top: 3px solid var(--color-interactivity);
     transition: background-color .5s, color .5s, border-color .5s;
+    margin-bottom: var(--gap);
 }
 
 .tab-heads > button:first-child,
@@ -39,9 +39,10 @@
 .tab-heads > button.-active,
 .tab-heads > a.-active {
     font-weight: 700;
-    border-color: var(--color-interactivity);
-    color: var(--color-interactivity);
-    background-color: transparent;
+    border-color: var(--color-highlight);
+    color: var(--color-highlight);
+    background-color: var(--color-background);
+    margin-bottom: 0;
 }
 
 

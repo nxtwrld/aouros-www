@@ -1,23 +1,23 @@
 <script lang="ts">
-    import { profiles, findInProfiles, profile, nomalizePatientData } from '$lib/med/profiles';
+    import { profiles,  } from '$lib/med/profiles';
+    import {  findInProfiles, normalizePatientData } from '$lib/med/profiles/tools';
     import { capitalizeFirstLetters } from '$lib/strings';
     import { t } from '$lib/i18n';
     import Modal from '$components/ui/Modal.svelte';
     import type { Profile } from '$lib/med/types.d';
     import ProfileImage from '$components/profile/ProfileImage.svelte';
     import { onMount } from 'svelte';
+    import { normalizeName } from '$lib/med/profiles/tools';
+    import type { DetectedProfileData } from '$lib/import'
+    import { scale } from 'svelte/transition';
 
-    export let contact: {
-        name: string;
-        insurance_number: string;
-        dateOfBirth: string;
-        biologicalSex: string;
-    }
+    export let contact: DetectedProfileData;
+
     export let linkFrom: 'top' | 'bottom' = 'top';
 
     let profilesFound = (contact) ? findInProfiles(contact) : []; 
 
-    export let selected: Profile = profilesFound.length > 0 ? profilesFound[0] :  nomalizePatientData(contact); 
+    export let selected: Profile = profilesFound.length > 0 ? profilesFound[0] :  normalizePatientData(contact); 
 
     let showSelectProfileModal: boolean = false;
 
@@ -26,8 +26,7 @@
         showSelectProfileModal = false;
     }   
     onMount(() => {
-        console.log('SelectProfile mounted', contact);
-        selected = profilesFound.length > 0 ? profilesFound[0] : nomalizePatientData(contact);
+        selected = profilesFound.length > 0 ? profilesFound[0] : normalizePatientData(contact);
     });
 </script>
 
@@ -35,6 +34,7 @@
 class="button selected-profile link-{linkFrom}" 
     class:-new={selected.id == 'NEW'}
     on:click={() => showSelectProfileModal = true}
+    transition:scale={{delay: 1000}}
     >
     {selected.fullName} {#if selected.insurance?.number}({selected.insurance.number}){/if}
 </button>
@@ -45,7 +45,6 @@ class="button selected-profile link-{linkFrom}"
         {#if profilesFound.length == 0}
         
             <li><button value="NEW" class:-selected={selected.id == 'NEW'}>
-                <ProfileImage profile={contact} />
                 {capitalizeFirstLetters(contact.name)} - {$t('app.profiles.add')}
             </button></li>
         {/if}

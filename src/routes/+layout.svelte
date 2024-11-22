@@ -11,10 +11,13 @@
 
 	onMount(() => {
 		setClient(supabase);
-
+		
 		const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
+			console.log('supabase:auth change', newSession);
 			if (newSession?.expires_at !== session?.expires_at) {
+				console.log('supabase:auth expirted', newSession);
 				invalidate('supabase:auth')
+				goto('/auth', { replaceState: true });
 			}
 		})
 		return () => data.subscription.unsubscribe();

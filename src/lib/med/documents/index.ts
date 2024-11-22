@@ -6,6 +6,8 @@ import { profiles } from '$lib/med/profiles';
 import Errors from '$lib/Errors';
 import type { Profile } from "$lib/med/types.d";
 import { DocumentType, type DocumentPreload, type DocumentEncrypted, type Document, type DocumentNew } from '$lib/med/documents/types.d';
+import { base64ToArrayBuffer } from '$lib/arrays';
+
 
 const documents: Writable<(DocumentPreload | Document)[]> = writable([])
 
@@ -126,7 +128,7 @@ export async function loadDocument(id: string, profile_id: string | undefined = 
         throw new Error(Errors.Unauthenticated);
     }
 
-    const documentEncrypted = await fetch('/v1/med/profiles/' + (user_id || profile_id) + '/documents/' + id)
+    const documentEncrypted = await fetch('/v1/med/profiles/' + (document.user_id) + '/documents/' + id)
         .then(r => r.json()).catch(e => {
             console.error(e);
             throw new Error(Errors.NetworkError);
@@ -158,15 +160,35 @@ export async function updateDocument(id: string, documentData: Document) {
     }
     const user_id = user.getId();
     const key = document.key;
-
+    // prepare new metadata
     let metadata = deriveMetadata(documentData, documentData.metadata);
 
-    const attachmentsToEncrypt = (documentData.attachments || []).filter(a => a.startsWith('data:'))
+    // encrypt attachments and map them to content with thumbnails
+    const attachmentsToEncrypt = (documentData.attachments || []).filter(a => !a.url).map(a => {
+        return JSON.stringify({
+            file: a.file,
+            type: a.type
+        });
+    });
+    const {data: attachmentsEncrypted} = await encrypt(attachmentsToEncrypt, key);
+    const attachmentsUrls = await saveAttachements(attachmentsEncrypted);
+    // remap attachments to 
+    let i = 0;
+    document.content.attachments = (document.attachments || []).map((a) => {
+        const url = a.url || attachmentsUrls[i];
+        const path = a.path || attachmentsUrls[i].path;
+        i++
+        return {
+            url,
+            path,
+            type: a.type,
+            thumbnail: a.thumbnail
+        }
+    })
 
-    const { data: enc } = await encrypt([JSON.stringify(documentData.content), JSON.stringify(documentData.metadata), ...attachmentsToEncrypt], key);
+    const { data: enc } = await encrypt([JSON.stringify(documentData.content), JSON.stringify(documentData.metadata)], key);
     
-    const attachments = await saveAttachements(enc.slice(2));
-
+    
     return await fetch('/v1/med/profiles/' + user_id + '/documents/' + id, {
         method: 'PUT',
         headers: {
@@ -175,11 +197,11 @@ export async function updateDocument(id: string, documentData: Document) {
         body: JSON.stringify({
             metadata: enc[1],
             content: enc[0],
-            attachments
+            attachments: document.content.attachments.map(a => a.url)
         })
     }).then(r => r.json()).catch(async (e) => {
         console.error(e);
-        await deleteAttachments(attachments);
+        await deleteAttachments(attachmentsUrls);
         throw new Error(Errors.NetworkError);
     });
 
@@ -203,12 +225,34 @@ export async function addDocument(document: DocumentNew): Promise<string> {
     
 
     const profile_id = document.user_id || user_id;
-
+    
+    // prepare metadata
     let metadata = deriveMetadata(document, document.metadata);
     
 
-    // encrypt document, metadata and attachments
-    const { data: enc, key } = await encrypt([JSON.stringify(document.content), JSON.stringify(metadata), ...(document.attachments || [])]);
+    // encrypt attachments and map them to content with thumbnails
+    const attachmentsToEncrypt: string[] = (document.attachments || []).map(a => {
+        return JSON.stringify({
+            file: a.file,
+            type: a.type
+        });
+    });
+    const {data: attachmentsEncrypted, key } = await encrypt(attachmentsToEncrypt);
+    // save encrypted attachments
+    const attachmentsUrls = await saveAttachements(attachmentsEncrypted, profile_id);
+
+    // map attachments to content
+    document.content.attachments = (document.attachments || []).map((a, i) => {
+        return {
+            url: attachmentsUrls[i].url,
+            path: attachmentsUrls[i].path,
+            type: a.type,
+            thumbnail: a.thumbnail
+        }
+    })
+
+    // encrypt document, metadata using the same key as attachments
+    const { data: enc } = await encrypt([JSON.stringify(document.content), JSON.stringify(metadata)], key);
     const keys = [{
         user_id: user_id,
         owner_id: profile_id || user_id,
@@ -231,10 +275,8 @@ export async function addDocument(document: DocumentNew): Promise<string> {
         }
 
     }
-    // handle encrypted attachments
-    const attachments = await saveAttachements(enc.slice(2));
 
-
+    // save the report itself
     const data = await fetch('/v1/med/profiles/' + (profile_id || user_id) + '/documents', {
             method: 'POST',
             headers: {
@@ -244,7 +286,7 @@ export async function addDocument(document: DocumentNew): Promise<string> {
                 type: document.type || DocumentType.document,
                 metadata: enc[1],
                 content: enc[0],
-                attachments,
+                attachments: attachmentsUrls,
                 keys
             })
         })
@@ -252,7 +294,7 @@ export async function addDocument(document: DocumentNew): Promise<string> {
         .catch(async (e) => {
             console.error(e);
 
-            await deleteAttachments(attachments);
+            await deleteAttachments(attachmentsUrls);
 
             throw new Error(Errors.NetworkError);
         });
@@ -261,18 +303,67 @@ export async function addDocument(document: DocumentNew): Promise<string> {
 }
 
 
-async function saveAttachements(attachments: string[]): Promise<string[]> {
-    // TODO: save attachments to storage
-    // TODO: remap attachments to references
-    console.log('TODO: save attachments to storage', attachments);
-    return attachments;
+async function saveAttachements(attachments: string[], profile_id: string): Promise<string[]> {
+    
+    console.log('Save attachments to storage', attachments);
+    const user_id = profile_id || user.getId();
+    // store attachments
+    const urls = await Promise.all(attachments.map(async (attachment, i) => {
+        const response = await fetch('/v1/med/profiles/' + user_id + '/attachments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                file: attachment
+            })
+        });
+        const data = await response.json();
+        return data;
+    }));
+
+    return urls;
 }
 
-async function deleteAttachments(attachments: string[]): Promise<void> {
-    // TODO: delete attachments from storage
-    console.log('TODO: delete attachments from storage', attachments);
+async function deleteAttachments(attachments: {
+    url: string;
+    path: string;
+}[]): Promise<void> {
+    
+    console.log('Delete attachments from storage', attachments);
+    await Promise.all(attachments.map(async (attachment) => {
+        const response = await fetch('/v1/med/profiles/' + user.getId() + '/attachments?path=' + attachment.path, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        return response.json();
+    }))   
+
+    return 
 }
 
+
+
+async function downloadAttachement(attachment: {
+    file: string;
+    type: string;
+    url?: string;
+    path?: string;
+}) {
+
+    console.log('at', at);
+    const file = base64ToArrayBuffer(attachment.file);
+    const blob = new Blob([file], { type: attachment.type });
+    const url = URL.createObjectURL(blob);
+    const a = window.document.createElement('a');
+    a.href = url;
+    a.download = a.name;
+    a.click();
+    URL.revokeObjectURL(url);
+
+}
 
 async function encrypt(data: string[], key: CryptoKey | string | undefined = undefined): Promise<{ data: string[], key: string}> {
     let cryptoKey: CryptoKey
@@ -314,7 +405,7 @@ async function encryptKeyForProfile(exportedKey: string, profile_id: string): Pr
 }
 
 
-async function decrypt(data: string[], keyEncrypted: string): Promise<string[]> {
+export async function decrypt(data: string[], keyEncrypted: string): Promise<string[]> {
 
         // decrypt key with user's private key
     const keyDecrypted = await user.keyPair.decrypt(keyEncrypted); 
@@ -331,9 +422,11 @@ async function decrypt(data: string[], keyEncrypted: string): Promise<string[]> 
 
 function deriveMetadata(document: Document | DocumentNew, metadata?: { [key: string]: any }): { [key: string]: any } {
     let result = { 
-        ...metadata,
         title: document.content.title,
-        tags: document.content.tags || []
+        tags: document.content.tags || [],
+        date: document.content.date || new Date().toISOString(),
+        ...metadata
+
      };
     return result;
 }

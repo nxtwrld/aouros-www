@@ -17,18 +17,18 @@
         <div class="actions -vertical">
             {#if data.tel && data.tel[0]}
             {@const tel = data.tel[0]}
-            <a href="tel:{data.tel[0]}">
+            <a href="tel:{data.tel[0].value}">
                 <svg>
                     <use href="/icons.svg#phone" />
                 </svg>
             </a>
             {/if}
             {#if data.email && data.email[0]}
-            <button>
+            <a href="mailto:{data.email[0].value}">
                 <svg>
                     <use href="/icons.svg#email" />
                 </svg>
-            </button>
+            </a>
             {/if}
             {#if data.adr && data.adr[0]}  
                 {@const address = data.adr[0]}
@@ -66,6 +66,12 @@
                 {#if data.email}
                     {#each data.email as {value}}
                     <p class="p"><a class="a" href="mailto:{value}">{value}</a></p>
+                    {/each}
+                {/if}
+
+                {#if data.url}
+                    {#each data.url as {value}}
+                    <p class="p"><a class="a" href="{value}" target="_blank">{value}</a></p>
                     {/each}
                 {/if}
             </div>

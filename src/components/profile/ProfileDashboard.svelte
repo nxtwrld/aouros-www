@@ -139,6 +139,7 @@
         </div>
     </div>
 
+    <h3 class="h3 heading">{ $t('app.headings.documents') }</h3>
     <Documents user={$profile.id} />
 
     <!--ul>

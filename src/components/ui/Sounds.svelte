@@ -30,7 +30,7 @@
     function enableSoundEffects() {
         Howler.volume(0.3);
         Howler.mobileAutoEnable = true;
-        console.log('enableSoundEffects 1');
+        
         soundSprite = new Howl({
             src: ["/sounds/sprite.mp3"],
             volume: 0.5,
@@ -57,7 +57,7 @@
         }
 
 
-        console.log('enableSoundEffects 2');
+        console.log('sound effects enabled');
         window.removeEventListener('mousedown', enableSoundEffects);
         window.removeEventListener('keydown', enableSoundEffects);
     };

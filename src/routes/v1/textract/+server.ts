@@ -71,34 +71,7 @@ const extractionFunctionSchema = {
 
 
 /** @type {import('./$types.d').RequestHandler} */
-/*
-export async function GET({ url }) {
-	//const str = url.searchParams.get('drug');
 
-
-    // Instantiate the ChatOpenAI class
-    const model = new ChatOpenAI({ 
-        model: "gpt-4",
-        apiKey: env.OPENAI_API_KEY
-    });
-
-    // Create a new runnable, bind the function to the model, and pipe the output through the parser
-    const runnable = model
-    .bind({
-        functions: [extractionFunctionSchema],
-        function_call: { name: "extractor" },
-    })
-    .pipe(parser);
-
-    // Invoke the runnable with an input
-    const result = await runnable.invoke([
-        new HumanMessage("I take Letrox 75 every day in the morning before breakfast."),
-    ]);
-
-    console.log({ result });
-
-    return json(result);
-}*/
 
 /** @type {import('./$types.d').RequestHandler} */
 export async function POST({ request }) {
@@ -106,7 +79,7 @@ export async function POST({ request }) {
 
     const data = await request.json();
 
-    console.log({ data } );
+    //console.log({ data } );
     // Instantiate the ChatOpenAI class
     const model = new ChatOpenAI({ 
         model: "gpt-4o",
@@ -144,7 +117,7 @@ export async function POST({ request }) {
         new HumanMessage(data.text),
     ]);
 
-    console.log({ result });
+    //console.log({ result });
 
     return json(result);
 }

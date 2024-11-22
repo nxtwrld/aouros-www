@@ -11,6 +11,7 @@
       "file-drop-area": "Oblast umístění souboru",
       "import-reports-scan-or-images": "Importujte zprávy, skeny nebo obrázky",
       "maxium-scans-reached": "Dosáhli jste měsíčního limitu {limit} importů.",
+      "preview-disabled": "Interakce nejsou v režimu náhledu povoleny.",
       "save": "Uložit",
       "you-still-have-scans-in-your-yearly-subscription": "Ve svém ročním předplatném stále máte {scans} importů."
     },
@@ -101,6 +102,66 @@
       "mg/dL": "mg/dl",
       "mmHg": "mmHg",
       "years": "let"
+    }
+  },
+  "profile": {
+    "health": {
+      "health-form": "Zdravotní profil",
+      "props": {
+        "alcoholConsumption": "Konzumace alkoholu",
+        "allergen": "Alergen",
+        "biologicalSex": "Biologický pohlaví",
+        "birthDate": "Datum narození",
+        "bloodSugar": "Krevní cukr",
+        "bloodType": "Krevní skupina",
+        "condition": "Stav",
+        "dateOfApplication": "Datum aplikace",
+        "diagnosisDate": "Datum diagnózy",
+        "diastolic": "Diastolický krevní tlak",
+        "diet": "Strava",
+        "heartRate": "Srdeční frekvence",
+        "height": "Výška",
+        "oxygenSaturation": "Nasycení kyslíkem",
+        "physicalActivity": "Fyzická aktivita",
+        "reaction": "Reakce",
+        "smokingStatus": "Kouření",
+        "systolic": "Systolický krevní tlak",
+        "temperature": "Teplota",
+        "vaccine": "Vakcína",
+        "weight": "Hmotnost"
+      },
+      "tabs": {
+        "allergies": "Alergie",
+        "chronicConditions": "Chronické nemoci",
+        "lifeStyle": "Životní styl",
+        "profile": "Profil",
+        "vaccinations": "Očkování",
+        "vitals": "Životní funkce"
+      }
+    },
+    "insurance": {
+      "health-insurance": "Zdravotní pojištění",
+      "identification": "Číslo pojistné smlouvy",
+      "provider": "Poskytovatel"
+    },
+    "vcard": {
+      "city": "Město",
+      "contact-information": "Kontaktní informace",
+      "country": "Země",
+      "email": "E-mail",
+      "family": "Příjmení",
+      "fn": "Jméno",
+      "given": "Křestní jméno",
+      "locality": "Lokalita",
+      "middle": "Druhé jméno",
+      "postal": "PSČ",
+      "prefix": "Tituly",
+      "region": "Kraj",
+      "role": "Role",
+      "street": "Ulice",
+      "suffix": "Tituly",
+      "tel": "Telefon",
+      "title": "Titul"
     }
   },
   "report": {

@@ -2,7 +2,9 @@
 	import { passwordStrength } from 'check-password-strength';
     import { prepareKeys } from '$lib/encryption/rsa';
     import { createHash } from '$lib/encryption/hash';
+    import { generatePassphrase } from '$lib/encryption/passphrase';
     import { onMount } from 'svelte';
+    
 
     export const ready: boolean = true;
     export let data: {
@@ -25,22 +27,6 @@
     $: strength = passwordStrength(passphrase).value;
 
 
-    function generatePassphrase(length: number =  10): string {
-        console.log('generatePassphrase', length);
-        const regx = new RegExp(/\d/, "g");
-        let p = window.crypto.getRandomValues(new BigUint64Array(length)).reduce(
-                (prev, curr, index) => (
-                    !index ? prev : prev.toString(36)
-                ) + (
-                    index % 2 ? curr.toString(36).toUpperCase().replace(regx, key => ".,:;-_()=*".charAt(parseInt(key))) : curr.toString(36)
-                )
-            , '').split('').sort(
-                () => 128 - window.crypto.getRandomValues(new Uint8Array(1))[0]
-            ).join('');
-        return p;
-
-
-    }
 
     export let profileForm: HTMLFormElement;
 

@@ -3,7 +3,7 @@
     import { type Profile, SexEnum } from "$lib/med/types.d";
     import user from "$lib/user";
 
-    console.log("user", $user);
+    //console.log("user", $user);
 
     let newProfile: Profile = {
         id: "NEW",

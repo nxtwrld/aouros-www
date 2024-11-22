@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { t } from '$lib/i18n';
+
     export let prop : {
         key: string,
         type: string,
@@ -12,7 +14,7 @@
 </script>
 <div class="input">
     {#if prop.key != "value"}
-    <label for={id}>{prop.key}</label>
+    <label for={id}>{ $t('profile.health.props.'+prop.key) }</label>
     {/if}
     {#if prop.type === 'select' && prop.options}
             <select id={id} bind:value={data}>

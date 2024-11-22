@@ -17,7 +17,7 @@ export async function POST({ request }) {
         try {
             instructions = Object.assign(instructions, JSON.parse(instructionsExtend as string));
         } catch (e) {
-            console.log();
+            console.log(e);
         }
     }
     //console.log(instructions);

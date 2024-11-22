@@ -9,8 +9,9 @@
     import SectionText from './SectionText.svelte';
     import SectionPerformer from './SectionPerformer.svelte';
     import SectionAttachments from './SectionAttachments.svelte';
-    export let document: Document;
 
+    export let document: Document;
+console.log('DOCUMENT', document);
 </script>
 
 
@@ -36,12 +37,12 @@
     <SectionText data={{
             original: document.content.content,
             text: document.content.localizedContent,
-            language: document.language
+            language: document.language || 'en'
 
         }} />
     <SectionPerformer data={document.content.performer} />
 
-    <SectionAttachments data={document.attachments} />
+    <SectionAttachments data={document.content.attachments} key={document.key} />
 </div>
 <!--pre>
     {JSON.stringify(document, null, 2)}

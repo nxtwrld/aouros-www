@@ -1,26 +1,16 @@
 <script lang="ts">
     import { byUser } from '$lib/med/documents';
     import { profile } from '$lib/med/profiles';
+    import Documents from '$components/documents/Index.svelte';
+    import { t } from '$lib/i18n';
+    //const documents = byUser($profile.id);
 
-
-    const documents = byUser($profile.id);
-    console.log(documents, $documents);
 </script>
 
-<div class="page">
+<div class="page -empty">
 
-<h1 class="h1">Documents</h1>
+<h1 class="h1 heading">Documents</h1>
 
-
-{#each $documents as doc}
-    <div class="document">
-        <a href="/med/p/{$profile.id}/documents/{doc.id}">
-
-            {doc.metadata.title} - 
-            {doc.type} -
-            {doc.metadata.tags.join(', ')}
-        </a>
-    </div>
-{/each}
+<Documents user={$profile.id}/>
 
 </div>

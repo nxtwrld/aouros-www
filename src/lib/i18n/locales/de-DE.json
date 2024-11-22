@@ -11,6 +11,7 @@
       "file-drop-area": "Bereich zum Ablegen von Dateien",
       "import-reports-scan-or-images": "Importieren Sie Berichte, Scans oder Bilder",
       "maxium-scans-reached": "Sie haben Ihr monatliches Limit von {limit} Importen erreicht.",
+      "preview-disabled": "Im Vorschaumodus sind alle Interaktionen deaktiviert.",
       "save": "Speichern",
       "you-still-have-scans-in-your-yearly-subscription": "Ihr Jahresabonnement enthält noch {scans}-Importe."
     },
@@ -103,13 +104,73 @@
       "years": "Jahre"
     }
   },
+  "profile": {
+    "health": {
+      "health-form": "Gesundheitsprofil",
+      "props": {
+        "alcoholConsumption": "Alkoholkonsum",
+        "allergen": "Allergen",
+        "biologicalSex": "Biologisches Geschlecht",
+        "birthDate": "Geburtsdatum",
+        "bloodSugar": "Blutzucker",
+        "bloodType": "Blutgruppe",
+        "condition": "Zustand",
+        "dateOfApplication": "Datum der Bewerbung",
+        "diagnosisDate": "Diagnosedatum",
+        "diastolic": "Diastolischer Blutdruck",
+        "diet": "Diät",
+        "heartRate": "Herzfrequenz",
+        "height": "Höhe",
+        "oxygenSaturation": "Sauerstoffsättigung",
+        "physicalActivity": "Körperliche Aktivität",
+        "reaction": "Reaktion",
+        "smokingStatus": "Raucherstatus",
+        "systolic": "Systolischer Blutdruck",
+        "temperature": "Temperatur",
+        "vaccine": "Impfstoff",
+        "weight": "Gewicht"
+      },
+      "tabs": {
+        "allergies": "Allergien",
+        "chronicConditions": "Chronische Erkrankungen",
+        "lifeStyle": "Lebensstil",
+        "profile": "Profil",
+        "vaccinations": "Impfungen",
+        "vitals": "Vitalwerte"
+      }
+    },
+    "insurance": {
+      "health-insurance": "Krankenversicherung",
+      "identification": "Versicherungsnummer",
+      "provider": "Anbieter"
+    },
+    "vcard": {
+      "city": "Stadt",
+      "contact-information": "Kontaktinformationen",
+      "country": "Land",
+      "email": "E-Mail",
+      "family": "Nachname",
+      "fn": "Freundlicher Name",
+      "given": "Vorname",
+      "locality": "Lokalität",
+      "middle": "Zweiter Vorname",
+      "postal": "Postleitzahl",
+      "prefix": "Präfix",
+      "region": "Region",
+      "role": "Rolle",
+      "street": "Straße",
+      "suffix": "Suffix",
+      "tel": "Telefon",
+      "title": "Titel"
+    }
+  },
   "report": {
     "anatomy": {
-      "body": "",
-      "body-part": "",
-      "status": "",
-      "status-and-diagnosis": "",
-      "treatment": ""
+      "body": "Anatomie",
+      "body-part": "Körperteil",
+      "status": "Status",
+      "status-and-diagnosis": "Status und Diagnose",
+      "treatment": "Behandlung"
     },
     "attachments": "Anhänge",
     "diagnosis": "Diagnose",

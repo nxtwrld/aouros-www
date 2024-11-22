@@ -1,14 +1,51 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
-    
-    export let data: {
+    import { decrypt as decryptAes, importKey } from '$lib/encryption/aes';
+    import { decrypt } from '$lib/med/documents/index';
+    import { base64ToArrayBuffer } from '$lib/arrays';
+
+    type Attachment = {
         thumbnail: string;
         type: string;
+        path?: string;
         url?: string;
-        file: ArrayBuffer
-    }[]
+        file?: ArrayBuffer;
+    }
+    export let data: Attachment[]
+
+    export let key: string | undefined = undefined;
 
     console.log(data);
+
+    function showAttachment() {
+        console.log(data);
+    }
+
+    const loadedAttachments = new Map<string, ArrayBuffer>();
+
+    async function loadAttachement(attachment: Attachment): Promise<ArrayBuffer> {
+        console.log('loadAttachment', attachment);
+        if (!('path' in attachment) || !key) return;
+        const fileResponse = await fetch('/v1/med/profiles/' + attachment.path);
+        console.log(fileResponse);
+        // base64 to arraybuffer to text file
+        const file = await decrypt([await fileResponse.text()], key);
+        // base64 to blob
+        console.log('decrypted', file);
+        const json = JSON.parse(file);
+        return base64ToArrayBuffer(json.file)
+
+    }
+
+    async function downloadAttachment(attachment: Attachment): Promise<void> {
+  
+        const blob = new Blob([await loadAttachement(attachment)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'attachment.' + ext;
+        a.click();
+    }
 </script>
 
 
@@ -20,11 +57,11 @@
 
     <div class="attachments">
         {#each data as attachment}
-            <div class="attachment">
+            <button class="attachment" on:click={() => downloadAttachment(attachment)}>
                 {#if attachment.thumbnail}
                 <img src={attachment.thumbnail} alt={attachment.type} />
                 {/if}
-            </div>
+            </button>
         {/each}
     </div>
 {/if}
@@ -39,44 +76,32 @@
         justify-content: stretch;
         align-items: stretch;
         flex-grow: 1;
-        gap: var(--gap);
-        padding: 1rem;
+        gap: 1rem;
+        padding: 1.5rem;
         background-color: var(--color-background);
         container: attachments /  inline-size;
         margin-bottom: var(--gap);
     }
 
     .attachment {
-        width: 15rem;
+        width: auto;
         height: 15rem;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
 
+
     }
     .attachment img {
         height: 100%;
         object-fit: contain;
         box-shadow: 0 1rem 1rem -1rem rgba(0,0,0,.6);
+        transition: transform .3s, border-width .3s;
+        border: 0px solid var(--color-interactivity);
     }
-
-    @container attachments (inline-size < 30rem) {
-        .attachment {
-            width: calc(50%);
-            min-width: none;
-        }
-    }
-    @container attachments (inline-size < 50rem) {
-        .attachment {
-            width: calc(33%);
-            min-width: none;
-        }
-    }
-    @container attachments (inline-size < 70rem) {
-        .attachment {
-            width: calc(25%);
-            min-width: none;
-        }
+    .attachment:hover img {
+        transform: scale(1.05);
+        border-width: 2px;
     }
 </style>

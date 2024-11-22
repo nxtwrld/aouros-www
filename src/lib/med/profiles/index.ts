@@ -1,9 +1,18 @@
 import profiles from './profiles';
 import profile from './profile';
-import { importDocuments } from '$lib/med/documents';
-import { capitalizeFirstLetters, removeNonAlpha, removeNonAlphanumeric, removeNonNumeric, searchOptimize } from '$lib/strings';
-import type { Profile } from '$lib/med/types.d';
-/** 
+import { importDocuments, addDocument } from '$lib/med/documents';
+import { DocumentType } from '$lib/med/documents/types.d';
+import type { Profile, ProfileNew } from '$lib/med/types.d';
+import user from '$lib/user';
+import { prepareKeys } from '$lib/encryption/rsa';
+import { createHash } from '$lib/encryption/hash';
+import { generatePassphrase } from '$lib/encryption/passphrase';
+
+export { profiles, profile };
+
+
+
+/** 1
  *  Removes links between a parent and a profile
 */
 export async function removeLinkedParent(profile_id: string) {
@@ -53,6 +62,7 @@ export async function loadProfiles(fetch: any = undefined, force: boolean = fals
         .filter(d => d.profiles != null)
         .map(async (d) => {
             // fetch encrypted profile and health documents
+            try {
             const rootsEncrypted = await fetch(`/v1/med/profiles/${d.profiles.id}/documents?types=profile,health&full=true`)
                 .then(r => r.json()).catch(e => {
                     console.error('Error loading profile documents', e);
@@ -64,19 +74,21 @@ export async function loadProfiles(fetch: any = undefined, force: boolean = fals
             const roots = await importDocuments(rootsEncrypted);
             // map profile data
             return mapProfileData(d, roots);
+            } catch (e) {
+                return {
+                    ...d.profiles,
+                    status: d.status,
+                    insurance: {},
+                    health: {},
+                    vcard: {}
+                }
+            }
         })
     );
 
     // set profiles
     profiles.set(profilesExtended || []);
 }
-
-
-
-
-export { profiles, profile };
-
-
 
 
 export function mapProfileData(core, roots) {
@@ -115,103 +127,93 @@ export function mapProfileData(core, roots) {
     return profileData
 }
 
-
 /**
- * Search for profiles with a given name and insurance number
- * 
- * @param name Search for profiles with this name
- * @param insurance_number Search for profiles with this insurance number
- * @returns array of profiles
+ * Creat a new virtual profile
  */
-export function findInProfiles(contact: {
-    name: string,
-    insurance_number: string
-    biologicalSex: string,
-    dateOfBirth: string
-}): Profile[] {
 
-    let name = contact.name;
-    let insurance_number = contact.insurance_number;
+export async function createVirtualProfile(profile: ProfileNew) {
 
-    const profilesArray = [...profiles.get()] as Profile[];
 
-    let names = [];
-    let insurance_numbers = [];
-    if (name) {
-        name = name.trim();
-        names.push(name);
-        names.push(searchOptimize(name));
-        if (name.indexOf(' ') > 0) {
-            names.push(name.split(' ').pop());
-            names.push(searchOptimize(name.split(' ').pop()));
-        }
-    }
-    if (insurance_number) {
-        insurance_numbers.push(removeNonNumeric(insurance_number));
-        insurance_numbers.push(removeNonAlphanumeric(insurance_number));
-        insurance_numbers.push(removeNonAlpha(insurance_number));           
-    }
+    // 2. generate random passphrase 
+    const key_pass = generatePassphrase();
+    const key_hash = await createHash(key_pass);
 
-    // remove empty string from names and insurance_numbers
-    names.filter(n => n.length > 0);
-    insurance_numbers.filter(n => n.length > 0);
+    // 3. encrypt private key with passphrase
+    const keys = await prepareKeys(key_pass);
+
+    console.log('Saving profile', {
+        fullName: profile.fullName,
+        language: profile.language || user.get()?.language || 'en',
+        publicKey: keys.publicKeyPEM,
+        privateKey: keys.encryptedPrivateKey,
+        key_hash: key_hash,
+        key_pass: key_pass
     
-    // search profiles based on names and insurance_numbers
-    const profilesFound = profilesArray.map(p => {
-        let r = {
-            profile: p,
-            matchName: false,
-            matchInsurance: false,
-        }
-        if (names.length > 0) {
-            if (names.some(n => searchOptimize(p.fullName).includes(n))) {
-                r.matchName = true;
-            }
-        }
-        if (insurance_numbers.length > 0) {
-            if (insurance_numbers.some(n => p.insurance && (n === p.insurance.number))) {
-                r.matchInsurance = true;
-            }
-        }
-        return r;
-    })
-    .filter(p => p.matchName || p.matchInsurance)
-    .sort((a, b) => {
-        if (a.matchName) return -1;
-    }).sort((a, b) => {
-        if (a.matchInsurance) return -1;
-    }).sort((a, b) => {
-        if (a.matchName && a.matchInsurance) return -1;
     });
 
-    return  profilesFound.map(p => p.profile);
-}
-
-
-export function nomalizePatientData(patient: any): any {
-    
-    console.log('patient', patient);
-    let result = {};
-
-    if (patient.fullName) {
-        result.fullName = capitalizeFirstLetters(patient.fullName.trim());
-    }
-    if (patient.dateOfBirth) {
-        result.dateOfBirth = patient.dateOfBirth;
-    }
-    if (patient.idenitifier) {
-        let insurance_number = removeNonNumeric(patient.idenitifier);
-        result.insurance = {
-            number: insurance_number,
-        }
-    }
-    return result;
-}
-
-export function excludePossibleDuplicatesInPatients(patients: any[]): any[] {
-    return patients.filter((p, i) => {
-        return patients.findIndex(p2 => {
-            return searchOptimize(p2.fullName) === searchOptimize(p.fullName) && p2.insurance.number === p.insurance.number
-        }) === i;
+    // 4. submit to server
+    const response = await fetch('/v1/med/profiles', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            fullName: profile.fullName,
+            language: profile.language || user.get()?.language || 'en',
+            publicKey: keys.publicKeyPEM,
+            privateKey: keys.encryptedPrivateKey,
+            key_hash: key_hash,
+            key_pass: key_pass
+        
+        }),
+    }).catch(e => {
+        console.error('Error saving profile', e);
+        throw new Error('Error saving profile');
     });
+    const [ profileData ] = await response.json();
+
+
+    console.log('Profile saved', profileData);
+
+    console.log('Add profile documnets', profileData.id);
+    // 7. update profiles
+    await loadProfiles(undefined, true);
+
+    // 5. create profile document if vcard is provided
+    await addDocument({
+        type: DocumentType.profile,
+        content: {
+            title: 'Profile',
+            tags : ['profile'],
+            vcard: profile.vcard || {},
+            insurance: profile.insurance || {},
+        },
+        user_id: profileData.id
+    });
+
+    // 6. create a health document
+    const healthDocument = {
+        ...(profile.health || {})
+    }
+    if (profile.birthDate) {
+        healthDocument.birthDate = profile.birthDate;
+    }
+
+    console.log('Add health documnets', profileData.id);
+    await addDocument({
+        type: DocumentType.health,
+        content: {
+            title: 'Health',
+            tags : ['health'],
+            ...healthDocument
+        },
+        user_id: profileData.id
+    });
+
+
+    // 7. update profiles
+    await loadProfiles(undefined, true);
+
+    return profileData;
+
 }

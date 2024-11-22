@@ -3,7 +3,7 @@
     "properties": {
         "fullName": {
             "type": "string",
-            "description": "Name of the patient."
+            "description": "Name of the patient without."
         },
         "biologicalSex": {
             "type": "string",
@@ -14,7 +14,7 @@
             "type": "string",
             "description": "Identifier of the patient."
         },
-        "dateOfBirth": {
+        "birthDate": {
             "type": "string",
             "description": "Date of birth of the patient. Format: YYYY-MM-DD. Leave empty if the date is not available."
         },
@@ -32,5 +32,6 @@
                 }
             }
         }
-    }
+    },
+    "required": ["fullName", "identifier"]
 }

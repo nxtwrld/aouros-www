@@ -8,16 +8,25 @@ export enum SexEnum {
 
 export interface Profile {
     id: string;
-    langauge: string;
+    language: string;
     vcard: any;
     health: any;
     fullName: string;
-    birthDate: string;
     insurance: any;
     publicKey: string;
     avatarUrl: string;
     status: string;
     publicKey: string;
+    language: string;
+}
+
+export interface ProfileNew {
+    fullName: string;
+    birthDate?: string;
+    language?: string;
+    insurance?: any;
+    vcard?: VCard;
+    health?: any;
 }
 
 

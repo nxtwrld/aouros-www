@@ -27,13 +27,9 @@
 
         const newFiles = await fromEvent(event) as File[];
         if (newFiles.length >  0) {
-            console.log('Files dropped', newFiles, $files);
             files.set([ ...$files,  ...newFiles ]);
-            //goto('/med/import');
             ui.emit('overlay.import');
         }
-        // Process the files
-
     }
 
     function handleDragEnd(event: DragEvent) {

@@ -63,6 +63,7 @@ export async function POST({ request, params, locals: { supabase, safeGetSession
         }
 
         if (documentExists.length) {
+            console.error('Document already exists', type, params.pid);
             return error(400, { message: 'Document already exists' });
         }
     }

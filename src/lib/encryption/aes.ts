@@ -1,3 +1,5 @@
+import { arrayBufferToBase64 } from "$lib/arrays";
+
 const crypto = globalThis.crypto;
 
 // Function to export an AES key to a Base64 string
@@ -18,7 +20,6 @@ export async function importKey(keyString: string): Promise<CryptoKey> {
         ['encrypt', 'decrypt']
     );
 }
-
 
 
 // Encrypt function using AES-GCM with a given CryptoKey
@@ -46,7 +47,8 @@ export async function encrypt(aesKey: CryptoKey, message: string): Promise<strin
     combinedData.set(encryptedBytes, iv.length);
 
     // Convert combined data to a Base64 string
-    return btoa(String.fromCharCode(...combinedData));
+    return arrayBufferToBase64(combinedData);
+    //return btoa(String.fromCharCode(...combinedData));
 }
 
 // Decrypt function using AES-GCM with a given CryptoKey

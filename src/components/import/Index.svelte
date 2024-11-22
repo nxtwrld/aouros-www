@@ -1,30 +1,37 @@
 
 <script lang="ts">
     import { files, createTasks, processTask } from '$lib/files';
-    import { processDocument } from '$lib/import';
-    import { type Document, DocumentState, type Task, TaskState  } from '$lib/import';
+    import { processDocument, DocumentState, type Task, TaskState  } from '$lib/import';
+    import { DocumentType, type DocumentNew  } from '$lib/med/documents/types.d';
     import { addDocument } from '$lib/med/documents';
-    import  user from '$lib/user';
+    import  user, { type User } from '$lib/user';
     import { onMount } from 'svelte';
     import { t } from '$lib/i18n';
-    import tempResults from './tempResults.json';
-    import ScanningAnimation from './ScanningAnimation.svelte';
     import DocumentView from '$components/documents/DocumentView.svelte';
     import SelectProfile from './SelectProfile.svelte';
     import { play } from '$components/ui/Sounds.svelte';
     import { state } from '$lib/ui';
-    import { excludePossibleDuplicatesInPatients } from '$lib/med/profiles';
-    import Modal from '$components/ui/Modal.svelte';
+    import { createVirtualProfile,  profile } from '$lib/med/profiles';
+    import type { Profile } from '$lib/med/types.d';
+        import { mergeNamesOnReports, excludePossibleDuplicatesInPatients } from '$lib/med/profiles/tools';
+    import ImportDocument from './ImportDocument.svelte';
+    import ImportProfile from './ImportProfile.svelte';
+    import ScreenOverlay from '$components/ui/ScreenOverlay.svelte';
 
     
-    let documents: Document[] = [];
-    let results: any = [];//empResults;
-    let invalids: any = [];
+    let documents: DocumentNew[] = [];
+    let results: DocumentNew[] = [];//empResults;
+    let byProfileDetected: {
+        profile: Profile,
+        reports: DocumentNew[]
+    }[] = [];
+    let invalids: DocumentNew[]= [];
     let tasks: Task[] = [];
 
     let currentFiles: File[] = [];
     let processingFiles: File[] = [];
     let processedCount: number = 0;
+
 
     $: remainingScans = ($user?.subscriptionStats?.scans || 0) - processedCount;
 
@@ -45,22 +52,37 @@
         files.set([...$files, ...e.target.files]);
     }
 
-    
-    files.subscribe(value => {
-        prepareFiles(value);
-        /*
-        if (value.length > 0) {
-            console.log('subscribed', value);
-            currentFiles = mergeFiles(value);
-            const toBeProcessed = currentFiles.filter(file => !processingFiles.includes(file));
+    onMount(() => {
+        const unsubscribe = files.subscribe(value => {
+                prepareFiles(value);
+            });
+        return () => {
+            console.log('unmounted....');
+            unsubscribe();
+            clearAll();
 
-            if (toBeProcessed.length > 0) {
-                processingFiles = [...processingFiles, ...toBeProcessed];
-                analyze(toBeProcessed);
-            }
-            files.set([]);
-        }*/
+        }
     });
+
+    
+    $: {
+        console.log(byProfileDetected);
+    }
+
+
+    function clearAll() {
+        files.set([]);
+        documents = [];
+        results = [];
+        byProfileDetected = [];
+        invalids = [];
+        tasks = [];
+        currentFiles = [];
+        processingFiles = [];
+        processedCount = 0;
+        processingState = ProcessingState.IDLE;
+        assessingState = AssessingState.IDLE;
+    }
 
     function prepareFiles(value: File[]) {
         if (value.length > 0) {
@@ -80,19 +102,11 @@
         }
     }
 
-    onMount(() => {
-        //files.set([]);
-        //prepareFiles($files);
-    });
-
-
     function mergeFiles(files: File[]) {
-
         // filter out files that are already in the currentFiles based on name and size
         files = files.filter(file => {
             return !currentFiles.some(f => f.name === file.name && f.size === file.size);
         });
-
 
         return [...currentFiles, ...files];
     }
@@ -123,11 +137,15 @@
         tasks  = [...tasks];
         const doc = await processTask(task);
         const valid = doc.filter(d => d.isMedical);
-        const invalid = doc.filter(d => !d.isMedical);
+        const invalid = doc.filter(d => !d.isMedical).map(d => {
+            d.state = DocumentState.ERROR;
+            return d;
+        });
         tasks = tasks.slice(1);
         documents = [...documents, ...valid];
         invalids = [...invalids, ...invalid];
-        console.log('documents', documents);
+        removeFiles(task.files);
+        //console.log('documents', documents);
         process();
         processedCount++;
         assessingState = AssessingState.IDLE;
@@ -144,8 +162,10 @@
             const doc = documents[0];
             doc.state = DocumentState.PROCESSING;
             documents = [...documents];
-            const report = await processDocument(doc, $user?.language);
+            const report = await processDocument(doc, ($user as User)?.language);
             documents = documents.slice(1);
+            delete report.isMedical;
+
             results = [
                 ...results,
                 {
@@ -158,52 +178,123 @@
                         ...report.report
                     },
                     attachments : doc.attachments,
-                    profile: undefined
+                    profile: undefined,
+                    task: doc.task
                 }
             ]
             play('focus');
+            
+            byProfileDetected = mergeNamesOnReports(results);
+            console.log('byProfileDetected', byProfileDetected);
         }
         processingState = ProcessingState.IDLE;
-        console.log('result', results);
+        //console.log('result', results);
         // lets do another task....
         assess();
         
     }
 
-    function add() {
-
-        console.log('Saving.... TODO', results);
-        console.log('1. checking for new profiles.... TODO');
-        // 1. check if new profiles need to be created - create just
-        // 1.1 filter out NEW profiles
-        // 1.2 normalize patient inputs
-        // 1.3 exclude possible duplicates
-        const newProfiles = excludePossibleDuplicatesInPatients(results.filter(doc => doc.profile.id === 'NEW').map(doc => doc.profile));
-
-
-        console.log('newProfiles', newProfiles);
-
-        // 2. add the documents to the database for each new profile
-        console.log('2. saving.... TODO')
-
-        /*addDocument({
-            title: 'Test',
-            tags: ['test'],
-            pages: [],
-            isMedical: true,
-        });*/
+    function removeItem(type: 'tasks' | 'results' | 'documents' | 'invalids', item: any) {
+        switch(type) {
+            case 'tasks':
+                removeFiles(item.files);
+                tasks = tasks.filter(task => task !== item);
+                break;
+            case 'results':
+                results = results.filter(doc => doc !== item);
+                byProfileDetected = [
+                    ...byProfileDetected.map(profileDetected => {
+                        profileDetected.reports = profileDetected.reports.filter(doc => doc !== item);
+                        return profileDetected;
+                    })
+                ]
+                break;
+            case 'documents':
+                documents = documents.filter(doc => doc !== item);
+                break;
+            case 'invalids':
+                invalids = invalids.filter(doc => doc !== item);
+               break;
+        }
     }
 
-    let previewReport: Document | null = null;
-    let showPreviewDisabled: boolean = false;
+    function removeFiles(files: File[]) {
+        currentFiles = currentFiles.filter(file => !files.includes(file));
+        processingFiles = processingFiles.filter(file => !files.includes(file));
+    }
+
+
+    async function add() {
+
+        console.log('Saving.... TODO', byProfileDetected);
+
+        await Promise.all(byProfileDetected.map(async profileDetected => {
+
+
+
+            console.log('1. checking profile status');
+            //console.log('profileDetected', profileDetected.profile);
+
+            // 1. check if profile exists
+
+            
+            if (!profileDetected.profile.id) {
+                // 1.1 create a new profile
+                console.log('1.1 profile does not exist - ', {...profileDetected.profile});
+
+                profileDetected.profile = await createVirtualProfile({
+                    fullName: profileDetected.profile.fullName
+                });
+            }
+
+
+            console.log('1.1 profile', profileDetected.profile);
+
+            // 2. add the documents to the database for each new profile
+
+            profileDetected.reports.map(async (document) => {        
+                // 2.0 add user id to the document
+                document.user_id = profileDetected.profile.id;
+                document.type = DocumentType.document;
+
+                // 2.1 prepare metadata
+
+                document.metadata = {
+                    title: document.content.title,
+                    tags: document.content.tags,
+                    date: document.content.date,
+                    category: document.content.category,
+                    language: document.language
+                }
+
+                if (document.content.summary) {
+                    document.metadata.summary = document.content.summary;
+                }
+                if (document.content.diagnosis) {
+                    document.metadata.diagnosis = document.content.diagnosis;
+                }
+                console.log('2.1 metadata', document.metadata);
+
+                // 2.2 add documents to the database
+                console.log('2. saving.... TODO', document)
+                const newSavedDocument = await addDocument(document);
+
+                // 3. update health profile document with signal histories...
+                //return await addDocument(document);
+            })
+
+        }));
+    }
+
+    let previewReport: DocumentNew | null = null;
 
 </script>
 
 <div class="page -empty">
-{#if $user.subscriptionStats?.scans <= 0}
+{#if $user?.subscriptionStats?.scans <= 0}
     <div class="alert -warning">
         { $t('app.import.maxium-scans-reached', { values: {
-            limit: $user.subscriptionStats?.default_scans
+            limit: $user?.subscriptionStats?.default_scans
         }}) } { $t('app.upgrade.please-upgrade-your-subscription-to-continue') }
     </div>
 {:else}
@@ -214,72 +305,33 @@
     
     <div class="import-canvas">
         <div class="imports">
-            {#each [...results] as doc}
-            <div class="report-import">
-                <button class="report {doc.state}" on:click={() => previewReport = doc}>
-                    <div class="preview">
-                    {#if doc.pages[0]?.thumbnail}
-                        <img src={doc.pages[0].thumbnail} alt={doc.title} class="thumbmail" />
-                    {/if}
+
+
+            {#each byProfileDetected as profileDetected}
+                <ImportProfile bind:profile={profileDetected.profile} />
+                {#each profileDetected.reports as doc}
+                    <div class="report-import">    
+                        <ImportDocument {doc} on:click={() => previewReport = doc}  on:remove={() => removeItem('results', doc)} />
+                        {#key JSON.stringify(profileDetected.profile)}
+                        <SelectProfile contact={profileDetected.profile} bind:selected={profileDetected.profile}  />
+                        {/key}
                     </div>
-                    <div class="title">{doc.content.title}</div>
-
-                </button>
-
-        
-
-                <SelectProfile contact={doc.content.patient} bind:selected={doc.profile}  />
-
-            </div>
+                {/each}
             {/each}
+
             {#each [...documents] as doc}
             <div class="report-import">
-                <div class="report {doc.state}">
-                    <div class="preview">
-                    {#if doc.pages[0]?.thumbnail}
-                        <img src={doc.pages[0].thumbnail} alt={doc.title} class="thumbmail" />
-                    {/if}
-                    <ScanningAnimation running={doc.state === DocumentState.PROCESSING} />
-                    </div>
-                    <div class="title">{doc.title}</div>
-                    <div class="status">
-                        {doc.state}
-                    </div>
-                </div>
+                <ImportDocument {doc}  removable={false}  />
             </div>
             {/each}
             {#each invalids as doc}
             <div class="report-import">
-                <div class="report ERROR">
-                    <div class="preview">
-                    {#if doc.pages[0]?.thumbnail}
-                        <img src={doc.pages[0].thumbnail} alt={doc.title} class="thumbmail" />
-                    {/if}
-                    </div>
-                    
-                    <div class="title">{doc.title}</div>
-                    <div class="status">
-                        ERROR
-                    </div>
-                </div>  
+                <ImportDocument {doc} on:remove={() => removeItem('invalids', doc)}  />
             </div>
             {/each}
             {#each tasks as task}
             <div class="report-import">
-                <div class="report {task.state}">
-                    <div class="preview">
-                        <svg class="icon">
-                            <use href="/files.svg#{task.icon}" />
-                        </svg>
-                        <ScanningAnimation running={task.state === TaskState.ASSESSING} />
-                    </div>
-                    <div class="title">
-                        {task?.name}
-                    </div>
-                    <div class="status">
-                        {task.state}
-                    </div>
-                </div>
+                <ImportDocument doc={task} on:remove={() => removeItem('tasks', task)} />
             </div>
             {/each}
             <div class="report-import">
@@ -301,7 +353,7 @@
         <p>{ $t('app.import.you-still-have-scans-in-your-yearly-subscription', { values: { scans: remainingScans} }) }</p>
         <div class="actions">
             <button on:click={assess} class="button -primary -large" disabled={tasks.length == 0}>{ $t('app.import.analyze-reports') }</button>
-            <button class="button -large" on:click={add} disabled={results.lenght == 0}>{ $t('app.import.save') }</button>
+            <button class="button -large" on:click={add} disabled={results.length == 0}>{ $t('app.import.save') }</button>
         </div>
     </div>
 
@@ -309,43 +361,13 @@
 
 </div>
 {#if previewReport}
-    <div class="overlay">
-        <div class="preview-report">
-            <div class="heading">
-                <h3 class="h3 heading">{previewReport.content.title}</h3>
-                <div class="actions">
-                    <button class="-close" on:click={() => previewReport = null}>
-                        <svg>
-                            <use href="/icons.svg#close" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="page -empty">
-                <div class="preview-container">
-                    <DocumentView document={previewReport} />
-                    <button on:click={() => showPreviewDisabled = true} class="preview-preventer">
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    {#if showPreviewDisabled}
-        <Modal on:close={() => showPreviewDisabled = false}>
-            <p class="p preview-disabled-message">{ $t('app.import.preview-disabled') }</p>
-        </Modal>
-    {/if}
+    <ScreenOverlay title={previewReport.content.title} preventer={true} on:close={() => previewReport = null}>
+        <DocumentView document={previewReport} />
+    </ScreenOverlay>
 {/if}
 
 <style>
-    .thumbmail {
-        max-width: 6rem;
-        max-height: 6rem;
-        object-fit: contain;
-        border: 1px solid var(--color-gray-500);
-        box-shadow: 0 .4rem .5rem -.3rem rgba(0, 0, 0, 0.3);
 
-    }
     .import-canvas {
         display: flex;
         align-items: center;
@@ -361,11 +383,16 @@
         gap: 1rem;
 
         overflow-y: auto;
-
+        --border-width: .2rem;
+        --radius: var(--radius-8);
+        --tile-height: 13rem;
     }
     .report-import {
         width: 8rem;
-        min-height: 15rem;
+        min-height: 20rem;
+
+
+
     }
     .report {
         position: relative;
@@ -375,66 +402,11 @@
         align-items: center;
         width: 100%;
         padding: 0;
+        height: var(--tile-height);
         background-color: var(--color-background);
-        border: .2rem solid var(--color-background);
-        border-radius: var(--radius-8);
+        border: var(--border-width) solid var(--color-background);
+        border-radius: var(--radius);
     }
-    .report.NEW {
-        --color: var(--color-gray-300);
-        --color-text: var(--color-text);
-    }
-    .report.ASSESSING {
-        --color: var(--color-purple);
-        --color-text: var(--color-white);
-        border-color: var(--color);
-    }
-    .report.PROCESSING {
-        --color: var(--color-blue);
-        --color-text: var(--color-white);
-        border-color: var(--color);   
-    }
-    .report.PROCESSED {
-        --color: var(--color-positive);
-        --color-text: var(--color-white);
-        border-color: var(--color);
-    }
-    .report.ERROR {
-        --color: var(--color-negative);
-        --color-text: var(--color-white);
-        border-color: var(--color);
-    }
-    .report.ERROR::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: var(--color-negative);
-        opacity: .3;
-    }
-    .report .status {
-        position: absolute;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        bottom: -2.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        text-align: center;
-        font-size: 1rem;
-        font-weight: bold;
-        z-index: 10;
-        border-radius: var(--radius-8);
-        background-color: var(--color);
-        color: var(--color-text);
-        padding: .5rem;
-    }
-
-    .report.ERROR .status {
-
-    }
-
     .report .preview {
         position: relative;
         display: flex;
@@ -484,32 +456,7 @@
         gap: 1rem;
     }
 
-    .preview-report {
-        margin-left: 20vw;
-    }
 
-    .preview-report > .page {
-        height: calc(100vh - var(--heading-height));
-    }
-    .preview-container {
-        position: relative;
-        width: 100%;
-        min-height: 100%;
-        overflow: hidden;
-    }
-    .preview-preventer {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 11;
-        cursor: not-allowed;
-        pointer-events: none;
-    }
-    .preview-disabled-message {
-        padding: 3rem;
-    }
 
 
 </style>

@@ -127,7 +127,7 @@
 
 </script>
 
-<h2 class="h2">{ $t('app.headings.profiles') }</h2>
+<h3 class="h3 heading -sticky">{ $t('app.headings.profiles') }</h3>
 
 <table class="table-list">
     <thead>

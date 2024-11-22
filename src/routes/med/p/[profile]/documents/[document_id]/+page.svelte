@@ -2,6 +2,7 @@
     import { getDocument, type Document } from '$lib/med/documents';
     import Loading from '$components/ui/Loading.svelte';
     import { onMount } from 'svelte';
+    import DocumentView from '$components/documents/DocumentView.svelte';
 
     export let  data: {
         document_id: string;
@@ -19,9 +20,11 @@
 {#if !document}
 <Loading/>
 {:else}
-    <div class="page">
-        <h1 class="h1">{document.title}</h1>
+    <div class="page -empty">
+        <h1 class="h1 heading">{document.metadata.title}</h1>
 
-        <p>{document.tags}</p>
+
+        <DocumentView {document} />
     </div>
+    
 {/if}
