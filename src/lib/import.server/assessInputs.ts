@@ -176,7 +176,7 @@ export default async function assess(input : Input): Promise<Assessment> {
     };
 
     if (DEBUG) {
-        await sleep(500);
+        await sleep(3500);
         return Promise.resolve(TEST_DATA);
     }
 

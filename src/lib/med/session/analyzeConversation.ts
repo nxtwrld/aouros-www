@@ -10,7 +10,7 @@ import { type Content, type TokenUsage } from '$lib/ai/types.d';
 import resultsSchema from '$lib/import.server/core.signals.json'
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
-import { ANALYZE_STEPS as Types } from '$lib/med/types';
+import { ANALYZE_STEPS as Types } from '$lib/med/types.d';
 /**
  * TODO:
  * - gtp-4o (7k) vs gpt-4o-mini (40k) -

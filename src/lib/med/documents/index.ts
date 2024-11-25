@@ -65,6 +65,12 @@ export async function getDocument(id: string): Promise<Document | undefined> {
 let loadingDocumentsResolve: (value: boolean) => void;
 let loadingDocuments: Promise<boolean> = new Promise(resolve => loadingDocumentsResolve = resolve);
 
+
+export async function loadDocuments(profile_id: string): Promise<(DocumentPreload | Document)[]> {
+    const documentsResponse = await fetch(`/v1/med/profiles/${profile_id}/documents`);
+    const result = await documentsResponse.json();
+    return await importDocuments(result);
+}
     
 export async function importDocuments(documentsEncrypted: DocumentEncrypted[] = []): Promise<DocumentPreload[]> {
 
@@ -298,6 +304,10 @@ export async function addDocument(document: DocumentNew): Promise<string> {
 
             throw new Error(Errors.NetworkError);
         });
+
+        
+    // update local documents
+    await loadDocument(data.id, profile_id || user_id);
 
     return data.id;
 }

@@ -190,7 +190,7 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
     console.log('Schema updated...', currentLanguage)
   
     if (DEBUG) {
-        await sleep(500);
+        await sleep(3500);
         // select and return random TEST_DATA item
         return TEST_DATA[Math.floor(Math.random() * TEST_DATA.length)];
         

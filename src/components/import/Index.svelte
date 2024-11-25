@@ -11,12 +11,14 @@
     import SelectProfile from './SelectProfile.svelte';
     import { play } from '$components/ui/Sounds.svelte';
     import { state } from '$lib/ui';
-    import { createVirtualProfile,  profile } from '$lib/med/profiles';
+    import { createVirtualProfile,  profile, profiles } from '$lib/med/profiles';
     import type { Profile } from '$lib/med/types.d';
         import { mergeNamesOnReports, excludePossibleDuplicatesInPatients } from '$lib/med/profiles/tools';
     import ImportDocument from './ImportDocument.svelte';
     import ImportProfile from './ImportProfile.svelte';
     import ScreenOverlay from '$components/ui/ScreenOverlay.svelte';
+    import LoaderThinking from '$components/ui/LoaderThinking.svelte';
+    import Loading from '$components/ui/Loading.svelte';
 
     
     let documents: DocumentNew[] = [];
@@ -31,7 +33,7 @@
     let currentFiles: File[] = [];
     let processingFiles: File[] = [];
     let processedCount: number = 0;
-
+    $: analyzingInProgress = assessingState === AssessingState.ASSESSING || processingState === ProcessingState.PROCESSING;
 
     $: remainingScans = ($user?.subscriptionStats?.scans || 0) - processedCount;
 
@@ -224,23 +226,62 @@
     }
 
 
-    async function add() {
+    let savingDocumentsInProgress: boolean = false;
 
-        console.log('Saving.... TODO', byProfileDetected);
+    async function add() {
+        savingDocumentsInProgress = true;
+        console.log('Saving files');
+
+        while (byProfileDetected.length > 0) {
+            const profileDetected = byProfileDetected[0];
+  
+            // 1. check if profile exists            
+            if (!profileDetected.profile.id) {
+                // 1.1 create a new profile
+                profileDetected.profile = await createVirtualProfile({
+                    fullName: profileDetected.profile.fullName
+                });
+            }
+
+            // 2. add the documents to the database for each new profile
+            while (profileDetected.reports.length > 0) {
+                const document = profileDetected.reports[0];
+                // 2.0 add user id to the document
+                document.user_id = profileDetected.profile.id;
+                document.type = DocumentType.document;
+                // 2.1 prepare metadata
+
+                document.metadata = {
+                    title: document.content.title,
+                    tags: document.content.tags,
+                    date: document.content.date,
+                    category: document.content.category,
+                    language: document.language
+                }
+
+                if (document.content.summary) {
+                    document.metadata.summary = document.content.summary;
+                }
+                if (document.content.diagnosis) {
+                    document.metadata.diagnosis = document.content.diagnosis;
+                }
+
+                // 3 add documents to the database
+                const newSavedDocument = await addDocument(document);
+                profileDetected.reports = profileDetected.reports.slice(1);
+            }
+            byProfileDetected = byProfileDetected.slice(1);
+            savingDocumentsInProgress = false;
+        }
+/*
 
         await Promise.all(byProfileDetected.map(async profileDetected => {
-
-
-
-            console.log('1. checking profile status');
-            //console.log('profileDetected', profileDetected.profile);
 
             // 1. check if profile exists
 
             
             if (!profileDetected.profile.id) {
                 // 1.1 create a new profile
-                console.log('1.1 profile does not exist - ', {...profileDetected.profile});
 
                 profileDetected.profile = await createVirtualProfile({
                     fullName: profileDetected.profile.fullName
@@ -248,11 +289,10 @@
             }
 
 
-            console.log('1.1 profile', profileDetected.profile);
 
             // 2. add the documents to the database for each new profile
 
-            profileDetected.reports.map(async (document) => {        
+            await Promise.all(profileDetected.reports.map(async (document) => {        
                 // 2.0 add user id to the document
                 document.user_id = profileDetected.profile.id;
                 document.type = DocumentType.document;
@@ -273,17 +313,19 @@
                 if (document.content.diagnosis) {
                     document.metadata.diagnosis = document.content.diagnosis;
                 }
-                console.log('2.1 metadata', document.metadata);
 
                 // 2.2 add documents to the database
-                console.log('2. saving.... TODO', document)
                 const newSavedDocument = await addDocument(document);
 
                 // 3. update health profile document with signal histories...
                 //return await addDocument(document);
-            })
+            }));
+            profileDetected.reports = [];
 
         }));
+        // clear all detected profiles
+        byProfileDetected = [];
+        */
     }
 
     let previewReport: DocumentNew | null = null;
@@ -352,8 +394,30 @@
     <div class="controls">
         <p>{ $t('app.import.you-still-have-scans-in-your-yearly-subscription', { values: { scans: remainingScans} }) }</p>
         <div class="actions">
-            <button on:click={assess} class="button -primary -large" disabled={tasks.length == 0}>{ $t('app.import.analyze-reports') }</button>
-            <button class="button -large" on:click={add} disabled={results.length == 0}>{ $t('app.import.save') }</button>
+            
+            {#if tasks.length > 0 || analyzingInProgress}
+            <button on:click={assess} class="button -primary -large" disabled={tasks.length == 0 || analyzingInProgress}>
+                {#if analyzingInProgress}
+                    <div class="button-loading">
+                        <LoaderThinking />
+                    </div>
+                {:else}
+                    { $t('app.import.analyze-reports') }
+                {/if}
+            </button>
+            {/if}
+            {#if results.length > 0 && !analyzingInProgress}
+            <button class="button -large" on:click={add} disabled={results.length == 0 || savingDocumentsInProgress}>
+                {#if savingDocumentsInProgress}
+                    <div class="button-loading">
+                        <LoaderThinking />
+                    </div>
+                {:else}    
+                    { $t('app.import.save') }
+                {/if}
+            </button>
+            {/if}
+
         </div>
     </div>
 
@@ -373,6 +437,12 @@
         align-items: center;
         justify-content: center;
         height: calc(100vh - var(--heading-height) - var(--toolbar-height) - 10rem);
+    }
+
+    .button-loading {
+        --color: var(--color-white);
+        width: 100%;
+        height: 1.2em;
     }
 
     .imports {
