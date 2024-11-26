@@ -7,7 +7,6 @@ export function getAuthor(document: Document): Profile | null {
         const profile = profiles.get(document.author_id) as Profile;
         return profile;
     } catch (e) {
-        console.log('Author not found in profiles....', document.id, document.author_id);
         return null;
     }
 }

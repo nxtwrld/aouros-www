@@ -3,7 +3,7 @@
     import Loading from '$components/ui/Loading.svelte';
     import { onMount } from 'svelte';
     import DocumentView from '$components/documents/DocumentView.svelte';
-
+    import DocumentHeading from '$components/documents/DocumentHeading.svelte';
     export let  data: {
         document_id: string;
     }
@@ -21,8 +21,8 @@
 <Loading/>
 {:else}
     <div class="page -empty">
-        <h1 class="h1 heading">{document.metadata.title}</h1>
 
+        <DocumentHeading {document} />
 
         <DocumentView {document} />
     </div>

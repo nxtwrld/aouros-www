@@ -3,7 +3,7 @@
     padding: 0 1rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+
     vertical-align: middle;
     background-color: var(--color-gray-400);
     margin: 0 0 var(--gap) 0;
@@ -21,6 +21,7 @@
 .heading:has(h3),
 .heading:has(h4) {
     background-color: transparent;
+    justify-content: space-between;
     padding: 0;
 }
 .heading > h1,
@@ -35,6 +36,14 @@
 .h1.heading {
     height: calc(2 * var(--heading-height));
 }
+
+.heading .heading-icon {
+    height: 65%;
+    aspect-ratio: 1;
+    margin: 1rem 1rem 1rem 0;
+}
+
+
 .heading > .actions {
     display: flex;
     align-items: center;
@@ -56,6 +65,7 @@
 .heading > .actions > a:has(svg:first-child:last-child) {
     padding: 0;
 }
+
 
 .heading > .actions svg {
     width: 1.5rem;

@@ -5,30 +5,96 @@
     import { byUser} from '$lib/med/documents';
     import { getByAnotherAuthor } from '$lib/med/documents/tools';
     import { type Profile } from '$lib/med/types.d';
+    import { date } from '$lib/datetime';
     import { t } from '$lib/i18n';
+    import Vertical from '$components/ui/dates/Vertical.svelte';
+    import { type Document } from '$lib/med/documents/types.d';
 
     export let user: string = $profile?.id || $userStore?.id as string;
     let documents = byUser(user);
 
 
-    console.log('documents', $documents);
+//    console.log('documents', $documents);
+
+    function sortByDate(a: Document, b: Document) {
+        if (!a.metadata.date) return 1;
+        if (!b.metadata.date) return -1;
+        return new Date(b.metadata.date) - new Date(a.metadata.date);
+    }
 
 </script>
 
 {#if documents}
 <div class="tiles">
-{#each $documents as document}
-    {@const author = getByAnotherAuthor(document.author_id)}
+{#each $documents.sort(sortByDate) as document}
+    {@const author = getByAnotherAuthor(document)}
 
-    <a href="/med/p/{document.user_id}/documents/{document.id}" class="tile -vertical">
-        {document.metadata.title}
+    <a href="/med/p/{document.user_id}/documents/{document.id}" class="tile -vertical category-{document.metadata.category}">
+        <!--Vertical date={document.metadata.date} /-->
 
-        {#if author}
-            {author.fullName}
-        {/if}
+        <div class="tile-header"> {date(document.metadata.date)}</div>
+        <div class="tile-body">
+            <h4 class="h4">{document.metadata.title}</h4>
+        </div>
 
-        <div class="actions"></div>
+        <div class="tile-footer">
+
+
+            <svg class="category">
+                <use href="/icons-o.svg#report-{document.metadata.category}" />
+            </svg>
+
+            <div class="people">
+                {#if author}
+                    {author.fullName}
+                {:else}
+                    {$profile.fullName}
+                {/if}
+            </div>
+        </div>
+        <!--div class="actions"></div-->
     </a>
 {/each}
 </div>
 {/if}
+
+
+<style>
+    .tile {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+
+    }
+    .tile .tile-body {
+        flex-grow: 1;
+        padding: .5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+    .tile .tile-footer {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: var(--color);
+        color: var(--color-text);
+    }
+
+    .tile  svg.category {
+
+        margin: .5rem;
+        width: 1.6rem;
+        height: 1.6rem;
+        fill: currentColor;
+
+    }
+    .tile .people {
+        margin: .5rem;
+
+    }
+
+</style>
