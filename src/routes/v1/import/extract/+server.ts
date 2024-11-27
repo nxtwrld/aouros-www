@@ -10,7 +10,7 @@ export async function POST({ request, locals: { supabase, safeGetSession }}) {
     const { session } = await safeGetSession()
 
     if (!session) {
-      return error(401, { message: 'Unauthorized' });
+        error(401, { message: 'Unauthorized' });
     }
     const subscription = await loadSubscription();
     //console.log('user', subscription);
