@@ -167,6 +167,7 @@
         padding: 1rem;
         grid-gap: 1rem;
     }
+
     .profile-header > * {
         display: flex;
         flex-direction: column;
@@ -189,6 +190,9 @@
     }
 
 
+
+    
+
     .avatar {
         width: 10rem;
         height: 10rem;
@@ -197,6 +201,21 @@
         justify-content: center;
         align-items: center;
     }
+
+  
+    @media screen and (max-width: 800px) {
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .profile-header > * {
+            width: 100%;
+        }
+    }   
+
+    
     .tiles {
         grid-template-rows: auto;
     }

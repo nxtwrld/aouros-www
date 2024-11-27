@@ -20,10 +20,9 @@
 {#if !document}
 <Loading/>
 {:else}
-    <div class="page -empty">
+    <div class="page -empty  -heading-master">
 
         <DocumentHeading {document} />
-
         <DocumentView {document} />
     </div>
     

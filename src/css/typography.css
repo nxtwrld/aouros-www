@@ -22,15 +22,11 @@
     font-weight: 600;
     margin: 1rem 0;
 }
-
-
 .h4 {
     font-size: 1.25rem;
     font-weight: 600;
     margin: .75rem 0;
 }
-
-
 .p {
     line-height: 1.3rem;
     margin: .5rem 0;
@@ -50,4 +46,24 @@ strong {
 .a {
     font-weight: 600;
     color: var(--color-interactivity);
+}
+
+
+@media screen and (max-width: 768px) {
+    .h1 {
+        font-size: 1.5rem;
+        margin: .75rem 0;
+    }
+    .h2 {
+        font-size: 1.5rem;
+        margin: .75rem 0;
+    }
+    .h3 {
+        font-size: 1.25rem;
+        margin: .5rem 0;
+    }
+    .h4 {
+        font-size: 1.1rem;
+        margin: .25rem 0;
+    }
 }

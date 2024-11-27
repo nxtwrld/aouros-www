@@ -5,9 +5,8 @@
     import { byUser} from '$lib/med/documents';
     import { getByAnotherAuthor } from '$lib/med/documents/tools';
     import { type Profile } from '$lib/med/types.d';
-    import { date } from '$lib/datetime';
     import { t } from '$lib/i18n';
-    import Vertical from '$components/ui/dates/Vertical.svelte';
+    import BadgeHorizontal from '$components/ui/dates/BadgeHorizontal.svelte';
     import { type Document } from '$lib/med/documents/types.d';
 
     export let user: string = $profile?.id || $userStore?.id as string;
@@ -32,7 +31,7 @@
     <a href="/med/p/{document.user_id}/documents/{document.id}" class="tile -vertical category-{document.metadata.category}">
         <!--Vertical date={document.metadata.date} /-->
 
-        <div class="tile-header"> {date(document.metadata.date)}</div>
+        <div class="tile-header"> <BadgeHorizontal date={document.metadata.date} /> </div>
         <div class="tile-body">
             <h4 class="h4">{document.metadata.title}</h4>
         </div>
@@ -74,6 +73,12 @@
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
+    }
+    .tile .tile-header {
+        display: flex;
+        justify-content: flex-end;
+        font-size: 1rem;
+        padding: .5rem;
     }
     .tile .tile-footer {
         width: 100%;

@@ -3,17 +3,24 @@
     padding: 0 1rem;
     display: flex;
     align-items: center;
-
+    position: relative;
     vertical-align: middle;
     background-color: var(--color-gray-400);
     margin: 0 0 var(--gap) 0;
     gap: var(--gap);
     height: var(--heading-height);
 }
+
+
+.-heading-master:has(> .heading.-sticky > .h1) .heading:not(.-heading-main) {
+    --sticky-top: calc(2 * var(--heading-height));
+    --sticky-z-index: 9;
+
+}
 .heading.-sticky {
     position: sticky;
-    top: 0;
-    z-index: 2;
+    top: var(--sticky-top);
+    z-index: var(--sticky-z-index);
 }
 
 .heading:has(h1),
@@ -21,6 +28,7 @@
 .heading:has(h3),
 .heading:has(h4) {
     background-color: transparent;
+    background-color: var(--color-background);
     justify-content: space-between;
     padding: 0;
 }
@@ -31,16 +39,79 @@
     padding: 0 1rem;
     background-color: var(--color-background);
     flex-grow: 2;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+
 }
-.heading > h1,
+.heading .-date {
+    font-size: 1rem;
+    position: absolute;
+    right: 1rem;
+    bottom: .5rem;
+    /*margin-top: -1.3rem;
+    */
+    z-index: 12;
+}
+.heading:has(.h1),
 .h1.heading {
     height: calc(2 * var(--heading-height));
 }
+.heading .heading-icon  {
+    height: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-.heading .heading-icon {
+
+.heading .heading-icon svg {
     height: 65%;
     aspect-ratio: 1;
-    margin: 1rem 1rem 1rem 0;
+    padding: 1rem;
+    background-color: var(--color);
+    border-radius: var(--radius-16);
+    color: var(--color-text);
+    fill: currentColor;
+}
+
+.heading .heading-icon + .h1,
+.heading .heading-icon + .h2,
+.heading .heading-icon + .h3,
+.heading .heading-icon + .h4 {
+    padding-left: 0;
+}
+
+
+@media screen and (max-width: 768px) {
+    .heading:has(.h1),
+    .h1.heading {
+        height: calc(1.5 * var(--heading-height));
+    }
+    .-heading-master:has(> .heading.-sticky > .h1) .heading:not(.-heading-main) {
+        --sticky-top: calc(1.5 * var(--heading-height));
+    }
+
+    .heading .heading-icon svg {
+        padding: .5rem;
+    }
+    
+    .heading .-date {
+        font-size: 1rem;
+        position: absolute;
+        right: 50%;
+        bottom: 0;
+        transform: translate(50%, 50%);
+        /*margin-top: -1.3rem;
+        */
+    }
+
 }
 
 
@@ -51,7 +122,7 @@
     margin: 0;
 }
 .heading > .actions > button,
-.heading > .actions > a{
+.heading > .actions > a {
     background-color: var(--color-background);
     border: 0;
     padding: 0 1rem;

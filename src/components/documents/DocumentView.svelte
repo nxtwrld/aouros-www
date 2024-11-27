@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Tags from './Tags.svelte';
-
     import SectionSummary from './SectionSummary.svelte';
     import SectionDiagnosis from './SectionDiagnosis.svelte';
     import SectionRecommendations from './SectionRecommendations.svelte';
@@ -11,14 +10,13 @@
     import SectionAttachments from './SectionAttachments.svelte';
 
     export let document: Document;
-console.log('DOCUMENT', document);
+    //console.log('DOCUMENT', document);
 </script>
 
 
-<div class="report">
+<div class="report -heading-sub">
     <SectionSummary data={document.content.summary} />
     <div class="page -block">
-        {document.content.category} -  {document.content.date}
         <Tags tags={document.content.tags} />
     </div>
 

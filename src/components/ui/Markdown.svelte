@@ -20,6 +20,7 @@
     .markdown :global(p) {
         display: block;
         margin: .5em 0;
+        line-height: 1.5em;
         padding: 0;
     }
     .markdown :global(h1) {
