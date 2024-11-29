@@ -65,6 +65,11 @@
     },
     "upgrade": {
       "please-upgrade-your-subscription-to-continue": "Please upgrade your subscription to continue."
+    },
+    "duration": {
+      "days-ago": "{value, plural, =0 {just now} one {a day ago} other {# days ago}}",
+      "months-ago": "{value, plural, =0 {just now} one {a month ago} other {# months ago}}",
+      "years-ago": "{value, plural, =0 {just now} one {a year ago} other {# years ago}}"
     }
   },
   "languages": {

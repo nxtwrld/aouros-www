@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LabResultDetail from "./LabResultDetail.svelte";
+    import LabResultDetail from "./SignalDetail.svelte";
     import synonyms from "$data/synonyms";
     import { createEventDispatcher } from "svelte";
     import defaults from '$data/lab.properties.defaults.json';
@@ -8,24 +8,25 @@
     const dispatch = createEventDispatcher();
     
 
-    export let observation: any = {};
     export let item: {
+        signal: string,
         test: string,
         value: string | number,
         unit: string,
-        reference: string
-    } | undefined = undefined;
+        reference: string,
+        urgency?: number
+    };
 
-    export let report: any = {};
+
 
     export let showDetails: boolean = false;
 
-    const code: string = (item?.test) || synonyms(observation?.code.text) || observation?.code.text;
+    const code: string = item.signal || item.test;
     const key = code.toLowerCase().replace(/ /g, '_');
-    const title: string = (item?.test) || observation?.code.text;
-    const value: string | number = parseValue((item?.value) || observation?.valueQuantity.value);
-    const unit: string = (item?.unit) || observation?.valueQuantity?.unit;
-    const urgency: number = item?.urgency || observation?.interpretation?.text || 1;
+    const title: string = item.signal || item.test;
+    const value: string | number = parseValue(item.value);
+    const unit: string = item.unit || '';
+    const urgency: number = item.urgency || -1;
 
     let referenceRange: {
         low: {
@@ -52,7 +53,7 @@
 
     function getRange() {
         try {
-            return (item?.reference) ? getRangeItem(item?.reference) : getRangeObservartion(observation?.referenceRange[0])
+            return  getRangeItem(item?.reference) 
         } catch(e) {
             
             if (!defaults[key]) return null;
@@ -114,24 +115,8 @@
         }
         return null; 
     }
-    function getRangeObservartion(obsRef: any) {
-        if(obsRef && obsRef.low && obsRef.high) {
-            return {
-                low: {
-                    value: obsRef.low.value,
-                    unit: obsRef.low.unit
-                },
-                high: {
-                    value: obsRef.high.value,
-                    unit: obsRef.high.unit
-                }
-            }
-        }    
-        return null;
-    }
-
-    $: status = getStatus(observation);
-
+    
+    /*
     function getStatus() {
         if (unit == 'arb.j.') {
             return (['neg', '-'].includes(value.toString())) ? 'ok' : 'risk';
@@ -168,7 +153,7 @@
     }
 
 
-
+*/
 </script>
 
     <tr class="lab-result  urgency-{urgency}  status-{status}"  id="{code.toLocaleLowerCase()}-lab-result">
@@ -183,7 +168,7 @@
 
         <td class="-empty">
             <div class="actions">
-                <button on:click={toggleDetails}>
+                <button on:click={() => alert('TODO: chart')}>
                     <svg>
                         <use href="/icons.svg#chart-line"></use>
                     </svg>

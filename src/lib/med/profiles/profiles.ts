@@ -28,4 +28,17 @@ export default {
     set: profilesStore.set,
     setActive,
     get: getCustom,
+    update: (p: Profile) => {
+        profilesStore.update(profiles => {
+            return profiles.map(profile => {
+                if (profile.id === p.id) {
+                    return {
+                        ...profile,
+                        ...p
+                    };
+                }
+                return profile;
+            });
+        });
+    }
 };

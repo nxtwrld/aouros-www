@@ -65,6 +65,11 @@
     },
     "upgrade": {
       "please-upgrade-your-subscription-to-continue": "Chcete-li pokračovat, upgradujte své předplatné."
+    },
+    "duration": {
+      "days-ago": "{value, plural, =0 {právě teď} one {včera} other {před # dny}}",
+      "months-ago": "{value, plural, =0 {právě teď} one {před měsícem} other {před # měsíci}}",
+      "years-ago": "{value, plural, =0 {právě teď} one {před roken} other {před # lety}}"
     }
   },
   "languages": {

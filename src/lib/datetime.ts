@@ -83,6 +83,40 @@ const formatDate = 'DD.MM.YYYY';
 const formatTime = 'HH:mm';
 
 
+export function durationFromFormatted(format: 'days'| 'months' | 'years'  = 'days', dataFrom: string | Date | number, dataTo: string | Date | number = (new Date())): number {
+    return dayjs(dataTo).diff(dayjs(dataFrom), format);
+}
+
+export function durationFrom(dataFrom: string | Date | number): {
+    format: 'days'| 'months' | 'years',
+    value: number
+} {
+    const days = durationFromFormatted('days', dataFrom);
+    if (days > 400) {
+        // duration in years
+        return {
+            value: durationFromFormatted('years', dataFrom),
+            format: 'years'
+        }
+    }
+    if (days > 30) {
+        // duration in months
+        return {
+            value: durationFromFormatted('months', dataFrom),
+            format: 'months'
+        }
+    } 
+    
+    // duration in days
+    return {
+        value: days,
+        format: 'days'
+    }
+
+}
+
+
+
 export function core(date: string | Date | number | undefined): Dayjs | undefined  {
     if (date == undefined) {
         return date;

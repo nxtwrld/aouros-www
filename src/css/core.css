@@ -17,6 +17,7 @@
     --font-face-cursive: 'Caveat', cursive;
     --color-blue: #3571FF;
     --color-purple: #A989EE;
+    --color-reglight: #ff6f93;
     --color-red: #FB104A;
     --color-yellow: #FEC400;
     --color-green: #29CC97;
@@ -58,8 +59,8 @@
     --color-highlight: var(--color-purple);
     --color-highlight-text: var(--color-white);
 
-    --color-urgency-low: var(--color-gray-500);
-    --color-urgency-medium: var(--color-warning);
+    --color-urgency-low: var(--color-warning);
+    --color-urgency-medium: var(--color-redlight);
     --color-urgency-high: var(--color-negative);
 
     --background: var(--color-gray-500);

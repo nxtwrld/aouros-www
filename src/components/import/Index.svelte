@@ -11,14 +11,15 @@
     import SelectProfile from './SelectProfile.svelte';
     import { play } from '$components/ui/Sounds.svelte';
     import { state } from '$lib/ui';
-    import { createVirtualProfile,  profile, profiles } from '$lib/med/profiles';
+    import { createVirtualProfile } from '$lib/med/profiles';
     import type { Profile } from '$lib/med/types.d';
-        import { mergeNamesOnReports, excludePossibleDuplicatesInPatients } from '$lib/med/profiles/tools';
+    import { mergeNamesOnReports, excludePossibleDuplicatesInPatients } from '$lib/med/profiles/tools';
     import ImportDocument from './ImportDocument.svelte';
     import ImportProfile from './ImportProfile.svelte';
     import ScreenOverlay from '$components/ui/ScreenOverlay.svelte';
     import LoaderThinking from '$components/ui/LoaderThinking.svelte';
     import Loading from '$components/ui/Loading.svelte';
+    import { updateSignals } from '$lib/health/signals';
 
     
     let documents: DocumentNew[] = [];
@@ -234,6 +235,7 @@
 
         while (byProfileDetected.length > 0) {
             const profileDetected = byProfileDetected[0];
+            const signals = [];
   
             // 1. check if profile exists            
             if (!profileDetected.profile.id) {
@@ -266,9 +268,22 @@
                     document.metadata.diagnosis = document.content.diagnosis;
                 }
 
-                // 3 add documents to the database
+                // 2.2 create a signals listing
+                if (document.content.signals) {
+                    signals.push(...document.content.signals);
+                    // add signals names to the metadata
+                    document.metadata.signals = document.content.signals.map(signal => signal.test);
+                }
+
+                // 3. add documents to the database
                 const newSavedDocument = await addDocument(document);
+
+                // 4. update the signalas as well
+                if (signals.length > 0) await updateSignals(signals, profileDetected.profile.id);
+
+                // remove the document from the list
                 profileDetected.reports = profileDetected.reports.slice(1);
+
             }
             byProfileDetected = byProfileDetected.slice(1);
             savingDocumentsInProgress = false;

@@ -1,5 +1,5 @@
 import { error, json   } from '@sveltejs/kit';
-
+import { type Attachment } from '$lib/med/documents/types.js';
 
 export async function GET({ request, params, locals: { supabase, safeGetSession }}) {
     
@@ -57,7 +57,7 @@ export async function POST({ request, params, locals: { supabase, safeGetSession
         return  json({
             url: data.publicUrl,
             path: userID+'/'+filename
-         });
+         } as Attachment);
 }
 
 export async function DELETE({ request, params, locals: { supabase, safeGetSession }}) {

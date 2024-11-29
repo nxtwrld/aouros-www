@@ -1,29 +1,96 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
     import { properties } from '$lib/health/dataTypes';
+    import { createEventDispatcher } from 'svelte';
+    import { durationFrom } from '$lib/datetime';
 
-    type Result = {
-        key?: string;
-        test?: string;
+    const dispatch = createEventDispatcher();
+
+    type Signal = {
+        signal?: string;
         value: number;
         unit?: string;
         reference?: string;
+        urgency?: number;
+        date?: string;
+        trend?: number;
     }
 
-    export let property:  Result;
-
+    type Property = {
+        key: string;
+        signal: string;
+        test: string;
+        source: any;
+        fn?: (v: any) => any;
+        reference?: string;
+        urgency?: number;
+    }
 
     
-    $: referenceRange = property.reference?.split('-').map(Number)
-    $: title = property.key || property.test as string;
-//    $: unit = getUnit(property.unit)
 
-    let icon: string = getResultIcon(property)
+    export let property:  Property;
+    
+    $: signal = getSignalFromProperty(property);
 
-    function getResultIcon(property: Result) {
+    $: ageOfEntry = durationFrom(signal.date);
+
+
+    function getSignalFromProperty(p: Property): Signal {
+        let value = undefined;
+        let trend = undefined;
+        let date = undefined;
+        // combining multiple values - but only if all are set
+        if (Array.isArray(p.source)) {
+            value = (p.source.every(v => v != undefined)) ? p.source : undefined;
+        } else {
+            value = p.source;
+        }
+        
+        // results is a time array of items - select the first one
+        // or if it is multiple values, select the first value of each
+        if (Array.isArray(value)) {
+            if (Array.isArray(value[0])) {
+                //value = value[0][0]?.value;
+                date = value[0][0]?.date;
+                value = value.map(v => v[0]?.value);
+            } else {
+                // calculate trend if available
+                if (value.length > 1) {
+                    trend = value[0].value - value[1].value;
+                }
+                date = value[0]?.date;
+                value = value[0]?.value;
+            }
+        }
+
+        // if there is a function to transform the value
+        if (value && p.fn) {
+            value = p.fn(value);
+        }
+        console.log('value  done', p, value);
+
+        return {
+            ...(properties[p.signal] || {}),
+            ...p,
+            date,
+            trend,
+            value
+
+        } as Signal;
+
+    }
+
+    
+    $: referenceRange = signal.reference?.split('-').map(Number)
+    $: title = signal.signal as string;
+//    $: unit = getUnit(signal.unit)
+
+    $: icon = getResultIcon(signal);
+
+    function getResultIcon(property: Signal) {
         switch (title) {
             case 'biologicalSex':
-                return 'biologicalSex-' + property.value;
+                return 'biologicalSex-' + signal.value;
             default:
                 return title;
         }
@@ -31,8 +98,8 @@
 
     function showUnit(unit: string) {
         if (!unit) return '';
-        const localized = $t(`medical.units.${property.unit}`);
-        if (localized && localized !== `medical.units.${property.unit}`) {
+        const localized = $t(`medical.units.${signal.unit}`);
+        if (localized && localized !== `medical.units.${signal.unit}`) {
             return localized;
         } 
         return unit;
@@ -45,25 +112,42 @@
     <svg class="icon">
         <use href="/icons-o.svg#prop-{icon}"></use>
     </svg>
-    <div class="grid-tile prop-{property.key} prop-value-{property.value}" class:-danger={referenceRange && (property.value < referenceRange[0] || property.value > referenceRange[1])} >
+    <button on:click={() => dispatch('open')} class="grid-tile prop-{signal.signal} urgency-{signal.urgency} prop-value-{signal.value}" class:-danger={referenceRange && (signal.value < referenceRange[0] || signal.value > referenceRange[1])} >
 
-        <div class="title">{ $t(`medical.props.${title}`)}</div>
-
-        <div class="value"><strong>
-            {#if properties[title]?.localize}
-                { $t(`medical.prop-values.${title}.${property.value}`) }
-            {:else}
-                {property.value}
+        <div class="title">
+            {#if $t(`medical.props.${title}`) == `medical.props.${title}`}
+                {title}
+            {:else} 
+                { $t(`medical.props.${title}`)}
             {/if}
-        </strong> <span class="unit">{@html  showUnit(property.unit)  } </span></div>
+            {#if signal.date}
+                <div class="date">
+                    {$t({ id: 'app.duration.'+ageOfEntry.format+'-ago', values: {value: ageOfEntry.value}})}
+                </div>
+            {/if}
+        </div>
 
-    </div>
+        <div class="value">
+            {#if signal.trend}
+                <span class="trend">{signal.trend > 0 ? '↑' : '↓'}</span>
+            {/if}
+            <strong>
+            {#if properties[title]?.localize}
+                { $t(`medical.prop-values.${title}.${signal.value}`) }
+            {:else}
+                {signal.value}
+            {/if}
+        </strong>
+        {#if signal.unit}<span class="unit">{@html  showUnit(signal.unit)  } </span>{/if}</div>
+
+    </button>
 </div>
 
 <style>
 
 
     .grid-tile-wrapper {
+        
         position: relative;
         width: 100%;
         height: 100%;
@@ -84,7 +168,7 @@
         width: 100%;
         height: 100%;
         align-items: stretch;
-
+        
     }
     .grid-tile .title {
         text-align: right;
@@ -106,11 +190,19 @@
         gap: .2rem;
         font-size: 2rem;
         font-weight: 700;
+        padding: .3rem;
     }
     .grid-tile .unit {
         font-size: 1.5rem;
         font-weight: 300;
     }
-
-
+    .grid-tile.urgency-1 .value {
+        background-color: var(--color-warning);
+        color: var(--color-warning-text);
+    }
+    .grid-tile.urgency-2,
+    .grid-tile.urgency-3 {
+        background-color: var(--color-negative);
+        color: var(--color-negative-text);
+    }
 </style>

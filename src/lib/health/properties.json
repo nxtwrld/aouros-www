@@ -1,61 +1,61 @@
 {
     "birthDate": {
-        "key": "birthDate",
+        "signal": "birthDate",
         "type": "date"
     },
     "age": {
-        "key": "age",
+        "signal": "age",
         "type": "number",
         "unit": "years"
     },
     "biologicalSex": {
-        "key": "biologicalSex",
+        "signal": "biologicalSex",
         "type": "enum",
         "localize": true,
         "options": ["male", "female", "intersex"]
     },
     "bloodType": {
-        "key": "bloodType",
+        "signal": "bloodType",
         "type": "enum",
         "options": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
     },
     "weight": {
-        "key": "weight",
+        "signal": "weight",
         "type": "number",
         "unit": "kg"
     },
     "height": {
-        "key": "height",
+        "signal": "height",
         "type": "number",
         "unit": "cm"
     },
     "systolic": {
-        "key": "systolic",
+        "signal": "systolic",
         "type": "number",
         "unit": "mmHg"
     },
     "diastolic": {
-        "key": "diastolic",
+        "signal": "diastolic",
         "type": "number",
         "unit": "mmHg"
     },
     "heartRate": {
-        "key": "heartRate",
+        "signal": "heartRate",
         "type": "number",
         "unit": "bpm"
     },
     "temperature": {
-        "key": "temperature",
+        "signal": "temperature",
         "type": "number",
         "unit": "°C"
     },
     "oxygenSaturation": {
-        "key": "oxygenSaturation",
+        "signal": "oxygenSaturation",
         "type": "number",
         "unit": "%"
     },
     "bloodSugar": {
-        "key": "bloodSugar",
+        "signal": "bloodSugar",
         "type": "number",
         "unit": "mg/dL"
     }

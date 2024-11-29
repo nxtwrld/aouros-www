@@ -1,8 +1,9 @@
 import profiles from './profiles';
 import profile from './profile';
+
 import { importDocuments, addDocument } from '$lib/med/documents';
-import { DocumentType } from '$lib/med/documents/types.d';
-import type { Profile, ProfileNew } from '$lib/med/types.d';
+import { DocumentType} from '$lib/med/documents/types.d';
+import type { ProfileNew, Profile } from '$lib/med/types.d';
 import user from '$lib/user';
 import { prepareKeys } from '$lib/encryption/rsa';
 import { createHash } from '$lib/encryption/hash';
@@ -68,10 +69,10 @@ export async function loadProfiles(fetch: any = undefined, force: boolean = fals
                     console.error('Error loading profile documents', e);
                     return [];
                 });
-
             
             // decrypt documents
             const roots = await importDocuments(rootsEncrypted);
+
             // map profile data
             return mapProfileData(d, roots);
             } catch (e) {
@@ -90,17 +91,32 @@ export async function loadProfiles(fetch: any = undefined, force: boolean = fals
     profiles.set(profilesExtended || []);
 }
 
+export function updateProfile(p: Profile) {
+    profiles.update(p);
+
+    // extend current profile with new data (if it is the same profile)
+    let currentProfile = profile.get();
+    if (currentProfile?.id === p.id) {
+        profile.set({
+            ...currentProfile,
+            ...p
+        });
+    }
+}
+
 
 export function mapProfileData(core, roots) {
 
-    let profile = null, health = null;
+    let profile = null, health = null, profileDocumentId = null, healthDocumentId = null;
 
     roots.forEach(r => {  
         if (r.type === 'profile') {
             profile = r.content;
+            profileDocumentId = r.id;
         }
         if (r.type === 'health') {
             health = r.content;
+            healthDocumentId = r.id;
         }
         delete r.content.title;
         delete r.content.tags;
@@ -109,6 +125,8 @@ export function mapProfileData(core, roots) {
     const profileData =  {
         ...core.profiles,
         status: core.status,
+        profileDocumentId,
+        healthDocumentId,
         insurance: {},
         health: {},
         vcard: {}

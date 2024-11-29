@@ -18,6 +18,8 @@ export interface Profile {
     status: string;
     publicKey: string;
     language: string;
+    profileDocumentId: string;
+    healthDocumentId: string;
 }
 
 export interface ProfileNew {
@@ -34,3 +36,15 @@ export enum ANALYZE_STEPS {
     transcript =  'transcript',
     diagnosis = 'diagnosis'
 }
+
+
+
+export type Signal = {
+    signal: string;
+    value: any;
+    unit: string;
+    reference: string;
+    date: string;
+    urgency?: number;
+}
+

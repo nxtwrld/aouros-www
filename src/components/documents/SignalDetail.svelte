@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from "svelte";
     //import LabResultHistory from "./LabResultHistory.svelte";
-    import LabResultTips from "./LabResultTips.svelte";
+    import LabResultTips from "./SignalTips.svelte";
     import ReferenceRange from "$components/charts/ReferenceRange.svelte";
 	//import Consult from "$components/contact/Consult.svelte";
-	import LabResultInfo from "./LabResultInfo.svelte";
+	import LabResultInfo from "./SignalInfo.svelte";
     import { Tabs, TabHeads, TabHead, TabPanel } from "$components/ui/tabs";
     import defaults from '$data/lab.properties.defaults.json';
 

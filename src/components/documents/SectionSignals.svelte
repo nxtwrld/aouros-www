@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Report } from "$lib/report/types.d";
-    import LabResult from "./LabResult.svelte";
+    import LabResult from "./Signal.svelte";
     import focused from "$lib/focused";
     import { t } from '$lib/i18n';
 

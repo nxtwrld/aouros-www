@@ -5,7 +5,7 @@ import { pemToKey, encrypt as encryptRSA } from "$lib/encryption/rsa";
 import { profiles } from '$lib/med/profiles';
 import Errors from '$lib/Errors';
 import type { Profile } from "$lib/med/types.d";
-import { DocumentType, type DocumentPreload, type DocumentEncrypted, type Document, type DocumentNew } from '$lib/med/documents/types.d';
+import { DocumentType, type DocumentPreload, type DocumentEncrypted, type Document, type DocumentNew, type Attachment } from '$lib/med/documents/types.d';
 import { base64ToArrayBuffer } from '$lib/arrays';
 
 
@@ -158,16 +158,18 @@ export async function loadDocument(id: string, profile_id: string | undefined = 
 }
 
 
-export async function updateDocument(id: string, documentData: Document) {
+export async function updateDocument(documentData: Document) {
     // get current document
-    const document = await getDocument(id);
+    const document = await getDocument(documentData.id);
     if (!document) {
         throw new Error(Errors.DocumentNotFound);
     }
     const user_id = user.getId();
-    const key = document.key;
+    //const key = document.key;
+    const key = await user.keyPair.decrypt(document.key); 
+
     // prepare new metadata
-    let metadata = deriveMetadata(documentData, documentData.metadata);
+    let metadata = deriveMetadata(documentData, Object.assign(document.metadata, documentData.metadata));
 
     // encrypt attachments and map them to content with thumbnails
     const attachmentsToEncrypt = (documentData.attachments || []).filter(a => !a.url).map(a => {
@@ -177,7 +179,9 @@ export async function updateDocument(id: string, documentData: Document) {
         });
     });
     const {data: attachmentsEncrypted} = await encrypt(attachmentsToEncrypt, key);
-    const attachmentsUrls = await saveAttachements(attachmentsEncrypted);
+
+    console.log('Update attachments', attachmentsEncrypted);
+    const attachmentsUrls = await saveAttachements(attachmentsEncrypted, document.user_id);
     // remap attachments to 
     let i = 0;
     document.content.attachments = (document.attachments || []).map((a) => {
@@ -190,12 +194,14 @@ export async function updateDocument(id: string, documentData: Document) {
             type: a.type,
             thumbnail: a.thumbnail
         }
-    })
+    });
 
-    const { data: enc } = await encrypt([JSON.stringify(documentData.content), JSON.stringify(documentData.metadata)], key);
+    console.log('Update document', JSON.stringify(documentData.content));
+
+    const { data: enc } = await encrypt([JSON.stringify(documentData.content), JSON.stringify(metadata)], key);
     
     
-    return await fetch('/v1/med/profiles/' + user_id + '/documents/' + id, {
+    return await fetch('/v1/med/profiles/' + document.user_id + '/documents/' + document.id, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -313,7 +319,7 @@ export async function addDocument(document: DocumentNew): Promise<string> {
 }
 
 
-async function saveAttachements(attachments: string[], profile_id: string): Promise<string[]> {
+async function saveAttachements(attachments: string[], profile_id: string): Promise<Attachment[]> {
     
     console.log('Save attachments to storage', attachments);
     const user_id = profile_id || user.getId();
@@ -335,10 +341,7 @@ async function saveAttachements(attachments: string[], profile_id: string): Prom
     return urls;
 }
 
-async function deleteAttachments(attachments: {
-    url: string;
-    path: string;
-}[]): Promise<void> {
+async function deleteAttachments(attachments: Attachment[]): Promise<void> {
     
     console.log('Delete attachments from storage', attachments);
     await Promise.all(attachments.map(async (attachment) => {
@@ -363,7 +366,7 @@ async function downloadAttachement(attachment: {
     path?: string;
 }) {
 
-    console.log('at', at);
+ 
     const file = base64ToArrayBuffer(attachment.file);
     const blob = new Blob([file], { type: attachment.type });
     const url = URL.createObjectURL(blob);

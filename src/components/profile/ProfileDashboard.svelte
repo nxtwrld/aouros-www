@@ -10,7 +10,7 @@
     import { t } from '$lib/i18n';
     
     interface Property {
-        key: string;
+        signal: string;
         value: string;
         editable?: string;
         label: string;
@@ -18,47 +18,90 @@
         icon: string;
     }
 
-    //console.log('profile', $profile);
-    $: props = (($profile) ?[
+    console.log('profile', $profile);
+    $: props = (($profile) ? [
+
         {
-            key: 'age',
-            value: getAge($profile.health.birthDate),
+            signal: 'age',
             source: $profile.health.birthDate,
+            fn: getAge,
             editable: 'birthDate'
         },
         {
-            key: 'bloodType',
-            source: $profile?.health?.bloodType,
-            value: $profile?.health?.bloodType
+            signal: 'bloodType',
+            source: $profile?.health?.bloodType
         },
         {
-            key: 'biologicalSex',
-            source: $profile?.health?.biologicalSex,
-            value: $profile?.health?.biologicalSex
+            signal: 'biologicalSex',
+            source: $profile?.health?.biologicalSex
         },
         {
-            key: 'height',
+            signal: 'height',
             source: $profile?.health?.height,
-            value: $profile?.health?.height?.height,
+
         },
         {
-            key: 'weight',
+            signal: 'weight',
             source: $profile?.health?.weight,
-            value: $profile?.health?.weight?.weight,
+
         },
         {
-            key: 'bloodPressure',
-            source: $profile?.health?.bloodPressure,
-            value: ($profile?.health?.bloodPressure) ? $profile?.health?.bloodPressure?.systolic + '/' + $profile?.health?.bloodPressure?.diastolic : undefined,
+            signal: 'bloodPressure',
+            source: [$profile?.health?.systolic, $profile?.health?.diastolic],
+            fn: (v: any) => v.join('/'),
+        },
+        // add high priority signals to the set
+        ...(Object.keys($profile?.health).reduce((acc, key) => {
+            
+            const o = (Array.isArray($profile.health[key])) ? $profile.health[key][0] : $profile.health[key];
+            if (!o || !o.urgency || o?.urgency == 1) return acc;
+
+            acc.push({
+                signal: key,
+                source: o.value,
+                unit: o.unit,
+                urgency: o.urgency
+            });
+
+            return acc;
+
+        }, [] as Property[]))
+    ] : [])/*.map(p => {
+        let value = undefined;
+        // combining multiple values - but only if all are set
+        if (Array.isArray(p.source)) {
+            value = (p.source.every(v => v != undefined)) ? p.source : undefined;
+        } else {
+            value = p.source;
+        }
+        
+        // results is a time array of items - select the first one
+        // or if it is multiple values, select the first value of each
+        if (Array.isArray(value)) {
+            if (Array.isArray(value[0])) {
+                //value = value[0][0]?.value;
+                value = value.map(v => v[0]?.value);
+            } else {
+                value = value[0]?.value;
+            }
         }
 
-    ] : []).map(p => {
-        return {
-            ...(properties[p.key] || {}),
+        // if there is a function to transform the value
+        if (value && p.fn) {
+            value = p.fn(value);
+        }
+        //console.log('value  done', value);
+
+        const mapped = {
+            ...(properties[p.signal] || {}),
             ...p,
+            value
 
         } as Property;
-    })
+        //console.log('mapped', mapped);
+        return mapped;
+    }).filter(p => p.value != undefined);*/
+
 
     $: isHealthSet  = Object.keys($profile?.health || {}).length > 0;
     $: isVcardSet  = Object.keys($profile?.vcard || {}).length > 0;
@@ -67,9 +110,9 @@
 
 
     function openTile(prop: Property) {
-        console.log('openTile', prop.key || prop.editable, prop);
+        console.log('openTile', prop.signal || prop.editable, prop);
         ui.emit('modal.healthForm', {
-            keys: [prop.editable || prop.key],
+            keys: [prop.editable || prop.signal],
             values: [prop.value]
         });
     }
@@ -126,11 +169,11 @@
     <div class="tiles">
 
         {#each props as prop}
-        {#if prop.value}
-        <button class="tile" on:click={() => openTile(prop)}>
-            <PropertyTile property={prop} />
-        </button>
-        {/if}
+            {#if prop.source}
+
+                <PropertyTile property={prop} on:open={() => openTile(prop)} />
+
+            {/if}
         {/each}
         <div class="tile">
             <button class="button --large" on:click={() => ui.emit('modal.healthForm')}>

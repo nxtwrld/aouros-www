@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LabResultTips from "./LabResultTips.svelte";
+    import LabResultTips from "./SignalTips.svelte";
     export let kb: any = {};
 
 </script>

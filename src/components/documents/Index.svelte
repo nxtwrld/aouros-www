@@ -1,13 +1,15 @@
 <script lang="ts">
 
     import { profile } from '$lib/med/profiles';
+    import { updateSignals } from '$lib/health/signals';
     import userStore from '$lib/user';
-    import { byUser} from '$lib/med/documents';
+    import { byUser, updateDocument, getDocument } from '$lib/med/documents';
     import { getByAnotherAuthor } from '$lib/med/documents/tools';
     import { type Profile } from '$lib/med/types.d';
     import { t } from '$lib/i18n';
     import BadgeHorizontal from '$components/ui/dates/BadgeHorizontal.svelte';
     import { type Document } from '$lib/med/documents/types.d';
+    import { ConditionalPromptSelector } from 'langchain/prompts';
 
     export let user: string = $profile?.id || $userStore?.id as string;
     let documents = byUser(user);
@@ -21,7 +23,106 @@
         return new Date(b.metadata.date) - new Date(a.metadata.date);
     }
 
+    function testSignals() {
+        updateSignals([{
+            signal: 'weight',
+            value: '85',
+            unit: 'kg',
+            reference: '70-90',
+            date: '2024-11-28'
+        }, {
+            signal: 'cholesterol',
+            value: '5.6',
+            unit: 'mmol/L',
+            reference: '3.0-5.0',
+            date: '2024-11-29',
+            urgency: 2
+        }], $profile.id);    
+
+
+
+    }
+
+    // test update document
+    async function testUpdateDocument() {
+        // load health profile document
+        let document = await getDocument($profile.healthDocumentId) as Document;
+
+
+
+
+        document.content = {
+    "title": "Health Profile",
+    "tags": [
+        "health",
+        "profile"
+    ],
+    "birthDate": "1975-12-31",
+    "biologicalSex": "male",
+    "bloodType": "AB-",
+    "weight": [
+            {
+                "signal": "weight",
+                "date": "2024-11-11T10:51:28.042Z",
+                "value": "84",
+            },
+            {
+                "signal": "weight",
+                "date": "2020-10-11T10:51:28.042Z",
+                "value": "89"
+            }
+        ],
+    "height": [
+            {
+                "signal": "height",
+                "date": "2024-11-11T10:51:28.042Z",
+                "value": 183,
+            },
+            {
+                "signal": "height",
+                "date": "2020-10-11T10:51:28.042Z",
+                "value": 183
+            }
+        ]
+    ,
+    "systolic": [
+            {
+                "signal": "systolic",
+                "date": "2020-10-11T10:51:28.042Z",
+                "value": 120
+            }
+        ],
+    "diastolic": [
+            {
+                "signal": "diastolic",
+                "date": "2020-10-11T10:51:28.042Z",
+                "value": 80
+            }
+        ]
+
+}
+
+console.log('document', document);
+        //convert format to signals type
+        await updateDocument(document);
+        
+    }
+
+    async function checkHealthProfile() {
+        if (!$profile.healthDocumentId) {
+            console.log('no health profile');
+            return;
+        }
+        console.log('health profile', $profile.healthDocumentId);
+        console.log('health profile', await getDocument($profile.healthDocumentId));
+    }
+
 </script>
+
+
+<button class="button" on:click={testSignals}>Test signals</button>
+<button class="button" on:click={testUpdateDocument}>Test update</button>
+<button class="button" on:click={checkHealthProfile}>Check</button>
 
 {#if documents}
 <div class="tiles">

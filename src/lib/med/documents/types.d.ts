@@ -48,7 +48,7 @@ export interface Document {
         tags: string[];
         [key: string]: any;
     }
-    attachments: string[];
+    attachments: Attachment[];
     author_id?: string;
     owner_id: string;
 
@@ -66,4 +66,11 @@ export interface DocumentNew {
     },
     attachments?: string[];
     user_id?: string;
+}
+
+export interface Attachment {
+    path: string;
+    url: string;
+    type?: string;
+    thumbnail?: string;
 }
