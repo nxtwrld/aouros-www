@@ -8,16 +8,20 @@ import testPropserties from '$data/lab.synonyms.json';
 import propertiesDefition from '$data/lab.properties.defaults.json';
 import { fetchGpt } from '$lib/ai/gpt';
 import { type Content, type TokenUsage } from '$lib/ai/types.d';
-import resultsSchema from '$lib/import.server/core.signals.json'
+import signals from '$lib/import.server/core.signals.json'
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from '$lib/med/types.d';
+import { env } from '$env/dynamic/private';
+
+
+const DEBUG = env.DEBUG_CONVERSATION  === 'true';
 /**
  * TODO:
  * - gtp-4o (7k) vs gpt-4o-mini (40k) -
  * - test multi-model setups for GP, PT, etc. medical configurations.
  */
-const DEBUG = false; //env.DEBUG || false;
+
 
 
 
@@ -70,8 +74,8 @@ type Input = {
 };
 
 
-(resultsSchema.items.properties.signal.enum as string[]) = Object.keys(propertiesDefition);
-diagnosis.parameters.properties.signals = resultsSchema;
+(signals.items.properties.signal.enum as string[]) = Object.keys(propertiesDefition);
+diagnosis.parameters.properties.signals = signals;
 
 
 
@@ -397,9 +401,9 @@ const TEST_DATA = {
                 "origin": "doctor"
             }
         ],
-        "results": [
+        "signals": [
             {
-                "test": "temperature",
+                "signal": "temperature",
                 "value": "37.6",
                 "unit": "°C",
                 "reference": "36.1-37.2",
@@ -407,7 +411,7 @@ const TEST_DATA = {
                 "date": ""
             },
             {
-                "test": "systolic blood pressure",
+                "signal": "systolic",
                 "value": "127",
                 "unit": "mmHg",
                 "reference": "90-120",
@@ -415,7 +419,7 @@ const TEST_DATA = {
                 "date": ""
             },
             {
-                "test": "diastolic blood pressure",
+                "signal": "diastolic",
                 "value": "80",
                 "unit": "mmHg",
                 "reference": "60-80",

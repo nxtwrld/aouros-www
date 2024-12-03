@@ -23,6 +23,7 @@
         signal: string;
         test: string;
         source: any;
+        value: any;
         fn?: (v: any) => any;
         reference?: string;
         urgency?: number;
@@ -44,30 +45,33 @@
         let trend = undefined;
         let date = undefined;
         // combining multiple values - but only if all are set
-        if (Array.isArray(p.source)) {
-            value = (p.source.every(v => v != undefined)) ? p.source : undefined;
-        } else {
-            value = p.source;
-        }
-        
-        // results is a time array of items - select the first one
-        // or if it is multiple values, select the first value of each
-        if (Array.isArray(value)) {
-            if (Array.isArray(value[0])) {
-                let lastIndex = value.length - 1;
-                //value = value[0][0]?.value;
-                date = value[0][0]?.date;
-                value = value.map(v => v[0]?.value);
+        if (p.source)  {
+            if (Array.isArray(p.source)) {
+                value = (p.source.every(v => v != undefined)) ? p.source : undefined;
             } else {
-                // calculate trend if available
-                if (value.length > 1) {
-                    trend = value[0].value - value[1].value;
-                }
-                date = value[0]?.date;
-                value = value[0]?.value;
+                value = p.source;
             }
+            
+            // results is a time array of items - select the first one
+            // or if it is multiple values, select the first value of each
+            if (Array.isArray(value)) {
+                if (Array.isArray(value[0])) {
+                    let lastIndex = value.length - 1;
+                    //value = value[0][0]?.value;
+                    date = value[0][0]?.date;
+                    value = value.map(v => v[0]?.value);
+                } else {
+                    // calculate trend if available
+                    if (value.length > 1) {
+                        trend = value[0].value - value[1].value;
+                    }
+                    date = value[0]?.date;
+                    value = value[0]?.value;
+                }
+            }
+        } else if (p.value) {
+            value = p.value;
         }
-
         // if there is a function to transform the value
         if (value && p.fn) {
             value = p.fn(value);

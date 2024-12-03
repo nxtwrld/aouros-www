@@ -125,8 +125,15 @@
                     },
                     "required": [ "name", "dosage", "days", "days_of_week", "time_of_day", "origin"]
                 }
+            },
+            "signals": {
+                "type": "array",
+                "description": "PLACEHOLDER  - wee be extended with core Signal schames",
+                "items": {
+                    "type": "string"
+                }
             }
         },
-        "required": [ "results",  "diagnosis", "treatment", "followUp", "medication"]
+        "required": [ "signals",  "diagnosis", "treatment", "followUp", "medication"]
     }
 }

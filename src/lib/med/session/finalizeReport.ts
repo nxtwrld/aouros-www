@@ -8,12 +8,16 @@ import { fetchGpt } from '$lib/ai/gpt';
 import { type Content, type TokenUsage } from '$lib/ai/types.d';
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
+import { env } from '$env/dynamic/private';
+
+
+const DEBUG = env.DEBUG_CONVERASATION_REPORT === 'true';
 /**
  * TODO:
  * - gtp-4o (7k) vs gpt-4o-mini (40k) -
  * - test multi-model setups for GP, PT, etc. medical configurations.
  */
-const DEBUG = false; //env.DEBUG || false;
+
 
 
 

@@ -94,7 +94,6 @@
 </div>
 {/if}
 
-
 {#if analysis.signals}
 <div class="block block-results">
     <h4 class="h4">Signals</h4>

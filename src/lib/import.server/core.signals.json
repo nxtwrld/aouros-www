@@ -6,7 +6,8 @@
         "properties": {
             "signal": {
                 "type": "string",
-                "description": "Name of the lab test. If the test is a combination of multiple tests, list them all. If the test is a general. Select a property from the provided enum."
+                "description": "Name of the lab test. If the test is a combination of multiple tests, list them all. If the test is a general. Select a property from the provided enum.",
+                "enum": []
             },
             "value": {
                 "type": "string",
