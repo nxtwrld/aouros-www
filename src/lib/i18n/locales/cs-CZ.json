@@ -34,11 +34,13 @@
       "phone": "Telefon",
       "setup-profile": "Nastavit profil",
       "upload": "Nahrát",
-      "uploading": "Nahrávání ..."
+      "uploading": "Nahrávání ...",
+      "value-age": "{value, plural, =0 {# let} one {# rok} two {# roky} few {# roky} other {# let}}"
     },
     "profiles": {
       "add": "Přidat profil",
       "delete": "Smazat",
+      "unlink": "Odpojit",
       "open": "Otevřít",
       "request-access": "Žádost o přístup"
     },
@@ -69,7 +71,7 @@
     "duration": {
       "days-ago": "{value, plural, =0 {právě teď} one {včera} other {před # dny}}",
       "months-ago": "{value, plural, =0 {právě teď} one {před měsícem} other {před # měsíci}}",
-      "years-ago": "{value, plural, =0 {právě teď} one {před roken} other {před # lety}}"
+      "years-ago": "{value, plural, =0 {právě teď} one {před rokem} other {před # lety}}"
     }
   },
   "languages": {

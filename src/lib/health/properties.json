@@ -5,8 +5,7 @@
     },
     "age": {
         "signal": "age",
-        "type": "number",
-        "unit": "years"
+        "type": "number"
     },
     "biologicalSex": {
         "signal": "biologicalSex",

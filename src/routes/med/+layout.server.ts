@@ -1,6 +1,9 @@
 import { fail, redirect } from '@sveltejs/kit'
 import type { LayoutServerLoad } from './$types'
 
+
+
+
 export const load: LayoutServerLoad = async ({ locals: { safeGetSession } }) => {
     
   const { session } = await safeGetSession()
@@ -8,8 +11,7 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession } }) => 
   if (!session) {
     redirect(303, '/auth')
   }
-
-
+  
   
   /*
   console.log('loading.user...')

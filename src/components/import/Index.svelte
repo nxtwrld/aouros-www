@@ -2,7 +2,7 @@
 <script lang="ts">
     import { files, createTasks, processTask } from '$lib/files';
     import { processDocument, DocumentState, type Task, TaskState  } from '$lib/import';
-    import { DocumentType, type DocumentNew  } from '$lib/med/documents/types.d';
+    import { DocumentType, type DocumentNew, type Document  } from '$lib/med/documents/types.d';
     import { addDocument } from '$lib/med/documents';
     import  user, { type User } from '$lib/user';
     import { onMount } from 'svelte';
@@ -20,6 +20,7 @@
     import LoaderThinking from '$components/ui/LoaderThinking.svelte';
     import Loading from '$components/ui/Loading.svelte';
     import { updateSignals } from '$lib/health/signals';
+    import { goto } from '$app/navigation';
 
     
     let documents: DocumentNew[] = [];
@@ -30,6 +31,7 @@
     }[] = [];
     let invalids: DocumentNew[]= [];
     let tasks: Task[] = [];
+    let savedDocuments: Document[] = [];
 
     let currentFiles: File[] = [];
     let processingFiles: File[] = [];
@@ -277,13 +279,13 @@
 
                 // 3. add documents to the database
                 const newSavedDocument = await addDocument(document);
-
+                console.log('newSavedDocument', newSavedDocument);
                 // 4. update the signalas as well
-                if (signals.length > 0) await updateSignals(signals, profileDetected.profile.id);
+                if (signals.length > 0) await updateSignals(signals, profileDetected.profile.id, newSavedDocument.id);
 
                 // remove the document from the list
                 profileDetected.reports = profileDetected.reports.slice(1);
-
+                savedDocuments = [...savedDocuments, newSavedDocument]; 
             }
             byProfileDetected = byProfileDetected.slice(1);
             savingDocumentsInProgress = false;
@@ -363,6 +365,14 @@
     <div class="import-canvas">
         <div class="imports">
 
+
+            {#each savedDocuments as doc}
+                <!--div class="report-import">    
+                    <a href={'/med/p/'+doc.user_id+'/document/' + doc.id} >
+                        {doc.id}
+                    </a>
+                </div-->
+            {/each}
 
             {#each byProfileDetected as profileDetected}
                 <ImportProfile bind:profile={profileDetected.profile} />

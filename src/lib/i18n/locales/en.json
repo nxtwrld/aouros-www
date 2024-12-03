@@ -34,11 +34,14 @@
       "phone": "Phone",
       "setup-profile": "Setup profile",
       "upload": "Upload",
-      "uploading": "Uploading ..."
+      "uploading": "Uploading ...",
+      "value-age": "{value, plural, =0 {# years} one {1 year} other {# years}}"
+
     },
     "profiles": {
       "add": "Add Profile",
       "delete": "Delete",
+      "unlink": "Unlink",
       "open": "Open",
       "request-access": "Request Access"
     },

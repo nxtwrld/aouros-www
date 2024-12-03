@@ -177,7 +177,7 @@
         </td>
 
         {#if unit == 'arb.j.'}
-            <td class="value">
+            <td class="-empty value">
                 <div class="status status-{status} urgency-{urgency}">
                     <!--svg>
                         <use href="/sprite.svg#status-{icon}"></use>
@@ -187,7 +187,7 @@
             </td>
         {:else}
             <td class="-empty value">
-                <div class="status">
+                <div class="status  urgency-{urgency}">
                     <!--svg>
                         <use href="/sprite.svg#status-{icon}"></use>
                     </svg-->

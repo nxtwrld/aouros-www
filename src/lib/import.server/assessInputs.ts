@@ -5,9 +5,11 @@ import { error, text } from '@sveltejs/kit';
 import { fetchGpt } from '$lib/ai/gpt';
 import { type Content, type TokenUsage } from '$lib/ai/types.d';
 import { sleep } from "$lib/utils";
+import { env } from '$env/dynamic/private';
 
 
-const DEBUG = true;
+const DEBUG = env.DEBUG_ASSESSER  === 'true';
+
 
 const assessSchemaImage : FunctionDefinition = {
     "name": "extractor",
@@ -176,7 +178,7 @@ export default async function assess(input : Input): Promise<Assessment> {
     };
 
     if (DEBUG) {
-        await sleep(3500);
+        await sleep(1500);
         return Promise.resolve(TEST_DATA);
     }
 
@@ -208,38 +210,30 @@ const TEST_DATA = {
     "pages": [
         {
             "page": 1,
-            "text": "MEDIENDO s.r.o., Thámova 289/13, 186 00 Praha 8\nTel.: +420 273 139 861\nIČZ: 0848600\n\nPacient: Ing. Veronika ČENKOVÁ, r. 1975\nBydliště: V Třešňovce 224, 190 00 Praha 9\nPojišťovna: 207 - Oborová zdravotní pojišťovna  Číslo pojištěnce: 7559100010\nDatum: 15.08.2024\n\nEndoskopie horní části trávicího traktu\nOdesílající lékař: MUDr. Miluše Vostradovská, Praha 8, Canadian Medical s.r.o. - AFI, IČP: 01354961\nIndikace: Dyspeptický syndrom recidiv. Bolest břicha.\nPřístroje: Gastroskop Pentax MAGiNA EG29-i10c, v.č. E0006120500, Insuflátor CO2 v.č. C000875, Pulzní oxymetr Nellcor PM100N, v.č. MBP1628.072\nAsistence: Hana Kubů\nPremedikace: Lidocain 10% spray\n\nNález:\nPřístroj volně zaveden do jícnu, který ve svém průběhu intaktní. Z-linie v 39cm od řezáků. Kardie nedovírá. \nŽaludek se po insuflaci přiměřeně rozvíjí, řasy autoplastické, jezírko čiré.\nSliznice fundu, těla a antra žaludku klidná. Pylorus okrouhlý, volně prostupný.\nV bulbu a D2 je normální nález.\nVýkon bez komplikací.\n\nZávěr:\nInkompetence kardie, jinak normální nález endoskopický nález v rozsahu jícen - D2.\n\nDoporučení:\nPo výkonu jednu hodinu nepít, nejíst, nekouřit.\nAntirefluxní dieta z režimová opatření, ev. PPI nebo prokinetika.\nPacient poučen o nepití, po vyšetření, odchází v klinicky stabilizovaném stavu.\n\nKrevní tlak/puls/saturace\nTK: 130/98 Puls: 88 Saturace: 97%\n\nMUDr. Tomáš Grega\nDatum: 15.08.2024 8:21:23\nMUDr. Tomáš Grega\n\nMediendo s.r.o.,\nGastroenterologie, oob. 105\nThámová 289/13\n186 00 Praha 8\nTel. 273 139 861",
+            "text": "Laboratoře EUC Laboratoře, s.r.o. Palackého 5, 110 00 Praha 1 IČO: 26775816 EUC OKB Identifikace 75 59 10 / 0010 Narozen/a 10.9.1975 Pohlaví F Plátce 987 Veronika CENKOVÁ Adresa V Třešňovce 224/8, 19000 Praha 9, Czech Republic, tel.: 606 609 507, 606 609 507, email: vcenkova@pfpeurope.com Vyžádal Interna Waltrovka 910, Interna Waltrovka, tel: 222 300 300, MUDr. Miluše Vostradeovská Alergie náplast 23.5.2023 08:06 Laboratorní vyšetření: EUC OKBH Výsledky Normály Jednotky Základní biochemická Urea 3.9 2,8 - 8,1 mmol/l Kreatinin 69 44 - 80 umol/l Kyselina močová 258 143 - 339 umol/l GF CKD-EPI 1,51 1,00 - 3,00 ml/s/1,73m2 Na - natrium 139 136 - 145 mmol/l K - kalium 4,4 3,5 - 5,1 mmol/l Cl - chloridy 102 98 - 107 mmol/l Mg - hořčík 0,92 0,66 - 1,07 mmol/l Bilirubin celk. 8,6 0,0 - 21,0 umol/l ALT 0,31 0,10 - 0,55 ukat/l AST 0,37 0,10 - 0,53 ukat/l GGT 0,25 0,10 - 0,70 ukat/l ALP 0,89 0,58 - 1,75 ukat/l #AMS ukat/l Celk.bílkovina g/l Albumin g/l Cholesterol 5,2 2,9 - 5,0 mmol/l HDL cholesterol 2,70 1,20 - 2,70 mmol/l LDL cholesterol 2,38 1,20 - 3,00 mmol/l Triglyceridy 0,56 0,45 - 1,70 mmol/l Vitamín D 71,9 75,0 - 125,0 nmol/l Diabetologie Glukóza 4,6 3,9 - 5,6 mmol/l Hematologie WBC - leukocyty 5,8 4,0 - 10,0 10^9/l RBC - erytrocyty 4,29 3,80 - 5,20 10^12/l HB - hemoglobin 133 120 - 160 g/l HCT - hematokrit 0,394 0,350 - 0,470 l/l MCV-stř.obj.ery 91,8 82,0 - 98,0 fl MCHC - stř.bark. 338 320 - 360 g/l MCH - bark.ery 31 28 - 34 pg PLT - trombocyty 211 150 - 400 10^9/l RDW 12,1 10,0 - 15,2 % Neutrofíl. segmenty 54,5 45,0 - 70,0 % Lymfocyty 31,8 20,0 - 45,0 % Monocyty 9,2 2,0 - 12,0 % Eosinofily 3,3 0,0 - 5,0 % Basofily 1,2 0,0 - 2,0 % Neutrofily abs. 3,14 2,00 - 7,00 10^9/l Lymfocyty abs. 1,83 0,80 - 4,00 10^9/l Monocyty abs. 0,53 0,08 - 1,20 10^9/l Eozinofily abs. 0,19 0,00 - 0,50 10^9/l Bazofily abs. 0,07 0,00 - 0,20 10^9/l Imunoglobuliny a pro CRP < 0.6 0,0 - 5,0 mg/l",
             "images": []
         },
         {
             "page": 2,
-            "text": "Centrum pohybové medicíny\nCentrum pohybové medicíny Pavla Koláře, a.s.\nWalterovo náměstí 329/2, 158 00, Praha 5 - Jinonice, tel.: +420 222 204 304\nV Parku 2328/18, 148 00 Praha 4 - Chodov, tel.: +420 222 204 304\nRTG Waltrovka\n\nVeronika ČENKOVÁ\nIdentifikace\n75 59 10 / 0010\nAdresář\nV Třešňovce 224, Praha, 190 00\nPojištěnec 207\n\nDatum a čas popisu:\n14.3.2023\nRTG prstů ruky L, kolene vestoje P\n\nRTG prstů ruky L:\nSkelet bez patrných traumatických změn.\n\nRTG kolene vestoje P:\nPostavení v kloubu správné, kloubní štěrbina není snížená. Incip. FT artrosa s přihrocením interkondylické eminence. Diskrétní známky incep. FP artrosy.\n\nMUDr. Petra Havlasová\nDatum: 16.3.2023 18:57\nCanadian Medical s.r.o., ICP: 01354958, odb. 001, Evropská 859/115, 160 00 Praha 8\n",
+            "text": "EUC Laboratoře, s.r.o., EUC OKB, Palackého 5, 110 00 Praha 1, IČO: 26775816 pacient Veronika CENKOVÁ identifikace 75 59 10 / 0010 narozen/a 10.9.1975 pohlaví F plátce 987 údaje 23.5.2023 Laboratorní vyšetření: EUC OKBH Endokrinologie TSH 1,090 0,270 - 4,200 uIU/ml fT4 18,60 12,00 - 22,00 pmol/l MCHS Moč CH+S Glukóza neg arb.j. Bílkovina neg arb.j. Bilirubin neg arb.j. Urobilinogen neg arb.j. pH 7,5 Krev neg arb.j. Leukocyty neg arb.j. Ketolátky neg arb.j. Nitirty + arb.j. Specifická hustota 1,011 kg/m^3 Základní biochemická Amyláza celk. 1,75 0,47 - 1,67 ukat/l non-HDL cholesterol 2,50 0,00 - 3,80 mmol/l Hematologie ESR sedimentace 7 2 - 37 mm/h MCHS Erytrocyty 3,0 0,0 - 5,0 elem./μl Epitel plochý 7,0 0,0 - 18,0 elem./μl Bakterie 183,0 0,0 - 40,0 elem./μl Ostatní DIFF - ELFO bílkovin - MDRD-UreaAlb 1,53 1,00 - 3,00 ml/s/1,73m2 Mgr. Pavel Nezbeda 01 EUC Laboratoře, s.r.o. Palackého 5, 110 00 Praha 1 EUC OKBH EUC OKB Odb.: 801 Tel.: 321 001 Tcz.: 801 MedicalId - KulID: 17459264 18,8 cm",
             "images": []
         }
     ],
     "documents": [
         {
-            "title": "Endoskopie horní části trávicího traktu",
-            "date": "2024-08-15",
+            "title": "Laboratorní vyšetření: EUC OKBH",
+            "date": "2023-05-23",
             "language": "cs",
             "isMedical": true,
             "pages": [
-                1
-            ]
-        },
-        {
-            "title": "RTG vyšetření",
-            "date": "2023-03-14",
-            "language": "cs",
-            "isMedical": true,
-            "pages": [
+                1,
                 2
             ]
         }
     ],
     "tokenUsage": {
-        "total": 3948,
-        "Proceed step by step. \n    Step 1: \n    Your input is a set of images of most probably a medical report or reports. \n    Your task is to extract all test from the image as plain text documents. Each image is page from the document.\n    Step 2:\n    Assess that all pages are from the same document or multiple documents. I multiple documents are detected, we will mark the invidual documents and the pages they consist of.\n    Step 3: if the page contains other data then text, like images, schemas or photos, extract that area and list them here. If the page is a DICOM image, list the image here. If the page is a photo, list the photo here.\n    ": 3948
+        "total": 4386,
+        "Proceed step by step. \n    Step 1: \n    Your input is a set of images of most probably a medical report or reports. \n    Your task is to extract all test from the image as plain text documents. Each image is page from the document.\n    Step 2:\n    Assess that all pages are from the same document or multiple documents. I multiple documents are detected, we will mark the invidual documents and the pages they consist of.\n    Step 3: if the page contains other data then text, like images, schemas or photos, extract that area and list them here. If the page is a DICOM image, list the image here. If the page is a photo, list the photo here.\n    ": 4386
     }
 } as Assessment;
 

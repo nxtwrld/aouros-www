@@ -16,7 +16,7 @@
     font-weight: 700;
     border-width: .1rem;
     border-style: solid;
-    transform: scale(1.01);
+    /* transform: scale(1.01); */
     border-color: var(--color-border);
     border-radius: var(--radius);
     box-shadow: 0 .3rem .2rem -.2rem rgba(0,0,0,.1);
@@ -39,9 +39,18 @@
     box-shadow: 0 .3rem .2rem -.2rem rgba(0,0,0,.3);
 }
 
+.button.-danger {
+    --color-hover: var(--color-negative);
+    --color-border: var(--color-negative);
+    --color-border-hover: var(--color-negative);
+    --color-text: var(--color-negative);
+    --color-text-hover: var(--color-negative-text);
+}
+
 .button.-primary:hover:not(:disabled) {    
     box-shadow: 0 1rem .4rem -.7rem rgba(0,0,0,.3);
 }
+
 
 .button:hover:not(:disabled) {
     background-color: var(--color-hover);

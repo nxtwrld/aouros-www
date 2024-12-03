@@ -11,6 +11,7 @@ export interface Task {
     type: 'application/pdf' | 'images';
     icon: string;
     data: string | ArrayBuffer | string[];
+    password?: string;
     state: TaskState;
     files: File[];
 }

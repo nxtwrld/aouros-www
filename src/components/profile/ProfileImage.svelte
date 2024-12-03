@@ -21,17 +21,19 @@
 
 <style>
     .avatar {
-        border-radius: 50%;
+        border-radius: 25%;
         width: 100%;
         height: 100%;
-        background-color: var(--color-gray-300);
+        background-color: var(--color-gray-500);
         display: flex;
         justify-content: center;
         align-items: center;
+        overflow: hidden;
+        border: 1px solid var(--color-gray-500);
+        box-shadow: 0 .3rem .2rem -.1rem var(--color-gray-800);
     }
 
     .avatar img {
-        border-radius: 50%;
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -41,6 +43,6 @@
         width: 100%;
         height: 100%;
         margin: 10%;
-        fill: var(--color-gray-500);
+        fill: var(--color-gray-300);
     }
 </style>

@@ -4,6 +4,8 @@
     import { onMount } from 'svelte';
     import DocumentView from '$components/documents/DocumentView.svelte';
     import DocumentHeading from '$components/documents/DocumentHeading.svelte';
+    import DocumentToolbar from '$components/documents/DocumentToolbar.svelte';
+
     export let  data: {
         document_id: string;
     }
@@ -23,6 +25,7 @@
     <div class="page -empty  -heading-master">
 
         <DocumentHeading {document} />
+        <DocumentToolbar {document} />
         <DocumentView {document} />
     </div>
     

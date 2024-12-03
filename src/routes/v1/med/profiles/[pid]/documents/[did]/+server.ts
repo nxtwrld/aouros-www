@@ -1,6 +1,5 @@
 
 import { error, json } from '@sveltejs/kit';
-import { last } from 'pdf-lib';
 
 
 /** @type {import('./$types.d').RequestHandler} */
@@ -14,7 +13,7 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
     }
 
 
-    const { data: documentsLoad, error: documentsError } = await supabase.from('documents').select('id, metadata, content, type, attachments, user_id, keys!inner(key, owner_id)')
+    const { data: documentsLoad, error: documentsError } = await supabase.from('documents').select('id, metadata, content, type, attachments, user_id, author_id, keys!inner(key, owner_id)')
         .eq('user_id', params.pid)
         .eq('id', params.did)
         .eq('keys.user_id', session.user.id).single();
@@ -107,6 +106,7 @@ export async function DELETE({ request, params, locals: { supabase, safeGetSessi
     const { data: documentDelete, error: documentDeleteError } = await supabase.from('documents')
         .delete()
         .eq('id', params.did)
+        .eq('user_id', params.pid);
 
     if (documentDeleteError) {
         console.error('Error deleting document', documentDeleteError);

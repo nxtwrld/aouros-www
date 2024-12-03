@@ -9,6 +9,7 @@ function getCustom(id: string| undefined = undefined): Profile[] | Profile{
     if (!id) {
         return get(profilesStore);
     }
+    console.log(id);
     const profile =  get(profilesStore).find(p => p.id === id);
 
     if (!profile) {

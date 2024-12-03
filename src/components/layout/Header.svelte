@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { profile } from "$lib/med/profiles";
+    import { profile, profiles } from "$lib/med/profiles";
     import { page } from "$app/stores";
     import { emit } from "$lib/shortcuts";
     import user from "$lib/user";
@@ -9,6 +9,7 @@
     import ui from "$lib/ui";
     import { state, Overlay } from "$lib/ui";
     import { t } from "$lib/i18n";
+    import ProfileImage from "$components/profile/ProfileImage.svelte";
 
     function isActive(path: string, currentPath: string, state: any) {
         if ($state.overlay !== Overlay.none) return false;
@@ -102,14 +103,7 @@
         {#if $user}
         <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
             <button on:click|stopPropagation={() => toggleMenu(Menu.user)}>
-                {#if $user.avatarUrl}
-                <img class="" src="/v1/med/profiles/{$user.id}/avatar?path={$user.avatarUrl}" alt="avatar" />
-                {:else}
-                <svg>
-                <use href="/icons.svg#doctor"></use>
-                </svg>
-
-                {/if}
+              <ProfileImage profile={profiles.get($user.id)} size={2} />
             </button>
             <ul class="menu">
                 <li>

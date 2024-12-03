@@ -9,7 +9,7 @@
     import { t } from '$lib/i18n';
     import BadgeHorizontal from '$components/ui/dates/BadgeHorizontal.svelte';
     import { type Document } from '$lib/med/documents/types.d';
-    import { ConditionalPromptSelector } from 'langchain/prompts';
+
 
     export let user: string = $profile?.id || $userStore?.id as string;
     let documents = byUser(user);
@@ -57,52 +57,13 @@
         "health",
         "profile"
     ],
-    "birthDate": "1975-12-31",
-    "biologicalSex": "male",
-    "bloodType": "AB-",
-    "weight": [
-            {
-                "signal": "weight",
-                "date": "2024-11-11T10:51:28.042Z",
-                "value": "84",
-            },
-            {
-                "signal": "weight",
-                "date": "2020-10-11T10:51:28.042Z",
-                "value": "89"
-            }
-        ],
-    "height": [
-            {
-                "signal": "height",
-                "date": "2024-11-11T10:51:28.042Z",
-                "value": 183,
-            },
-            {
-                "signal": "height",
-                "date": "2020-10-11T10:51:28.042Z",
-                "value": 183
-            }
-        ]
-    ,
-    "systolic": [
-            {
-                "signal": "systolic",
-                "date": "2020-10-11T10:51:28.042Z",
-                "value": 120
-            }
-        ],
-    "diastolic": [
-            {
-                "signal": "diastolic",
-                "date": "2020-10-11T10:51:28.042Z",
-                "value": 80
-            }
-        ]
+    "birthDate": "1975-10-09",
+    "biologicalSex": "female",
+    "signals": {
+    }
 
 }
 
-console.log('document', document);
         //convert format to signals type
         await updateDocument(document);
         
@@ -120,9 +81,9 @@ console.log('document', document);
 </script>
 
 
-<button class="button" on:click={testSignals}>Test signals</button>
+<!--button class="button" on:click={testSignals}>Test signals</button>
 <button class="button" on:click={testUpdateDocument}>Test update</button>
-<button class="button" on:click={checkHealthProfile}>Check</button>
+<button class="button" on:click={checkHealthProfile}>Check</button-->
 
 {#if documents}
 <div class="tiles">
@@ -186,6 +147,14 @@ console.log('document', document);
         display: flex;
         align-items: center;
         justify-content: space-between;
+        background-color: var(--color-gray-600);
+    }
+
+
+    .tile:hover {
+        background-color: var(--color-white);
+    }
+    .tile:hover .tile-footer {
         background-color: var(--color);
         color: var(--color-text);
     }

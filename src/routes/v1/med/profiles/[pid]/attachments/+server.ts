@@ -1,5 +1,5 @@
 import { error, json   } from '@sveltejs/kit';
-import { type Attachment } from '$lib/med/documents/types.js';
+import { type Attachment } from '$lib/med/documents/types.d';
 
 export async function GET({ request, params, locals: { supabase, safeGetSession }}) {
     

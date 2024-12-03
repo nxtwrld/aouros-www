@@ -6,8 +6,10 @@
     import user from '$lib/user';
     import ui from '$lib/ui';
     import Avatar from '$components/onboarding/Avatar.svelte';
+    import ProfileImage from './ProfileImage.svelte';
     import Documents from '$components/documents/Index.svelte';
     import { t } from '$lib/i18n';
+    import { ConstitutionalPrinciple } from 'langchain/chains';
     
     interface Property {
         signal: string;
@@ -18,47 +20,54 @@
         icon: string;
     }
 
-    console.log('profile', $profile);
+    interface PropertyBlock {
+        signal: string;
+        log: 'full' | 'sampled';
+        history: string[];
+        values: Property[];
+    }
+    let alwaysOn = ['cholesterol', 'glucose', 'magnesium', 'triglycerides']
+    //console.log($profile?.health?.signals )
     $: props = (($profile) ? [
 
         {
-            signal: 'age',
+            property: 'age',
             source: $profile.health.birthDate,
             fn: getAge,
             editable: 'birthDate'
         },
         {
-            signal: 'bloodType',
+            property: 'bloodType',
             source: $profile?.health?.bloodType
         },
         {
-            signal: 'biologicalSex',
+            property: 'biologicalSex',
             source: $profile?.health?.biologicalSex
         },
         {
             signal: 'height',
-            source: $profile?.health?.height,
+            source: $profile?.health?.signals?.height,
 
         },
         {
             signal: 'weight',
-            source: $profile?.health?.weight,
+            source: $profile?.health?.signals?.weight,
 
         },
         {
             signal: 'bloodPressure',
-            source: [$profile?.health?.systolic, $profile?.health?.diastolic],
+            source: [$profile?.health?.signals?.systolic, $profile?.health?.signals?.diastolic],
             fn: (v: any) => v.join('/'),
         },
         // add high priority signals to the set
-        ...(Object.keys($profile?.health).reduce((acc, key) => {
+        
+        ...(Object.keys($profile?.health?.signals || {}).reduce((acc, key) => {
             
-            const o = (Array.isArray($profile.health[key])) ? $profile.health[key][0] : $profile.health[key];
-            if (!o || !o.urgency || o?.urgency == 1) return acc;
-
+            const o = $profile.health.signals[key].values[0];
+            if (!o || ((!o.urgency || o?.urgency == 1) && !alwaysOn.includes(key.toLowerCase().replace(/ /ig, '_')))) return acc;
             acc.push({
                 signal: key,
-                source: o.value,
+                source: $profile.health.signals[key],
                 unit: o.unit,
                 urgency: o.urgency
             });
@@ -66,41 +75,24 @@
             return acc;
 
         }, [] as Property[]))
-    ] : [])/*.map(p => {
-        let value = undefined;
-        // combining multiple values - but only if all are set
-        if (Array.isArray(p.source)) {
-            value = (p.source.every(v => v != undefined)) ? p.source : undefined;
-        } else {
-            value = p.source;
+    ] : []).map((p) => {
+        if (p.signal) {
+            let source = (Array.isArray(p.source)) ? p.source.map(s => s && s.values ) : p.source?.values;
+            return {
+                ...p,
+                source
+            };
         }
-        
-        // results is a time array of items - select the first one
-        // or if it is multiple values, select the first value of each
-        if (Array.isArray(value)) {
-            if (Array.isArray(value[0])) {
-                //value = value[0][0]?.value;
-                value = value.map(v => v[0]?.value);
-            } else {
-                value = value[0]?.value;
-            }
+        if (p.property) {
+            return {
+                ...p,
+                signal: p.property
+            };
         }
+        return p
+    })
+    
 
-        // if there is a function to transform the value
-        if (value && p.fn) {
-            value = p.fn(value);
-        }
-        //console.log('value  done', value);
-
-        const mapped = {
-            ...(properties[p.signal] || {}),
-            ...p,
-            value
-
-        } as Property;
-        //console.log('mapped', mapped);
-        return mapped;
-    }).filter(p => p.value != undefined);*/
 
 
     $: isHealthSet  = Object.keys($profile?.health || {}).length > 0;
@@ -124,7 +116,8 @@
     <div class="profile-header">
         <div class="avatar">
 
-            <Avatar id={$profile.id} bind:url={$profile.avatarUrl} editable={$user.id == $profile.id} />
+            <ProfileImage profile={$profile} size={8} />
+            <!--Avatar id={$profile.id} bind:url={$profile.avatarUrl} editable={$user.id == $profile.id} /-->
 
         </div>
         

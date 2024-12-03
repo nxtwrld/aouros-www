@@ -25,10 +25,11 @@
     --color-black: #252733;
     --color-gray-900: #464957;
     --color-gray-800: #9FA2B4;
+    --color-gray-600: #bdbec5;
     --color-gray-500: #d0d1d7;
     --color-gray-400: #e0e0e3;
     --color-gray-300: #E6E7EA;
-    --color-gray-800-alpha: #6263687c;
+    --color-gray-800-alpha: #06060a7c;
     --color-gray-500-alpha: #d0d1d77c;
     --color-gray-400-alpha: #e0e0e37c;
     --color-gray-300-alpha: #E6E7EA7c;
@@ -87,6 +88,8 @@
     --input-color: var(--color-white);
 
     --gap: 2px;
+
+    --shadow-interactivity: 0 .3rem .2rem -.2rem rgba(0,0,0,.1);
 
 
     --shadow-modal: 0 2rem 2rem -.75rem rgba(0,0,0,.2);

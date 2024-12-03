@@ -46,5 +46,6 @@ export type Signal = {
     reference: string;
     date: string;
     urgency?: number;
+    source?: 'input' | string;
 }
 

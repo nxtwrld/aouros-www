@@ -1,9 +1,10 @@
 .tiles {
+    --gap: .8rem;
     --background-color: var(--color-gray-300);
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
     gap: var(--gap);
-    margin-bottom: var(--gap);
+    margin: var(--gap);
     text-align: left;
 }
 .tiles.-fit {

@@ -2,7 +2,7 @@ import  user from "$lib/user";
 import { writable, type Writable , type Readable, derived, get } from 'svelte/store';
 import { importKey, exportKey, encrypt as encryptAES, decrypt as decryptAES, prepareKey } from "$lib/encryption/aes";
 import { pemToKey, encrypt as encryptRSA } from "$lib/encryption/rsa";
-import { profiles } from '$lib/med/profiles';
+import { profile, profiles } from '$lib/med/profiles';
 import Errors from '$lib/Errors';
 import type { Profile } from "$lib/med/types.d";
 import { DocumentType, type DocumentPreload, type DocumentEncrypted, type Document, type DocumentNew, type Attachment } from '$lib/med/documents/types.d';
@@ -120,41 +120,59 @@ export async function importDocuments(documentsEncrypted: DocumentEncrypted[] = 
 
 
 
-export async function loadDocument(id: string, profile_id: string | undefined = undefined)
+export async function loadDocument(id: string, profile_id: string | null = null)
     : Promise<Document> {
     const user_id = user.getId();
-
+    profile_id = profile_id || user_id;
     let document = byID[id] as DocumentPreload | Document;
     
-    if (document.content) {
+    if (document && document.content) {
         return document as Document;
+    }
+    if (document && document.user_id) {
+        profile_id = document.user_id;
     }
 
     if (!user_id) {
         throw new Error(Errors.Unauthenticated);
     }
 
-    const documentEncrypted = await fetch('/v1/med/profiles/' + (document.user_id) + '/documents/' + id)
+    const documentEncrypted = await fetch('/v1/med/profiles/' + (profile_id) + '/documents/' + id)
         .then(r => r.json()).catch(e => {
             console.error(e);
             throw new Error(Errors.NetworkError);
         });
     // decrypt content data
-    const documentDecrypted = JSON.parse((await decrypt([documentEncrypted.content], documentEncrypted.keys[0].key))[0]);
+    const documentDecrypted = await decrypt([documentEncrypted.metadata, documentEncrypted.content], documentEncrypted.keys[0].key);
     
     documents.update(docs => {
         const index = docs.findIndex(doc => doc.id === id);
+        if (index < 0) {
+            docs.push({
+                key: documentEncrypted.keys[0].key,
+                id: documentEncrypted.id,
+                user_id: documentEncrypted.user_id,
+                type: documentEncrypted.type,
+                metadata: JSON.parse(documentDecrypted[0]),
+                content: JSON.parse(documentDecrypted[1]),
+                owner_id: documentEncrypted.keys[0].owner_id,
+                author_id: documentEncrypted.author_id,
+                attachments: documentEncrypted.attachments || []
+            });
+
+        }
         if (index >= 0) {
-            docs[index].content = documentDecrypted;
+            docs[index].content = JSON.parse(documentDecrypted[1]);
             document = docs[index] as Document;
             byID[id] = document;
             console.log('Document loaded', docs[index]);
         }
         return docs;
     })
+    updateIndex();
 
 
-    return document as Document;
+    return byID[id] as Document;
 }
 
 
@@ -182,8 +200,10 @@ export async function updateDocument(documentData: Document) {
 
     console.log('Update attachments', attachmentsEncrypted);
     const attachmentsUrls = await saveAttachements(attachmentsEncrypted, document.user_id);
+
     // remap attachments to 
     let i = 0;
+    console.log('Update attachments', document);
     document.content.attachments = (document.attachments || []).map((a) => {
         const url = a.url || attachmentsUrls[i];
         const path = a.path || attachmentsUrls[i].path;
@@ -196,10 +216,7 @@ export async function updateDocument(documentData: Document) {
         }
     });
 
-    console.log('Update document', JSON.stringify(documentData.content));
-
     const { data: enc } = await encrypt([JSON.stringify(documentData.content), JSON.stringify(metadata)], key);
-    
     
     return await fetch('/v1/med/profiles/' + document.user_id + '/documents/' + document.id, {
         method: 'PUT',
@@ -213,7 +230,7 @@ export async function updateDocument(documentData: Document) {
         })
     }).then(r => r.json()).catch(async (e) => {
         console.error(e);
-        await deleteAttachments(attachmentsUrls);
+        await removeAttachments(attachmentsUrls);
         throw new Error(Errors.NetworkError);
     });
 
@@ -228,20 +245,18 @@ export async function updateDocument(documentData: Document) {
  *  - save them to storage XX post them to sercer for server to save them and create references
  */
 
-export async function addDocument(document: DocumentNew): Promise<string> {
+export async function addDocument(document: DocumentNew): Promise<Document> {
 
     const user_id = user.getId();
     if (!user_id) {
         throw new Error(Errors.Unauthenticated);
     }
-    
 
     const profile_id = document.user_id || user_id;
     
     // prepare metadata
     let metadata = deriveMetadata(document, document.metadata);
     
-
     // encrypt attachments and map them to content with thumbnails
     const attachmentsToEncrypt: string[] = (document.attachments || []).map(a => {
         return JSON.stringify({
@@ -261,8 +276,8 @@ export async function addDocument(document: DocumentNew): Promise<string> {
             type: a.type,
             thumbnail: a.thumbnail
         }
-    })
-
+    });
+    console.log('Add document', document);
     // encrypt document, metadata using the same key as attachments
     const { data: enc } = await encrypt([JSON.stringify(document.content), JSON.stringify(metadata)], key);
     const keys = [{
@@ -270,7 +285,6 @@ export async function addDocument(document: DocumentNew): Promise<string> {
         owner_id: profile_id || user_id,
         key: await user.keyPair.encrypt(key),
     }];
-
 
     // if we are saveing a document for a profile, add the key to the profile
     if (profile_id && profile_id !== user_id) {
@@ -285,7 +299,6 @@ export async function addDocument(document: DocumentNew): Promise<string> {
                 throw e;
             }
         }
-
     }
 
     // save the report itself
@@ -306,17 +319,51 @@ export async function addDocument(document: DocumentNew): Promise<string> {
         .catch(async (e) => {
             console.error(e);
 
-            await deleteAttachments(attachmentsUrls);
+            await removeAttachments(attachmentsUrls);
 
             throw new Error(Errors.NetworkError);
         });
 
         
     // update local documents
-    await loadDocument(data.id, profile_id || user_id);
+    return await loadDocument(data.id, profile_id || user_id);
 
-    return data.id;
 }
+
+
+export async function removeDocument(id: string): Promise<void> {
+    const document = await getDocument(id);
+    if (!document) {
+        throw new Error(Errors.DocumentNotFound);
+    }
+    const user_id = user.getId();
+    const key = await user.keyPair.decrypt(document.key); 
+    console.log(document);
+    // remove attachments
+    if (document?.content?.attachments) await removeAttachments(document?.content?.attachments);
+    // remove document
+    await fetch('/v1/med/profiles/' + document.user_id + '/documents/' + id, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).then(r => r.json()).catch(e => {
+        console.error(e);
+        throw new Error(Errors.NetworkError);
+    });
+
+    documents.update(docs => {
+        const index = docs.findIndex(doc => doc.id === id);
+        if (index >= 0) {
+            docs.splice(index, 1);
+        }
+        return docs;
+    });
+
+    delete byID[id];
+    return;
+}
+
 
 
 async function saveAttachements(attachments: string[], profile_id: string): Promise<Attachment[]> {
@@ -341,7 +388,7 @@ async function saveAttachements(attachments: string[], profile_id: string): Prom
     return urls;
 }
 
-async function deleteAttachments(attachments: Attachment[]): Promise<void> {
+async function removeAttachments(attachments: Attachment[]): Promise<void> {
     
     console.log('Delete attachments from storage', attachments);
     await Promise.all(attachments.map(async (attachment) => {

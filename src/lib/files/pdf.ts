@@ -17,45 +17,54 @@ const TOP_OFFSET = 15;
 const SCALE = 2;
 
 export async function processPDF(arrayBuffer: ArrayBuffer, password: string | undefined = undefined): Promise<ProcessedFile> {
-    
-    try {
-
-        const options: {
-            data: ArrayBuffer;
-            password?: string;
-        } = {
-            data: arrayBuffer.slice(0)
-        }
-        if (password) {
-            options.password = password;
-        }
-
-      const pdfDoc = await loadPdfDocument(options);
-
-      return processInternal(pdfDoc);
-    } catch (error: any) {
-       if (error.name === 'PasswordException') {
-        throw new Error(CODES.PASSWORD);
-      } else {
-        throw new Error(error);
+  try {
+    console.log('Processing PDF', password);
+      const options: {
+          data: ArrayBuffer;
+          password?: string;
+      } = {
+          data: arrayBuffer.slice(0)
       }
+      if (password) {
+          options.password = password;
+      }
+
+    const pdfDoc = await loadPdfDocument(options);
+
+    return processInternal(pdfDoc);
+  } catch (error: any) {
+      if (error.name === 'PasswordException') {
+      const passwordNew = prompt('Enter password');
+      if (passwordNew) {
+        return processPDF(arrayBuffer, passwordNew);
+      } else {
+        throw new Error(CODES.PASSWORD);
+      }
+      //throw new Error(CODES.PASSWORD);
+
+    } else {
+      throw new Error(error);
     }
   }
+}
   
 
 
 
-export async function splitPdf(
+export async function selectPagesFromPdf(
     sourcePdfArrayBuffer: ArrayBuffer,
     pagesForFirstPdf: number[],
-    pagesForSecondPdf: number[]
-  ): Promise<{ firstPdfBytes: ArrayBuffer; secondPdfBytes: ArrayBuffer }> {
+    //pagesForSecondPdf: number[]
+    password: string | undefined = undefined
+  ): Promise<ArrayBuffer> {
     // Load the source PDF document from the ArrayBuffer
-    const sourcePdf = await PDFDocument.load(sourcePdfArrayBuffer);
+    const sourcePdf = await PDFDocument.load(sourcePdfArrayBuffer, {
+      ignoreEncryption: true
+    });
   
     // Create new PDF documents for the split PDFs
     const firstPdf = await PDFDocument.create();
-    const secondPdf = await PDFDocument.create();
+    //const secondPdf = await PDFDocument.create();
   
     // Copy selected pages to the first PDF
     const firstPdfPages = await firstPdf.copyPages(
@@ -65,17 +74,19 @@ export async function splitPdf(
     firstPdfPages.forEach((page) => firstPdf.addPage(page));
   
     // Copy selected pages to the second PDF
+    /*
     const secondPdfPages = await secondPdf.copyPages(
       sourcePdf,
       pagesForSecondPdf.map((pageNumber) => pageNumber - 1)
     );
-    secondPdfPages.forEach((page) => secondPdf.addPage(page));
+    */
+    //secondPdfPages.forEach((page) => secondPdf.addPage(page));
   
     // Save the new PDFs as Uint8Array
     const firstPdfBytes = typedArrayToBuffer(await firstPdf.save());
-    const secondPdfBytes = typedArrayToBuffer(await secondPdf.save());
-  
-    return { firstPdfBytes, secondPdfBytes };
+    //const secondPdfBytes = typedArrayToBuffer(await secondPdf.save());
+    return firstPdfBytes;
+    //return { firstPdfBytes, secondPdfBytes };
   }
 
 
@@ -114,38 +125,62 @@ export async function createPdfFromImageBuffers(imageBuffers: ArrayBuffer[]): Pr
   const pdfBytes = await pdfDoc.save();
   return typedArrayToBuffer(pdfBytes);
 }
+
+
+export async function checkPassword(data: ArrayBuffer, name: string = 'file'): Promise<string | undefined | Error> {
+  
+    let password: string | null | undefined = undefined;
+    while (password !== null) {
+      try {
+        const options: {
+            data: ArrayBuffer;
+            password?: string;
+        } = {
+            data: data.slice(0)
+        }
+        if (password) {
+            options.password = password;
+        }
+        await loadPdfDocument(options);
+        return password;
+      } catch (error: any) {
+        if (error.name === 'PasswordException') {
+          password = prompt('Please, enter password for ' + name);  
+        } else {
+          throw new Error(error);
+        }
+      }
+    }
+    return new Error('Password not provided');
+}
   
 
 
   async function processInternal(pdfDoc: PDFDocumentProxy): Promise<ProcessedFile> {
- 
-        const thumbnail = await makeThumb(await pdfDoc.getPage(1));
-        
-        //fileProcessor?.emit('thumbnail', thumbnail);
-        
 
-          // no text was extracted, it is probably PDF scan so we'll try to extract images instead and OCR them
-          const base64Images = await renderPDFToBase64Images(pdfDoc);
+    const thumbnail = await makeThumb(await pdfDoc.getPage(1));  
+    //fileProcessor?.emit('thumbnail', thumbnail);
+  
+    // no text was extracted, it is probably PDF scan so we'll try to extract images instead and OCR them
+    const base64Images = await renderPDFToBase64Images(pdfDoc);
 
-          let imagesCount = base64Images.length;
-        
-          let text: string = '';
-          let tags: string[] = [];
-          const pages: ProcessedPage[] = [];
+    let imagesCount = base64Images.length;
+  
+    let text: string = '';
+    let tags: string[] = [];
+    const pages: ProcessedPage[] = [];
 
 
-          let index = 0;
-        const processedImages = await processImages(base64Images);
+    let index = 0;
 
-          //if (fileProcessor) fileProcessor.emit('progress', 'extract', 100);
-          
-          return processedImages;
+    const processedImages = await processImages(base64Images);
 
-
-
+      //if (fileProcessor) fileProcessor.emit('progress', 'extract', 100);
+      
+    return processedImages;
   }
 
-  async function loadPdfDocument(config: any) {
+  export async function loadPdfDocument(config: any) {
     // Dynamically import pdf.js
     const { pdfjsLib } = await import('./lazyPdfjs');
   
@@ -165,9 +200,9 @@ export async function createPdfFromImageBuffers(imageBuffers: ArrayBuffer[]): Pr
     }
 
     return base64Images;
-}
+  }
 
-async function renderPDFPageToBase64Image(page: PDFPageProxy): Promise<string> {
+  async function renderPDFPageToBase64Image(page: PDFPageProxy): Promise<string> {
     const viewport = page.getViewport({ scale: SCALE });
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -176,7 +211,7 @@ async function renderPDFPageToBase64Image(page: PDFPageProxy): Promise<string> {
 
     await page.render({ canvasContext: ctx, viewport }).promise;
     return canvas.toDataURL(); 
-}
+  }
 
 
 

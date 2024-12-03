@@ -15,15 +15,15 @@
             <ProfileImage size={8} />
         </div>
         <div class="actions -vertical">
-            {#if data.tel && data.tel[0]}
+            {#if data.tel && data.tel[0] && data.email[0].value}
             {@const tel = data.tel[0]}
-            <a href="tel:{data.tel[0].value}">
+            <a href="tel:{data.email[0].value}">
                 <svg>
                     <use href="/icons.svg#phone" />
                 </svg>
             </a>
             {/if}
-            {#if data.email && data.email[0]}
+            {#if data.email && data.email[0] && data.email[0].value}
             <a href="mailto:{data.email[0].value}">
                 <svg>
                     <use href="/icons.svg#email" />
@@ -59,13 +59,17 @@
 
                 {#if data.tel}
                     {#each data.tel as {value}}
+                    {#if value}
                     <p class="p"><a class="a" href="tel:{value}">{value}</a></p>
+                    {/if}
                     {/each}
                 {/if}
 
                 {#if data.email}
                     {#each data.email as {value}}
-                    <p class="p"><a class="a" href="mailto:{value}">{value}</a></p>
+                    {#if value}
+                        <p class="p"><a class="a" href="mailto:{value}">{value}</a></p>
+                    {/if}
                     {/each}
                 {/if}
 

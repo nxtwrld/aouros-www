@@ -3,120 +3,32 @@
     import { getAge } from '$lib/med/datetime';
     import { goto } from '$app/navigation';
     import { profiles, removeLinkedProfile } from '$lib/med/profiles/';
+    import ProfileImage from './ProfileImage.svelte';
     import user from '$lib/user';
-    import { addDocument } from '$lib/med/documents';
-    import { DocumentType } from '$lib/med/documents/types.d';
     import { t } from '$lib/i18n';
+    import Health from '$components/onboarding/Health.svelte';
+    
     const ROOT_PATH = '/med/p/';
+
+    enum Views {
+        LIST = 'list',
+        GRID = 'grid'
+    }
+    let view: Views = ($profiles.length < 10 ) ? Views.GRID : Views.LIST;
+
 
     function openProfile(profile: Profile) {
         
         if(profile.status == 'approved') goto(ROOT_PATH + profile.id);
+        else alert('Request access sent');
     }
 
     async function deleteUser(id: string) {
         try {
-            await removeLinkedProfile(id);
+            if (confirm('Are you sure you want to remove this user?')) await removeLinkedProfile(id);
             //await profiles.update();
         } catch (e) {
             console.error(e);
-        }
-    }
-
-    let tempData = {
-        "title": "Health Profile",
-        "tags": [
-            "health",
-            "profile"
-        ],
-    "birthDate":  "1975-12-31",
-    "biologicalSex":  "male",
-    "bloodType": "AB-",
-    "weight": {
-        "date": "2024-11-11T10:51:28.042Z",
-        "weight": "84",
-        "history": [
-            {
-                "date": "2020-10-11T10:51:28.042Z",
-                "weight": "89"
-            }
-        ]
-    },
-    "height": {
-        "date": "2024-11-11T10:51:28.042Z",
-        "height": 183,
-        "history": [
-            {
-                "date": "2020-10-11T10:51:28.042Z",
-                "height": 183
-            }
-        ]
-    },
-    "bloodPressure": {
-        "date": "2024-11-11T10:51:28.042Z",
-        "systolic": 120,
-        "diastolic": 80,
-        "history": [
-            {
-                "date": "2020-10-11T10:51:28.042Z",
-                "systolic": 120,
-                "diastolic": 80
-            }
-        ]
-    },
-}
-
-/*{
-       "title": "Profile",
-    "tags": [
-        "profile",
-        "contact"
-    ],
-    "insurance": {
-        "provider": "111",
-        "number": "7512310201"
-    },
-    "vcard": {
-        "n": {
-            "honorificPrefixes": "",
-            "givenName": "Ondřej",
-            "familyName": "Mašek",
-            "honorificSufixes": ""
-        },
-        "org": "",
-        "title": "",
-        "email": [
-            {
-                "type": "work",
-                "value": ""
-            }
-        ],
-        "tel": [
-            {
-                "type": "work",
-                "value": "+420773594110"
-            }
-        ],
-        "adr": [
-            {
-                "type": "work",
-                "street": "Na strzi 1195/57",
-                "city": "",
-                "state": "",
-                "postalCode": "140 00"
-            }
-        ],
-        "note": ""
-    }
-}*/;
-    function addProfileData() {
-        if (tempData) {
-            //console.log(tempData);
-            addDocument({
-                type: DocumentType.health,
-                content: tempData//,
-                //user_id: 'e799dca2-13e6-4568-b990-aed7ac2875db'
-            });
         }
     }
 
@@ -129,43 +41,43 @@
 
 <h3 class="h3 heading -sticky">{ $t('app.headings.profiles') }</h3>
 
-<table class="table-list">
-    <thead>
-    <tr>
-        <th>{ $t('app.profile.name') }</th>
-        <th>{ $t('app.profile.age') }</th>
-        <th>{ $t('app.profile.date-of-birth') }</th>
-        <th>{ $t('app.profile.phone') }</th>
-        <th></th>
-    </tr>
-</thead>
-<tbody>
+
+<div class="list-items list-items-{view}">
 {#each $profiles as profile}
-    <tr class="table-row -click -{profile.status}" on:click={() => openProfile(profile)}>
-        <td data-label="Name" class="title">{profile.fullName}</td>
-        <td data-label="Age" class="age">{#if profile.birthDate}{getAge(profile.birthDate)}{/if}</td>
-        <td data-label="Birth date" class="dob">{#if profile.birthDate}{profile.birthDate}{/if}</td>
-        <td data-label="Phone" class="tel">
-            {#if profile.vcard?.tel?.[0]?.value}
-            <a href="tel:{profile.vcard?.tel?.[0]?.value}" on:click|stopPropagation>{profile.vcard?.tel?.[0]?.value}</a>
-            {/if}
-        </td>
-        <td class="actions">
-            <div class="table-actions">
-                {#if profile.status == 'approved'}
-                <a href={ROOT_PATH + profile.id} class="button">{ $t('app.profiles.open') }</a>
-                {:else}
-                <button class="button -request" on:click|stopPropagation={() => requestAccess(profile.id)}>{ $t('app.profiles.request-access') }</button>
-                {/if}
-                {#if profile.id != $user.id}
-                <button on:click|stopPropagation={() => deleteUser(profile.id)} class="button -danger">{ $t('app.profiles.delete') }</button>
+    <div class="list-item -click -{profile.status}">
+        <button  class="content" on:click={() => openProfile(profile)}>
+            <div class="image">
+                <ProfileImage {profile} size={view === Views.GRID ? 8 : 4} />
+            </div>
+            <div class="title">{profile.fullName}</div>
+            <div class="age">{#if profile.health?.birthDate}{$t({id: 'app.profile.value-age', values: { value: getAge(profile.health?.birthDate)}})}{/if}</div>
+            <div class="dob">{#if profile.health?.birthDate}{profile.health?.birthDate}{/if}</div>
+            <div class="tel">
+                {#if profile.vcard?.tel?.[0]?.value}
+                <a href="tel:{profile.vcard?.tel?.[0]?.value}" on:click|stopPropagation>{profile.vcard?.tel?.[0]?.value}</a>
                 {/if}
             </div>
-        </td>
-    </tr>
+        </button>
+        <div class="actions">
+            {#if profile.status == 'approved'}
+            <a href={ROOT_PATH + profile.id} class="button">{ $t('app.profiles.open') }</a>
+            {:else}
+            <button class="button -request" on:click|stopPropagation={() => requestAccess(profile.id)}>{ $t('app.profiles.request-access') }</button>
+            {/if}
+            {#if profile.id != $user.id}
+            <button on:click|stopPropagation={() => deleteUser(profile.id)} class="button -danger">
+                {#if profile.auth_id}
+                { $t('app.profiles.unlink') }
+                {:else}
+                { $t('app.profiles.delete') }
+                {/if}
+            </button>
+            {/if}
+        </div>
+    </div>
 {/each}
-</tbody>
-</table>
+</div>
+
 
 
 
@@ -173,6 +85,117 @@
 
 <style> 
 
+    /* Grid */
+
+    .list-items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+        gap: var(--gap);
+        margin-top: var(--gap);
+    }
+
+    .list-items-grid .list-item {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: var(--gap);
+        height: 20rem;
+    }
+
+    .list-items-grid .list-item .content {
+        background-color: var(--color-gray-300);
+        cursor: pointer;
+        flex-grow: 1;
+    }
+
+    .list-items-grid .list-item button.content:hover {
+        background-color: var(--color-white);
+        box-shadow: var(--shadow-interactivity);
+        z-index: 10;
+        cursor: pointer;
+    }
+
+    .list-items-grid .list-item .image {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .list-items-grid .list-item .actions {
+        display: flex;
+        gap: var(--gap);
+        justify-content: stretch;
+        align-items: stretch;
+
+    }
+    .list-items-grid .list-item .actions .button {
+        flex-grow: 1;
+        border-radius: 0;
+        transform: none;
+        border: none;
+    }
+    .list-items-grid .list-item .actions .button:hover {
+        /*background-color: var(--color-gray-400);*/
+    }
+    
+
+
+
+    /* List */
+
+
+    .list-items-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--gap);
+        margin-top: var(--gap);
+    }
+
+    .list-items-list .list-item {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        background-color: var(--color-gray-300);
+        justify-content: space-between;
+        gap: var(--gap);
+        width: 100%;
+    }
+
+    .list-items-list .list-item .content {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        cursor: pointer;
+        flex-grow: 1;
+        padding: .5rem;
+    }
+    .list-items-list .list-item .image {
+        margin-right: 1rem;
+    }
+
+    .list-items-list .list-item .content > * {
+        white-space: nowrap;
+        padding: .5rem;
+    }
+
+    .list-items-list .list-item .content .title {
+        flex-grow: 1;
+        text-align: left;
+        font-weight: 500;
+        font-size: 1.2rem;
+    }
+    .list-items-list .list-item .actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--gap);
+        padding: 0 1rem;
+        justify-content: center;
+        align-items: stretch;
+    }
+/*
     .table-list {
         width: 100%;
         border-collapse: collapse;
@@ -271,4 +294,5 @@
             width: 100%;
         }
     }
+        */
 </style>
