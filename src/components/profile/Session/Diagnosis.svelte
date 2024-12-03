@@ -95,12 +95,12 @@
 {/if}
 
 
-{#if analysis.results}
+{#if analysis.signals}
 <div class="block block-results">
-    <h4 class="h4">Results</h4>
+    <h4 class="h4">Signals</h4>
     <div class="block-grid">
-        {#each analysis.results as result}
-            <PropertyTile property={result} />
+        {#each analysis.signals as signal}
+            <PropertyTile property={signal} />
 
         {/each}
     </div>

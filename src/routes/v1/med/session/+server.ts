@@ -12,7 +12,7 @@ export async function POST({ request, locals: { supabase, safeGetSession } }) {
     if (!session) {
         error(401, { message: 'Unauthorized' });
     }
-    
+
     const data = await request.json();
     if (data.text === undefined) {
         error(400, { message: 'No  text provided' });

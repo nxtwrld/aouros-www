@@ -2,7 +2,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 //import { defineConfig } from 'vitest/config';
 import { type ViteDevServer, defineConfig, normalizePath  } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-import topLevelAwait from "vite-plugin-top-level-await"
+//import topLevelAwait from "vite-plugin-top-level-await"
 import path from 'path';
 //import { Server } from 'socket.io'
 /*
@@ -24,7 +24,7 @@ export default defineConfig({
 	plugins: [
 		
 		sveltekit(),
-		topLevelAwait(),
+		//topLevelAwait(),
 		viteStaticCopy({
 			targets: [
 			  {

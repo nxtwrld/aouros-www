@@ -5,6 +5,7 @@ import transcript from './transcript.json';
 import diagnosis from './diagnosis.json';
 import tags from '../../import.server/tags.json';
 import testPropserties from '$data/lab.synonyms.json';
+import propertiesDefition from '$data/lab.properties.defaults.json';
 import { fetchGpt } from '$lib/ai/gpt';
 import { type Content, type TokenUsage } from '$lib/ai/types.d';
 import resultsSchema from '$lib/import.server/core.signals.json'
@@ -69,8 +70,8 @@ type Input = {
 };
 
 
-(resultsSchema.items.properties.test.enum as string[]) = testPropserties.map((item: any) => item[0]);
-diagnosis.parameters.properties.results = resultsSchema;
+(resultsSchema.items.properties.signal.enum as string[]) = Object.keys(propertiesDefition);
+diagnosis.parameters.properties.signals = resultsSchema;
 
 
 
