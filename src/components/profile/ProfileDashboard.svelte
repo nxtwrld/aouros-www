@@ -103,10 +103,8 @@
 
     function openTile(prop: Property) {
         console.log('openTile', prop.signal || prop.editable, prop);
-        ui.emit('modal.healthForm', {
-            keys: [prop.editable || prop.signal],
-            values: [prop.value]
-        });
+        
+        ui.emit('modal.healthProperty', prop);
     }
 
 </script>

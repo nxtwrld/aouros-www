@@ -13,6 +13,8 @@
     onMount(() => {
         if ($user && $user.subscription == 'individual') {
             goto('/med/p/'+$user.id);
+        } else {
+            goto('/med/p');
         }
     });
 

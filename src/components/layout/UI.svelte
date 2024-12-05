@@ -3,6 +3,7 @@
     import DropFiles from '$components/import/DropFiles.svelte';   
     import Modal from '$components/ui/Modal.svelte';
     import HealthForm from '../profile/HealthForm.svelte';
+    import HealthProperty from '../healthProperty/Overview.svelte';
     import Import from '$components/import/Index.svelte';
     import ui from '$lib/ui';
     import { onMount } from 'svelte';
@@ -12,7 +13,8 @@
     import shortcuts from '$lib/shortcuts';
     import Sounds from '$components/ui/Sounds.svelte';
     const dialogs = {
-        healthForm: false
+        healthForm: false,
+        healthProperty: false
     };
 
 
@@ -33,6 +35,10 @@
     onMount(() => {
         console.log('UI mounted');
         const offs = [
+            ui.listen('modal.healthProperty', (config: any) => {
+                console.log('modal.healthProperty', config);
+                dialogs.healthProperty = config || true;
+            }),
             ui.listen('modal.healthForm', (config: any) => {
                 console.log('modal.healthForm', config);
                 dialogs.healthForm = config || true;
@@ -74,6 +80,11 @@
     {#if dialogs.healthForm}
         <Modal on:close={() => dialogs.healthForm = false}>
             <HealthForm config={dialogs.healthForm}  on:abort={() => dialogs.healthForm = false}/>
+        </Modal>
+    {/if}
+    {#if dialogs.healthProperty}
+        <Modal on:close={() => dialogs.healthProperty = false}>
+            <HealthProperty property={dialogs.healthProperty}  on:abort={() => dialogs.healthProperty = false}/>
         </Modal>
     {/if}
 

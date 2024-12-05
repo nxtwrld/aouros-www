@@ -10,6 +10,7 @@
     export let config: {
         keys: string[];
         values: any[];
+        property: any;
     } | true = true;
     
     enum BloodType {
@@ -28,6 +29,7 @@
         data = mapInputsToData(inputs);
     }
 
+    console.log('property', config.property);
 
     const FORM = FORM_DEFINITION.reduce((acc, prop) => {
         acc[prop.key] = prop;
