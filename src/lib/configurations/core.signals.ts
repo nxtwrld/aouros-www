@@ -1,6 +1,12 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default{
     "type": "array",
-    "description": "If there are any medical measurements like temprature, heart rate or specific lab results resented in the text, extract them here. If there was nothing mentioned, leave the array empty.",
+    "description": `
+    Proceed step by step. 
+    Step 1: Extract all medical measurements from the text. 
+    Step 2: Extract all lab tests from the text.
+    Step 3: Evaluate the values and units of the lab tests and match them to proper signals and sources.
+    `,
     "items": {
         "type": "object",
         "properties": {
@@ -13,13 +19,18 @@
                 "type": "string",
                 "description": "Value of the lab test. If the it contains a numeric value, convert the decimals to a dot. If the value is a range, use a dash to separate the values. If the value is a text, leave it as is."
             },
+            "valueType": {
+                "type": "string",
+                "description": "Type of the value. Select a property from the provided enum.",
+                "enum": ["number", "text"]
+            },
             "unit": {
                 "type": "string",
                 "description": "Unit of the lab test."
             },
             "reference": {
                 "type": "string",
-                "description": "Reference range of the lab test NUMBER - NUMBER or an appropriate alternative. Convert the decimals to a dot."
+                "description": "Reference range of the lab test NUMBER - NUMBER or an appropriate alternative. Convert the decimals to a dot. If not reference is available, leave empty."
             },
             "source": {
                 "type": "string",
@@ -28,13 +39,13 @@
             },
             "urgency": {
                 "type": "number",
-                "description": "Urgency of the result on a scale of 1-5. 1 - not severe, 5 - very severe. where 1 is non issue - just a general statement, 2 and up are issues detected, that need to be reflected upon."
+                "description": "Urgency of the result based on the value and refrence range result on a scale of 1-5. 1 - not severe, 5 - very severe. where 1 is non issue - just a general statement, 2 and up are issues detected, that need to be reflected upon."
             },
             "date": {
                 "type": "string",
                 "description": "Date of the measurement or lab test in the format YYYY-MM-DD. Derive date from context. If the date is not available, leave empty."
             }
         },
-        "required": [ "test", "value", "unit", "reference", "urgency"]
+        "required": [ "signal", "date", "value", "valueType", "unit", "reference"]
     }
-}
+} as FunctionDefinition;

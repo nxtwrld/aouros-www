@@ -1,4 +1,4 @@
-[
+export default [
     "eyebrows",
     "eyelashes",
     "eye_surface",
@@ -470,4 +470,4 @@
     "mammary_gland",
     "seminal_vesicle",
     "epididymis"
-]
+];

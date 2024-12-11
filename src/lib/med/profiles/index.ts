@@ -115,6 +115,7 @@ export function mapProfileData(core, roots) {
             profileDocumentId = r.id;
         }
         if (r.type === 'health') {
+            console.log('health', r);
             health = r.content;
             healthDocumentId = r.id;
         }

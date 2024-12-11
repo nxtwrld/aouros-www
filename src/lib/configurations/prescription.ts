@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "name": "extractor",
     "description": "Proceed ste by step. From the medication record, extract the following information. If it is not a medication record, mark it as isMedication as false.",
     "parameters": {
@@ -89,4 +90,4 @@
         },
         "required": ["isPrescription", "prescription"]
     }
-}
+} as FunctionDefinition;

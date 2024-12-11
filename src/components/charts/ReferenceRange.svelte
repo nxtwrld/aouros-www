@@ -1,6 +1,7 @@
 <script lang="ts">
 
     export let value: number;
+    export let reference: string;
 
     export let referenceRange: {
         low: {
@@ -10,6 +11,15 @@
         high: {
             value: number,
             unit: string
+        }
+    } = {
+        low: {
+            value: Number(reference.split('-')[0]),
+            unit: ''
+        },
+        high: {
+            value: Number(reference.split('-')[1]),
+            unit: ''
         }
     }
 
@@ -68,7 +78,7 @@
         flex-grow: 1;
         width: 100%;
         min-width: 15rem;
-        margin: .1rem;
+        margin: .1rem .1rem 1rem .1rem;
         height: 100%;
     }
 .range.-value {
@@ -117,11 +127,11 @@
     .bar__high,
     .bar__low {
         background-color: var(--color-negative);
-        color: var(--color-negative-contrast);
+        color: var(--color-negative-text);
     }
     .bar__ok {
         background-color: var(--color-positive);
-        color: var(--color-positive-contrast);
+        color: var(--color-positive-text);
     }
      
     .bar__indicator {
@@ -157,11 +167,11 @@
     .bar__value.low,
     .bar__value.high {
         background-color: var(--color-negative);
-        color: var(--color-negative-contrast);
+        color: var(--color-negative-text);
     }
     .bar__value.ok {
         background-color: var(--color-positive);
-        color: var(--color-positive-contrast);
+        color: var(--color-positive-text);
     }
     .bar__value.ok:after {
         border-color: var(--color-positive) transparent transparent transparent;

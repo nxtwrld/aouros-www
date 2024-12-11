@@ -1,22 +1,22 @@
 
 import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
 import { error } from '@sveltejs/kit';
-import featureDetection from './feature-detection.json';
+import featureDetection from '$lib/configurations/feature-detection';
 //import text from './text.json';
-import report from './report.json';
-import laboratory from './laboratory.json';
-import tags from './tags.json';
-import dental from './dental.json';
-import prescription from './prescription.json';
-import immunization from './immunization.json';
-import imaging from './imaging.json';
-import fhir from './fhir.json';
-import patient from './core.patient.json';
-import performer from './core.performer.json';
-import signals from './core.signals.json'
-import diagnosis from './core.diagnosis.json';
-import bodyParts from './core.bodyParts.json';
-import jcard from './jcard.reduced.json';
+import report from '$lib/configurations/report';
+import laboratory from '$lib/configurations/laboratory';
+import tags from '$lib/configurations/tags';
+import dental from '$lib/configurations/dental';
+import prescription from '$lib/configurations/prescription';
+import immunization from '$lib/configurations/immunization';
+import imaging from '$lib/configurations/imaging';
+//import fhir from './configurations/fhir';
+import patient from '$lib/configurations/core.patient';
+import performer from '$lib/configurations/core.performer';
+import signals from '$lib/configurations/core.signals'
+import diagnosis from '$lib/configurations/core.diagnosis';
+import bodyParts from '$lib/configurations/core.bodyParts';
+import jcard from '$lib/configurations/jcard.reduced';
 //import { extractText } from "./gemini";
 //import testPropserties from '$data/lab.synonyms.json';
 import propertiesDefition from '$data/lab.properties.defaults.json';
@@ -98,8 +98,8 @@ const schemas: {
     dental: dental as FunctionDefinition,
     prescription: prescription as FunctionDefinition,
     immunization: immunization as FunctionDefinition,
-    imaging: imaging as FunctionDefinition,
-    fhir: fhir as FunctionDefinition
+    imaging: imaging as FunctionDefinition//,
+    //fhir: fhir as FunctionDefinition
 
 };
 
@@ -278,6 +278,19 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
     // extend tags with body parts
     if (data.report.bodyParts) {
         data.tags = [...new Set(data.tags.concat(data.report.bodyParts.map((item) => item.identification)))];
+    }
+
+    if (data.report.signals) {
+        data.report.signals = data.report.signals.map((item) => {
+            if (item.signal) {
+                item.signal = item.signal.toLowerCase();
+            }
+            if (item.valueType == 'number') {
+                item.value = parseFloat(item.value);
+            }
+            delete item.valueType;
+            return item;
+        });
     }
 
     data.tokenUsage = tokenUsage;

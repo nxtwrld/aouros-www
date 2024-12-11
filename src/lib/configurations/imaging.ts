@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "name": "extractor",
     "description": "You are an expert in analysis of medical imaging data. Proceed step by step. Identify the content of the image. We are analyzing medical data, if it is not a medical imaging, mark it as notMedical. We want to identify the contents of the image. With each section provide only information contained in the document.",
     "parameters": {
@@ -43,4 +44,4 @@
         },
         "required": [ "observation_type", "observation", "results", "date", "patient", "performer"]
     }
-}
+} as FunctionDefinition;

@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "type": "object",
     "properties": {
         "fullName": {
@@ -34,4 +35,4 @@
         }
     },
     "required": ["fullName", "identifier"]
-}
+} as FunctionDefinition;

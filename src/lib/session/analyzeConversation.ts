@@ -1,14 +1,13 @@
 
 import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
 import { error } from '@sveltejs/kit';
-import transcript from './transcript.json';
-import diagnosis from './diagnosis.json';
-import tags from '../../import.server/tags.json';
-import testPropserties from '$data/lab.synonyms.json';
+import transcript from '$lib/session/session.transcript';
+import diagnosis from '$lib/configurations/session.diagnosis';
+import tags from '$lib/configurations/tags';
 import propertiesDefition from '$data/lab.properties.defaults.json';
 import { fetchGpt } from '$lib/ai/gpt';
 import { type Content, type TokenUsage } from '$lib/ai/types.d';
-import signals from '$lib/import.server/core.signals.json'
+import signals from '$lib/configurations/core.signals'
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from '$lib/med/types.d';

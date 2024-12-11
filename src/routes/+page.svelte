@@ -13,11 +13,12 @@
 </script>
 
 <div class="placer">
-    <img src="/icon.svg" alt="aouros logo" />
     <div>
-        <!--h1>qureio.com</h1-->
-        <h2>quantify curiosity</h2>
-        <h2>query cure</h2>
+        <img src="/icon.svg" alt="aouros logo" />
+
+        <h1>QUREIO</h1>
+        <h2>quantified curiosity</h2>
+        <!--h2>query cure</h2-->
     </div>
 </div>
 
@@ -29,6 +30,8 @@
         height: 100%;
         background-color: var(--color-primary);
         background-image: none;
+        font-family: "Mulish", sans-serif;
+        font-optical-sizing: auto;
     }
 
     .placer {
@@ -41,19 +44,24 @@
     img {
         width: 20vh;
         max-width: 20vh;
-        max-height: 30vh;
+        max-height: 20vh;
         aspect-ratio: 1/1;
+        margin-left: -10%;
     }
     h1 {
         font-size: 4rem;
-        color: var(--color-gray-800);
+        color: var(--color-white);
         font-weight: 400;
-        margin: 1rem 0 2.5rem;
+        margin: 1rem 0 1rem;
+        font-family: "Montserrat", sans-serif;
+        font-optical-sizing: auto;
     }
     h2 {
         font-size: 2.5rem;
-        color: var(--color-gray-800);
+        color: var(--color-white);
         font-weight: 405;
         margin-top: 1rem;
+        font-family: "Montserrat", sans-serif;
+        font-optical-sizing: auto;
     }
 </style>

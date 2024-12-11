@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "name": "extractor",
     "description": "You a medical professional assistent of doctor and you will prepare a final report from his session with a patient that will be signed in his name. The phrasing should be done in a manner that the doctr himself writes it. Continue step by step. In the input JSON you have th inital ananlysis. Step 1: Take the analysis and its properties - complaint, symptoms, diagnosis, treatment, medication, follow-up and patient. Step 2: Generate a json according to the definition bellow in a simple and understandable language and markdown format. All test should be based on the provided JSON input and no additional information should be added. Your task is to phrase the JSON. Provide all answers in [LANGUAGE] language.",
     "parameters": {
@@ -29,4 +30,4 @@
 
         "required": ["findinds", "treatment", "medication", "follow-up", "recommendations"]
     }
-}
+} as FunctionDefinition;

@@ -134,10 +134,10 @@
     on:click={() => dispatch('open')} 
         class="grid-tile ">
         <div class="title">
-            {#if $t(`medical.props.${title}`) == `medical.props.${title}`}
+            {#if $t(`profile.health.props.${title}`) == `profile.health.props.${title}`}
                 {title}
             {:else} 
-                { $t(`medical.props.${title}`)}
+                { $t(`profile.health.props.${title}`)}
             {/if}
             <!--
             {#if ageOfEntry}
@@ -243,7 +243,7 @@
         transition: opacity 0.3s;
     }
     .grid-tile .unit {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         font-weight: 300;
     }
     .indicator {

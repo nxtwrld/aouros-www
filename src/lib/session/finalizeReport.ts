@@ -2,8 +2,8 @@
 import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
 
 import { error } from '@sveltejs/kit';
-import report from './report.json';
-import tags from '../../import.server/tags.json';
+import report from '$lib/configurations/session.report';
+import tags from '$lib/configurations/tags';
 import { fetchGpt } from '$lib/ai/gpt';
 import { type Content, type TokenUsage } from '$lib/ai/types.d';
 import { updateLanguage } from "$lib/ai/schema";

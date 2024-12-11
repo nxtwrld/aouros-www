@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "name": "extractor",
     "description": "You are aprofessional medical assistent. You have transcript of doctor patient conversation and you provide of the conversation. Step 1: Structure the conversation and identify speakers. Step 2: extract symptoms. Step 3: Identify main problem of the patient. Provide all answers in [LANGUAGE] language.",
     "parameters": {
@@ -77,4 +78,4 @@
         },
         "required": [ "conversation", "symptoms", "complaint"]
     }
-}
+} as FunctionDefinition;

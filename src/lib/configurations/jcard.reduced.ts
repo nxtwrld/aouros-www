@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
 
 	"title" : "jCard" ,
 	"description" : "This document defines the jCard data format for representing and exchanging a variety of information about an individual (e.g., formatted and structured name and delivery addresses, email address, multiple telephone numbers, photograph, logo, audio clips, etc.)." ,
@@ -246,4 +247,4 @@
         "role",
         "title"
     ]
-}
+} as FunctionDefinition;

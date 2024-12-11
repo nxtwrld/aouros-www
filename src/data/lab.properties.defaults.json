@@ -843,6 +843,18 @@
         }
       ]
     },
+    "glucose_urine": {
+      "type": "number",
+      "unit": "arb.j.",
+      "valueExpirationInDays": 360,
+      "referenceRange": []
+    },
+    "blood_urine": {
+      "type": "number",
+      "unit": "arb.j.",
+      "valueExpirationInDays": 360,
+      "referenceRange": []
+    },
     "white_blood_cells": {
       "type": "number",
       "unit": "10^9/L",
@@ -1186,9 +1198,15 @@
         }
       ]
     },
+    "ketones_urine": {
+      "type": "number",
+      "unit": "arb.j.",
+      "valueExpirationInDays": 360,
+      "referenceRange": []
+    },
     "nitrites": {
       "type": "number",
-      "unit": "",
+      "unit": "arb.j.",
       "valueExpirationInDays": 360,
       "referenceRange": [
         {
@@ -1311,6 +1329,19 @@
           "ageRange": { "min": 18, "max": 100 },
           "low": 90,
           "high": null
+        }
+      ]
+    },
+    "ph": {
+      "type": "number",
+      "unit": "",
+      "valueExpirationInDays": 360,
+      "referenceRange": [
+        {
+          "sex": "any",
+          "ageRange": { "min": 0, "max": 100 },
+          "low": 7.35,
+          "high": 7.45
         }
       ]
     }

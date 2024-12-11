@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "name": "extractor",
     "description": "Proceed step by step. Identify the contents of the provided JSON  input. We are analyzing medical data, if it is not medical report, lab results of medical imaging, mark it as notMedical.   All results should be in [LANGUAGE] language, except for contents which is in the original language of the report.",
     "parameters": {
@@ -41,4 +42,4 @@
         },
         "required": [ "isMedical", "type", "tags", "language", "text", "labels", "hasPrescription"]
     }
-}
+} as FunctionDefinition;

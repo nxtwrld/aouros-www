@@ -9,6 +9,7 @@
     margin: 0 0 var(--gap) 0;
     gap: var(--gap);
     height: var(--heading-height);
+    font-family: var(--font-face-heading);
 }
 
 

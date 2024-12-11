@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
 	"$schemaTransformation" : "http://buzzword.org.uk/2008/jCard/transformation.js" ,
 	"id" : "jCard" ,
 	"version" : "0.1.0" ,
@@ -559,4 +560,4 @@
 			}
 		}
 	}
-}
+} as FunctionDefinition;

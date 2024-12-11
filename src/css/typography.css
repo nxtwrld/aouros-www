@@ -49,6 +49,13 @@ strong {
 }
 
 
+.value {
+    font-family: var(--font-face-values);
+}
+.unit {
+    font-family: var(--font-face-values);
+    letter-spacing: -.2px;
+}
 @media screen and (max-width: 768px) {
     .h1 {
         font-size: 1.5rem;

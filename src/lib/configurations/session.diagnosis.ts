@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "name": "extractor",
     "description": "You are aprofessional medical assistent with deep knowledge like Doctor House. Your input is a JSON  ith doctor/patient conversation and extracted symptoms. Your task is to extract any diagnosis, treatment, medication mentioned by the doctor and also suggest other relevant alternatives. All information mentioned by the doctor should have the origin set to DOCTOR. Suggestion and alternatives based on context should set the origin as SUGGESTION. Provide all answers in [LANGUAGE] language.",
     "parameters": {
@@ -136,4 +137,4 @@
         },
         "required": [ "signals",  "diagnosis", "treatment", "followUp", "medication"]
     }
-}
+} as FunctionDefinition;

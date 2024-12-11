@@ -1,8 +1,9 @@
 <script lang="ts">
-    import LabResultDetail from "./SignalDetail.svelte";
-    import synonyms from "$data/synonyms";
-    import { createEventDispatcher } from "svelte";
+    import SignalDetail from "./SignalDetail.svelte";
+        import { createEventDispatcher } from "svelte";
     import defaults from '$data/lab.properties.defaults.json';
+    import ui from '$lib/ui';
+    import { t } from '$lib/i18n';
     //import profile from '$lib/user/profile';
 
     const dispatch = createEventDispatcher();
@@ -164,11 +165,11 @@
             </svg>
         </td-->
         
-        <td class="title">{code}</td>
+        <td class="title">{$t('profile.health.props.'+code)}</td>
 
         <td class="-empty">
             <div class="actions">
-                <button on:click={() => alert('TODO: chart')}>
+                <button on:click={() =>         ui.emit('modal.healthProperty', item)}>
                     <svg>
                         <use href="/icons.svg#chart-line"></use>
                     </svg>
@@ -208,7 +209,7 @@
 
             {#if showDetails}
 
-                <LabResultDetail
+                <SignalDetail
                     {code}
                     {status}
                     {item}

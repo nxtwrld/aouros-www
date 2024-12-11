@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Report } from "$lib/report/types.d";
-    import LabResult from "./Signal.svelte";
+    import Signal from "./Signal.svelte";
     import focused from "$lib/focused";
     import { t } from '$lib/i18n';
 
@@ -34,7 +34,7 @@
         <table  class="table-list">
         {#each data as item, index}
 
-            <LabResult bind:this={children[index]} on:showDetails={closeAll}
+            <Signal bind:this={children[index]} on:showDetails={closeAll}
                 {item} {report} />
         {/each}
         

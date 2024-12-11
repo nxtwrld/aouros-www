@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "name": "extractor",
     "description": "You are medical expert data analyzer. Proceed step by step. Identify the content of the image. We are analyzing medical data, if it is not medical report, lab results of medical imaging, mark it as notMedical. With each section provide only iformation contained in the document. For dates, if only a year is known, just list the year without day or month.  All results should be translated to [LANGUAGE] language, except for 'content' field that keeps the original language of the document.",
     "parameters": {
@@ -65,4 +66,4 @@
         },
         "required": [ "observation_type", "summary", "content", "bodyParts", "date", "performer", "patient"]
     }
-}
+} as FunctionDefinition;

@@ -103,8 +103,15 @@
 
     function openTile(prop: Property) {
         console.log('openTile', prop.signal || prop.editable, prop);
+
+        let property: Property = {
+            signal: prop.signal || prop.editable,
+            value: prop.source ? prop.source[0].value : prop.value,
+            reference: prop.source ? prop.source[0].reference : undefined,
+            unit: prop.unit
+        }
         
-        ui.emit('modal.healthProperty', prop);
+        ui.emit('modal.healthProperty', property);
     }
 
 </script>

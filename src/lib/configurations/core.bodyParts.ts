@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "type": "array",
     "items": {
         "type": "object",
@@ -24,4 +25,4 @@
         },
         "required": [ "identification", "status", "diagnosis", "treatment", "urgency"]
     }
-}
+} as FunctionDefinition;

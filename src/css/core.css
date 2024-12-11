@@ -13,7 +13,8 @@
     --font-face-print: "Verdana", sans-serif;
     --font-face: "Mulish", sans-serif;
     --font-face-system: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    --font-face-monospace: 'Fira Code', 'Courier New', monospace;
+    --font-face-heading: "Montserrat", sans-serif;
+    --font-face-values:  "Roboto Mono", "Fira Code", monospace;
     --font-face-cursive: 'Caveat', cursive;
     --color-blue: #3571FF;
     --color-purple: #A989EE;

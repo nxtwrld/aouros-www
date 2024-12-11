@@ -1,6 +1,6 @@
 
 import { error, json } from '@sveltejs/kit';
-import { analyze } from '$lib/med/session/analyzeConversation';
+import { analyze } from '$lib/session/analyzeConversation';
 
 /** @type {import('./$types.d').RequestHandler} */
 export async function POST({ request, locals: { supabase, safeGetSession } }) {

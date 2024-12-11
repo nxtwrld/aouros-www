@@ -150,26 +150,28 @@
         background-color: var(--color-gray-600);
     }
 
-
     .tile:hover {
         background-color: var(--color-white);
     }
+
     .tile:hover .tile-footer {
         background-color: var(--color);
         color: var(--color-text);
     }
 
     .tile  svg.category {
-
+        color: var(--color);
         margin: .5rem;
         width: 1.6rem;
         height: 1.6rem;
         fill: currentColor;
-
     }
+    .tile:hover  svg.category {
+        color: var(--color-text);
+    }
+
     .tile .people {
         margin: .5rem;
-
     }
 
 </style>

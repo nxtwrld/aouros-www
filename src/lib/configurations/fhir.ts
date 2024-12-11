@@ -1,4 +1,5 @@
-{
+import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+export default {
     "name": "extractor",
     "description": "Proceed step by step. From the provided structured data, create a FHIR resource JSON. The data can contain standard reports, lab results, medical imaging, etc.",
     "parameters": {
@@ -380,4 +381,4 @@
         },
         "required": [ "type", "entry"]
     }
-}
+} as FunctionDefinition;
