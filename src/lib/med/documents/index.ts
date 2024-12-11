@@ -286,7 +286,7 @@ export async function addDocument(document: DocumentNew): Promise<Document> {
         key: await user.keyPair.encrypt(key),
     }];
 
-    // if we are saveing a document for a profile, add the key to the profile
+    // if we are saving a document for a another profile, add the key to the profile
     if (profile_id && profile_id !== user_id) {
         try { 
             keys.push({
@@ -425,7 +425,7 @@ async function downloadAttachement(attachment: {
 
 }
 
-async function encrypt(data: string[], key: CryptoKey | string | undefined = undefined): Promise<{ data: string[], key: string}> {
+export async function encrypt(data: string[], key: CryptoKey | string | undefined = undefined): Promise<{ data: string[], key: string}> {
     let cryptoKey: CryptoKey
     if (key instanceof CryptoKey) {
         cryptoKey = key;
@@ -447,7 +447,7 @@ async function encrypt(data: string[], key: CryptoKey | string | undefined = und
 
 
 
-async function encryptKeyForProfile(exportedKey: string, profile_id: string): Promise<string> {
+export async function encryptKeyForProfile(exportedKey: string, profile_id: string): Promise<string> {
 
     const profile = profiles.get(profile_id) as Profile;
 

@@ -16,6 +16,8 @@ export async function GET({ request, locals: { supabase, safeGetSession }}) {
         .select('profiles!profiles_links_profile_id_fkey(id, auth_id, owner_id, fullName, language, avatarUrl, publicKey), status')
         .eq('parent_id', session.user.id);
 
+    console.log('profiles data', data);
+
     if (errorDb) {
         return error(500, { message: 'Database error' });
     }

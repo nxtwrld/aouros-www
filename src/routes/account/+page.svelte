@@ -5,7 +5,8 @@
     import { onMount } from 'svelte';
 	import type { VCard } from '$lib/contact/types.d';
     import { goto } from '$app/navigation';
-
+	import { prepareKey, encrypt as encryptAES, exportKey } from '$lib/encryption/aes.js';
+	import { encrypt as encryptRSA, pemToKey } from '$lib/encryption/rsa.js';
 
 	let STEP = 0;
 
@@ -15,6 +16,7 @@
 			fullName: string;
 			avatarUrl: string;
 			birthDate: string;
+			language: string;
 		};
 		vcard: VCard;
 		health: Record<string, any>;
@@ -92,7 +94,7 @@
 		}
 	}
 
-	const handleSubmit: SubmitFunction = ({formElement, formData, action, cancel}) => {
+	const handleSubmit: SubmitFunction = async ({formElement, formData, action, cancel}) => {
 		console.log('editData', editData);
 		//console.log('handleSubmit', {formElement, formData, action, cancel})
 		formData.append('fullName', editData.bio.fullName);
@@ -108,8 +110,57 @@
 		formData.append('publicKey', editData.privacy.publicKey);
 		formData.append('privateKey', editData.privacy.privateKey);
 		formData.append('key_hash', editData.privacy.key_hash);
+		
+		// TODO Create health and profile documents
 
 
+
+		const documents = [{
+			type: 'health',
+			metadata: {
+				title: 'Health Profile',
+				tags: ['health', 'profile'],
+				date: new Date().toISOString(),
+			},
+			content: {
+				title: 'Health Profile',
+				tags: ['health', 'profile'],
+				signals: {}
+			}
+		}, {
+			type: 'profile',
+			metadata: {
+				title: 'Profile',
+				tags: ['profile'],
+				date: new Date().toISOString(),
+			},
+			content: {
+				title: 'Profile',
+				tags: ['profile'],
+				
+			}
+		}];
+
+		await Promise.all(documents.map(async (d) => {
+			const cryptoKey = await prepareKey();
+			const encrypted = await Promise.all([d.content, d.metadata].map(s => encryptAES(cryptoKey, JSON.stringify(s))));
+			const exportedKey = await exportKey(cryptoKey);
+			const profile_key = await pemToKey(editData.privacy.publicKey);
+			const keyEncrypted = await encryptRSA(profile_key, exportedKey);
+			const keys = [{
+				key:  keyEncrypted,
+			}];
+			d.content = encrypted[0];
+			d.metadata = encrypted[1];
+			d.keys = keys;
+			return;
+		}));
+
+
+
+
+
+		formData.append('documents', JSON.stringify(documents));
 
 		loading = true
 		return async ({ update, result }) => {
@@ -122,6 +173,7 @@
 			}
 			if (result.type === 'failure') {
 				error = result.data.error;
+				console.log('error', error);
 				setStep(0);
 				loading = false
 			}
@@ -147,7 +199,7 @@
 
 	<div class="form modal">
 		{#if error}
-			<div class="form-instructions -error">{error}</div>
+			<div class="form-instructions -error">{error.message}</div>
 		{/if}
 		<div class="form-contents">
 		<svelte:component this={steps[STEP].component} bind:data={editData} {profileForm}  bind:ready={readyNext} />
