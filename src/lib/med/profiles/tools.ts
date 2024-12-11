@@ -66,13 +66,14 @@ export function mergeNamesOnReports(reports: DocumentNew[]): {
     // Merge reports with the same patient name
     reports.forEach((report) => {
         if (report.content?.patient?.fullName) {
-            
             const name = normalizeName(report.content.patient.fullName);
+
             if (patientMap.has(name)) {
                 // merge the patient object with the same name to include any missing properties
                 // carefull about the insurance subobject
                 let profile = patientMap.get(name)!.profile;
                 let newProfile = report.content.patient;
+                console.log('newProfile', newProfile);
                 if (newProfile.insurance && !profile.insurance) {
                     profile.insurance = newProfile.insurance;
                 }
@@ -98,6 +99,7 @@ export function mergeNamesOnReports(reports: DocumentNew[]): {
 
                 patientMap.get(name)!.profile = profile;
             } else {
+                
                 let profile = Object.assign(getEmptyProfile(), {
                     id: 'NEW',
                     //...report.content.patient,
@@ -122,9 +124,9 @@ export function mergeNamesOnReports(reports: DocumentNew[]): {
                     profile.insurance.number = insurance_number;
                 }
 
-
                 // check profiles store for a match
                 const foundInProfiles = findInProfiles(profile);
+
                 if (foundInProfiles.length > 0) {
                     profile = foundInProfiles[0];
                 }
@@ -133,6 +135,7 @@ export function mergeNamesOnReports(reports: DocumentNew[]): {
                     profile,
                     reports: [report]
                 });
+
             }
             
         } else {
@@ -144,7 +147,9 @@ export function mergeNamesOnReports(reports: DocumentNew[]): {
             });
         }
     });
+
     const profilesInSet = Array.from(patientMap.values());
+
     // look for matching profiles in the profiles store
 
 
@@ -237,10 +242,15 @@ export function findInProfiles(contact: {
 export function normalizePatientData(profile: DetectedProfileData): Profile {
     
     let result: Profile = getEmptyProfile();
-    profile.fullName = capitalizeFirstLetters(profile.fullName.trim())
+    result.fullName = capitalizeFirstLetters(profile.fullName.trim())
+
+    if (profile.health) {
+        result.health = profile.health;
+    }
 
     
     if (profile.birthDate) {
+        if (!result.health) result.health = {};
         result.health.birthDate = profile.birthDate;
     }
     if (profile.insurance) {
@@ -275,11 +285,11 @@ export function excludePossibleDuplicatesInPatients(patients: any[]): any[] {
     });
 }
 
-
+export const PROFILE_NEW_ID = 'NEW';
 function getEmptyProfile(): Profile {
     return {
         ...{
-            id: 'NEW',
+            id: PROFILE_NEW_ID,
             fullName: '',
             health: {},
             insurance: {},

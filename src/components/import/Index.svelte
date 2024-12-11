@@ -13,7 +13,7 @@
     import { state } from '$lib/ui';
     import { createVirtualProfile } from '$lib/med/profiles';
     import type { Profile } from '$lib/med/types.d';
-    import { mergeNamesOnReports, excludePossibleDuplicatesInPatients } from '$lib/med/profiles/tools';
+    import { mergeNamesOnReports, PROFILE_NEW_ID, excludePossibleDuplicatesInPatients } from '$lib/med/profiles/tools';
     import ImportDocument from './ImportDocument.svelte';
     import ImportProfile from './ImportProfile.svelte';
     import ScreenOverlay from '$components/ui/ScreenOverlay.svelte';
@@ -62,18 +62,17 @@
                 prepareFiles(value);
             });
         return () => {
-            console.log('unmounted....');
             unsubscribe();
             clearAll();
 
         }
     });
-
+/*
     
     $: {
         console.log(byProfileDetected);
     }
-
+*/
 
     function clearAll() {
         files.set([]);
@@ -190,6 +189,7 @@
             play('focus');
             
             byProfileDetected = mergeNamesOnReports(results);
+            console.log('byProfileDetected', JSON.stringify(byProfileDetected[0].profile));
             console.log('byProfileDetected', byProfileDetected);
         }
         processingState = ProcessingState.IDLE;
@@ -240,11 +240,9 @@
             const signals = [];
   
             // 1. check if profile exists            
-            if (!profileDetected.profile.id) {
+            if (profileDetected.profile.id === PROFILE_NEW_ID ) {
                 // 1.1 create a new profile
-                profileDetected.profile = await createVirtualProfile({
-                    fullName: profileDetected.profile.fullName
-                });
+                profileDetected.profile = await createVirtualProfile(profileDetected.profile);
             }
 
             // 2. add the documents to the database for each new profile

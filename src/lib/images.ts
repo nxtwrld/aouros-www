@@ -152,23 +152,27 @@ export function getImageMimeTypeFromBuffer(input: ArrayBuffer | string): string 
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
     
-    console.log('header', header);
     // Check the header bytes for common image formats
     if (header.startsWith('ffd8ff')) {
-      return 'image/jpg';
+        return 'image/jpg';
     } else if (header.startsWith('89504e47')) {
-      return 'image/png';
+        return 'image/png';
     } else if (header.startsWith('47494638')) {
-      return 'image/jpeg';
-    /*} else if (header.startsWith('424d')) {
-      return 'image/bmp';
-    } else if (header.startsWith('49492a00')) {
-      return 'image/tiff';*/
-    } else if (header.startsWith('52494646') && header.endsWith('57454250')) {
-      return 'image/webp';
-    } else if (header.startsWith('464c56')) {
-        return 'image/webm';
-      } else {
-      return 'application/octet-stream';
+        return 'image/jpeg';
+    } else if (header.startsWith('424d')) {
+        return 'image/bmp';
+    }
+    else if (header.startsWith('49492a00') || header.startsWith('4d4d002a')) {
+        return 'image/tiff';
+      
+    } else if (header.startsWith('52494646')) {
+        const riffType = Array.from(arr.subarray(8, 12))
+          .map(b => String.fromCharCode(b))
+          .join('');
+        if (riffType === 'WEBP') {
+          return 'image/webp';
+        }
+    } else {
+        return 'application/octet-stream';
     }
   }

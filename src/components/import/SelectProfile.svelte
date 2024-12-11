@@ -10,6 +10,7 @@
     import { normalizeName } from '$lib/med/profiles/tools';
     import type { DetectedProfileData } from '$lib/import'
     import { scale } from 'svelte/transition';
+    import { PROFILE_NEW_ID } from '$lib/med/profiles/tools';
 
     export let contact: DetectedProfileData;
 
@@ -32,7 +33,7 @@
 
 <button 
 class="button selected-profile link-{linkFrom}" 
-    class:-new={selected.id == 'NEW'}
+    class:-new={selected.id === PROFILE_NEW_ID }
     on:click={() => showSelectProfileModal = true}
     transition:scale={{delay: 1000}}
     >
@@ -44,8 +45,8 @@ class="button selected-profile link-{linkFrom}"
     <ul class="list">
         {#if profilesFound.length == 0}
         
-            <li><button value="NEW" class:-selected={selected.id == 'NEW'}>
-                {capitalizeFirstLetters(contact.name)} - {$t('app.profiles.add')}
+            <li><button value="NEW" class:-selected={selected.id == PROFILE_NEW_ID }>
+                {capitalizeFirstLetters(contact.fullName)} - {$t('app.profiles.add')}
             </button></li>
         {/if}
         {#each $profiles as profile}

@@ -4,12 +4,13 @@
     import ProfileImage from '$components/profile/ProfileImage.svelte';
     import ProfileEdit from '$components/profile/ProfileEdit.svelte';
     import { scale } from 'svelte/transition';
+    import { PROFILE_NEW_ID } from '$lib/med/profiles/tools';
     
     export let profile: Profile;
 
     export let initialProfile: Profile = structuredClone(profile);
 
-    $: isNewProfile = !('id' in profile);
+    $: isNewProfile = profile.id === PROFILE_NEW_ID;
     let showProfile: boolean = false;
 
 
