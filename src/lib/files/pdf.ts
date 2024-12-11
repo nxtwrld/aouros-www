@@ -98,7 +98,7 @@ export async function createPdfFromImageBuffers(imageBuffers: ArrayBuffer[]): Pr
   for (const imageBuffer of imageBuffers) {
     let img;
     const mimeType = getImageMimeTypeFromBuffer(imageBuffer);
-
+    console.log('mimeType', mimeType);
     if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
       img = await pdfDoc.embedJpg(imageBuffer);
     } else if (mimeType === 'image/png') {

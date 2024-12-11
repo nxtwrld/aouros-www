@@ -360,7 +360,7 @@
 
     <h3 class="h3 heading">{ $t('app.import.import-reports-scan-or-images') }</h3>
 
-    <input type="file" id="upload-file" class="-none" accept=".pdf" on:change={fileInput} />
+    <input type="file" id="upload-file" class="-none" accept=".pdf,.jpg,.jpeg,.png,.webp,.webm" on:change={fileInput} />
     
     <div class="import-canvas">
         <div class="imports">

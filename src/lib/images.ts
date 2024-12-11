@@ -120,19 +120,55 @@ export async function merge(base64Images: string[]): Promise<string>  {
 
 
 // Helper function to get image MIME type from ArrayBuffer
-export function getImageMimeTypeFromBuffer(buffer: ArrayBuffer): string {
-    const arr = new Uint8Array(buffer).subarray(0, 4);
-    let header = '';
-    for (let i = 0; i < arr.length; i++) {
-      header += arr[i].toString(16);
+export function getImageMimeTypeFromBuffer(input: ArrayBuffer | string): string {
+    
+    let arr: Uint8Array;
+    if (typeof input === 'string') {
+        // Detect and strip data URL prefix if present
+        let base64String = input;
+        if (base64String.startsWith('data:')) {
+          const commaIndex = base64String.indexOf(',');
+          if (commaIndex === -1) {
+            // Invalid data URL, no comma found
+            return undefined;
+          }
+          // Extract the part after the comma
+          base64String = base64String.slice(commaIndex + 1);
+        }
+    
+        // Decode base64 into a binary string
+        const binaryString = atob(base64String);
+        const length = binaryString.length;
+        arr = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+          arr[i] = binaryString.charCodeAt(i);
+        }
+    } else {
+        arr = new Uint8Array(input);
     }
-  
+        
+    // Extract the first 4 bytes (enough to identify most formats)
+    const header = Array.from(arr.subarray(0, 4))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    
+    console.log('header', header);
     // Check the header bytes for common image formats
     if (header.startsWith('ffd8ff')) {
-      return 'image/jpeg';
+      return 'image/jpg';
     } else if (header.startsWith('89504e47')) {
       return 'image/png';
-    } else {
-      throw new Error('Unsupported image type.');
+    } else if (header.startsWith('47494638')) {
+      return 'image/jpeg';
+    /*} else if (header.startsWith('424d')) {
+      return 'image/bmp';
+    } else if (header.startsWith('49492a00')) {
+      return 'image/tiff';*/
+    } else if (header.startsWith('52494646') && header.endsWith('57454250')) {
+      return 'image/webp';
+    } else if (header.startsWith('464c56')) {
+        return 'image/webm';
+      } else {
+      return 'application/octet-stream';
     }
   }
