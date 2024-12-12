@@ -64,8 +64,8 @@
     }
     .pi {
         position: absolute;
-        bottom: 1rem;
-        right: 1rem;
+        bottom: .2rem;
+        right: .2rem;
         font-size: .8rem;
         color: var(--color-white);
         text-decoration: none;
