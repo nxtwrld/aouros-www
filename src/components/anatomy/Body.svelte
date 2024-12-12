@@ -37,7 +37,7 @@
         target: THREE.Vector3;
     }
     const DEFAULT_OPACITY = .9;
-    const UNFOCUSED_OPACITY = .3;
+    const UNFOCUSED_OPACITY = .5;
 
 /*
 
@@ -65,6 +65,7 @@
     let shade: THREE.Group;
 
     export function reset() {
+        resetFocus();
         previousViewState = initialViewState;
         setViewState(initialViewState);
     }
@@ -1119,8 +1120,8 @@
     }*/
     .selected {
         position: absolute;
-        top: calc(var(--top-offset) + 1rem);
-        right: calc(100% - var(--viewer-size) + 3rem);
+        top: 1rem;
+        right: 1rem;
         padding: 0 0 0 1rem;
         pointer-events: none;
         display: flex;
@@ -1195,7 +1196,7 @@
         height: 100%;
         width: 100%;
         border-radius: 100%;
-        border: 1px solid var(--color-light);
+        border: 1px solid var(--color-white);
         /*background: var(--label-color);*/
         box-shadow: 1px 1px 6px 0 rgba(0,0,0.3);
         color: #FFF;
