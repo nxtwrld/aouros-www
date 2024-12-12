@@ -294,5 +294,27 @@
     "toggle-original-contents": "Toggle original contents",
     "translated-from": "Translated from {language}.",
     "vitals-and-amp-results": "Vitals &amp; Results"
+  },
+  "anatomy": {
+    "tools": {
+      "reset": "Reset",
+      "close": "Close",
+      "selection": "Selection",
+      "zoom-in": "Zoom in",
+      "zoom-out": "Zoom out"
+    },
+    "layers": { 
+      "shade" : "Shade",
+      "skin": "Skin",
+      "skeleton": "Skeleton",
+      "connective": "Connective",
+      "muscular" : "Muscular",
+      "vascular": "Vascular",
+      "nervous": "Nervous",
+      "lymphatic": "Lymphatic",
+      "respiratory": "Respiratory",
+      "digestive": "Digestive",
+      "urogenital": "Urogenital"
+    }
   }
 }

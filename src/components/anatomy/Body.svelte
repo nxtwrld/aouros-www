@@ -6,23 +6,25 @@
     import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
     import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
     import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
-    import layoutState from '$lib/layoutState';
-    import objects3d, { isObject } from '$data/objects';
-    import Label from '$components/report/ReportLabel.svelte';
+    import { state } from '$lib/ui';
+    import objects3d, { isObject } from '$lib/context/objects';
+    import Label from '$components/documents/Label.svelte';
     import { fade } from 'svelte/transition';
     import TWEEN from '@tweenjs/tween.js';
     import { isTouchDevice  } from '$lib/device';
     import focused from '$lib/focused';
-    import profile from '$lib/user/profile';
-    import type { Figure } from '$lib/user/profile';
-    import { groupReportsByTag } from '$lib/report/utils';
-    import reports from '$lib/report/store';
-    //import shaders from './shaders';
+    import { profile } from '$lib/med/profiles';
+    //import profile from '$lib/user/profile';
+    //import type { Figure } from '$lib/user/profile';
+    import type { Profile, SexEnum } from '$lib/med/types.d';
+    import { groupByTags } from '$lib/med/documents/tools';
+    //import reports from '$lib/report/store';
+    import shaders from './shaders';
     import type { IContext } from './context/types.d';
     import contexts from './context/index';
 	import store from './store';
-	import { linkPage } from '$lib/app';
-    import { addExperience } from '$lib/xp/store';
+	//import { linkPage } from '$lib/app';
+    //import { addExperience } from '$lib/xp/store';
 	import { sounds } from '$components/ui/Sounds.svelte';
     import { t } from '$lib/i18n';
 	//import Error from '../../../routes/+error.svelte';
@@ -48,10 +50,10 @@
 
     let FOCUS_COLOR = 0x16d3dd;
     let HIGHLIGHT_COLOR = 0xe9a642;
-
-    export let layout: 'mobile' | 'desk' = 'mobile';
-
-    export let model: Figure = $profile?.figure || 'male';
+        
+    //console.log('🧍', 'Body', objects3d);
+    //console.log('profile', $profile);
+    export let model: SexEnum = $profile?.health?.biologicalSex || 'male';
 
     export let activeLayers: string[] = [];
     export let activeTools: string[] = [];
@@ -85,11 +87,11 @@
         //'cholesterol': 'heart',
     }
 //  TODO: switch offf
-    $: labels = getLabelsMap({});
+    $: labels = getLabelsMap($profile);
 
-    function getLabelsMap($reports) {
+    function getLabelsMap($profile: Profile) {
 
-        return Object.entries(groupReportsByTag())
+        return Object.entries(groupByTags($profile.id))
         .filter(([k,v]) => {
             if (mapped[k]) {
                 return isObject(mapped[k], 'anatomy')
@@ -194,7 +196,7 @@
     } : {
         minZoom : 1500,
         maxZoom : 300,
-        modelY : isTouchDevice() ? -1050 : -1000,
+        modelY : isTouchDevice() ? -1050 : -960,
         modelZ : isTouchDevice() ? 500 : 600,
         cameraY : 500,
         cameraX : 800
@@ -255,7 +257,7 @@
 
     onMount(() => {
         if (container) init();
-
+        console.log('🧍', 'Mounted');
         const unsubscibeFocus = focused.subscribe((f) => {
             if (!ready) return;
             setHighlight(f.object);
@@ -493,37 +495,70 @@
             }
 
             const mtlLoader = new MTLLoader();
-            mtlLoader.load('/models/' + model + '_' + setup.id + '_obj/' + setup.id + '.mtl', function(materials) {
-                materials.preload();     
+            mtlLoader.load('/anatomy_models/' + model + '_' + setup.id + '_obj/' + setup.id + '.mtl', function(materialsCreator) {
+                materialsCreator.preload();     
+                
+/*
+                for (const materialName in materialsCreator.materials) {
+                    const oldMat = materialsCreator.materials[materialName];
+                    
+                    // Create a new MeshStandardMaterial
+                    const newMat = new THREE.MeshStandardMaterial();
+                    
+                    // Copy basic properties
+                    if (oldMat.color) newMat.color.copy(oldMat.color);
+                    if (oldMat.map) newMat.map = oldMat.map;
+                    if (oldMat.emissive) newMat.emissive.copy(oldMat.emissive);
+                    if (oldMat.emissiveMap) newMat.emissiveMap = oldMat.emissiveMap;
+                    if (oldMat.normalMap) newMat.normalMap = oldMat.normalMap;
+                    if (oldMat.alphaMap) newMat.alphaMap = oldMat.alphaMap;
+
+                    // Convert shininess (Phong) to roughness (Standard):
+                    // Phong shininess range is typically 0-100+, standard roughness is 0-1.
+                    // A higher shininess means smoother surface -> lower roughness.
+                    // Rough guess: roughness ≈ 1 - (shininess / 100), clamp it between 0 and 1.
+                    const shininess = oldMat.shininess !== undefined ? oldMat.shininess : 30;
+                    newMat.roughness = THREE.MathUtils.clamp(1 - shininess / 100, 0, 1);
+                    
+                    // Phong specular isn't directly used in standard materials.
+                    // If needed, you can approximate metalness. If specular is strong (like white),
+                    // you might set a lower roughness or slightly increase metalness for shiny surfaces.
+                    // But a common approach is to just leave metalness at 0 unless you know it's a metal.
+                    newMat.metalness = 0.0;
+
+                    // Replace the old material in the material creator
+                    materialsCreator.materials[materialName] = newMat;
+                }
+*/
                 const objLoader = new OBJLoader( );
                 if (setup.material) {
-                    //console.log('setup.material', setup.material)
-                    Object.keys(materials.materials).forEach(key => {
-                        materials.materials[key] = setup.material;
+                    console.log('setup.material', setup.material)
+                    Object.keys(materialsCreator.materials).forEach(key => {
+                        materialsCreator.materials[key] = setup.material;
                     });
                     
                 }
 
-                objLoader.setMaterials( materials );
+                
+                objLoader.setMaterials( materialsCreator );
             
                 
-                objLoader.load( '/models/' + model + '_' + setup.id + '_obj/' + setup.id + '.obj', function ( object ) {
+                objLoader.load( '/anatomy_models/' + model + '_' + setup.id + '_obj/' + setup.id + '.obj', function ( object ) {
                         object.name = setup.rename || setup.name;
 
 
-                        if (setup.color) {
-                            object.traverse( function ( child ) {
-                                if ( child.isMesh ) {
-                                    //child.material.color.setHex( o.color );
-                                    // = setup.opacity || 1;
-                                }
-                            });
-                        }
+
                         if (setup.opacity) {
                             object.traverse( function ( child ) {
                                 if ( child.isMesh ) {
-                                    child.material.transparent = true;
-                                    child.material.opacity = setup.opacity;
+                                    child.geometry.computeVertexNormals();
+                                    if (setup.color) {
+
+                                    }
+                                    if (setup.opacity) {
+                                        child.material.transparent = true;
+                                        child.material.opacity = setup.opacity;
+                                    }
                                 }
                             });
                         }
@@ -584,20 +619,24 @@
 
         scene.add(group);
 
-        const ambientLight = new THREE.AmbientLight( 0xffffff, 0.3 );
+        const ambientLight = new THREE.AmbientLight( 0xffffff, 2 );
         scene.add( ambientLight );
 
-        const light = new THREE.PointLight( 0xffffff, .8 );
+        const light = new THREE.PointLight( 0xffffff, 150 );
         light.position.set( 1, 1, 1 ).normalize();
         camera.add( light );
         scene.add( camera );
+        //scene.add( light )
 
         // Renderer
-
+        //THREE.WebGLRenderer.useLegacyLights = true;
         renderer = new THREE.WebGLRenderer( { alpha: true, antialias: true } );
         renderer.setClearColor( 0x000000, 0 ); // the default
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( container.offsetWidth, container.offsetHeight );
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
         container.appendChild( renderer.domElement );
 
         // CSS2DRenderer
@@ -678,7 +717,7 @@
     function toggleContextInfo() {
         
         showContextInfo = !showContextInfo;
-        if (showContextInfo) addExperience('curiosity');
+        //if (showContextInfo) addExperience('curiosity');
     }
     
     let originalState: any = {
@@ -819,11 +858,11 @@
         event.preventDefault();
         console.log('click label')
         sounds.focus.play();
-        $layoutState.focusView = false;
+        $state.focusView = false;
     }
 
     function mouseUpLabel(event: MouseEvent) {
-        $layoutState.focusView = true;
+        $state.focusView = true;
         event.stopPropagation();
         event.preventDefault();
         const a = event.target.closest('a');
@@ -923,7 +962,7 @@
 
             let now = Date.now();
             if (tap && (now - tap) < 300) {
-                    $layoutState.focusView = !$layoutState.focusView;
+//                    $state.focusView = !$state.focusView;
                     tap = now;
                 return;
             } else {
@@ -954,8 +993,9 @@
                 const object = intersects[ 0 ].object;
                 if (object.name) {
                     sounds.focus.play();
-                    addExperience('curiosity');
+                    //addExperience('curiosity');
                     //highlight(object);
+                    console.log('click', object.name, object);
                     focused.set({ object: object.name });
                     selected = object;
                 }
@@ -1017,7 +1057,7 @@
 <div class="labels" bind:this={labelContainer}>
     {#each labels as label}
     <div class="label" id="label-id-{label.id}">
-        <a href={linkPage('/report/tags', label.tag)} class="highlight" data-id={label.id}>
+        <a href="/med/p/{$profile.id}/documents/?tags={label.tag}" class="highlight" data-id={label.id}>
             <Label type={label.type} />
         </a>
     </div>
@@ -1032,7 +1072,7 @@
         {$t('anatomy.'+ selected.name)}
         <button on:click={resetFocus}>
             <svg>
-                <use href="/sprite.svg#close"></use>
+                <use href="/icons.svg#close"></use>
             </svg>
         </button>
     </div>
@@ -1045,11 +1085,11 @@
         <button class="close" on:click={toggleContextInfo}>
             {#if showContextInfo}
             <svg>
-                <use href="/sprite.svg#close"></use>
+                <use href="/icons.svg#close"></use>
             </svg>
             {:else}
             <svg>
-                <use href="/sprite.svg#info"></use>
+                <use href="/icons.svg#info"></use>
             </svg>
             {/if}
 
@@ -1069,13 +1109,14 @@
         transform: translateX(0);
         /*background-image: radial-gradient(ellipse at center, rgba(102, 255, 196, 100)  0%, rgba(102, 255, 196, 0) 100%);*/
     }
+    /*
     @media only screen and (min-width: 769px) {
         .model {
             width: 200%;
             height: 100%;
             transform: translateX(-40%);
         }
-    }
+    }*/
     .selected {
         position: absolute;
         top: calc(var(--top-offset) + 1rem);
@@ -1155,7 +1196,7 @@
         width: 100%;
         border-radius: 100%;
         border: 1px solid var(--color-light);
-        background: var(--label-color);
+        /*background: var(--label-color);*/
         box-shadow: 1px 1px 6px 0 rgba(0,0,0.3);
         color: #FFF;
         transform: scale(.5);

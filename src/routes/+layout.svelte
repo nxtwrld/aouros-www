@@ -5,7 +5,7 @@
 	import '../css/index.css';
 
 	export let data;
-	$: ({ session, supabase, user } = data);
+	//$: ({ session, supabase } = data);
 
 
 
@@ -15,7 +15,7 @@
 		const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
 			console.log('supabase:auth change', newSession);
 			if (newSession?.expires_at !== session?.expires_at) {
-				console.log('supabase:auth expirted', newSession);
+				console.log('supabase:auth expired', newSession);
 				invalidate('supabase:auth')
 				goto('/auth', { replaceState: true });
 			}

@@ -12,6 +12,9 @@
     import { Overlay, state } from '$lib/ui';
     import shortcuts from '$lib/shortcuts';
     import Sounds from '$components/ui/Sounds.svelte';
+    import Viewer from './Viewer.svelte';
+
+
     const dialogs = {
         healthForm: false,
         healthProperty: false
@@ -48,6 +51,10 @@
                 location.hash = '#overlay-import';
                 //$state.overlay = Overlay.import;
             }),
+            ui.listen('viewer', (config) => {
+                $state.viewer = true;
+                //$state.overlay = Overlay.none;
+            }),
             shortcuts.listen('Escape', () => {
                 if (location.hash.indexOf('#overlay-') == 0) {
                     history.back();
@@ -68,7 +75,12 @@
 
 <DropFiles>
     <Header></Header>
-    <main><slot/></main>
+    <main class="layout" class:-viewer={$state.viewer}>
+        {#if $state.viewer}
+            <section class="layout-viewer" transition:fade><Viewer /></section>
+        {/if}
+        <section class="layout-content"><slot/></section>
+    </main>
 
 
     {#if $state.overlay == Overlay.import}

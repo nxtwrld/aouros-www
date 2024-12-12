@@ -17,9 +17,10 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
     redirect(303, '/auth');
   }).then(r => r.json())
 
-  console.log('profile', profile)
+  //console.log('profile', profile)
 
   if (profile && profile.fullName && profile.private_keys && profile.publicKey) {
+    console.log('profile loaded - redirecting to med');
     redirect(303, '/med');
   }
 

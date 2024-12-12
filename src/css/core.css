@@ -119,10 +119,7 @@ html, body {
     }
 }
 
-main {
-    padding: calc(var(--toolbar-height) + var(--gap)) 0 0 0;
-    height: 100vh;
-}
+
 
 input, textarea {
     font-family: inherit;

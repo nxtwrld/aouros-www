@@ -8,8 +8,10 @@ export enum Overlay {
 
 export const state: Writable<{
     overlay: Overlay;
+    viewer: boolean;
 }> = writable({
     overlay: Overlay.none,
+    viewer: false
 });
 
 class UIEvents  extends EventEmitter {

@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
+
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
@@ -76,17 +77,25 @@ const supabase: Handle = async ({ event, resolve }) => {
   event.locals.safeGetSession = async () => {
     const {
       data: { session },
+      error: sessionError,
     } = await event.locals.supabase.auth.getSession()
+
+    if (sessionError) {
+      // JWT validation has failed
+      console.error('Error getting session:', sessionError.message)
+    }
     if (!session) {
-      return { session: null, user: null }
+      console.log('session is null', session);
+      //return { session: null, user: null }
     }
 
     const {
       data: { user },
-      error,
+      error: userError,
     } = await event.locals.supabase.auth.getUser()
-    if (error) {
+    if (userError) {
       // JWT validation has failed
+      console.error('Error getting user:', userError.message)
       return { session: null, user: null }
     }
 
@@ -111,12 +120,14 @@ const supabase: Handle = async ({ event, resolve }) => {
 }
 
 const authGuard: Handle = async ({ event, resolve }) => {
+  console.log('event::::::::::::::::::::::::::::::::', event.url.pathname )
   const { session, user } = await event.locals.safeGetSession()
 
   event.locals.session = session;
   event.locals.user = user;
 
-
+  console.log('session', session !== null)
+  console.log('user', user != null)
 
   if (!event.locals.session && event.url.pathname.startsWith('/med')) {
     return new Response(null, {

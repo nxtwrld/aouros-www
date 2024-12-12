@@ -27,11 +27,12 @@
 		"@sveltejs/kit": "^2.7.1",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/bcryptjs": "^2.4.6",
+		"@types/three": "^0.170.0",
 		"@types/throttle-debounce": "^5.0.2",
-		"@typescript-eslint/eslint-plugin": "^6.0.0",
-		"@typescript-eslint/parser": "^6.0.0",
+		"@typescript-eslint/eslint-plugin": "^8.18.0",
+		"@typescript-eslint/parser": "^8.18.0",
 		"@vercel/blob": "^0.19.0",
-		"eslint": "^8.28.0",
+		"eslint": "^9.16.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-svelte": "^2.30.0",
 		"prettier": "^2.8.0",
@@ -50,8 +51,8 @@
 	"dependencies": {
 		"@google-cloud/speech": "^6.7.0",
 		"@ricky0123/vad-web": "^0.0.18",
+		"@tweenjs/tween.js": "^21.0.0",
 		"@types/meyda": "^4.3.8",
-		"@types/pdfjs-dist": "^2.10.378",
 		"assemblyai": "^4.7.1",
 		"axios": "^1.7.7",
 		"bcryptjs": "^2.4.3",
@@ -74,6 +75,7 @@
 		"svelte-file-dropzone": "^2.0.9",
 		"svelte-i18n": "^4.0.1",
 		"sveltekit-io": "^1.0.11",
+		"three": "^0.152.2",
 		"vite-plugin-static-copy": "^2.0.0"
 	}
 }

@@ -1,6 +1,9 @@
 import { type Document } from '$lib/med/documents/types.d';
-import { profiles } from '$lib/med/profiles';
+import { get } from 'svelte/store';
+import { profiles, profile } from '$lib/med/profiles';
 import { type Profile } from '$lib/med/types.d';
+import documents from '$lib/med/documents';
+import user from '$lib/user';
 
 export function getAuthor(document: Document): Profile | null {
     try {
@@ -17,4 +20,24 @@ export function getByAnotherAuthor(document: Document): Profile | null {
         return null;
     }
     return getAuthor(document);
+}
+
+
+
+export function groupByTags(user_id: string | undefined = undefined): { [key: string]: Document[] } {
+    if (!user_id) user_id = get(profile).id;
+    const userDocuments = get(documents.byUser(user_id));
+    const groups: {
+        [key: string]: Document[];
+    } = {};
+    userDocuments.forEach(d => {
+        (d.metadata.tags || []).forEach(t => {
+            if (!groups[t]) {
+                groups[t] = [];
+            }
+            groups[t].push(d);
+        });
+    });
+    return groups;
+
 }

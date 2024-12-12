@@ -1,4 +1,33 @@
 
+
+main.layout {
+    padding: calc(var(--toolbar-height) + var(--gap)) 0 0 0;
+    height: 100vh;
+    position: relative;
+    
+}
+
+section.layout-content {
+    margin-left: 0;
+    height: 100%; 
+    overflow: auto;
+    transition: margin-left 0.2s;
+}
+section.layout-viewer {
+    position: absolute;
+    width: 33vw;
+    height: calc(100% - var(--toolbar-height) - var(--gap));
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.2s, width 0.2s;
+}
+
+main.layout.-viewer section.layout-content {    
+    margin-left: 33vw;
+}
+main.layout.-viewer section.layout-viewer {
+    opacity: 1;
+}
 .-block {
     display: block !important;
 }

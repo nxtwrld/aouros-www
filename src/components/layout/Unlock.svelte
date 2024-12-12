@@ -21,6 +21,7 @@
         if ($user) {
             console.log('unlocking');
             const unlocked = await user.unlock(passphrase);
+            console.log('unlocked', unlocked);
             if (!unlocked) {
                 error = $t('app.unlock.invalid-passphrase');
              } else {

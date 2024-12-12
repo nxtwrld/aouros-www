@@ -115,7 +115,7 @@ export function mapProfileData(core, roots) {
             profileDocumentId = r.id;
         }
         if (r.type === 'health') {
-            console.log('health', r);
+            //console.log('health', r);
             health = r.content;
             healthDocumentId = r.id;
         }
@@ -192,9 +192,9 @@ export async function createVirtualProfile(profile: ProfileNew) {
     const [ profileData ] = await response.json();
 
 
-    console.log('Profile saved', profileData);
+    //console.log('Profile saved', profileData);
 
-    console.log('Add profile documnets', profileData.id);
+    //console.log('Add profile documnets', profileData.id);
     // 7. update profiles
     await loadProfiles(undefined, true);
 
@@ -218,7 +218,7 @@ export async function createVirtualProfile(profile: ProfileNew) {
         healthDocument.birthDate = profile.birthDate;
     }
 
-    console.log('Add health documnets', profileData.id);
+    //console.log('Add health documnets', profileData.id);
     await addDocument({
         type: DocumentType.health,
         content: {

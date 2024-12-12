@@ -65,7 +65,7 @@ export const actions: Actions = {
         message: `There was an issue, Please contact support.`,
       })
     }
-
+    console.log('success')
     return {
       success: true,
       message: 'Please check your email for a magic link to log into the website.',
