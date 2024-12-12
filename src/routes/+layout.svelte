@@ -5,7 +5,7 @@
 	import '../css/index.css';
 
 	export let data;
-	//$: ({ session, supabase } = data);
+	$: ({ session, supabase } = data);
 
 
 

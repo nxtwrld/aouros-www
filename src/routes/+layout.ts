@@ -7,7 +7,6 @@ import { setClient } from '$lib/supabase'
 import { session } from "$lib/user";
 import '$lib/i18n' // Import to initialize. Important :)
 import { locale, waitLocale } from 'svelte-i18n';
-//import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 
 
 mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: false });
@@ -30,7 +29,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
    * Declare a dependency so the layout can be invalidated, for example, on
    * session refresh.
    */
-  //depends('supabase:auth')
+  depends('supabase:auth')
   
   const supabase = isBrowser()
     ? createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
