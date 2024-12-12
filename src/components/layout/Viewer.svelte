@@ -190,11 +190,12 @@
 
     .model-tools,
     .model-layers {
+        --size: 3.5rem;
         --radius: 0;
         position: absolute;
         top: 1rem;
         left: 1rem;
-        width: 4rem;
+        width: var(--size);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -219,7 +220,6 @@
         right: 1rem;
         left: auto;
         flex-direction: column;
-        width: 4rem;
         bottom: 1rem;
         top: auto;
     }
