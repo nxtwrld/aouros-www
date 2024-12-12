@@ -619,10 +619,10 @@
 
         scene.add(group);
 
-        const ambientLight = new THREE.AmbientLight( 0xffffff, 2 );
+        const ambientLight = new THREE.AmbientLight( 0xffffff, 0.3 );
         scene.add( ambientLight );
 
-        const light = new THREE.PointLight( 0xffffff, 150 );
+        const light = new THREE.PointLight( 0xffffff, .8 );
         light.position.set( 1, 1, 1 ).normalize();
         camera.add( light );
         scene.add( camera );
