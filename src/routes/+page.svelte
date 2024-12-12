@@ -1,11 +1,7 @@
 <script lang="ts">
     
     import { browser } from '$app/environment';
-    import { goto } from '$app/navigation';
-    import './www/styles.css';
 
-	export let data;
-	$: ({ countries } = data);
     //console.log(data);
     if (browser) {
      //   goto('/www');
@@ -22,14 +18,14 @@
     </div>
 </div>
 
+<a href="/auth" class="pi">&#x3C0;</a>
+
 
 <style>
     :global(html), :global(body) {
         margin: 0;
         padding: 0;
         height: 100%;
-        background-color: var(--color-primary);
-        background-image: none;
         font-family: "Mulish", sans-serif;
         font-optical-sizing: auto;
     }
@@ -39,6 +35,8 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        background-color: var(--color-gray-600);
+        width: 100vw;
         height: 100vh;
     }
     img {
@@ -63,5 +61,13 @@
         margin-top: 1rem;
         font-family: "Montserrat", sans-serif;
         font-optical-sizing: auto;
+    }
+    .pi {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        font-size: .8rem;
+        color: var(--color-white);
+        text-decoration: none;
     }
 </style>
