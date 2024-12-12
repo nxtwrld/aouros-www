@@ -794,15 +794,13 @@
             color: 3,
             opacity: .3,
             rename: 'shade_skin',
-            material:  new THREE.MeshPhysicalMaterial({
+            material:  new THREE.MeshStandardMaterial({
                 metalness: 0.2,
                 roughness: 0.5,
                 //envMapIntensity: 0.9,
                 //clearcoat: 1,
-                transparent: true,
                 transmission: .8,
-                color: 0x999999,
-                opacity: .2,
+                color: 0xCCCCCC,
                 reflectivity: 0.5,
                 //refractionRatio: 0.985,
                 //ior: 0.1,
@@ -1020,8 +1018,12 @@
         scene.traverse( function ( child: THREE.Mesh ) {
             if ( child.isMesh && child.material) {
                 // material needs to cloned to distinguish from original
-                child.oldMaterial = child.material;
-                child.material = updateMaterial(child.material, { opacity: (object == null) ? DEFAULT_OPACITY : UNFOCUSED_OPACITY , transparent: true });
+                if(!child.parent || child.parent?.name !== 'shade_skin') {
+                    // material needs to cloned to distinguish from original
+                    child.oldMaterial = child.material;
+                    child.material = updateMaterial(child.material, { opacity: (object == null) ? DEFAULT_OPACITY : UNFOCUSED_OPACITY , transparent: true });
+                }
+
 
             }
         });
