@@ -150,6 +150,7 @@
 				key:  keyEncrypted,
 			}];
 			return {
+				type: d.type,
 				content: encrypted[0],
 				metadata: encrypted[1],
 				keys
@@ -157,10 +158,7 @@
 		}));
 
 
-
-
-		console.log(documents)
-		formData.append('documents', JSON.stringify(documents));
+		formData.append('documents', JSON.stringify(documentsEncrypted));
 
 		loading = true
 		return async ({ update, result }) => {

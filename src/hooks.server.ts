@@ -60,13 +60,14 @@ const supabase: Handle = async ({ event, resolve }) => {
        * standard behavior.
        */
       set: (key, value, options) => {
-        console.log('SET COOKIE', key, value, options)
+        //console.log('SET COOKIE', key, value, options)
         event.cookies.set(key, value, { ...options, path: '/' })
       },
       remove: (key, options) => {
         event.cookies.delete(key, { ...options, path: '/' })
       },
     },
+    cookieOptions: { httpOnly: false },
   })
 
 
@@ -87,7 +88,7 @@ const supabase: Handle = async ({ event, resolve }) => {
     }
     if (!session) {
       console.log('session is null', session);
-      //return { session: null, user: null }
+      return { session: null, user: null }
     }
 
     const {

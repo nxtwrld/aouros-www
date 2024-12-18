@@ -39,10 +39,11 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
         cookies: {
           get(key) {
             const cookie = parse(document.cookie)
-            console.log('COOKIE', key, cookie[key])
+            //console.log('COOKIE', key, cookie[key])
             return cookie[key]
           },
         },
+        cookieOptions: { httpOnly: false }
       })
       
     : createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
@@ -54,6 +55,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
             return JSON.stringify(data.session)
           },
         },
+        cookieOptions: { httpOnly: false }
       })
     
   setClient(supabase)
@@ -72,21 +74,29 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 
   const currentSession = tasks[0].data.session
   const user = tasks[1].data.user*/
-  
+  /*
   const {
     data: { session: currentSession },
   } = await supabase.auth.getSession()
+      */
 
-
+  const currentSession = isBrowser()
+    ? (await supabase.auth.getSession()).data.session 
+    : data.session;
+/*
   const {
-    data: { user }
+    data: { user } 
   } = (currentSession) ? await supabase.auth.getUser() : { data: { user: null } }
-
+*/
+  
+  const user = data.user;
+  
   await waitLocale()
 
   //console.log('TASKS', tasks);
-  if (currentSession == null) console.log('session is null');
-  else console.log('sesion is correct')
+  if (currentSession == null) console.log('session is null. client browser: ',isBrowser());
+  else console.log('sesion is correct');
+  
   session.set(currentSession);
 
 
