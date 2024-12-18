@@ -1,4 +1,26 @@
 {
+  "anatomy": {
+    "layers": {
+      "connective": "",
+      "digestive": "",
+      "lymphatic": "",
+      "muscular": "",
+      "nervous": "",
+      "respiratory": "",
+      "shade": "",
+      "skeleton": "",
+      "skin": "",
+      "urogenital": "",
+      "vascular": ""
+    },
+    "tools": {
+      "close": "",
+      "reset": "",
+      "selection": "",
+      "zoom-in": "",
+      "zoom-out": ""
+    }
+  },
   "app": {
     "duration": {
       "days-ago": "{value, plural, =0 {právě teď} one {včera} other {před # dny}}",
@@ -20,6 +42,11 @@
       "save": "Uložit",
       "you-still-have-scans-in-your-yearly-subscription": "Ve svém ročním předplatném stále máte {scans} importů."
     },
+    "languages": {
+      "cs": "",
+      "de": "",
+      "en": ""
+    },
     "name": "mediqom",
     "nav": {
       "add-profile": "Přidat profil",
@@ -29,6 +56,57 @@
       "logout": "Odhlášení",
       "new-session": "Nové sezení",
       "profiles": "Profily"
+    },
+    "onboarding": {
+      "basic-profile": "",
+      "click-here": "",
+      "copy-to-clipboard": "",
+      "date-of-birth": "",
+      "email": "",
+      "enable-total-privacy": "",
+      "full-name": "",
+      "healh-profile": "",
+      "hide-passphrase": "",
+      "hit-save-to-start": "",
+      "i-am-not-sure": "",
+      "i-stored-or-remembered-the-passphrase-myself": "",
+      "if-you-loose-this-passphrase-it-can-never-be-recovered-and-all-your-data-will-be-lost-we-suggest-to-keep-it-in-password-": "",
+      "language": "",
+      "optional": "",
+      "or": "",
+      "please-select-your-anatomy": "",
+      "privacy": {
+        "check-saved-passphrase": "",
+        "configure-again": "",
+        "i-dont-need-to-store-it": "",
+        "i-have-it-stored": "",
+        "passphrase-is-not-saved-in-password-manager": "",
+        "passphrase-is-saved-in-password-manager": "",
+        "store-this-password-securely": "",
+        "to-generate-a-random-passphrase": "",
+        "try-again": "",
+        "your-passphrase-is-not-yet-set": "",
+        "your-total-privacy-is-configured": ""
+      },
+      "privacy-and-amp-encryption": "",
+      "required": "",
+      "set-passphrase": "",
+      "subscription": {
+        "call": "",
+        "connected-accounts": "",
+        "family": "",
+        "free-beta-access": "",
+        "individual": "",
+        "medical-institution": "",
+        "medical-practice": "",
+        "price": "",
+        "select": ""
+      },
+      "to-set-your-own-custom-passphrase": "",
+      "total-privacy-lets-you-add-another-layer-of-privacy-by-encrypt-all-your-data-with-a-custom-passphrase-that-even-the-serv": "",
+      "view-passphrase": "",
+      "you-account-is-almost-ready": "",
+      "your-data-are-currently-stored-securely-on-our-backend-in-encrypted-form": ""
     },
     "profile": {
       "age": "Věk",
@@ -74,6 +152,7 @@
       "please-upgrade-your-subscription-to-continue": "Chcete-li pokračovat, upgradujte své předplatné."
     }
   },
+  "click-here": "",
   "languages": {
     "ar": "arabština",
     "cs": "čeština",
@@ -89,6 +168,16 @@
         "female": "Žena",
         "intersex": "Intersex",
         "male": "Muž"
+      },
+      "bloodType": {
+        "A+": "",
+        "A-": "",
+        "AB+": "",
+        "AB-": "",
+        "B+": "",
+        "B-": "",
+        "O+": "",
+        "O-": ""
       }
     },
     "props": {

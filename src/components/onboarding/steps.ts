@@ -18,6 +18,10 @@ const steps: Step[] = [
         description: "Basic information",
         dataset: "bio",
         component: Profile
+    },{
+        description: "Health information",
+        dataset: "health",
+        component: Health
     }, {
         description: "Subscription",
         dataset: "subscription",
@@ -37,11 +41,7 @@ const steps: Step[] = [
         dataset: "insurance",
         component: Insurance
 
-    }*//*,{
-        description: "Health information",
-        dataset: "health",
-        component: Health
-    } */,{
+    }*/,{
         description: "Allset",
         dataset: "privacy",
         component: AllSet

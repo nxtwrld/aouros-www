@@ -127,6 +127,8 @@
 	}
 
 	function setStep(step: number) {
+		readyNext = false;
+		console.log('readyNext: ', readyNext);
 		location.hash = step.toString();
 	}
 	

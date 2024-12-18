@@ -1072,7 +1072,11 @@
 {#if selected}
     {#key selected}
     <div class="selected" transition:fade >
-        {$t('anatomy.'+ selected.name)}
+        {#if $t('anatomy.'+ selected.name) == 'anatomy.'+ selected.name}
+            {selected.name}
+        {:else}
+            {$t('anatomy.'+ selected.name)}
+        {/if}
         <button on:click={resetFocus}>
             <svg>
                 <use href="/icons.svg#close"></use>

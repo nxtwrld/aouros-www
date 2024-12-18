@@ -1,10 +1,82 @@
 <script lang="ts">
 	
-    export const ready: boolean = true;
-    export let data: {};
+
+    
+    import { SexEnum, BloodType } from '$lib/med/types.d';
+    import { t } from '$lib/i18n';
+
+    export let ready: boolean = false;
+    export let data: {
+        health: {
+            biologicalSex?: SexEnum;
+            birthDate?: string;
+            bloodType?:  BloodType;
+        }
+    }
     
     export let profileForm: HTMLFormElement;
+
+    $: {
+
+        if (birthDate && birthDate != '') {
+            data.health.birthDate = birthDate
+        } else {
+            delete data.health.birthDate;
+        }
+
+        if (bloodType) {
+            data.health.bloodType = bloodType
+        } else {
+            delete data.health.bloodType
+        }
+        if (biologicalSex) {
+            data.health.biologicalSex = biologicalSex;
+        } else {
+            delete data.health.biologicalSex;
+        }
+        
+        console.log('D', data.health);
+        if (data.health.biologicalSex && data.health.birthDate) {
+            ready = true;
+        } else {
+            ready = false;
+        }
+    }
+
+    let bloodType: BloodType | undefined = data.health.bloodType || undefined;
+    let biologicalSex: SexEnum | undefined = data.health.biologicalSex || undefined;
+    let birthDate: string | undefined = data.health.birthDate || undefined;
 </script>
 
 
-Health
+<h2 class="h2">{ $t('app.onboarding.healh-profile') }</h2>
+
+<div class="input">
+    <label for="birthDate">{ $t('app.onboarding.date-of-birth') } ({ $t('app.onboarding.required') })</label>
+    <input id="birthDate" name="birthDate" type="date" bind:value={birthDate} required />
+</div>
+
+
+<div class="input">
+    <label for="biologicalSex">{ $t('profile.health.props.biologicalSex') } ({ $t('app.onboarding.required') })</label>
+    <select id="biologicalSex" name="biologicalSex" bind:value={biologicalSex}  required>
+        <option value={undefined}>{ $t('app.onboarding.please-select-your-anatomy') }</option>
+        {#each Object.entries(SexEnum) as [v, o]}
+        <option value={v}>{$t('medical.prop-values.biologicalSex.'+o)}</option>
+        {/each}
+        
+    </select>
+</div>
+
+
+
+<div class="input">
+    <label for="bloodType">{ $t('profile.health.props.bloodType') }</label>
+    <select id="bloodType" name="bloodType" bind:value={bloodType}>
+        <option value={undefined}>{ $t('app.onboarding.i-am-not-sure') }</option>
+        {#each Object.entries(BloodType) as [v, o]}
+        <option value={v}>{$t('medical.prop-values.bloodType.'+o)}</option>
+        {/each}
+        
+    </select>
+</div>

@@ -1,5 +1,7 @@
 <script lang="ts">
-	
+	import { t } from '$lib/i18n';
+    
+    
     export const ready: boolean = true;
     export let data: {
         subscription: string;
@@ -10,27 +12,27 @@
     const SUBSCRIPTIONS = [
         {
             id: 'individual',
-            name: 'Individual',
+            name: $t('app.onboarding.subscription.individual'),
             connectedAccounts: 1,
             price: 'free',
         },
         {
             id: 'family',
-            name: 'Family',
+            name: $t('app.onboarding.subscription.family'),
             connectedAccounts: 10,
             price: '299',
         },
         {
             id: 'gp',
-            name: 'Medical Practice',
+            name: $t('app.onboarding.subscription.medical-practice'),
             connectedAccounts: 100,
             price: '999',
         },
         {
             id: 'medical',
-            name: 'Medical institution',
+            name: $t('app.onboarding.subscription.medical-institution'),
             connectedAccounts: 0,
-            price: 'call',
+            price: $t('app.onboarding.subscription.call'),
         },
     ]
 </script>
@@ -41,17 +43,17 @@
         <h3 class="h3">{subscription.name}</h3>
         <div class="card-body flex">
             <div class="details">
-                <p>Connected accounts: 
+                <p>{ $t('app.onboarding.subscription.connected-accounts') }: 
                     
                     {subscription.connectedAccounts === 0
                         ? 'Unlimited'
                         : subscription.connectedAccounts
                     }
                 </p>
-                <p>Price: {subscription.price}</p>
+                <p><!--{ $t('app.onboarding.subscription.price') }: {subscription.price} --> { $t('app.onboarding.subscription.free-beta-access') }</p>
             </div>
             {#if subscription.id != data.subscription}
-                <button class="button" on:click={() => data.subscription = subscription.id}>Select</button>
+                <button class="button" on:click={() => data.subscription = subscription.id}>{ $t('app.onboarding.subscription.select') }</button>
             {/if}
         </div>
     </div>

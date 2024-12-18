@@ -1,6 +1,6 @@
 import { writable, type Writable, get, type Updater} from "svelte/store";
+import type { Session } from "@supabase/supabase-js";
 import { getClient } from "$lib/supabase";
-import type { VCard } from '$lib/contact/types.d';
 import auth from '$lib/auth';
 import { decryptString } from "../encryption/passphrase";
 import { verifyHash } from "../encryption/hash";
@@ -52,7 +52,7 @@ user.subscribe((value) => {
 });
 
 
-const userSession = writable(null);
+const userSession: Writable<Session | null> = writable(null);
 export const session = {
     subscribe: userSession.subscribe,
     set: userSession.set,

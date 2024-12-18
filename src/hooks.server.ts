@@ -60,6 +60,7 @@ const supabase: Handle = async ({ event, resolve }) => {
        * standard behavior.
        */
       set: (key, value, options) => {
+        console.log('SET COOKIE', key, value, options)
         event.cookies.set(key, value, { ...options, path: '/' })
       },
       remove: (key, options) => {
@@ -125,9 +126,6 @@ const authGuard: Handle = async ({ event, resolve }) => {
 
   event.locals.session = session;
   event.locals.user = user;
-
-  console.log('session', session !== null)
-  console.log('user', user != null)
 
   if (!event.locals.session && event.url.pathname.startsWith('/med')) {
     return new Response(null, {

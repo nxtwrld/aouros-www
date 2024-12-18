@@ -1,8 +1,20 @@
 import type { VCard } from "$lib/contact/types.d";
 
 export enum SexEnum {
-    male,
-    female
+    male = "male",
+    female = "female",
+    intersex = "intersex"
+}
+
+export enum BloodType {
+    "A+" = "A+", 
+    "A-" = "A-", 
+    "B+" = "B+", 
+    "B-" = "B-", 
+    "AB+" = "AB+", 
+    "AB-" = "AB-", 
+    "O+" = "O+", 
+    "O-" = "O-"
 }
 
 

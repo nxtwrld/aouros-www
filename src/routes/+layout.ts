@@ -39,6 +39,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
         cookies: {
           get(key) {
             const cookie = parse(document.cookie)
+            console.log('COOKIE', key, cookie[key])
             return cookie[key]
           },
         },
@@ -79,12 +80,13 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
 
   const {
     data: { user }
-  } = (currentSession)? await supabase.auth.getUser() : { data: { user: null } }
+  } = (currentSession) ? await supabase.auth.getUser() : { data: { user: null } }
 
   await waitLocale()
 
   //console.log('TASKS', tasks);
-  console.log('SESSION in layout.ts', currentSession);
+  if (currentSession == null) console.log('session is null');
+  else console.log('sesion is correct')
   session.set(currentSession);
 
 

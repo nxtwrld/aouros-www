@@ -5,6 +5,12 @@
     import { t } from '$lib/i18n';
     //const documents = byUser($profile.id);
 
+    export let data: {
+        filters: {
+            tags: string[];
+        }
+    };
+    console.log('data', data);
 </script>
 
 <div class="page -empty">

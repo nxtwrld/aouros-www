@@ -8,13 +8,13 @@
 </script>
 
 
-    <h2 class="h2">You account is almost ready!</h2>
+    <h2 class="h2">{ $t('app.onboarding.you-account-is-almost-ready') }</h2>
 <div class="result-icon">
 <svg>
     <use href="/icons-o.svg#registration-form" />
 </svg>
 </div>
-<h2 class="h2">Hit SAVE to enter!</h2>
+<h2 class="h2">{ $t('app.onboarding.hit-save-to-start') }</h2>
 
 <style>
 

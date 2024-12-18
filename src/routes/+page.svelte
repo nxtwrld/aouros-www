@@ -47,7 +47,7 @@
         margin-left: -10%;
     }
     h1 {
-        font-size: 4rem;
+        font-size: 3rem;
         color: var(--color-white);
         font-weight: 400;
         margin: 1rem 0 1rem;
@@ -55,7 +55,7 @@
         font-optical-sizing: auto;
     }
     h2 {
-        font-size: 2.5rem;
+        font-size: 2rem;
         color: var(--color-white);
         font-weight: 405;
         margin-top: 1rem;

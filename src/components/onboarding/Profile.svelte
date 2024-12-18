@@ -3,7 +3,7 @@
     import { onMount } from 'svelte';
     import Languages, { type LanguageType } from '$lib/languages';
     import user from '$lib/user';
-
+    import { t } from '$lib/i18n';
 
     export let ready: boolean = false;
     export let data: {
@@ -49,23 +49,23 @@
 />
 </div>
 
-<h2 class="h2">Basic Profile (required)</h2>
+<h2 class="h2">{ $t('app.onboarding.basic-profile') }</h2>
 
 <div class="input">
-    <label for="email">Email</label>
+    <label for="email">{ $t('app.onboarding.email') }</label>
     <input id="email" type="text" bind:value={data.bio.email} disabled />
 </div>
 
 <div class="input">
-    <label for="fullName">Full Name</label>
+    <label for="fullName">{ $t('app.onboarding.full-name') }  ({ $t('app.onboarding.required') })</label>
     <input id="fullName" name="fullName" type="text" bind:value={data.bio.fullName} required />
 </div>
 
 <div class="input">
-    <label for="avatar">Language</label>
+    <label for="language">{ $t('app.onboarding.language') }</label>
     <select id="language" name="language" bind:value={data.bio.language}>
-        <option value="en">English</option>
-        <option value="cs">Čeština</option>
-        <option value="de">Deutsch</option>
+        <option value="en">{ $t('languages.en') }</option>
+        <option value="cs">{ $t('languages.cs') }</option>
+        <option value="de">{ $t('languages.de') }</option>
     </select>
 </div>

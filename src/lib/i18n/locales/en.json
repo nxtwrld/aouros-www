@@ -1,4 +1,26 @@
 {
+  "anatomy": {
+    "layers": {
+      "connective": "Connective",
+      "digestive": "Digestive",
+      "lymphatic": "Lymphatic",
+      "muscular": "Muscular",
+      "nervous": "Nervous",
+      "respiratory": "Respiratory",
+      "shade": "Shade",
+      "skeleton": "Skeleton",
+      "skin": "Skin",
+      "urogenital": "Urogenital",
+      "vascular": "Vascular"
+    },
+    "tools": {
+      "close": "Close",
+      "reset": "Reset",
+      "selection": "Selection",
+      "zoom-in": "Zoom in",
+      "zoom-out": "Zoom out"
+    }
+  },
   "app": {
     "duration": {
       "days-ago": "{value, plural, =0 {just now} one {a day ago} other {# days ago}}",
@@ -20,6 +42,11 @@
       "save": "Save",
       "you-still-have-scans-in-your-yearly-subscription": "You still have {scans} imports in your yearly subscription."
     },
+    "languages": {
+      "cs": "",
+      "de": "",
+      "en": ""
+    },
     "name": "mediqom",
     "nav": {
       "add-profile": "Add Profile",
@@ -29,6 +56,57 @@
       "logout": "Logout",
       "new-session": "New Session",
       "profiles": "Profiles"
+    },
+    "onboarding": {
+      "basic-profile": "Basic Profile",
+      "click-here": "click here.",
+      "copy-to-clipboard": "Copy to clipboard",
+      "date-of-birth": "Date of Birth",
+      "email": "Email",
+      "enable-total-privacy": "Enable total privacy",
+      "full-name": "Full Name",
+      "healh-profile": "Healh profile",
+      "hide-passphrase": "Hide passphrase.",
+      "hit-save-to-start": "Hit SAVE to Start!",
+      "i-am-not-sure": "I am not sure",
+      "i-stored-or-remembered-the-passphrase-myself": "I stored or remembered the passphrase myself.",
+      "if-you-loose-this-passphrase-it-can-never-be-recovered-and-all-your-data-will-be-lost-we-suggest-to-keep-it-in-password-": "If you loose this passphrase it can never be recovered and all your data will be lost. We suggest to keep it in password manager securely",
+      "language": "Language",
+      "optional": "optional",
+      "or": "or",
+      "please-select-your-anatomy": "Please select your anatomy",
+      "privacy": {
+        "check-saved-passphrase": "Check saved passphrase",
+        "configure-again": "Configure again",
+        "i-dont-need-to-store-it": "I don't need to store it",
+        "i-have-it-stored": "I have it stored!",
+        "passphrase-is-not-saved-in-password-manager": "Passphrase is not saved in password manager",
+        "passphrase-is-saved-in-password-manager": "Passphrase is saved in password manager",
+        "store-this-password-securely": "Store this password securely.",
+        "to-generate-a-random-passphrase": "To generate a random passphrase,",
+        "try-again": "Try again",
+        "your-passphrase-is-not-yet-set": "Your passphrase is not yet set.",
+        "your-total-privacy-is-configured": "Your total privacy is configured."
+      },
+      "privacy-and-amp-encryption": "Privacy &amp; Encryption",
+      "required": "required",
+      "set-passphrase": "Set passphrase",
+      "subscription": {
+        "call": "call",
+        "connected-accounts": "Connected accounts",
+        "family": "Family",
+        "free-beta-access": "Free beta access",
+        "individual": "Individual",
+        "medical-institution": "Medical institution",
+        "medical-practice": "Medical Practice",
+        "price": "Price",
+        "select": "Select"
+      },
+      "to-set-your-own-custom-passphrase": "To set your own custom passphrase,",
+      "total-privacy-lets-you-add-another-layer-of-privacy-by-encrypt-all-your-data-with-a-custom-passphrase-that-even-the-serv": "Total privacy lets you add another layer of privacy by encrypt all your data with a custom passphrase, that even the server does not know.",
+      "view-passphrase": "View passphrase.",
+      "you-account-is-almost-ready": "You account is almost ready!",
+      "your-data-are-currently-stored-securely-on-our-backend-in-encrypted-form": "Your data are currently stored securely on our backend in encrypted form."
     },
     "profile": {
       "age": "Age",
@@ -74,6 +152,7 @@
       "please-upgrade-your-subscription-to-continue": "Please upgrade your subscription to continue."
     }
   },
+  "click-here": "click here",
   "languages": {
     "ar": "Arabic",
     "cs": "Czech",
@@ -89,6 +168,16 @@
         "female": "Female",
         "intersex": "Intersex",
         "male": "Male"
+      },
+      "bloodType": {
+        "A+": "A+",
+        "A-": "A-",
+        "AB+": "AB+",
+        "AB-": "AB-",
+        "B+": "B+",
+        "B-": "B-",
+        "O+": "O+",
+        "O-": "O-"
       }
     },
     "props": {
@@ -120,13 +209,13 @@
         "absolute_lymphocytes": "Absolute Lymphocytes",
         "absolute_monocytes": "Absolute Monocytes",
         "absolute_neutrophils": "Absolute Neutrophils",
+        "age": "Age",
         "albumin": "Albumin",
         "alcoholConsumption": "Alcohol Consumption",
         "allergen": "Allergen",
         "alp": "ALP",
         "alt": "ALT",
         "ast": "AST",
-        "age": "Age",
         "bacteria": "Bacteria",
         "basophils": "Basophils",
         "bilirubin": "Bilirubin",
@@ -294,27 +383,5 @@
     "toggle-original-contents": "Toggle original contents",
     "translated-from": "Translated from {language}.",
     "vitals-and-amp-results": "Vitals &amp; Results"
-  },
-  "anatomy": {
-    "tools": {
-      "reset": "Reset",
-      "close": "Close",
-      "selection": "Selection",
-      "zoom-in": "Zoom in",
-      "zoom-out": "Zoom out"
-    },
-    "layers": { 
-      "shade" : "Shade",
-      "skin": "Skin",
-      "skeleton": "Skeleton",
-      "connective": "Connective",
-      "muscular" : "Muscular",
-      "vascular": "Vascular",
-      "nervous": "Nervous",
-      "lymphatic": "Lymphatic",
-      "respiratory": "Respiratory",
-      "digestive": "Digestive",
-      "urogenital": "Urogenital"
-    }
   }
 }
