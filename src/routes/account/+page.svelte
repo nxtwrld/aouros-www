@@ -78,7 +78,6 @@
 			email: session.user.email,
 			fullName: form?.fullName ?? profile?.fullName ?? '',
 			avatarUrl: profile?.avatarUrl ?? '',
-			birthDate: form?.birthDate ?? profile?.birthDate ?? '',
 			language: form?.language ?? profile?.language ?? 'en'
 		},
 		subscription: profile?.subscription ?? 'individual',
@@ -95,11 +94,10 @@
 	}
 
 	const handleSubmit: SubmitFunction = async ({formElement, formData, action, cancel}) => {
-		console.log('editData', editData);
+		//console.log('editData', editData);
 		//console.log('handleSubmit', {formElement, formData, action, cancel})
 		formData.append('fullName', editData.bio.fullName);
 		formData.append('avatarUrl', editData.bio.avatarUrl);
-		formData.append('birthDate', editData.bio.birthDate);
 		formData.append('language', editData.bio.language);
 		formData.append('vcard', JSON.stringify(editData.vcard));
 		formData.append('subscription', editData.subscription);
@@ -107,9 +105,9 @@
 		formData.append('health', JSON.stringify(editData.health));
 		formData.append('passphrase', !editData.privacy.enabled ? editData.privacy.passphrase : undefined);
 
-		formData.append('publicKey', editData.privacy.publicKey);
-		formData.append('privateKey', editData.privacy.privateKey);
-		formData.append('key_hash', editData.privacy.key_hash);
+		formData.append('publicKey', editData.privacy.publicKey as string);
+		formData.append('privateKey', editData.privacy.privateKey as string);
+		formData.append('key_hash', editData.privacy.key_hash as string);
 		
 		// TODO Create health and profile documents
 
@@ -125,7 +123,8 @@
 			content: {
 				title: 'Health Profile',
 				tags: ['health', 'profile'],
-				signals: {}
+				signals: {},
+				...editData.health
 			}
 		}, {
 			type: 'profile',
@@ -141,25 +140,26 @@
 			}
 		}];
 
-		await Promise.all(documents.map(async (d) => {
+		const documentsEncrypted = await Promise.all(documents.map(async (d) => {
 			const cryptoKey = await prepareKey();
 			const encrypted = await Promise.all([d.content, d.metadata].map(s => encryptAES(cryptoKey, JSON.stringify(s))));
 			const exportedKey = await exportKey(cryptoKey);
-			const profile_key = await pemToKey(editData.privacy.publicKey);
+			const profile_key = await pemToKey(editData.privacy.publicKey as string);
 			const keyEncrypted = await encryptRSA(profile_key, exportedKey);
 			const keys = [{
 				key:  keyEncrypted,
 			}];
-			d.content = encrypted[0];
-			d.metadata = encrypted[1];
-			d.keys = keys;
-			return;
+			return {
+				content: encrypted[0],
+				metadata: encrypted[1],
+				keys
+			};
 		}));
 
 
 
 
-
+		console.log(documents)
 		formData.append('documents', JSON.stringify(documents));
 
 		loading = true

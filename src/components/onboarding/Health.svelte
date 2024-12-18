@@ -35,7 +35,6 @@
             delete data.health.biologicalSex;
         }
         
-        console.log('D', data.health);
         if (data.health.biologicalSex && data.health.birthDate) {
             ready = true;
         } else {

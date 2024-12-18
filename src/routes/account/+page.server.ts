@@ -43,12 +43,17 @@ export const actions: Actions = {
     const documents = JSON.parse(formData.get('documents') as string);
 
     const { session } = await safeGetSession()
+
+    if (!session || !session.user) {
+      return fail(403, { error: 'Unauthorized'})
+    }
+
     if (passphrase && !(await verifyHash(passphrase, key_hash))) {
       return fail(400, { error: 'Invalid passphrase' })
     }
 
     // store profile data
-    console.log('update profile', fullName, avatarUrl, subscription, publicKey, session?.user.id);
+    //console.log('update profile', fullName, avatarUrl, subscription, publicKey, session?.user.id);
 
     const { error: profileError } = await supabase.from('profiles').update({
       fullName,

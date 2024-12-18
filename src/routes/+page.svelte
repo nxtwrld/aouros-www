@@ -12,7 +12,7 @@
     <div>
         <img src="/icon.svg" alt="aouros logo" />
 
-        <h1>AOUROS</h1>
+        <h1>qureio</h1>
         <h2>quantified curiosity</h2>
         <!--h2>query cure</h2-->
     </div>
