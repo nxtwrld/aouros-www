@@ -23,8 +23,6 @@ export default defineConfig({
 	//plugins: [sveltekit(), webSocketServer],
 	plugins: [
 		
-		sveltekit(),
-		//topLevelAwait(),
 		viteStaticCopy({
 			targets: [
 			  {
@@ -40,13 +38,13 @@ export default defineConfig({
 				dest: normalizePath(path.join(__dirname, 'static'))
 			  },
 			  {
-				src: normalizePath(path.join(__dirname, 'node_modules/pdfjs-dist/build/*')),
+				src: normalizePath(path.join(__dirname, 'node_modules/pdfjs-dist/build/*.*')),
 				dest: normalizePath(path.join(__dirname, 'static/pdfjs'))
 			  }
-			],
-			watch: true
+			]
 		}),
-
+		//topLevelAwait(),
+		sveltekit()
 	],
 	optimizeDeps: {
 		//force: true,
