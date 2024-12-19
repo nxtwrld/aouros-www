@@ -38,6 +38,10 @@ export default defineConfig({
 			  {
 				src: normalizePath(path.join(__dirname, 'node_modules/onnxruntime-web/dist/*.wasm')),
 				dest: normalizePath(path.join(__dirname, 'static'))
+			  },
+			  {
+				src: normalizePath(path.join(__dirname, 'node_modules/pdfjs-dist/build/*')),
+				dest: normalizePath(path.join(__dirname, 'static/pdfjs'))
 			  }
 			],
 			watch: true
