@@ -3,6 +3,8 @@ import { error, json } from '@sveltejs/kit';
 import assess from '$lib/import.server/assessInputs';
 import { loadSubscription, updateSubscription } from '$lib/user/subscriptions.server.js';
 
+
+
 /** @type {import('./$types.d').RequestHandler} */
 export async function POST({ request, locals: { supabase, safeGetSession }}) {
 	//const str = url.searchParams.get('drug');
