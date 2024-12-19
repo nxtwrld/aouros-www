@@ -14,7 +14,7 @@ const config = {
 		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
 		adapter: vercel({
 			strict: false,
-			maxDuration: 400
+			maxDuration: 300
 		}),
 		files : {
 			//lib: 'src/core/lib',
