@@ -22,7 +22,13 @@ export function getClient(clientName: string = 'default'): SupabaseClient {
     const client = clients.get(clientName);
     if (client == undefined) {
         console.log(clientName, clients);
-        throw new Error(`Client ${clientName} not found`);
+        if (clientName == 'default') {
+            clients.set('default', createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY))
+            return getClient();
+        } else {
+            throw new Error (`Supabase client ${clientName} noe found`)
+        }
+        
     }
     return client;
 }

@@ -46,9 +46,14 @@
                 console.log('modal.healthForm', config);
                 dialogs.healthForm = config || true;
             }),
-            ui.listen('overlay.import', () => {
+            ui.listen('overlay.import', (state: boolean = true) => {
                 console.log('import');
-                location.hash = '#overlay-import';
+                if (state == true) location.hash = '#overlay-import';
+                else  {
+                    if (location.hash.indexOf('#overlay-') == 0) {
+                    history.back();
+                }
+                }
                 //$state.overlay = Overlay.import;
             }),
             ui.listen('viewer', (config) => {

@@ -10,7 +10,6 @@
     import DocumentView from '$components/documents/DocumentView.svelte';
     import SelectProfile from './SelectProfile.svelte';
     import { play } from '$components/ui/Sounds.svelte';
-    import { state } from '$lib/ui';
     import { createVirtualProfile } from '$lib/med/profiles';
     import type { Profile } from '$lib/med/types.d';
     import { mergeNamesOnReports, PROFILE_NEW_ID, excludePossibleDuplicatesInPatients } from '$lib/med/profiles/tools';
@@ -18,10 +17,8 @@
     import ImportProfile from './ImportProfile.svelte';
     import ScreenOverlay from '$components/ui/ScreenOverlay.svelte';
     import LoaderThinking from '$components/ui/LoaderThinking.svelte';
-    import Loading from '$components/ui/Loading.svelte';
     import { updateSignals } from '$lib/health/signals';
-    import { goto } from '$app/navigation';
-
+    import DocumentTile from '$components/documents/DocumentTile.svelte';
     
     let documents: DocumentNew[] = [];
     let results: DocumentNew[] = [];//empResults;
@@ -139,7 +136,11 @@
         const task = tasks[0]
         task.state = TaskState.ASSESSING;
         tasks  = [...tasks];
-        const doc = await processTask(task);
+        const doc = await processTask(task)            
+            .catch(e => {
+                doc.state = DocumentState.ERROR;
+                console.log('ERROR assessing document', e, doc);
+            });
         const valid = doc.filter(d => d.isMedical);
         const invalid = doc.filter(d => !d.isMedical).map(d => {
             d.state = DocumentState.ERROR;
@@ -166,7 +167,12 @@
             const doc = documents[0];
             doc.state = DocumentState.PROCESSING;
             documents = [...documents];
-            const report = await processDocument(doc, ($user as User)?.language);
+        
+            const report = await processDocument(doc, ($user as User)?.language)
+                .catch(e => {
+                    doc.state = DocumentState.ERROR;
+                    console.log('ERROR processing document', e, doc);
+                });
             documents = documents.slice(1);
             delete report.isMedical;
 
@@ -189,8 +195,6 @@
             play('focus');
             
             byProfileDetected = mergeNamesOnReports(results);
-            console.log('byProfileDetected', JSON.stringify(byProfileDetected[0].profile));
-            console.log('byProfileDetected', byProfileDetected);
         }
         processingState = ProcessingState.IDLE;
         //console.log('result', results);
@@ -286,7 +290,10 @@
                 savedDocuments = [...savedDocuments, newSavedDocument]; 
             }
             byProfileDetected = byProfileDetected.slice(1);
-            savingDocumentsInProgress = false;
+            //ui.emit('overlay.import', false);
+            setTimeout(() => {
+                savingDocumentsInProgress = false;
+            },500)
         }
 /*
 
@@ -365,11 +372,9 @@
 
 
             {#each savedDocuments as doc}
-                <!--div class="report-import">    
-                    <a href={'/med/p/'+doc.user_id+'/document/' + doc.id} >
-                        {doc.id}
-                    </a>
-                </div-->
+            <div class="report-done">
+                <DocumentTile document={doc} />
+            </div>
             {/each}
 
             {#each byProfileDetected as profileDetected}
@@ -429,7 +434,7 @@
                 {/if}
             </button>
             {/if}
-            {#if results.length > 0 && !analyzingInProgress}
+            {#if byProfileDetected.length > 0 && !analyzingInProgress}
             <button class="button -large" on:click={add} disabled={results.length == 0 || savingDocumentsInProgress}>
                 {#if savingDocumentsInProgress}
                     <div class="button-loading">
@@ -483,10 +488,12 @@
     .report-import {
         width: 8rem;
         min-height: 20rem;
-
-
-
     }
+    .report-done {
+        width: 12rem;
+        background-color: var(--color-gray-300);
+    }
+
     .report {
         position: relative;
         display: flex;
