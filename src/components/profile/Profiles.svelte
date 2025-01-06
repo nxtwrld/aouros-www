@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { type Profile } from '$lib/med/types.d';
-    import { getAge } from '$lib/med/datetime';
+    import { type Profile } from '$lib/types.d';
+    import { getAge } from '$lib/datetime';
     import { goto } from '$app/navigation';
-    import { profiles, removeLinkedProfile } from '$lib/med/profiles/';
+    import { profiles, removeLinkedProfile } from '$lib/profiles/';
     import ProfileImage from './ProfileImage.svelte';
     import user from '$lib/user';
     import { t } from '$lib/i18n';

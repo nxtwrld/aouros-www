@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { profile} from '$lib/med/profiles';
-    import { getAge } from '$lib/med/datetime';
+    import { profile} from '$lib/profiles';
+    import { getAge } from '$lib/datetime';
     import PropertyTile from './PropertyTile.svelte';
     import { properties } from '$lib/health/dataTypes';
     import user from '$lib/user';

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { profile, profiles } from "$lib/med/profiles";
+    import { profile, profiles } from "$lib/profiles";
     import { page } from "$app/stores";
     import { emit } from "$lib/shortcuts";
     import user from "$lib/user";

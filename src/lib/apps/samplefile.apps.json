@@ -1,0 +1,84 @@
+[
+    {
+        "uid": "com.medainsight.app",
+        "name": "MedAInsight",
+        "description": "MedAInsight is a and AI medical assistent helping users to diagnose their symptoms and find the best doctor for their needs.",
+        "icon": "/apps/MedAInsight/appicon.png",
+        "category": "AI",
+        "url": "https://www.medainsight.com/",
+        "tags": [
+            "AI",
+            "Medical",
+            "Health"
+        ],
+        "connect" : {
+            "uri": "https://med-ainsight.vercel.app",
+            "type": "once"
+        },
+        "credits": 100,
+        "author": "MedAInsight Corp.",
+        "requires": [
+        ],
+        "permissions": [
+            "read"
+        ],
+        "connections" : [
+            "report", "focus", "question"
+        ],
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA78n7hENd5ruxntluGGedHE6vFwyDiLtAOXWqbgwQNlje6UoZ8GH4zxMXp940uhT/jpG8pp2hzH3gYv+0dVPqRuhn6szUqG9LQsOy+Ub2iyE0kQHfZPXUiBCARsZV+QI3ECNbpaq9LwZuPKsWXfurt1JMNS5YHcWXw9MpF0mT2ViBa0+34EOcI65ET9qz9livGzgse9CJVm5HJkqs6s1mZy5aA0gdVh20k884T7yeZf3GH+sU0aFieerPA29SL2P0KWfr0HWElYrhD/rktB0zJCqg8ZWHTQJjaBkY65vcvYaAECj+/o1Djpe0VTi/zSmxIcC8VsiynWWsEYr+rIs1uygpLOt798dL31yJ07n0FCv7dad0G2vLr0ZuRQpSLGcKdyUj4gFrN35OsWqiU8lSf00caXYjYxMnYq7jeyP2Ih+AeW63p4V6fO1xqZBARmjd2Y5clGPCfQOq7rFJih4FqFVXO8fQb4bYHFxYLPgPi7Ykdf9VTILG6Ixw5WFNHeAyxvficUfZL4/K3yzVzkMhCbSCbNsYuPtijQeRqB9b58E1eKpldJXV6tQpQukkidaPGKwMsVgMwOejLJulOUJK79rs/QAsHnDrNhqBCdOXXEa5FxF03kvvjLBbJY0PHUTFUO2BTv2TDffXNBEI85CwI/NIGDl/sUyX9IGNwCu8mp8CAwEAAQ==\n-----END PUBLIC KEY-----"
+    },
+    {
+        "uid": "com.mammaio.mammography",
+        "name": "Mammaio",
+        "description": "Mammaio is a breast scanner detection model that uses AI to detect breast cancer in early stages. It always checks your sonography against the most recent versions of the model.",
+        "icon": "/apps/Mammaio/appicon.png",
+        "category": "AI",
+        "url": "https://mammaio.aouros.com/",
+        "tags": [
+            "AI",
+            "Medical",
+            "Health"
+        ],
+        "connect" : {
+            "uri": "https://mammaio.vercel.app",
+            "type": "async"
+        },
+        "credits": 150,
+        "author": "NYU",
+        "requires": [
+            "mammography"
+        ],
+        "permissions": [
+            "read"
+        ],
+        "connections" : [
+            "report", "focus", "question"
+        ],
+        "publicKey": "-----BEGIN PUBLIC KEY-----\nMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA78n7hENd5ruxntluGGedHE6vFwyDiLtAOXWqbgwQNlje6UoZ8GH4zxMXp940uhT/jpG8pp2hzH3gYv+0dVPqRuhn6szUqG9LQsOy+Ub2iyE0kQHfZPXUiBCARsZV+QI3ECNbpaq9LwZuPKsWXfurt1JMNS5YHcWXw9MpF0mT2ViBa0+34EOcI65ET9qz9livGzgse9CJVm5HJkqs6s1mZy5aA0gdVh20k884T7yeZf3GH+sU0aFieerPA29SL2P0KWfr0HWElYrhD/rktB0zJCqg8ZWHTQJjaBkY65vcvYaAECj+/o1Djpe0VTi/zSmxIcC8VsiynWWsEYr+rIs1uygpLOt798dL31yJ07n0FCv7dad0G2vLr0ZuRQpSLGcKdyUj4gFrN35OsWqiU8lSf00caXYjYxMnYq7jeyP2Ih+AeW63p4V6fO1xqZBARmjd2Y5clGPCfQOq7rFJih4FqFVXO8fQb4bYHFxYLPgPi7Ykdf9VTILG6Ixw5WFNHeAyxvficUfZL4/K3yzVzkMhCbSCbNsYuPtijQeRqB9b58E1eKpldJXV6tQpQukkidaPGKwMsVgMwOejLJulOUJK79rs/QAsHnDrNhqBCdOXXEa5FxF03kvvjLBbJY0PHUTFUO2BTv2TDffXNBEI85CwI/NIGDl/sUyX9IGNwCu8mp8CAwEAAQ==\n-----END PUBLIC KEY-----"
+    },
+    {
+        "uid": "2",
+        "name": "uLékaře.cz",
+        "description": "When it comes to your health, you no longer need to be alone. Now you can have over 350 doctors of all specializations in your pocket, along with other ways of caring for your health and that of your loved ones. We're to help you with any problem you may have. We always strive to care for you and your health as best we can, and to be a true partner on your way to health.",
+        "icon": "/apps/uLekare/appicon.png",
+        "category": "Telemedicine",
+        "url": "https://www.ulekare.cz/",
+        "tags": [
+            "Telemedicine",
+            "Medical",
+            "Health"
+        ],
+        "credits": 0,
+        "author": "uLékaře.cz",
+        "requires": [
+        ],
+        "permissions": [
+            "read",
+            "write"
+        ],
+        "connections" : [
+            "report", "focus", "question"
+        ],
+        "publicKey": ""
+    }
+]

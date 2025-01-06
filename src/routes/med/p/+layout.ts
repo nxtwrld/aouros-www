@@ -1,6 +1,6 @@
 
 import type { LayoutLoad } from './$types';
-import { loadProfiles } from '$lib/med/profiles';
+import { loadProfiles } from '$lib/profiles';
 
 export const prerender = false;
  

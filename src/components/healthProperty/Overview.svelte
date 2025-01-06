@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { type Signal } from "$lib/med/types.d"; 
-    import { profile } from '$lib/med/profiles';
+    import { type Signal } from "$lib/types.d"; 
+    import { profile } from '$lib/profiles';
     import ReferenceRange from "$components/charts/ReferenceRange.svelte";
     import ReferenceRangeLineChart from "$components/charts/ReferenceRangeLineChart.svelte";
     import { t } from '$lib/i18n';

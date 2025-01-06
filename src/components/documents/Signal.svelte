@@ -1,9 +1,13 @@
 <script lang="ts">
     import SignalDetail from "./SignalDetail.svelte";
-        import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import defaults from '$data/lab.properties.defaults.json';
     import ui from '$lib/ui';
     import { t } from '$lib/i18n';
+
+    import type { Document } from '$lib/documents/types.d';
+
+    export let document: Document;
     //import profile from '$lib/user/profile';
 
     const dispatch = createEventDispatcher();
@@ -15,10 +19,13 @@
         value: string | number,
         unit: string,
         reference: string,
-        urgency?: number
+        urgency?: number,
+        document?: Document
     };
 
-
+    if (document) {
+        item.document = document;
+    }
 
     export let showDetails: boolean = false;
 
@@ -169,7 +176,7 @@
 
         <td class="-empty">
             <div class="actions">
-                <button on:click={() =>         ui.emit('modal.healthProperty', item)}>
+                <button on:click={() =>         ui.emit('modal.healthProperty', item )}>
                     <svg>
                         <use href="/icons.svg#chart-line"></use>
                     </svg>

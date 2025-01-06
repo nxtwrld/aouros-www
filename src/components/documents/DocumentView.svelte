@@ -7,7 +7,9 @@
     import SectionSignals from './SectionSignals.svelte';
     import SectionText from './SectionText.svelte';
     import SectionPerformer from './SectionPerformer.svelte';
+    import SectionLinks from './SectionLinks.svelte';
     import SectionAttachments from './SectionAttachments.svelte';
+    import type { Document } from '$lib/documents/types.d';
 
     export let document: Document;
     //console.log('DOCUMENT', document);
@@ -29,7 +31,7 @@
 
     <SectionRecommendations data={document.content.recommendations} />
     
-    <SectionSignals data={document.content.signals} />
+    <SectionSignals data={document.content.signals} {document} />
 
 
     <SectionText data={{
@@ -39,8 +41,12 @@
 
         }} />
     <SectionPerformer data={document.content.performer} />
+    <SectionLinks data={document.content.links} />
 
     <SectionAttachments data={document.content.attachments} key={document.key} />
+
+
+
 </div>
 <!--pre>
     {JSON.stringify(document, null, 2)}

@@ -10,7 +10,7 @@ import { type Content, type TokenUsage } from '$lib/ai/types.d';
 import signals from '$lib/configurations/core.signals'
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
-import { ANALYZE_STEPS as Types } from '$lib/med/types.d';
+import { ANALYZE_STEPS as Types } from '$lib/types.d';
 import { env } from '$env/dynamic/private';
 
 

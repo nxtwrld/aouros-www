@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { profile } from '$lib/med/profiles';
+    import { profile } from '$lib/profiles';
     import userStore from '$lib/user';
-    import { byUser } from '$lib/med/documents';
-    import { type Document } from '$lib/med/documents/types.d';
+    import { byUser } from '$lib/documents';
+    import { type Document } from '$lib/documents/types.d';
     import DocumentTile from './DocumentTile.svelte';
 
     export let user: string = $profile?.id || $userStore?.id as string;

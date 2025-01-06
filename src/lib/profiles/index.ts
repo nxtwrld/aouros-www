@@ -1,9 +1,9 @@
 import profiles from './profiles';
 import profile from './profile';
 
-import { importDocuments, addDocument } from '$lib/med/documents';
-import { DocumentType} from '$lib/med/documents/types.d';
-import type { ProfileNew, Profile } from '$lib/med/types.d';
+import { importDocuments, addDocument } from '$lib/documents';
+import { DocumentType} from '$lib/documents/types.d';
+import type { ProfileNew, Profile } from '$lib/types.d';
 import user from '$lib/user';
 import { prepareKeys } from '$lib/encryption/rsa';
 import { createHash } from '$lib/encryption/hash';

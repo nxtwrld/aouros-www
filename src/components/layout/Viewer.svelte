@@ -1,6 +1,6 @@
 <script lang="ts">
     import Body from '$components/anatomy/Body.svelte';
-    import { profile } from '$lib/med/profiles';
+    import { profile } from '$lib/profiles';
     import objects from '$components/anatomy/objects.json';
 	import { onDestroy, onMount } from 'svelte';
 	import Loading from '$components/ui/Loading.svelte';

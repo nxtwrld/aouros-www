@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type Document } from '$lib/med/documents/types.d';
+    import { type Document } from '$lib/documents/types.d';
     import BadgeHorizontal from '$components/ui/dates/BadgeHorizontal.svelte';
     export let document: Document;  
 </script>

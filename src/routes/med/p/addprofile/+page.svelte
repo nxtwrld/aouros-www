@@ -1,6 +1,6 @@
 <script lang="ts">
     
-    import { type Profile, SexEnum } from "$lib/med/types.d";
+    import { type Profile, SexEnum } from "$lib/types.d";
     import user from "$lib/user";
 
     //console.log("user", $user);

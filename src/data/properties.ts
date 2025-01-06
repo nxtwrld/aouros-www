@@ -2,7 +2,7 @@ import lab from './lab.properties.json';
 import defaults from './lab.properties.defaults.json';
 //import vital from './vital.properties.json';
 //import type { SelectOptions } from '$components/forms/Select.svelte';
-import type { Profile } from '$lib/med/types.d';
+import type { Profile } from '$lib/types.d';
 
 export type Property = {
     key: string;

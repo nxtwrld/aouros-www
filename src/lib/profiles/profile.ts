@@ -1,5 +1,5 @@
 import { writable, type Writable, get } from "svelte/store";
-import { type Profile } from "$lib/med/types.d";
+import { type Profile } from "$lib/types.d";
 
 
 const store: Writable<Profile> = writable();

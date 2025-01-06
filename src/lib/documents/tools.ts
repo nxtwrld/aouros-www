@@ -1,8 +1,8 @@
-import { type Document } from '$lib/med/documents/types.d';
+import { type Document } from '$lib/documents/types.d';
 import { get } from 'svelte/store';
-import { profiles, profile } from '$lib/med/profiles';
-import { type Profile } from '$lib/med/types.d';
-import documents from '$lib/med/documents';
+import { profiles, profile } from '$lib/profiles';
+import { type Profile } from '$lib/types.d';
+import documents from '$lib/documents';
 import user from '$lib/user';
 
 export function getAuthor(document: Document): Profile | null {

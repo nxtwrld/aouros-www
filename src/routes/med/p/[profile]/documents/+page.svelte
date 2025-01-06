@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { byUser } from '$lib/med/documents';
-    import { profile } from '$lib/med/profiles';
+    import { byUser } from '$lib/documents';
+    import { profile } from '$lib/profiles';
     import Documents from '$components/documents/Index.svelte';
     import { t } from '$lib/i18n';
     //const documents = byUser($profile.id);

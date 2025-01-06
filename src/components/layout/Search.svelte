@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { type Profile } from '$lib/med/types.d';
-    import { profiles } from '$lib/med/profiles';
+    import { type Profile } from '$lib/types.d';
+    import { profiles } from '$lib/profiles';
     import shortcuts from '$lib/shortcuts';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';

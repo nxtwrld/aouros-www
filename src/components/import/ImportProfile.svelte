@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { type Profile } from '$lib/med/types.d';
+    import { type Profile } from '$lib/types.d';
     import ScreenOverlay from '$components/ui/ScreenOverlay.svelte';
     import ProfileImage from '$components/profile/ProfileImage.svelte';
     import ProfileEdit from '$components/profile/ProfileEdit.svelte';
     import { scale } from 'svelte/transition';
-    import { PROFILE_NEW_ID } from '$lib/med/profiles/tools';
+    import { PROFILE_NEW_ID } from '$lib/profiles/tools';
     
     export let profile: Profile;
 

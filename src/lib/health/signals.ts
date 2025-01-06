@@ -1,8 +1,8 @@
-import { type Signal } from '$lib/med/types.d';
-import { getDocument, updateDocument } from '$lib/med/documents';
-import {  type Document } from '$lib/med/documents/types.d';
-import { profiles, updateProfile} from '$lib/med/profiles';
-import { type Profile } from '$lib/med/types.d';
+import { type Signal } from '$lib/types.d';
+import { getDocument, updateDocument } from '$lib/documents';
+import {  type Document } from '$lib/documents/types.d';
+import { profiles, updateProfile} from '$lib/profiles';
+import { type Profile } from '$lib/types.d';
 
 export async function updateSignals(signals: Signal[], user_id: string, refId: string = 'input') {
 

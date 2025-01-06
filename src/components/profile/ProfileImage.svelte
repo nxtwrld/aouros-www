@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type Profile } from '$lib/med/types.d';
+    import { type Profile } from '$lib/types.d';
 
     export let profile: Profile | null = null;
     

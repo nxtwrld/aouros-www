@@ -13,11 +13,11 @@
     import TWEEN from '@tweenjs/tween.js';
     import { isTouchDevice  } from '$lib/device';
     import focused from '$lib/focused';
-    import { profile } from '$lib/med/profiles';
+    import { profile } from '$lib/profiles';
     //import profile from '$lib/user/profile';
     //import type { Figure } from '$lib/user/profile';
-    import type { Profile, SexEnum } from '$lib/med/types.d';
-    import { groupByTags } from '$lib/med/documents/tools';
+    import type { Profile, SexEnum } from '$lib/types.d';
+    import { groupByTags } from '$lib/documents/tools';
     //import reports from '$lib/report/store';
     import shaders from './shaders';
     import type { IContext } from './context/types.d';

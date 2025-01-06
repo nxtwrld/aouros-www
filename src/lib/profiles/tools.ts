@@ -1,9 +1,9 @@
 import { prefixes, suffixes } from './honorificTitles';
 import type { DetectedProfileData } from '$lib/import';
 import { profiles } from './index';
-import type { Profile } from '$lib/med/types.d';
+import type { Profile } from '$lib/types.d';
 import { capitalizeFirstLetters, removeNonAlpha, removeNonAlphanumeric, removeNonNumeric, searchOptimize } from '$lib/strings';
-import type { DocumentNew  } from '$lib/med/documents/types.d';
+import type { DocumentNew  } from '$lib/documents/types.d';
 import user from '$lib/user';
 
 export function normalizeName(name: string, options: {

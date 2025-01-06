@@ -1,7 +1,7 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
     import { decrypt as decryptAes, importKey } from '$lib/encryption/aes';
-    import { decrypt } from '$lib/med/documents/index';
+    import { decrypt } from '$lib/documents/index';
     import { base64ToArrayBuffer } from '$lib/arrays';
 
     type Attachment = {

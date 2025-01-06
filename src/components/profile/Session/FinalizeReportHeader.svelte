@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { profile } from '$lib/med/profiles';
+    import { profile } from '$lib/profiles';
 
     
     export let report: any;

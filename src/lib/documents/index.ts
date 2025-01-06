@@ -2,10 +2,10 @@ import  user from "$lib/user";
 import { writable, type Writable , type Readable, derived, get } from 'svelte/store';
 import { importKey, exportKey, encrypt as encryptAES, decrypt as decryptAES, prepareKey } from "$lib/encryption/aes";
 import { pemToKey, encrypt as encryptRSA } from "$lib/encryption/rsa";
-import { profile, profiles } from '$lib/med/profiles';
+import { profile, profiles } from '$lib/profiles';
 import Errors from '$lib/Errors';
-import type { Profile } from "$lib/med/types.d";
-import { DocumentType, type DocumentPreload, type DocumentEncrypted, type Document, type DocumentNew, type Attachment } from '$lib/med/documents/types.d';
+import type { Profile } from "$lib/types.d";
+import { DocumentType, type DocumentPreload, type DocumentEncrypted, type Document, type DocumentNew, type Attachment } from '$lib/documents/types.d';
 import { base64ToArrayBuffer } from '$lib/arrays';
 
 

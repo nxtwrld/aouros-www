@@ -1,11 +1,13 @@
 <script lang="ts">
-    import type { Report } from "$lib/report/types.d";
+    
     import Signal from "./Signal.svelte";
     import focused from "$lib/focused";
     import { t } from '$lib/i18n';
+    import type { Document } from '$lib/documents/types.d';
+
+    export let document: Document;
 
     export let data: any;
-    export let report: Report;
 
     //console.log('Results',data);
     let children: LabResult[] = [];
@@ -35,7 +37,7 @@
         {#each data as item, index}
 
             <Signal bind:this={children[index]} on:showDetails={closeAll}
-                {item} {report} />
+                {item} {document} />
         {/each}
         
         

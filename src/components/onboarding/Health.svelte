@@ -2,7 +2,7 @@
 	
 
     
-    import { SexEnum, BloodType } from '$lib/med/types.d';
+    import { SexEnum, BloodType } from '$lib/types.d';
     import { t } from '$lib/i18n';
 
     export let ready: boolean = false;

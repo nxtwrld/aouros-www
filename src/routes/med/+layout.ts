@@ -2,7 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { LayoutLoad } from './$types';
 import { setUser } from '$lib/user';
 import { locale, waitLocale } from 'svelte-i18n';
-import { loadProfiles } from '$lib/med/profiles';
+import { loadProfiles } from '$lib/profiles';
 
 export const load: LayoutLoad = async ({ fetch, parent }) => {
 

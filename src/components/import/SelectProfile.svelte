@@ -1,16 +1,16 @@
 <script lang="ts">
-    import { profiles,  } from '$lib/med/profiles';
-    import {  findInProfiles, normalizePatientData } from '$lib/med/profiles/tools';
+    import { profiles,  } from '$lib/profiles';
+    import {  findInProfiles, normalizePatientData } from '$lib/profiles/tools';
     import { capitalizeFirstLetters } from '$lib/strings';
     import { t } from '$lib/i18n';
     import Modal from '$components/ui/Modal.svelte';
-    import type { Profile } from '$lib/med/types.d';
+    import type { Profile } from '$lib/types.d';
     import ProfileImage from '$components/profile/ProfileImage.svelte';
     import { onMount } from 'svelte';
-    import { normalizeName } from '$lib/med/profiles/tools';
+    import { normalizeName } from '$lib/profiles/tools';
     import type { DetectedProfileData } from '$lib/import'
     import { scale } from 'svelte/transition';
-    import { PROFILE_NEW_ID } from '$lib/med/profiles/tools';
+    import { PROFILE_NEW_ID } from '$lib/profiles/tools';
 
     export let contact: DetectedProfileData;
 

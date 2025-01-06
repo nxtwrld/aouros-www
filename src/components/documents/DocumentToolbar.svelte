@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { type Document } from '$lib/med/documents/types.d';
-    import { removeDocument } from '$lib/med/documents';
+    import { type Document } from '$lib/documents/types.d';
+    import { removeDocument } from '$lib/documents';
     import { goto } from '$app/navigation';
 
 

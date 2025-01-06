@@ -1,5 +1,5 @@
 <script lang="ts">
-    //import { type Profile } from '$lib/med/types.d';
+    //import { type Profile } from '$lib/types.d';
     import { AudioState, convertFloat32ToMp3} from '$lib/audio/microphone';
     import { onMount} from 'svelte';
     import Diagnosis from '$components/profile/Session/Diagnosis.svelte';
@@ -9,9 +9,9 @@
     import LoaderThinking from '$components/ui/LoaderThinking.svelte';
     import Report from '$components/profile/Session/FinalizeReport.svelte';
     import doctor, { getDoctorSignature } from '$lib/med/doctor';
-    import { profile } from '$lib/med/profiles';
+    import { profile } from '$lib/profiles';
     import { float32Flatten } from '$lib/array';
-    import { ANALYZE_STEPS } from '$lib/med/types.d';
+    import { ANALYZE_STEPS } from '$lib/types.d';
   
     
     const MIN_AUDIO_SIZE: number = 100000 * 2;

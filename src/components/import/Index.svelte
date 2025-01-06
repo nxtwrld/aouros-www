@@ -2,17 +2,17 @@
 <script lang="ts">
     import { files, createTasks, processTask } from '$lib/files';
     import { processDocument, DocumentState, type Task, TaskState  } from '$lib/import';
-    import { DocumentType, type DocumentNew, type Document  } from '$lib/med/documents/types.d';
-    import { addDocument } from '$lib/med/documents';
+    import { DocumentType, type DocumentNew, type Document  } from '$lib/documents/types.d';
+    import { addDocument } from '$lib/documents';
     import  user, { type User } from '$lib/user';
     import { onMount } from 'svelte';
     import { t } from '$lib/i18n';
     import DocumentView from '$components/documents/DocumentView.svelte';
     import SelectProfile from './SelectProfile.svelte';
     import { play } from '$components/ui/Sounds.svelte';
-    import { createVirtualProfile } from '$lib/med/profiles';
-    import type { Profile } from '$lib/med/types.d';
-    import { mergeNamesOnReports, PROFILE_NEW_ID, excludePossibleDuplicatesInPatients } from '$lib/med/profiles/tools';
+    import { createVirtualProfile } from '$lib/profiles';
+    import type { Profile } from '$lib/types.d';
+    import { mergeNamesOnReports, PROFILE_NEW_ID, excludePossibleDuplicatesInPatients } from '$lib/profiles/tools';
     import ImportDocument from './ImportDocument.svelte';
     import ImportProfile from './ImportProfile.svelte';
     import ScreenOverlay from '$components/ui/ScreenOverlay.svelte';

@@ -1,9 +1,9 @@
 
 <script lang="ts">
-    import { getByAnotherAuthor } from '$lib/med/documents/tools';
-    import type { Document } from '$lib/med/documents/types.d';
+    import { getByAnotherAuthor } from '$lib/documents/tools';
+    import type { Document } from '$lib/documents/types.d';
     import BadgeHorizontal from '$components/ui/dates/BadgeHorizontal.svelte';
-    import { profile } from '$lib/med/profiles';
+    import { profile } from '$lib/profiles';
 
     export let document: Document
 

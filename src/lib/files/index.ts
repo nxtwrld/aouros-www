@@ -3,7 +3,7 @@ import { processPDF, CODES as PDF_CODES } from "./pdf";
 import { processImages } from "./image";
 import type { Assessment, AssessmentDocument, AssessmentPage} from "../import.server/assessInputs";
 import { type Document, DocumentState } from "../import/index";
-import type { DocumentNew  } from '$lib/med/documents/types.d';
+import type { DocumentNew  } from '$lib/documents/types.d';
 import { writable, type Writable } from "svelte/store";
 import { selectPagesFromPdf, createPdfFromImageBuffers } from '$lib/files/pdf';
 import { type Task, TaskState } from "../import/index";

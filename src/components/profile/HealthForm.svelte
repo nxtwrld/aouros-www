@@ -3,7 +3,7 @@
     import HealthFormField from './HealthFormField.svelte';
     import { createEventDispatcher } from 'svelte';
     import { t } from '$lib/i18n';
-///    import { profile } from '$lib/med/profiles';
+///    import { profile } from '$lib/profiles';
 
     const dispatch = createEventDispatcher();
 
