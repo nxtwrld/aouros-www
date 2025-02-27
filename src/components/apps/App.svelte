@@ -2,8 +2,9 @@
     import { sharedItems } from '$lib/apps/store';
     import type { AppRecord } from '$lib/apps/types.d';
 
-    export let data: AppRecord | undefined = undefined;
-
+    export let data: any;
+    export let app: AppRecord = data.app ;
+    console.log('App record', data.app);
 
     function close() {
         sharedItems.set([]);
@@ -12,13 +13,13 @@
 
 </script>
 
-{#if data}
+{#if app && app.connect}
 <div class="app">
         <button on:click={close} class='close'><svg>
             <use href="/sprite.svg#close" />
         </svg>
         </button>
-        <iframe src="{data.connect.uri}" frameborder="0" class="app-iframe"></iframe>
+        <iframe src="{app.connect.uri}" frameborder="0" class="app-iframe"></iframe>
 
 </div>
 {/if}
@@ -31,7 +32,7 @@
     }
     .app-iframe {
         width: 100%;
-        height: 100%;
+        height: calc(100vh - var(--toolbar-height));
         border: none;
     }
 

@@ -2,7 +2,7 @@
     import apps, { sharedItems } from '$lib/apps/store';
     import { AppConnectionType, type AppConnectionType as AppConnectionTypeEnum, type AppRecord } from '$lib/apps/types.d';
     import Modal from '$components/ui/Modal.svelte';
-	//import Share from '../shares/Share.svelte';
+	import Share from './Share.svelte';
     //import { getAllLinkedItems, type Item } from "$lib/common.utils";
     import AppGet from './AppGet.svelte';
     //import type { Link } from "$lib/common.types.d";
@@ -17,9 +17,10 @@
 
     let selectedApp: AppRecord | undefined = undefined;
 
-    let items: Link[] = [];
+    let items: Link[] = shared;
 
     if (shared) {
+        console.log('Shared', shared);
         /*
         getAllLinkedItems(shared).then((itemsShared: Item[]) => {
             items = itemsShared.map(item => {
@@ -66,6 +67,24 @@
         showShareDialog = true;
     }
 
+    function download() {
+        console.log('Download', items);
+        items[0].content.signals.forEach(signal => {
+            delete signal.document
+        });
+        const file = JSON.parse(JSON.stringify(items[0]));
+        console.log('Download', file);
+
+        delete file.key;
+        delete file.attachments;
+        delete file.content.attachments;
+    
+        const a = document.createElement('a');
+        a.href = 'data:application/octet-stream,' + encodeURIComponent(JSON.stringify(file, null, 2));
+        a.download = `${file.metadata.title} - ${file.metadata.date} - export.json`;
+        a.click();
+    }
+
     function filterApps(app: AppRecord) {
         // check if 
         if (app.requires.length > 0) {
@@ -80,15 +99,22 @@
 
 
 <div class="apps">
-        {#if shared}
+        {#if shared && false}
             <button on:click={share}>
                 <svg class="app-icon">
-                    <use xlink:href="/sprite.svg#share"></use>
+                    <use xlink:href="/icons.svg#share"></use>
                 </svg>
                 <span>Share</span>
             </button>
         {/if}
 
+        
+        <button on:click={download}>
+            <svg class="app-icon">
+                <use xlink:href="/icons.svg#download"></use>
+            </svg>
+            <span>Download</span>
+        </button>
     <slot />
 {#each $apps.filter(filterApps) as app}
         <button on:click={() => openApp(app)} >
@@ -147,7 +173,7 @@
         top: .5rem;
         right: .5rem;
         font-size: .8rem;
-        background-color: var(--color-secondary);
+        background-color: var(--color-highlight);
         padding: .2rem .5rem
     }
     @media (hover: hover) {

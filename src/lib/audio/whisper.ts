@@ -12,7 +12,7 @@ export async function transcribeAudio(audioData: File, instructions: { lang: str
     model: "whisper-1",
     language: instructions.lang,
     response_format: "text",
-    prompt: "The transcript is park of a doctor patient session convesation. The doctor is asking the patient about their symptoms and the patient is responding."//,
+    prompt: "The transcript is a part of a doctor patient session convesation. The doctor is asking the patient about their symptoms and the patient is responding. A nurse or multiple doctors may be part of the conversation."//,
     //timestamp_granularities: ["word"]
   });
 

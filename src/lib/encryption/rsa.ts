@@ -1,4 +1,5 @@
 import { encryptString } from './passphrase';
+import { str2ab } from './utils';
 const crypto = globalThis.crypto;
 
 export class KeyPair {
@@ -115,4 +116,28 @@ export async function prepareKeys(passphrase: string): Promise<{ publicKeyPEM: s
     const privateKeyPEM = await keyToPEM(keyPair.privateKey, true);
     const encryptedPrivateKey = await encryptString(privateKeyPEM, passphrase);
     return { publicKeyPEM, encryptedPrivateKey };
+}
+
+
+
+export async function importPublicKeySpki(pem: string): Promise<CryptoKey> {
+    const pemHeader = "-----BEGIN PUBLIC KEY-----";
+    const pemFooter = "-----END PUBLIC KEY-----";
+    const pemContents = pem.replace(/(\r\n|\r|\n)/g, '').replace(pemHeader, '').replace(pemFooter, '').trim();
+
+    // base64 decode the string to get the binary data
+    const binaryDerString = window.atob(pemContents);
+    // convert from a binary string to an ArrayBuffer
+    const binaryDer = str2ab(binaryDerString);
+
+    return await window.crypto.subtle.importKey(
+        "spki",
+        binaryDer,
+        {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+        },
+        true,
+        ["encrypt"],
+    );
 }

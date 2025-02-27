@@ -12,7 +12,8 @@
     export let app: AppRecord;
     export let items: Link[] = [];
     
-    console.log(app);
+    console.log('App', app);
+    console.log('Items', items);
     
     const dispatch = createEventDispatcher();
     let reviewData: boolean = false;
@@ -24,7 +25,7 @@
             dispatch('abort');
             setTimeout(() => {
                 //spendCredits(app.credits);
-                goto('/app/s' + uid);
+                goto('/med/app/' + uid);
             }, 500);
 
 
@@ -44,7 +45,7 @@
         <div class="app-details">
             <div>
                 <h5>{ $t('app-connect.price') }:</h5>
-                <strong class="price" class:-insufficent-credit={$xp.credits < app.credits}>{app.credits} { $t('app-connect.credits') }</strong>
+                <!--strong class="price" class:-insufficent-credit={$xp.credits < app.credits}>{app.credits} { $t('app-connect.credits') }</strong-->
             </div>
             <div>
                 <h5>{ $t('app-connect.author') }:</h5>

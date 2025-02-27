@@ -8,15 +8,15 @@
     import AudioButton from '$components/profile/Session/AudioButton.svelte';
     import LoaderThinking from '$components/ui/LoaderThinking.svelte';
     import Report from '$components/profile/Session/FinalizeReport.svelte';
-    import doctor, { getDoctorSignature } from '$lib/med/doctor';
+    //import doctor, { getDoctorSignature } from '$lib/med/doctor';
     import { profile } from '$lib/profiles';
     import { float32Flatten } from '$lib/array';
     import { ANALYZE_STEPS } from '$lib/types.d';
   
     
-    const MIN_AUDIO_SIZE: number = 100000 * 2;
+    const MIN_AUDIO_SIZE: number = 10000 * 8;
     const MIN_TEXT_LENGTH: number = 100;
-    const DEFAULT_WAIT_TIME: number = 15000;
+    const DEFAULT_WAIT_TIME: number = 10000;
     // UI Session States
     enum Views {
         "start",
@@ -291,7 +291,7 @@
             followUp: selectFinals(analysis.followUp),
             medication: selectFinals(analysis.medication),
             patient: $profile,
-            doctor: $doctor
+            doctor: {}
         };
 
         console.log('Finalized', toFinalize);
@@ -307,7 +307,7 @@
         });
         report = await result.json();
         finalReport = report;
-        report.doctor = getDoctorSignature();
+        report.doctor = 'doctor signature'
 
         console.log(report);
         view = Views.report;
