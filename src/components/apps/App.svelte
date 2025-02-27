@@ -1,6 +1,7 @@
 <script lang="ts">
     import { sharedItems } from '$lib/apps/store';
     import type { AppRecord } from '$lib/apps/types.d';
+    import { onMount } from 'svelte';
 
     export let data: any;
     export let app: AppRecord = data.app ;
@@ -10,6 +11,22 @@
         sharedItems.set([]);
         history.back(-1);
     }
+    let id: null | string = null;
+
+    onMount(()=> {
+        const items = sharedItems.get();
+        console.log('Items to be stored....', items);
+        fetch(app.connect.uri + '/api/connect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ items })
+        }).then(res => res.json()).then(res => {
+            console.log('Connect response', res);
+            id = res.id;
+        });
+    })
 
 </script>
 
@@ -19,7 +36,11 @@
             <use href="/sprite.svg#close" />
         </svg>
         </button>
-        <iframe src="{app.connect.uri}" frameborder="0" class="app-iframe"></iframe>
+        {#if id}
+        <iframe src="{app.connect.uri}?id={id}" frameborder="0" class="app-iframe"></iframe>
+        {:else}
+        Loading data...
+        {/if}
 
 </div>
 {/if}

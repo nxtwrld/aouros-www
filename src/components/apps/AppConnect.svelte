@@ -17,7 +17,7 @@
 
     let selectedApp: AppRecord | undefined = undefined;
 
-    let items: Link[] = shared;
+    let items: Link[] = cleanItems(shared);
 
     if (shared) {
         console.log('Shared', shared);
@@ -33,7 +33,17 @@
         });*/
     }
 
-
+    function cleanItems(items) {
+        return items.map(item => {
+            item.content.signals.forEach(signal => {
+                delete signal.document
+            });
+            delete item.key;
+            delete item.attachments;
+            delete item.content.attachments;
+            return item;
+        });
+    }
 
 
 
@@ -47,7 +57,7 @@
         showShareDialog = false;
         showLeavingWarning = false;
         selectedApp = undefined;
-        sharedItems.set([]);
+        //sharedItems.set([]);
     }
 /*
     function confirm() {
@@ -68,17 +78,9 @@
     }
 
     function download() {
-        console.log('Download', items);
-        items[0].content.signals.forEach(signal => {
-            delete signal.document
-        });
-        const file = JSON.parse(JSON.stringify(items[0]));
-        console.log('Download', file);
 
-        delete file.key;
-        delete file.attachments;
-        delete file.content.attachments;
-    
+        const file = JSON.parse(JSON.stringify(items[0]));
+
         const a = document.createElement('a');
         a.href = 'data:application/octet-stream,' + encodeURIComponent(JSON.stringify(file, null, 2));
         a.download = `${file.metadata.title} - ${file.metadata.date} - export.json`;
@@ -131,7 +133,7 @@
 {#if showLeavingWarning && selectedApp !== undefined}
     <Modal on:close={abort}>
         <div class="window">
-        <AppGet app={selectedApp} {items} on:abort={abort} />
+        <AppGet app={selectedApp} items={cleanItems(items)} on:abort={abort} />
         </div>
     </Modal>
 {/if}
@@ -139,7 +141,7 @@
 {#if showShareDialog && shared !== undefined}
     <Modal on:close={abort}>
         <div class="window">
-            <Share on:share={abort} on:abort={abort}  {items} />
+            <Share on:share={abort} on:abort={abort}  items={cleanItems(items)} />
         </div>
     </Modal>
 {/if}

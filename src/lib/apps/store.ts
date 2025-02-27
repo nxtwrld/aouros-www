@@ -4,7 +4,7 @@ import type { AppRecord } from './types.d';
 //import { get as vaultGet, set as vaultSet } from '$lib/vault/index';
 import ui from '$lib/ui';
 import sampleData from './samplefile.apps.json';
-
+console.log(sampleData);
 const STORE_NAME = 'apps';
 
 console.log('🌍','Apps store created');
@@ -17,7 +17,17 @@ ui.on('vault-ready', async () => {
 */
 //loadStore();
 
-export const sharedItems = writable<[]>([]);
+const sharedItemsStore = writable<[]>([]);
+
+
+export const sharedItems = {
+    subscribe: sharedItemsStore.subscribe,
+    set: sharedItemsStore.set,
+    get: function() {
+        return get(sharedItemsStore)
+    },
+
+}
 /*
 async function loadStore() {
     try {
