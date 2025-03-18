@@ -35,7 +35,7 @@
 
     function cleanItems(items) {
         return items.map(item => {
-            item.content.signals.forEach(signal => {
+            if (item.content.signals) item.content.signals.forEach(signal => {
                 delete signal.document
             });
             delete item.key;
