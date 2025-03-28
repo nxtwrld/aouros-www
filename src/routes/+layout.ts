@@ -58,6 +58,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
         cookieOptions: { httpOnly: false }
       })
     
+  console.log('supabase setClient from layout.ts')
   setClient(supabase)
 
   /**

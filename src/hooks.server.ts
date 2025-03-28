@@ -70,7 +70,9 @@ const supabase: Handle = async ({ event, resolve }) => {
     cookieOptions: { httpOnly: false },
   })
 
-  setClient(event.locals.supabase);
+
+  // CHECK IF IT IS ENOUGH TO SET CLIENT IN LAYOUT
+  //setClient(event.locals.supabase);
   /**
    * Unlike `supabase.auth.getSession()`, which returns the session _without_
    * validating the JWT, this function also calls `getUser()` to validate the

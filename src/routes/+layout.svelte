@@ -10,14 +10,15 @@
 
 
 	onMount(() => {
+		console.log('supabase setClient from layout.svelte')
 		setClient(supabase);
 		
 		const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
-			console.log('supabase:auth change', newSession);
+			console.log('supabase:auth change', newSession, session);
 			if (newSession?.expires_at !== session?.expires_at) {
 				console.log('supabase:auth expired', newSession);
-				invalidate('supabase:auth')
-				goto('/auth', { replaceState: true });
+				//invalidate('supabase:auth')
+				//goto('/auth', { replaceState: true });
 			}
 		})
 		return () => data.subscription.unsubscribe();

@@ -14,6 +14,11 @@ clients.set('default', createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KE
 
 
 export function setClient(client: SupabaseClient, clientName: string = 'default') {
+    console.log('Supabase - setting client:', clientName);
+    if (clients.get(clientName) != undefined) {
+        //throw new Error(`Supabase client ${clientName} already exists`);
+        console.warn(`Supabase client ${clientName} already exists`);
+    }
     clients.set(clientName, client);
 }
 
@@ -21,7 +26,7 @@ export function setClient(client: SupabaseClient, clientName: string = 'default'
 export function getClient(clientName: string = 'default'): SupabaseClient {
     const client = clients.get(clientName);
     if (client == undefined) {
-        console.log(clientName, clients);
+        console.log('Supabase - creating client:', clientName, clients);
         if (clientName == 'default') {
             clients.set('default', createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY))
             return getClient();
@@ -30,5 +35,6 @@ export function getClient(clientName: string = 'default'): SupabaseClient {
         }
         
     }
+    console.log('Supabase - getting client:', clientName);
     return client;
 }

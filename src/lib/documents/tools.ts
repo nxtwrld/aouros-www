@@ -2,7 +2,7 @@ import { type Document } from '$lib/documents/types.d';
 import { get } from 'svelte/store';
 import { profiles, profile } from '$lib/profiles';
 import { type Profile } from '$lib/types.d';
-import documents from '$lib/documents';
+import documents, { byUser } from '$lib/documents';
 import user from '$lib/user';
 
 export function getAuthor(document: Document): Profile | null {
@@ -26,7 +26,7 @@ export function getByAnotherAuthor(document: Document): Profile | null {
 
 export function groupByTags(user_id: string | undefined = undefined): { [key: string]: Document[] } {
     if (!user_id) user_id = get(profile).id;
-    const userDocuments = get(documents.byUser(user_id));
+    const userDocuments = get(byUser(user_id));
     const groups: {
         [key: string]: Document[];
     } = {};
