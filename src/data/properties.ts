@@ -57,7 +57,7 @@ export function computeOutputForRereference(
     const lowerBound = refMin - halfRange;
     const upperBound = refMax + halfRange;
     
-    console.log('value', value, 'refMin', refMin, 'refMax', refMax, 'outMin', outMin, 'outMax', outMax)
+    //console.log('value', value, 'refMin', refMin, 'refMax', refMax, 'outMin', outMin, 'outMax', outMax)
 
     if (value >= refMin && value <= refMax) {
       // Value is within the reference range
