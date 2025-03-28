@@ -17,7 +17,7 @@
 			console.log('supabase:auth change', newSession, session);
 			if (newSession?.expires_at !== session?.expires_at) {
 				console.log('supabase:auth expired', newSession);
-				//invalidate('supabase:auth')
+				invalidate('supabase:auth')
 				//goto('/auth', { replaceState: true });
 			}
 		})
