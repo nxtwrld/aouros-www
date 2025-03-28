@@ -15,9 +15,15 @@ export function byUser(id: string): Readable<(DocumentPreload | Document)[]> {
     return profileStores[id];
 }
 
+
+const byID: {
+    [key: string]: DocumentPreload | Document
+} = {};
+
 export const profileStores: {
     [key: string]: Readable<(DocumentPreload | Document)[]>
 } = {};
+
 
 export default {
     subscribe: documents.subscribe,
@@ -28,26 +34,27 @@ export default {
 }
 
 
-const byID: {
-    [key: string]: DocumentPreload | Document
-} = {};
-
-
 
 function updateIndex() {
     get(documents).forEach(doc => {
         byID[doc.id] = doc;
-        if (!profileStores[doc.user_id]) {
-            profileStores[doc.user_id] = derived(documents, ($documents, set) => {
-                const userDocuments = $documents.filter(doc => 
-                    doc.user_id === doc.user_id
-                    && doc.type === 'document'
-                );
-                set(userDocuments);
-            });
+        const user_id = doc.user_id;
+        if (!profileStores[user_id]) {
+            (() => {
+
+                profileStores[user_id] = derived(documents, ($documents, set) => {
+                    const userDocuments = $documents.filter(doc => 
+                        doc.user_id === user_id
+                        && doc.type === 'document'
+                    );
+                    console.log('Update profile store', user_id, userDocuments);
+                    set(userDocuments);
+                });
+            })();
         }
 
     })
+ //   console.log('Updated index', Object.entries(byID).map(([k, v]) => console.log(k, get(v))));
 }
 
 export async function getDocument(id: string): Promise<Document | undefined> {
