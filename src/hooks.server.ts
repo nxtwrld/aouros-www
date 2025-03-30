@@ -52,23 +52,20 @@ const supabase: Handle = async ({ event, resolve }) => {
    */
   event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
-
-      get: (key) => event.cookies.get(key),
+      getAll: () => event.cookies.getAll(),
       /**
        * SvelteKit's cookies API requires `path` to be explicitly set in
        * the cookie options. Setting `path` to `/` replicates previous/
        * standard behavior.
        */
-      set: (key, value, options) => {
-        //console.log('SET COOKIE', key, value, options)
-        event.cookies.set(key, value, { ...options, path: '/' })
-      },
-      remove: (key, options) => {
-        event.cookies.delete(key, { ...options, path: '/' })
+      setAll: (cookiesToSet) => {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          event.cookies.set(name, value, { ...options, path: '/' })
+        })
       },
     },
-    cookieOptions: { httpOnly: false },
   })
+
 
 
   // CHECK IF IT IS ENOUGH TO SET CLIENT IN LAYOUT
@@ -81,32 +78,21 @@ const supabase: Handle = async ({ event, resolve }) => {
   event.locals.safeGetSession = async () => {
     const {
       data: { session },
-      error: sessionError,
     } = await event.locals.supabase.auth.getSession()
-
-    if (sessionError) {
-      // JWT validation has failed
-      console.error('Error getting session:', sessionError.message)
-    }
     if (!session) {
-      console.log('session is null', session);
       return { session: null, user: null }
     }
-
     const {
       data: { user },
-      error: userError,
+      error,
     } = await event.locals.supabase.auth.getUser()
-    if (userError) {
+    if (error) {
       // JWT validation has failed
-      console.error('Error getting user:', userError.message)
       return { session: null, user: null }
     }
-
     return { session, user }
   }
-
-  const response = await resolve(event, {
+  return resolve(event, {
     filterSerializedResponseHeaders(name) {
       /**
        * Supabase libraries use the `content-range` and `x-supabase-api-version`
@@ -115,36 +101,33 @@ const supabase: Handle = async ({ event, resolve }) => {
       return name === 'content-range' || name === 'x-supabase-api-version'
     },
   })
+}
+/*
+  const response = await resolve(event, {
+    filterSerializedResponseHeaders(name) {
+      return name === 'content-range' || name === 'x-supabase-api-version'
+    },
+  })
 
   if (event.url.pathname.startsWith('/v1')) {
         response.headers.append('Access-Control-Allow-Origin', `*`);
   }
 
-  return response;
-}
+  return response;*/
+
+
 
 const authGuard: Handle = async ({ event, resolve }) => {
-  console.log('event::::::::::::::::::::::::::::::::', event.url.pathname )
   const { session, user } = await event.locals.safeGetSession()
-
-  event.locals.session = session;
-  event.locals.user = user;
-
-  if (!event.locals.session && event.url.pathname.startsWith('/med')) {
-    return new Response(null, {
-      status: 303,
-      headers: { location: '/auth?redirect='+ event.url.pathname }
-    })
+  event.locals.session = session
+  event.locals.user = user
+  if (!event.locals.session && event.url.pathname.startsWith('/private')) {
+    redirect(303, '/auth')
   }
-
   if (event.locals.session && event.url.pathname === '/auth') {
-    return new Response(null, {
-      status: 303,
-      headers: { location: '/account' }
-    })
+    redirect(303, '/private')
   }
-
   return resolve(event)
 }
-
-export const handle: Handle = sequence(options, supabase, authGuard);
+export const handle: Handle = sequence(supabase, authGuard)
+//export const handle: Handle = sequence(options, supabase, authGuard);
