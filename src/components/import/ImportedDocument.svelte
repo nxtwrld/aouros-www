@@ -1,16 +1,22 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import type { Document } from "$lib/documents/types.d";
 
-    export let doc: Document;
+    interface Props {
+        doc: Document;
+    }
 
-    $: thumbnail = doc.content?.attachments.find(a => {
+    let { doc }: Props = $props();
+
+    let thumbnail = $derived(doc.content?.attachments.find(a => {
         return a.thumbnail;
-    }).thumbnail;
+    }).thumbnail);
 
-    $: {
+    run(() => {
         console.log('0', doc.content.attachments);
         console.log('1',thumbnail);
-    }
+    });
 </script>
 
     <div class="report">

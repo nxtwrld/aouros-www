@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import { type Profile } from '$lib/types.d';
     import { profiles } from '$lib/profiles';
     import shortcuts from '$lib/shortcuts';
@@ -15,7 +17,7 @@
         action?: () => void;
     }
 
-    let commands: Command[] = [
+    let commands: Command[] = $state([
         {
             command: 'view',
             translation: $t('app.search.commands.view-profile'),
@@ -32,7 +34,7 @@
             translation: $t('app.search.commands.view-history'),
             path: '/med/p/[UID]/history'
         }
-    ];
+    ]);
 
     let systemCommands: Command[] = [
         {
@@ -54,32 +56,15 @@
             path: '/med/import'
         }
     ]
-
-    $: {
-        if ($user) {
-            if ($user.isMedical) {
-                commands = [
-                    ...commands,
-                    {
-                        command: 'session',
-                        translation: $t('app.search.commands.start-an-interview-session'),
-                        path: '/med/p/[UID]/session'
-                    }
-                ]
-            }
-        }
-    }   
+   
     
-    let results: (Profile | Command)[] = [];
-    let inputValue: string = '';
-    let inputElement: HTMLInputElement;
+    let results: (Profile | Command)[] = $state([]);
+    let inputValue: string = $state('');
+    let inputElement: HTMLInputElement = $state();
     
-    let selectedResult: number = -1;
-    let selectedCommand: number = -1;
+    let selectedResult: number = $state(-1);
+    let selectedCommand: number = $state(-1);
 
-    $: {
-        search(inputValue);
-    }
 
     function search (str: string = '') {
 
@@ -109,7 +94,11 @@
         }
 
     }
-    export let isSearchOpen: boolean = false;
+    interface Props {
+        isSearchOpen?: boolean;
+    }
+
+    let { isSearchOpen = $bindable(false) }: Props = $props();
     let blurTimer: ReturnType<typeof setTimeout>;
 
     function showSearch() {
@@ -218,6 +207,23 @@
             off.forEach(f => f());
         }
     });
+    run(() => {
+        if ($user) {
+            if ($user.isMedical) {
+                commands = [
+                    ...commands,
+                    {
+                        command: 'session',
+                        translation: $t('app.search.commands.start-an-interview-session'),
+                        path: '/med/p/[UID]/session'
+                    }
+                ]
+            }
+        }
+    });
+    run(() => {
+        search(inputValue);
+    });
 </script>
 
 <div class="search-panel" class:-open={isSearchOpen }>
@@ -232,9 +238,9 @@
             placeholder="Search profiles"
             bind:this={inputElement} 
             bind:value={inputValue} 
-            on:blur={blurredInput}
-            on:focus={focusedInput}
-            on:keydown={handleKeyDown} />
+            onblur={blurredInput}
+            onfocus={focusedInput}
+            onkeydown={handleKeyDown} />
         <input type="text" class="secondary"/>
     </div>
     {#if results.length == 0 && inputValue.length > 0}

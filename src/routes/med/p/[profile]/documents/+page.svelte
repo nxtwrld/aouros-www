@@ -3,13 +3,18 @@
     import { profile } from '$lib/profiles';
     import Documents from '$components/documents/Index.svelte';
     import { t } from '$lib/i18n';
-    //const documents = byUser($profile.id);
+    
 
-    export let data: {
+    interface Props {
+        //const documents = byUser($profile.id);
+        data: {
         filters: {
             tags: string[];
         }
     };
+    }
+
+    let { data }: Props = $props();
     console.log('data', data);
 </script>
 

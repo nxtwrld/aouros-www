@@ -5,7 +5,11 @@
     import ReferenceRangeLineChart from "$components/charts/ReferenceRangeLineChart.svelte";
     import { t } from '$lib/i18n';
 
-    export let property: Signal;
+    interface Props {
+        property: Signal;
+    }
+
+    let { property }: Props = $props();
 
     console.log('property', property);
     let prop = $profile.health[property.signal] || $profile.health.signals[property.signal]; 

@@ -3,10 +3,14 @@
     
     
     export const ready: boolean = true;
-    export let data: {
+    interface Props {
+        data: {
         subscription: string;
     };
-    export let profileForm: HTMLFormElement;
+        profileForm: HTMLFormElement;
+    }
+
+    let { data = $bindable(), profileForm }: Props = $props();
 
 
     const SUBSCRIPTIONS = [
@@ -53,7 +57,7 @@
                 <p><!--{ $t('app.onboarding.subscription.price') }: {subscription.price} --> { $t('app.onboarding.subscription.free-beta-access') }</p>
             </div>
             {#if subscription.id != data.subscription}
-                <button class="button" on:click={() => data.subscription = subscription.id}>{ $t('app.onboarding.subscription.select') }</button>
+                <button class="button" onclick={() => data.subscription = subscription.id}>{ $t('app.onboarding.subscription.select') }</button>
             {/if}
         </div>
     </div>

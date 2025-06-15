@@ -5,7 +5,11 @@
     import { type Document } from '$lib/documents/types.d';
     import DocumentTile from './DocumentTile.svelte';
 
-    export let user: string = $profile?.id || $userStore?.id as string;
+  interface Props {
+    user?: string;
+  }
+
+  let { user = $profile?.id || $userStore?.id as string }: Props = $props();
     let documents = byUser(user);
 
 

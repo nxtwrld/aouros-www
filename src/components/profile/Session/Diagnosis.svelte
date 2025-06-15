@@ -1,12 +1,18 @@
 <script lang="ts">
+    import { run, stopPropagation } from 'svelte/legacy';
+
     import { getSortForEnum, sortbyProperty } from '$lib/array';
     import { ANALYZE_STEPS } from '$lib/types.d';
     import PropertyTile from '../PropertyTile.svelte';
 
 
-    export let analysis: any;
 
-    export let step: ANALYZE_STEPS = ANALYZE_STEPS.transcript;
+    interface Props {
+        analysis: any;
+        step?: ANALYZE_STEPS;
+    }
+
+    let { analysis = $bindable(), step = ANALYZE_STEPS.transcript }: Props = $props();
 
 
     enum Origin {
@@ -39,20 +45,6 @@
 
 
 
-    $: {
-        if (analysis.diagnosis) {
-            pinSpecialist(analysis.diagnosis);
-        }
-        if (analysis.treatment) {
-            pinSpecialist(analysis.treatment);
-        }
-        if (analysis.followUp) {
-            pinSpecialist(analysis.followUp);
-        }
-        if (analysis.medication) {
-            pinSpecialist(analysis.medication);
-        }
-    }
 
 
     function pinSpecialist(ar : {
@@ -86,6 +78,20 @@
         analysis = {...analysis}
     }
 
+    run(() => {
+        if (analysis.diagnosis) {
+            pinSpecialist(analysis.diagnosis);
+        }
+        if (analysis.treatment) {
+            pinSpecialist(analysis.treatment);
+        }
+        if (analysis.followUp) {
+            pinSpecialist(analysis.followUp);
+        }
+        if (analysis.medication) {
+            pinSpecialist(analysis.medication);
+        }
+    });
 </script>
 {#if analysis.complaint}
 <div class="block block-complaint">
@@ -116,7 +122,7 @@
         <div>{symptom.duration}</div>
         <div>{symptom.bodyParts}</div>
         <div class="actions">
-            <button class="list-action remove" on:click|stopPropagation={() => removeItem(symptom, analysis.symptoms)}>
+            <button class="list-action remove" onclick={stopPropagation(() => removeItem(symptom, analysis.symptoms))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>
@@ -132,21 +138,21 @@
 <div class="block block-diagnosis">
     <h4 class="h4">Diagnostic results</h4>
     {#each analysis.diagnosis.sort(sortbyProperty('probability')).reverse() as diagnosis}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="list-item" class:-pinned={diagnosis.pinned}  on:click={() => togglePin(diagnosis)}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="list-item" class:-pinned={diagnosis.pinned}  onclick={() => togglePin(diagnosis)}>
 
         <div>{#if diagnosis.code}{diagnosis.code}{:else}&nbsp;&nbsp;&nbsp;{/if}</div>
         <div class="list-title">{diagnosis.name}</div>
         <div>{diagnosis.basis}</div>
         <div>{diagnosis.probability}</div>
         <div class="actions">
-            <button class="list-action pin" on:click|stopPropagation={() => togglePin(diagnosis)}>
+            <button class="list-action pin" onclick={stopPropagation(() => togglePin(diagnosis))}>
                 <svg>
                     <use href="/icons.svg#pin"></use>
                 </svg>
             </button>
-            <button class="list-action remove" on:click|stopPropagation={() => removeItem(diagnosis, analysis.diagnosis)}>
+            <button class="list-action remove" onclick={stopPropagation(() => removeItem(diagnosis, analysis.diagnosis))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>
@@ -161,17 +167,17 @@
 <div class="block block-recommendations">
     <h4 class="h4">Treatment Plan</h4>
     {#each analysis.treatment as treatment}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="list-item" class:-pinned={treatment.pinned}  on:click={() => togglePin(treatment)}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="list-item" class:-pinned={treatment.pinned}  onclick={() => togglePin(treatment)}>
         <div class="list-title">{treatment.description}</div>
         <div class="actions">
-            <button class="list-action pin" on:click|stopPropagation={() => togglePin(treatment)}>
+            <button class="list-action pin" onclick={stopPropagation(() => togglePin(treatment))}>
                 <svg>
                     <use href="/icons.svg#pin"></use>
                 </svg>
             </button>
-            <button class="list-action remove" on:click|stopPropagation={() => removeItem(treatment, analysis.treatment)}>
+            <button class="list-action remove" onclick={stopPropagation(() => removeItem(treatment, analysis.treatment))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>
@@ -186,19 +192,19 @@
 <div class="block block-follow-up">
     <h4 class="h4">Follow up</h4>
     {#each analysis.followUp as followUp}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="list-item" class:-pinned={followUp.pinned} on:click={() => togglePin(followUp)}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="list-item" class:-pinned={followUp.pinned} onclick={() => togglePin(followUp)}>
         <!--div>{followUp.type}</div-->
         <div class="list-title">{followUp.name}</div>
         <div class="list-description">{followUp.reason}</div>
         <div class="actions">
-            <button class="list-action pin" on:click|stopPropagation={() => togglePin(followUp)}>
+            <button class="list-action pin" onclick={stopPropagation(() => togglePin(followUp))}>
                 <svg>
                     <use href="/icons.svg#pin"></use>
                 </svg>
             </button>
-            <button class="list-action remove" on:click|stopPropagation={() => removeItem(followUp, analysis.followUp)}>
+            <button class="list-action remove" onclick={stopPropagation(() => removeItem(followUp, analysis.followUp))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>
@@ -213,21 +219,21 @@
 <div class="block block-prescriptions">
     <h4 class="h4">Suggested Medication</h4>
     {#each analysis.medication as medication}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="list-item" class:-pinned={medication.pinned} on:click={() => togglePin(medication)}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="list-item" class:-pinned={medication.pinned} onclick={() => togglePin(medication)}>
         <div class="list-title">
             {medication.name} {medication.dosage}
             <div class="sub">{getFrequency(medication.days_of_week)} - {medication.days}</div>
             <div class="sub">{medication.time_of_day}</div>
         </div>
         <div class="actions">
-            <button class="list-action pin" on:click|stopPropagation={() => togglePin(medication)}>
+            <button class="list-action pin" onclick={stopPropagation(() => togglePin(medication))}>
                 <svg>
                     <use href="/icons.svg#pin"></use>
                 </svg>
             </button>
-            <button class="list-action remove" on:click|stopPropagation={() => removeItem(medication, analysis.medication)}>
+            <button class="list-action remove" onclick={stopPropagation(() => removeItem(medication, analysis.medication))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>

@@ -5,12 +5,16 @@
     import { t } from '$lib/i18n';
     import type { Document } from '$lib/documents/types.d';
 
-    export let document: Document;
 
-    export let data: any;
+  interface Props {
+    document: Document;
+    data: any;
+  }
+
+  let { document, data }: Props = $props();
 
     //console.log('Results',data);
-    let children: LabResult[] = [];
+    let children: LabResult[] = $state([]);
 
     function closeAll() {
         children.forEach((c: any) => {

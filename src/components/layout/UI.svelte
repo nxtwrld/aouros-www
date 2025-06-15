@@ -9,16 +9,16 @@
     import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
     import { beforeNavigate, afterNavigate } from '$app/navigation';
-    import { Overlay, state } from '$lib/ui';
+    import { Overlay, state as uiState } from '$lib/ui';
     import shortcuts from '$lib/shortcuts';
     import Sounds from '$components/ui/Sounds.svelte';
     import Viewer from './Viewer.svelte';
 
-
-    const dialogs = {
+    // Fixed: Convert to proper Svelte 5 reactive state
+    let dialogs = $state({
         healthForm: false,
         healthProperty: false
-    };
+    });
 
 
     // close all dialogs on navigation
@@ -29,9 +29,9 @@
     function manageOverlay() {
         if (location.hash.indexOf('#overlay-') == 0) {
             const overlay = location.hash.replace('#overlay-', '');
-            if (Object.values(Overlay).includes(overlay as Overlay)) $state.overlay = overlay as Overlay;
+            if (Object.values(Overlay).includes(overlay as Overlay)) $uiState.overlay = overlay as Overlay;
         } else {
-            $state.overlay = Overlay.none;
+            $uiState.overlay = Overlay.none;
         }
     }
 
@@ -56,9 +56,9 @@
                 }
                 //$state.overlay = Overlay.import;
             }),
-            ui.listen('viewer', (config) => {
-                $state.viewer = true;
-                //$state.overlay = Overlay.none;
+            ui.listen('viewer', (config: any) => {
+                $uiState.viewer = true;
+                //$uiState.overlay = Overlay.none;
             }),
             shortcuts.listen('Escape', () => {
                 if (location.hash.indexOf('#overlay-') == 0) {
@@ -80,15 +80,15 @@
 
 <DropFiles>
     <Header></Header>
-    <main class="layout" class:-viewer={$state.viewer}>
-        {#if $state.viewer}
+    <main class="layout" class:-viewer={$uiState.viewer}>
+        {#if $uiState.viewer}
             <section class="layout-viewer" transition:fade><Viewer /></section>
         {/if}
         <section class="layout-content"><slot/></section>
     </main>
 
 
-    {#if $state.overlay == Overlay.import}
+    {#if $uiState.overlay == Overlay.import}
         <div class="virtual-page" transition:fade>
             <Import />
             </div>

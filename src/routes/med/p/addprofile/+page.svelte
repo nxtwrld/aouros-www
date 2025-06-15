@@ -5,7 +5,7 @@
 
     //console.log("user", $user);
 
-    let newProfile: Profile = {
+    let newProfile: Profile = $state({
         id: "NEW",
         fullName: "",
         sex: SexEnum.male,
@@ -13,7 +13,7 @@
         location: "",
         phone: "",
         email: ""
-    }
+    })
 
     async function createNewProfile() {
         /*
@@ -41,7 +41,7 @@
         <p class="p">You can add {$user?.subscriptionStats?.profiles} more profiles.</p>
 
 
-        <input type="text" bind:value={newProfile.fullName} on:click={createNewProfile} />
+        <input type="text" bind:value={newProfile.fullName} onclick={createNewProfile} />
         <button>Create</button>
     {/if}
 </div>

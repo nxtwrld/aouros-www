@@ -1,9 +1,13 @@
 <script lang="ts">
     import { type Profile } from '$lib/types.d';
 
-    export let profile: Profile | null = null;
     
-    export let size = 3;
+    interface Props {
+        profile?: Profile | null;
+        size?: number;
+    }
+
+    let { profile = null, size = 3 }: Props = $props();
 </script>
 
 <div class="avatar " style="height: {size}em; width: {size}em;">

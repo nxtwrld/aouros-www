@@ -24,9 +24,9 @@
         "report"
     }
 
-    let view: Views = Views.start;
+    let view: Views = $state(Views.start);
 
-    let models = [
+    let models = $state([
             {
                 name: 'GP',
                 active: true,
@@ -45,22 +45,22 @@
                 available: false,
                 disabled: true
             }
-        ];
+        ]);
 
     let texts: string[] = [];
-    let audioState: AudioState = AudioState.ready;
+    let audioState: AudioState = $state(AudioState.ready);
 
 
-    let analysis: any = {};
+    let analysis: any = $state({});
 
     let silenceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
-    let speechChunks: Float32Array[] =[];
+    let speechChunks: Float32Array[] =$state([]);
 
 
-    $: hasResults = view !== Views.start;
+    let hasResults = $derived(view !== Views.start);
 
 
-    let newSpeech: boolean = false;
+    let newSpeech: boolean = $state(false);
 
     function speechStart() {
         newSpeech = true;
@@ -159,7 +159,7 @@
     }
 
     let lastAnalyzedTextLength: number = 0;
-    let activeModels: string[] = [];
+    let activeModels: string[] = $state([]);
     let analysisTimer: ReturnType<typeof setTimeout> | undefined = undefined;  
 
 
@@ -264,9 +264,9 @@
     }
 
 
-    let finalizeReportState = 'idle';
-    let report: any = undefined;
-    let finalReport: any = undefined;
+    let finalizeReportState = $state('idle');
+    let report: any = $state(undefined);
+    let finalReport: any = $state(undefined);
     let finalizationData: string = '';
     async function finalizeReport() {
         if (finalizeReportState === 'processing') {
@@ -366,7 +366,7 @@
 {#if view === Views.start}
     <div class="canvas canvas-start">
         <div>
-            <div class="uhint" on:click={testAnalyze}>
+            <div class="uhint" onclick={testAnalyze}>
                 {#if audioState === AudioState.listening || audioState === AudioState.speaking}
                     Listening...
                 {:else}
@@ -390,7 +390,7 @@
                                 <div>Finalizing</div> <LoaderThinking />
                             </div>
                         {:else}
-                            <button class="button -primary" on:click={finalizeReport}>Finalize Report</button>
+                            <button class="button -primary" onclick={finalizeReport}>Finalize Report</button>
                         {/if}
 
                 </div>
@@ -426,9 +426,9 @@
                     <use href="/icons-o.svg#report"></use>
                 </svg>
                 <h3 class="h3">Report</h3>
-                <button class="button" on:click={backToAnalysis}>Back</button>
-                <button class="button" on:click={copyReportText}>Copy</button>
-                <button class="button" on:click={printReport}>Print</button>
+                <button class="button" onclick={backToAnalysis}>Back</button>
+                <button class="button" onclick={copyReportText}>Copy</button>
+                <button class="button" onclick={printReport}>Print</button>
                 <button class="button -primary">Save</button>
             </div>
             <div class="report-background">

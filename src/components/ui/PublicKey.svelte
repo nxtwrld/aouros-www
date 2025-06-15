@@ -1,14 +1,28 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import Prop from "$components/forms/Prop.svelte";
     import { importPublicKeySpki } from '$lib/encryption/rsa';
-    export let value = '';
+    interface Props {
+        value?: string;
+    }
+
+    let { value = '' }: Props = $props();
 
 
-    let key: CryptoKey | undefined;
-    let error: string | undefined;
+    let key: CryptoKey | undefined = $state();
+    let error: string | undefined = $state();
 
 
-    $: {
+
+
+    async function importKey(pem: string) {
+        return importPublicKeySpki(pem);
+    }
+
+
+
+    run(() => {
         if (value !== '') {
             importKey(value).then((k) => {
                 if (k) {
@@ -20,15 +34,7 @@
                 error = e?.message || "Invalid Key format";
             })
         }
-    }
-
-
-    async function importKey(pem: string) {
-        return importPublicKeySpki(pem);
-    }
-
-
-
+    });
 </script>
 
 

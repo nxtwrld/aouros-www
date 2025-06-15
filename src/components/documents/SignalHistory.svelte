@@ -16,18 +16,31 @@
         max: number
     }
 
-    export let code: string = 'unknown';
-    export let unit: string = 'unknown';
-    export let status: string = 'ok';
-    export let date: string = 'unknown';
     
-    export let margin = {top: 20, right: 10, bottom: 40, left: 50};
 
-    export let rangeGap = 2;
 
-    export let series: LabItem[] = []
     
-    export let ranges: Range[] = []
+  interface Props {
+    code?: string;
+    unit?: string;
+    status?: string;
+    date?: string;
+    margin?: any;
+    rangeGap?: number;
+    series?: LabItem[];
+    ranges?: Range[];
+  }
+
+  let {
+    code = 'unknown',
+    unit = 'unknown',
+    status = 'ok',
+    date = 'unknown',
+    margin = {top: 20, right: 10, bottom: 40, left: 50},
+    rangeGap = 2,
+    series = $bindable([]),
+    ranges = $bindable([])
+  }: Props = $props();
 
 
     // derive ranges from series.refernenceRange
@@ -36,7 +49,7 @@
 
     export const id: string = crypto.randomUUID();
 
-    let svgE: SVGElement;
+    let svgE: SVGElement = $state();
 
 
     onMount(async () => {
@@ -337,8 +350,6 @@
 
     }
 
-    $: percentChange = getPercentageFromLastValues(series);
-    $: trend = getTrendStatusFromLastValues(series);
     // calculate trend difference between last two values 
     function getTrendFromLastValues() {
         if (series.length < 2) return 0;
@@ -374,6 +385,8 @@
         }
     }
 
+    let percentChange = $derived(getPercentageFromLastValues(series));
+    let trend = $derived(getTrendStatusFromLastValues(series));
 </script>
 
 

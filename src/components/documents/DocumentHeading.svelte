@@ -1,7 +1,11 @@
 <script lang="ts">
     import { type Document } from '$lib/documents/types.d';
     import BadgeHorizontal from '$components/ui/dates/BadgeHorizontal.svelte';
-    export let document: Document;  
+    interface Props {
+        document: Document;
+    }
+
+    let { document }: Props = $props();
 </script>
 
 <div class="heading -heading-main -sticky category-{document.metadata.category}">

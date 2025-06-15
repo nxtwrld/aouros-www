@@ -1,34 +1,50 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
     export type SelectOptions = {
         key: string;
         value: string;
     }[];
 </script>
 <script lang="ts">
-    export let value: string | string[] | null;
-    export let placeholder: string = 'Select';
-    export let options: SelectOptions = [];
-    export let label: string | undefined = undefined;
-    export let required: boolean = false;
-    export let multiple: boolean = false;
-    export let size: number = options.length;
-    export let tabindex: number = 0;
-    export let disabled: boolean = false;
 
-    export let id: string = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    let className: string = 'input';
-    export {
-        className as class
+    interface Props {
+        value: string | string[] | null;
+        placeholder?: string;
+        options?: SelectOptions;
+        label?: string | undefined;
+        required?: boolean;
+        multiple?: boolean;
+        size?: number;
+        tabindex?: number;
+        disabled?: boolean;
+        id?: string;
+        class?: string;
+        children?: import('svelte').Snippet;
     }
+
+    let {
+        value = $bindable(),
+        placeholder = 'Select',
+        options = [],
+        label = undefined,
+        required = false,
+        multiple = false,
+        size = options.length,
+        tabindex = 0,
+        disabled = false,
+        id = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+        class: className = 'input',
+        children
+    }: Props = $props();
+    
 
 </script>
 
-{#if $$slots.default || label}
+{#if children || label}
     <label class="label" for={id}>
         {#if label}
             {label}
         {:else}
-            <slot/>
+            {@render children?.()}
         {/if}
     </label>
 {/if}

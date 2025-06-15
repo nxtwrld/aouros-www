@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
     import { goto } from '$app/navigation';
 
     export interface Data {
@@ -23,6 +23,8 @@
 </script>
 
 <script lang="ts">
+    import { run, stopPropagation } from 'svelte/legacy';
+
     import * as d3 from 'd3';
 	import { onMount } from 'svelte';
     import Input from '$components/forms/Input.svelte';
@@ -31,49 +33,40 @@
 	import { linkPage } from '$lib/app';
 
 
-    export let data: Data[];
 
-    export let showToday: boolean = false;
 
     
-    export let colors: string[] = ["#9B68C5","#6291FF", "#F69D26","#6554C4","#73C34D","#E73784","#ffd92f","#e5c494","#b3b3b3"];
+    interface Props {
+        data: Data[];
+        showToday?: boolean;
+        colors?: string[];
+    }
+
+    let { data = $bindable(), showToday = false, colors = ["#9B68C5","#6291FF", "#F69D26","#6554C4","#73C34D","#E73784","#ffd92f","#e5c494","#b3b3b3"] }: Props = $props();
     
-    let tooltip: HTMLDivElement;
+    let tooltip: HTMLDivElement = $state();
     let tooltipData: {
         value: string | number,
         unit: string,
         date: Date,
         lablel?: string
-    }
+    } = $state()
 
     const margin = { top: 15, right: 30, bottom: 30, left: 30 };
 
 
-    let svgElement: SVGSVGElement;
+    let svgElement: SVGSVGElement = $state();
 
-    let width: number = 300;
-    let height: number = 100;
+    let width: number = $state(300);
+    let height: number = $state(100);
 
     let selectedEvent: {
         node: SVGCircleElement,
         d: Value
     } | null = null;
     
-    // add visible flag to data in not present
-    $: data = data.map(d => {
-        if (d.visible === undefined) {
-            d.visible = (d.data.length > 0) ? true : false;
-        }
-        return d;
-    })
 
 
-    $: {
-        if (svgElement && data) {
-            checkVisibility(data);
-
-        }
-    }
 
     function checkVisibility(data: Data[]) {
         // hide and show goals
@@ -352,9 +345,22 @@
         
     }
 
+    // add visible flag to data in not present
+    let data = $derived(data.map(d => {
+        if (d.visible === undefined) {
+            d.visible = (d.data.length > 0) ? true : false;
+        }
+        return d;
+    }))
+    run(() => {
+        if (svgElement && data) {
+            checkVisibility(data);
+
+        }
+    });
 </script>
 
-    <svelte:window on:click={clearSelectedEvent} />
+    <svelte:window onclick={clearSelectedEvent} />
 
 <div class="chart">
     <div class="chart-controls">
@@ -381,7 +387,7 @@
         </svg>
     </div>
 </div>
-<button class="tooltip" bind:this={tooltip} on:click|stopPropagation={viewDetails}>
+<button class="tooltip" bind:this={tooltip} onclick={stopPropagation(viewDetails)}>
     {#if tooltipData}
         <div class="date">{date(tooltipData.date)}</div>
         <div class="property">{tooltipData.label}</div>

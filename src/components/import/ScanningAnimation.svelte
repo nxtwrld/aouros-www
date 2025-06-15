@@ -1,5 +1,9 @@
 <script lang="ts">
-    export let running: boolean = false;
+    interface Props {
+        running?: boolean;
+    }
+
+    let { running = false }: Props = $props();
 </script>
 {#if running}
 <div class="scanning">

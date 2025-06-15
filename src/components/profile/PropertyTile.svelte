@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import { t } from '$lib/i18n';
     //import { properties } from '$lib/health/dataTypes';
     import properties from '$data/lab.properties.defaults.json'
@@ -30,14 +32,13 @@
     }
 
 
-    export let property:  Property;
-    
-    $: signal = getSignalFromProperty(property);
+    interface Props {
+        property: Property;
+    }
 
-    //$: ageOfEntry = (signal.date) ? durationFrom(signal.date) : undefined;
-    // how much is the value expiring  1== recent  < 1 == older
-    //$: isExpired = (signal.date) ? durationFromFormatted('days', signal.date) -  defaultSetup.valueExpirationInDays > 0 : false;
-    $: valueHeat = (signal.date) ? computeOutputForRereference( durationFromFormatted('days', signal.date) || 0, [0, defaultSetup.valueExpirationInDays], [0.4, 1]) : 1;
+    let { property }: Props = $props();
+    
+
 
 
     function getSignalFromProperty(p: Property): Signal {
@@ -89,19 +90,10 @@
 
     }
 
-    $: defaultSetup = properties[signal.signal?.toLowerCase().replace(/ /ig, '_')] || {};
-    $: referenceRange = signal.reference?.split('-').map(Number);
-    $: title = signal.signal as string;
 //    $: unit = getUnit(signal.unit)
 
     const supportedIcons = ['age', 'biologicalSex', 'bloodPressure', 'weight', 'height', 'bmi', 'temperature']
-    $: icon = getResultIcon(signal);
 
-    $: {
-        //console.log('defaultSetup', defaultSetup);
-        //console.log('referenceRange', referenceRange);
-        
-    }
 
     function getResultIcon(property: Signal) {
         switch (property.signal) {
@@ -121,6 +113,20 @@
         return unit;
     }
 
+    let signal = $derived(getSignalFromProperty(property));
+    let defaultSetup = $derived(properties[signal.signal?.toLowerCase().replace(/ /ig, '_')] || {});
+    //$: ageOfEntry = (signal.date) ? durationFrom(signal.date) : undefined;
+    // how much is the value expiring  1== recent  < 1 == older
+    //$: isExpired = (signal.date) ? durationFromFormatted('days', signal.date) -  defaultSetup.valueExpirationInDays > 0 : false;
+    let valueHeat = $derived((signal.date) ? computeOutputForRereference( durationFromFormatted('days', signal.date) || 0, [0, defaultSetup.valueExpirationInDays], [0.4, 1]) : 1);
+    let referenceRange = $derived(signal.reference?.split('-').map(Number));
+    let title = $derived(signal.signal as string);
+    let icon = $derived(getResultIcon(signal));
+    run(() => {
+        //console.log('defaultSetup', defaultSetup);
+        //console.log('referenceRange', referenceRange);
+        
+    });
 </script>
 
 {#if signal.value}
@@ -131,7 +137,7 @@
     </svg>
     <div class="indicator" style="opacity: {valueHeat}"></div>
     <button 
-    on:click={() => dispatch('open')} 
+    onclick={() => dispatch('open')} 
         class="grid-tile ">
         <div class="title">
             {#if $t(`profile.health.props.${title}`) == `profile.health.props.${title}`}
@@ -165,7 +171,7 @@
                 {signal.value}
             {/if}
         </strong>
-        {#if signal.unit}<span class="unit">{@html  showUnit(signal.unit)  } </span>{/if}</div>
+        {#if signal.unit}<span class="unit">{@html  showUnit(signal.unit)} </span>{/if}</div>
 
     </button>
 </div>

@@ -1,7 +1,11 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
 
-    export let data: any;
+    interface Props {
+        data: any;
+    }
+
+    let { data }: Props = $props();
 </script>
 
 

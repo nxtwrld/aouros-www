@@ -5,9 +5,13 @@
     import BadgeHorizontal from '$components/ui/dates/BadgeHorizontal.svelte';
     import { profile } from '$lib/profiles';
 
-    export let document: Document
+    interface Props {
+        document: Document;
+    }
 
-    $: author = getByAnotherAuthor(document)
+    let { document }: Props = $props();
+
+    let author = $derived(getByAnotherAuthor(document))
 </script>
 
 

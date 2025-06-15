@@ -1,28 +1,28 @@
-<script>
-	import { goto, invalidate } from '$app/navigation';
+<script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { setClient } from '$lib/supabase';
 	import '../css/index.css';
 
-
-
-	  
-	export let data;
-	$: ({ session, supabase } = data);
-
+	let { data, children } = $props();
+	
+	// Break reactive loop: use $derived.by to avoid self-reference
+	let session = $derived(data?.session || null);
+	let supabase = $derived(data?.supabase);
 
 	onMount(() => {
-		const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
-		if (newSession?.expires_at !== session?.expires_at) {
-			invalidate('supabase:auth')
-		}
-		})
-		return () => data.subscription.unsubscribe()
-	})
+		if (!supabase) return;
+		
+		const authListener = supabase.auth.onAuthStateChange(() => {
+			// Always invalidate on auth state change to be safe
+			invalidate('supabase:auth');
+		});
 
+		return () => authListener.data.subscription.unsubscribe();
+	});
 
-
-
+	// Keep existing setClient call for compatibility
+	setClient(supabase);
 </script>
 
-<slot />
+{@render children()}

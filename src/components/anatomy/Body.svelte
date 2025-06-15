@@ -1,3 +1,5 @@
+<!-- @migration-task Error while migrating Svelte code: can't migrate `let loadedLayers: string[] = [];` to `$state` because there's a variable named state.
+     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { onMount, onDestroy, createEventDispatcher } from 'svelte';

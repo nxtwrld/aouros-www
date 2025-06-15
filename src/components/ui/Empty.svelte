@@ -1,15 +1,18 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
 
-    let className: string = '';
-    export {
-        className as class
+    interface Props {
+        class?: string;
+        children?: import('svelte').Snippet;
     }
+
+    let { class: className = '', children }: Props = $props();
+    
 </script>
 
 <div class="empty {className}">
-    {#if $$slots.default}
-        <slot />
+    {#if children}
+        {@render children?.()}
     {:else}
     { $t('links.no-items') }
     {/if}

@@ -1,7 +1,11 @@
 <script lang="ts">
 
-    export let country: string = 'us';
-    export let height: string = "1rem";
+    interface Props {
+        country?: string;
+        height?: string;
+    }
+
+    let { country = 'us', height = "1rem" }: Props = $props();
 
     const flagMapping: Record<string, string> = {
         en: 'us',
@@ -11,13 +15,12 @@
         el: 'gr',
     } 
 
-    let flag: string = '';
 
-    $: flag = getCode(country.toLowerCase());
 
     function getCode(country: string): string {
         return flagMapping[country] || country;
     }
+    let flag = $derived(getCode(country.toLowerCase()));
 </script>
 
 <span class="fi fi-{flag}" style="height: {height}"></span>

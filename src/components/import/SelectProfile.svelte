@@ -12,15 +12,19 @@
     import { scale } from 'svelte/transition';
     import { PROFILE_NEW_ID } from '$lib/profiles/tools';
 
-    export let contact: DetectedProfileData;
 
-    export let linkFrom: 'top' | 'bottom' = 'top';
 
     let profilesFound = (contact) ? findInProfiles(contact) : []; 
 
-    export let selected: Profile = profilesFound.length > 0 ? profilesFound[0] :  normalizePatientData(contact); 
+    interface Props {
+        contact: DetectedProfileData;
+        linkFrom?: 'top' | 'bottom';
+        selected?: Profile;
+    }
 
-    let showSelectProfileModal: boolean = false;
+    let { contact, linkFrom = 'top', selected = $bindable(profilesFound.length > 0 ? profilesFound[0] :  normalizePatientData(contact)) }: Props = $props();
+
+    let showSelectProfileModal: boolean = $state(false);
 
     function selectProfile(profile: Profile) {
         selected = profile;
@@ -34,7 +38,7 @@
 <button 
 class="button selected-profile link-{linkFrom}" 
     class:-new={selected.id === PROFILE_NEW_ID }
-    on:click={() => showSelectProfileModal = true}
+    onclick={() => showSelectProfileModal = true}
     transition:scale={{delay: 1000}}
     >
     {selected.fullName} {#if selected.insurance?.number}({selected.insurance.number}){/if}
@@ -51,7 +55,7 @@ class="button selected-profile link-{linkFrom}"
         {/if}
         {#each $profiles as profile}
             <li><button 
-                on:click={() => selectProfile(profile)}  
+                onclick={() => selectProfile(profile)}  
                 class:-selected={(selected.id == profile.id)}>
                     <ProfileImage {profile} />
                 

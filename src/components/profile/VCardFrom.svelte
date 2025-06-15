@@ -1,8 +1,14 @@
 <script lang="ts">
-    import { t } from '$lib/i18n';
-    export let data: any;
+    import { run } from 'svelte/legacy';
 
-    let inputData = Object.assign({
+    import { t } from '$lib/i18n';
+    interface Props {
+        data: any;
+    }
+
+    let { data = $bindable() }: Props = $props();
+
+    let inputData = $state(Object.assign({
         fn: '',
         n: {
             honorificPrefix: '',
@@ -32,11 +38,11 @@
                 value: ''
             }
         ]
-    }, data);
+    }, data));
 
-    $: {
+    run(() => {
         data = inputData;
-    }
+    });
 
 </script>
 

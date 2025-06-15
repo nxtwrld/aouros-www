@@ -1,8 +1,12 @@
 <script lang="ts">
     import markdown from 'nano-markdown';
-    export let text: any;
+    interface Props {
+        text: any; //console.log(text);
+    }
 
-    //console.log(text);
+    let { text }: Props = $props();
+
+    
 </script>
 
 

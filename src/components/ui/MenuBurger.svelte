@@ -1,5 +1,9 @@
 <script lang="ts">
-    export let open: boolean = false;
+    interface Props {
+        open?: boolean;
+    }
+
+    let { open = false }: Props = $props();
 </script>
 
 

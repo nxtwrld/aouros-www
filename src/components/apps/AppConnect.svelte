@@ -8,14 +8,24 @@
     //import type { Link } from "$lib/common.types.d";
     import './style.css';
 
-    export let type: AppConnectionTypeEnum = AppConnectionType.Report;
-    export let shared: Item | undefined = undefined;
-    export let tags: string[] = [];
+    interface Props {
+        type?: AppConnectionTypeEnum;
+        shared?: Item | undefined;
+        tags?: string[];
+        children?: import('svelte').Snippet;
+    }
 
-    let showLeavingWarning: boolean = false;
-    let showShareDialog: boolean = false;
+    let {
+        type = AppConnectionType.Report,
+        shared = undefined,
+        tags = [],
+        children
+    }: Props = $props();
 
-    let selectedApp: AppRecord | undefined = undefined;
+    let showLeavingWarning: boolean = $state(false);
+    let showShareDialog: boolean = $state(false);
+
+    let selectedApp: AppRecord | undefined = $state(undefined);
 
     let items: Link[] = cleanItems(shared);
 
@@ -102,7 +112,7 @@
 
 <div class="apps">
         {#if shared && false}
-            <button on:click={share}>
+            <button onclick={share}>
                 <svg class="app-icon">
                     <use xlink:href="/icons.svg#share"></use>
                 </svg>
@@ -111,15 +121,15 @@
         {/if}
 
         
-        <button on:click={download}>
+        <button onclick={download}>
             <svg class="app-icon">
                 <use xlink:href="/icons.svg#download"></use>
             </svg>
             <span>Download</span>
         </button>
-    <slot />
+    {@render children?.()}
 {#each $apps.filter(filterApps) as app}
-        <button on:click={() => openApp(app)} >
+        <button onclick={() => openApp(app)} >
             <img src={app.icon} alt={app.name} class="app-icon" />
             <span>{app.name}</span>
             <span class="app-credits">{app.credits}</span>

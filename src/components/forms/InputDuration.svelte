@@ -1,11 +1,8 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import {parse, serialize} from 'tinyduration';
 
-    export let value: string;
-    export let placeholder: string = 'Input';
-    export let id: string = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    export let label: string | undefined = undefined;
-    export let name: string = id;
 
     type Duration = {
         years?: number,
@@ -18,10 +15,7 @@
         milliseconds?: number
     }
 
-    let duration: Duration = extendDuration(parse(value));
-    $: {
-        if(value) duration = extendDuration(parse(value));
-    }
+    let duration: Duration = $state(extendDuration(parse(value)));
 
     function extendDuration(d: Duration): Duration {
         return {
@@ -36,27 +30,46 @@
         }
     }
 
-    let className: string = 'input';
-    export {
-        className as class
+    interface Props {
+        value: string;
+        placeholder?: string;
+        id?: string;
+        label?: string | undefined;
+        name?: string;
+        class?: string;
+        children?: import('svelte').Snippet;
     }
+
+    let {
+        value = $bindable(),
+        placeholder = 'Input',
+        id = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+        label = undefined,
+        name = id,
+        class: className = 'input',
+        children
+    }: Props = $props();
+    
     function updateDuration() {
         duration = extendDuration(duration);
         value = serialize(duration);
     }
+    run(() => {
+        if(value) duration = extendDuration(parse(value));
+    });
 </script>
 
 
 
-{#if $$slots.default}
-<label class="label" for={id}><slot/></label>
+{#if children}
+<label class="label" for={id}>{@render children?.()}</label>
 {/if}
 <!--input type="text" id="{id}" class={className} bind:value {placeholder}/-->
 <div class="duration">
 {#each Object.keys(duration) as key}
 
     <div class="duration-segment">
-        <input type="text" inputmode="numeric" id="{id}-{key}" {name} class={className} bind:value={duration[key]} placeholder={key} on:keyup={updateDuration}/>
+        <input type="text" inputmode="numeric" id="{id}-{key}" {name} class={className} bind:value={duration[key]} placeholder={key} onkeyup={updateDuration}/>
         <label for="{id}-{key}">{key}</label>
     </div>
 {/each}

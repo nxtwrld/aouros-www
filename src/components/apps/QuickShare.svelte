@@ -2,7 +2,11 @@
     import ImportFileContainer from "$components/import/ImportFileContainer.svelte";
     import type { JOURNEY } from '$components/user/Onboarding.svelte';
 
-    export let journey: JOURNEY | undefined = undefined;
+    interface Props {
+        journey?: JOURNEY | undefined;
+    }
+
+    let { journey = undefined }: Props = $props();
 
     const callback: (items: any) => void = (items: any) => {
         console.log('HEY', items);

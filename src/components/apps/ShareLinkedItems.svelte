@@ -5,12 +5,18 @@
 
     
 
-    export let items: Link[] = [];
+    interface Props {
+        items?: Link[];
+    }
+
+    let { items = $bindable([]) }: Props = $props();
 
 
 </script>
 <LinkedItems bind:items={items} removable={true}>
-    <svelte:fragment slot="view" let:item >
-        <ItemPreview {item} passive={true} />
-    </svelte:fragment>
+    {#snippet view({ item })}
+    
+            <ItemPreview {item} passive={true} />
+        
+    {/snippet}
 </LinkedItems>

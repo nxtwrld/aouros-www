@@ -6,8 +6,13 @@
     import { fromEvent } from 'file-selector'; 
     import ui from '$lib/ui';
     import { t } from '$lib/i18n';
+    interface Props {
+        children?: import('svelte').Snippet;
+    }
 
-    let dragover: boolean = false;
+    let { children }: Props = $props();
+
+    let dragover: boolean = $state(false);
     let dragTimer: any;
     let dropActive: boolean = true;
 
@@ -45,8 +50,8 @@
 </script>
 
 
-    <div class="droparea" role="region" aria-label={ $t('app.import.file-drop-area') } on:drop={handleDrop} on:dragover={handleDragOver} on:dragleave={handleDragEnd} on:dragend={handleDragEnd}>
-        <slot />
+    <div class="droparea" role="region" aria-label={ $t('app.import.file-drop-area') } ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragEnd} ondragend={handleDragEnd}>
+        {@render children?.()}
         {#if dragover}
         <div class="drag-active overlay" transition:fade>
             <p>{ $t('app.import.drop-files-here') }</p>

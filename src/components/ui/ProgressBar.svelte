@@ -1,23 +1,30 @@
 <script lang="ts">
 
-    export let value: number = 0;
-    let className: string = '';
 
 
 
-    export let offset: {
-        right?: string,
-        left?: string
-    } = {};
 
-    $: offsetExtended = getOffset(offset);
 
         
-    export let type: 'linear' | 'circular' = 'linear';
-    export let max: number = 100;
-    export {
-        className as class
+    interface Props {
+        value?: number;
+        class?: string;
+        offset?: {
+        right?: string,
+        left?: string
+    };
+        type?: 'linear' | 'circular';
+        max?: number;
     }
+
+    let {
+        value = 0,
+        class: className = '',
+        offset = {},
+        type = 'linear',
+        max = 100
+    }: Props = $props();
+    
 
     function getOffset(offset) {
         return Object.assign({
@@ -27,6 +34,7 @@
     }
 
 
+    let offsetExtended = $derived(getOffset(offset));
 </script>
 
 {#if type == 'linear'}

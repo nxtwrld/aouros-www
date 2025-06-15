@@ -8,10 +8,13 @@
     //import MedicationLink from "$components/event/MedicationLink.svelte";
     import LinkedItem from './LinkedItem.svelte';
 
-    export let item: Link;
-    export let passive: boolean = false;
+    interface Props {
+        item: Link;
+        passive?: boolean;
+    }
 
-    $: component = getComponent(item);
+    let { item, passive = false }: Props = $props();
+
 
     function getComponent(link: Link) {
         switch (link.type) {
@@ -31,10 +34,12 @@
         }
     }
 
+    let component = $derived(getComponent(item));
 </script>
 
 {#if component}
-    <svelte:component this={component} {item} passive={passive} />
+    {@const SvelteComponent = component}
+    <SvelteComponent {item} passive={passive} />
 {:else}
     <LinkedItem title="Item deleted" type="focus" passive={passive} />
 {/if}

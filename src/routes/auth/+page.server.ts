@@ -3,72 +3,158 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { env } from '$env/dynamic/private';
 
-const getURL = (redirect: string = '/') => {
-  let url =
-    env?.SITE_URL ??
-    env?.VERCEL_URL ?? // Automatically set by Vercel.
-    'http://localhost:5174/'
-  // Make sure to include `https://` when not localhost.
-  url = url.startsWith('http') ? url : `https://${url}`
-  // Make sure to include a trailing `/`.
-  url = url.endsWith('/') ? url : `${url}/`
+const getURL = (redirect: string = '/', currentUrl: URL) => {
+  // Get the base URL based on environment
+  console.log('[Auth Server] Environment check:', {
+    SITE_URL: env?.SITE_URL,
+    VERCEL_URL: env?.VERCEL_URL,
+    currentOrigin: currentUrl.origin
+  })
+  
+  const baseUrl = env?.SITE_URL 
+    ? env.SITE_URL
+    : env?.VERCEL_URL 
+    ? `https://${env.VERCEL_URL}`
+    : `${currentUrl.origin}`
 
-  url = `${url}auth/confirm?next=${encodeURIComponent(redirect)}`
-  //console.log('getURL', url)
-  return url
+  console.log('[Auth Server] Selected base URL:', baseUrl)
+
+  // Build the complete redirect URL with proper path
+  const redirectUrl = `${baseUrl}/auth/confirm?next=${encodeURIComponent(redirect)}`
+  console.log('[Auth Server] Generated redirect URL:', redirectUrl)
+  return redirectUrl
 }
-
 
 export const load: PageServerLoad = async ({ url, locals: { safeGetSession } }) => {
   const { session } = await safeGetSession()
-  const redirectPath = new URL(url).searchParams.get('redirect') || '/account'
-  // if the user is already logged in return them to the account page
+  const redirectPath = new URL(url).searchParams.get('redirect') || '/med'
+  // if the user is already logged in return them to the med page
   if (session) {
-    redirect(303, redirectPath)
+    console.log('[Auth Server] User is already logged in, redirecting to:', redirectPath)
+    throw redirect(303, redirectPath)
   }
 
   return { url: url.origin }
 }
 
+// Simple in-memory rate limiting (for production, use Redis or database)
+const emailRateLimit = new Map<string, number>();
+
 export const actions: Actions = {
-  default: async (event) => {
-
-
-    const {
-      url,
-      request,
-      locals: { supabase },
-    } = event;
-
-
-    const redirectPath = new URL(request.url).searchParams.get('redirect') || '/account'
-    const formData = await request.formData()
-    const email = formData.get('email') as string
-    const validEmail = /^[\w-\.+]+@([\w-]+\.)+[\w-]{2,8}$/.test(email)
-
-    if (!validEmail) {
-      return fail(400, { errors: { email: 'Please enter a valid email address' }, email })
-    }
-    console.log('email', email, getURL(redirectPath))
-    const { error } = await supabase.auth.signInWithOtp({ 
-      email,
-      options: {
-        emailRedirectTo: getURL(redirectPath)
+  default: async ({ request, locals: { supabase }, cookies }) => {
+    console.log('[Auth Server] ===== STARTING AUTH FORM SUBMISSION =====')
+    
+    let email: string = ''
+    
+    try {
+      const formData = await request.formData()
+      email = formData.get('email') as string
+      const redirectPath = formData.get('redirectPath') as string ?? '/med'
+      
+      console.log('[Auth Server] Received form data:', { email, redirectPath })
+      console.log('[Auth Server] Request URL:', request.url)
+      
+      // Rate limiting: Allow only 1 request per email per 60 seconds
+      const now = Date.now()
+      const lastRequest = emailRateLimit.get(email)
+      
+      if (lastRequest && (now - lastRequest) < 60000) {
+        const remainingTime = Math.ceil((60000 - (now - lastRequest)) / 1000)
+        console.log('[Auth Server] Rate limited:', { email, remainingTime })
+        return fail(429, { 
+          errors: { 
+            email: `Please wait ${remainingTime} seconds before requesting another magic link.` 
+          }, 
+          email: email 
+        })
       }
-     })
+      
+      emailRateLimit.set(email, now)
+      
+      // Check cookies before submission
+      const allCookies = cookies.getAll()
+      const authCookies = allCookies.filter(c => c.name.includes('sb-') || c.name.includes('supabase'))
+      console.log('[Auth Server] Pre-auth cookies:', {
+        totalCookies: allCookies.length,
+        authCookies: authCookies.length,
+        authCookieNames: authCookies.map(c => c.name)
+      })
+      
+      if (!email) {
+        console.error('[Auth Server] Error: No email provided')
+        return fail(400, { 
+          errors: { 
+            email: 'Please enter an email address' 
+          }, 
+          email: '' 
+        })
+      }
 
-    if (error) {
-      console.log('error', error)
-      return fail(400, {
-        success: false,
+      if (!email.includes('@')) {
+        console.error('[Auth Server] Error: Invalid email format')
+        return fail(400, { 
+          errors: { 
+            email: 'Please enter a valid email address' 
+          }, 
+          email: '' 
+        })
+      }
+      
+      // Get the current URL to use for development
+      const currentUrl = new URL(request.url)
+      const redirectUrl = getURL(redirectPath, currentUrl)
+      console.log('[Auth Server] Final redirect URL for magic link:', redirectUrl)
+      
+      console.log('[Auth Server] Calling Supabase signInWithOtp...')
+      // Send magic link using signInWithOtp
+      const { data, error } = await supabase.auth.signInWithOtp({
         email,
-        message: `There was an issue, Please contact support.`,
+        options: {
+          emailRedirectTo: redirectUrl,
+          shouldCreateUser: true
+        }
+      })
+
+      console.log('[Auth Server] Supabase OTP response:', {
+        hasData: !!data,
+        dataKeys: data ? Object.keys(data) : [],
+        error: error ? {
+          message: error.message,
+          status: error.status,
+          code: error.code
+        } : null
+      })
+
+      if (error) {
+        console.error('[Auth Server] Error sending magic link:', {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          email
+        })
+        return fail(400, { 
+          errors: { 
+            email: error.message 
+          }, 
+          email: '' 
+        })
+      }
+
+      console.log('[Auth Server] Magic link sent successfully to:', email)
+      console.log('[Auth Server] User should check email and click link to:', redirectUrl)
+      
+      return { 
+        success: true,
+        message: 'Magic link sent! Please check your email and click the link to continue.'
+      }
+        } catch (error) {
+      console.error('[Auth Server] Unexpected error:', error)
+      return fail(500, {
+        errors: {
+          email: 'An unexpected error occurred. Please try again.'
+        },
+        email: email || ''
       })
     }
-    console.log('success')
-    return {
-      success: true,
-      message: 'Please check your email for a magic link to log into the website.',
-    }
-  },
+  }
 }

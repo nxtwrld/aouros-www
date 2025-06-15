@@ -1,3 +1,5 @@
+<!-- @migration-task Error while migrating Svelte code: can't migrate `let micAnimationContainer: HTMLDivElement;` to `$state` because there's a variable named state.
+     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
     import { AudioState, getAudio, getAudioVAD, convertBlobToMp3, convertFloat32ToMp3, type AudioControlsVad} from '$lib/audio/microphone';
     import { throttle } from 'throttle-debounce';

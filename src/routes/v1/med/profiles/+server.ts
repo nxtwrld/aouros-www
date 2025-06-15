@@ -4,12 +4,12 @@ import { loadSubscription, updateSubscription } from '$lib/user/subscriptions.se
 /** @type {import('./$types.d').RequestHandler} */
 export async function GET({ request, locals: { supabase, safeGetSession }}) {
 
+    try {
+        const { session } = await safeGetSession();
 
-    const { session } = await safeGetSession();
-
-    if (!session) {
-      return error(401, { message: 'Unauthorized' });
-    }
+        if (!session) {
+            return error(401, { message: 'Unauthorized' });
+        }
 
 
     const { data , error: errorDb } = await supabase.from('profiles_links')
@@ -23,22 +23,29 @@ export async function GET({ request, locals: { supabase, safeGetSession }}) {
     }
 
 
-    return json(data);
+        return json(data);
+    } catch (authError) {
+        console.error('[API] /v1/med/profiles - Unexpected error:', authError);
+        return error(500, { message: 'Internal server error' });
+    }
 }
 
 
 export async function POST({ request, locals: { supabase, safeGetSession }}) {
 
-    const { session } = await safeGetSession();
+    try {
+        const { session } = await safeGetSession();
 
-    if (!session) {
-        return error(401, { message: 'Unauthorized' });
-    }
-    const { data: { user }, error: errorGettingUser } = await supabase.auth.getUser();
+        if (!session) {
+            return error(401, { message: 'Unauthorized' });
+        }
+        
+        const { data: { user }, error: errorGettingUser } = await supabase.auth.getUser();
 
-    if (errorGettingUser || !user) {
-        return error(500, { message: 'Error getting user' });
-    }
+        if (errorGettingUser || !user) {
+            console.error('[API] /v1/med/profiles POST - Auth error:', errorGettingUser);
+            return error(401, { message: 'Authentication failed' });
+        }
 
     const subscription = await loadSubscription();
     //console.log('user', subscription);
@@ -106,7 +113,11 @@ export async function POST({ request, locals: { supabase, safeGetSession }}) {
     subscription.profiles -= 1;
     const u = await updateSubscription(subscription);
 
-    return json(profileData);
+        return json(profileData);
+    } catch (authError) {
+        console.error('[API] /v1/med/profiles POST - Unexpected error:', authError);
+        return error(500, { message: 'Internal server error' });
+    }
 }
 
 

@@ -1,11 +1,13 @@
 <script lang="ts">
-    export let type: string = 'default';
 
-    let className: string = '';
-
-    export {
-        className as class
+    interface Props {
+        type?: string;
+        class?: string;
     }
+
+    let { type = 'default', class: className = '' }: Props = $props();
+
+    
 
 </script>
 {#if type == 'selected'}

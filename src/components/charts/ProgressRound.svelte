@@ -1,9 +1,13 @@
 <script lang="ts">
     import DonutChart from "./DonutChart.svelte";
 
-    export let value: number = 0;
 
-    export let colors: string[] = ["var(--color-shade)", "var(--color-primary)"];
+    interface Props {
+        value?: number;
+        colors?: string[];
+    }
+
+    let { value = 0, colors = ["var(--color-shade)", "var(--color-primary)"] }: Props = $props();
 </script>
 
 <div class="progress">

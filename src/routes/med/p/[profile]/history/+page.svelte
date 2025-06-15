@@ -1,9 +1,13 @@
 <script lang="ts">
     import { type Profile } from '$lib/types.d';
 
-    export let data: {
+    interface Props {
+        data: {
         profile: Profile
+    };
     }
+
+    let { data }: Props = $props();
     const profile: Profile = data.profile;
 </script>
  

@@ -1,6 +1,10 @@
 <script lang="ts">
     import LabResultTips from "./SignalTips.svelte";
-    export let kb: any = {};
+    interface Props {
+        kb?: any;
+    }
+
+    let { kb = {} }: Props = $props();
 
 </script>
 
@@ -45,7 +49,7 @@
         <h3 class="h3">How to lower your {kb.term}</h3>
     {/if}
 
-    {#if kb.high.diet.length > 0 }
+    {#if kb.high.diet.length > 0}
         <div class="status-block">
             <LabResultTips tips={kb.high.diet} icon="diet" >What to eat</LabResultTips>
         </div>

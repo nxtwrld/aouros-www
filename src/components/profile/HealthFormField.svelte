@@ -1,16 +1,20 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
 
-    export let prop : {
+
+    let id: string = Math.random().toString(36).substring(7);
+
+    interface Props {
+        prop: {
         key: string,
         type: string,
         unit?: string,
         options?: string[]
     };
+        data: any;
+    }
 
-    let id: string = Math.random().toString(36).substring(7);
-
-    export let data: any;
+    let { prop, data = $bindable() }: Props = $props();
 </script>
 <div class="input">
     {#if prop.key != "value"}
@@ -52,7 +56,7 @@
     .field input {
         width: 100%;
     }
-    .field:has(.unit) input {
+    .field:has(:global(.unit)) input {
         padding-right: 4rem;
     }
     .field .unit {

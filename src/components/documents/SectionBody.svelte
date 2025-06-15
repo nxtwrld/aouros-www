@@ -1,3 +1,5 @@
+<!-- @migration-task Error while migrating Svelte code: `<tr>` cannot be a child of `<table>`. `<table>` only allows these children: `<caption>`, `<colgroup>`, `<tbody>`, `<thead>`, `<tfoot>`, `<style>`, `<script>`, `<template>`. The browser will 'repair' the HTML (by moving, removing, or inserting elements) which breaks Svelte's assumptions about the structure of your components.
+https://svelte.dev/e/node_invalid_placement -->
 <script lang="ts">
     import focused from '$lib/focused';
     import ui from '$lib/ui';
@@ -31,6 +33,7 @@
     <h3 class="h3 heading -sticky">{ $t('report.anatomy.body') }</h3>
 
     <table  class="table-list">
+        <tbody>
         <tr>
             <th>{ $t('report.anatomy.body-part') }</th>
             <th></th>
@@ -70,6 +73,7 @@
 
         </tr>
         {/each}
+    </tbody>
     </table>
 
 

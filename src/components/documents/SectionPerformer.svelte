@@ -2,7 +2,11 @@
     import ProfileImage from "$components/profile/ProfileImage.svelte";
     import { t } from "$lib/i18n";
 
-    export let data: any;
+    interface Props {
+        data: any;
+    }
+
+    let { data }: Props = $props();
     console.log('Performer', data)
 </script>
 

@@ -1,16 +1,23 @@
 <script lang="ts">
+    import { preventDefault } from 'svelte/legacy';
+
     import { fade } from "svelte/transition";
     import user from '$lib/user';
     import Loading from "$components/ui/Loading.svelte";
     import { t } from '$lib/i18n';
     import { sounds } from '$components/ui/Sounds.svelte';
+    interface Props {
+        children?: import('svelte').Snippet;
+    }
 
-    let passphrase = '';
+    let { children }: Props = $props();
 
-    $: unlocked = $user && $user.unlocked;
-    $: email = $user?.email ?? '';
+    let passphrase = $state('');
 
-    let error: string = '';
+    let unlocked = $derived($user && $user.unlocked);
+    let email = $derived($user?.email ?? '');
+
+    let error: string = $state('');
 
     async function unlock () {
         error = '';
@@ -38,7 +45,7 @@
 
 {#if unlocked}
 
-<slot/>
+{@render children?.()}
 {:else}
     {#if unlocked === false}
         <div class="overlay" transition:fade>
@@ -46,7 +53,7 @@
                 <div class="form">
                     <h2 class="h2">{ $t('app.unlock.unlock') }</h2>
                     {#if error}{error}{/if}
-                    <form on:submit|preventDefault={unlock} autocomplete="on">
+                    <form onsubmit={preventDefault(unlock)} autocomplete="on">
                         <div class="input -none">
                             <input type="text" name="email" id="email" value={email} placeholder="Email" autocomplete="email" />
                         </div>

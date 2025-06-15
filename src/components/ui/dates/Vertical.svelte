@@ -1,9 +1,13 @@
 <script lang="ts">
     import { monthNamesShort } from '$lib/datetime';
-    export let date: string;
+    interface Props {
+        date: string;
+    }
 
-    $: year = date.split('-')[0];
-    $: month = date.split('-')[1];
+    let { date }: Props = $props();
+
+    let year = $derived(date.split('-')[0]);
+    let month = $derived(date.split('-')[1]);
 </script>
 
 

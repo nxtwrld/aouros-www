@@ -4,7 +4,7 @@
     import VCardFrom from "./VCardFrom.svelte";
     import HealthForm from "./HealthForm.svelte";
 
-    export let profile;
+    let { profile = $bindable() } = $props();
 
 
 </script>

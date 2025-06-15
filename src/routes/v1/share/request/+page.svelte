@@ -1,17 +1,17 @@
 <script lang="ts">
     import { enhance } from '$app/forms'
-    export let form
+  let { form } = $props();
   
-    let file: File | null = null
+    let file: File | null = $state(null)
   
     function onChange(
       event: Event & { currentTarget: EventTarget & HTMLInputElement },
     ) {
       file = (event.target as HTMLInputElement)?.files?.[0] ?? null
     }
-    $: buttonClass = file
+    let buttonClass = $derived(file
       ? 'border-black bg-black text-white hover:bg-white hover:text-black'
-      : 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+      : 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400')
   </script>
   
   <main class="relative flex min-h-screen flex-col items-center justify-center">
@@ -95,7 +95,7 @@
               type="file"
               accept="image/*"
               class="sr-only"
-              on:change={onChange}
+              onchange={onChange}
             />
           </div>
         </div>

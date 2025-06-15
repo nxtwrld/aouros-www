@@ -7,13 +7,13 @@
 
     import type { Document } from '$lib/documents/types.d';
 
-    export let document: Document;
     //import profile from '$lib/user/profile';
 
     const dispatch = createEventDispatcher();
     
-
-    export let item: {
+  interface Props {
+    document: Document;
+    item: {
         signal: string,
         test: string,
         value: string | number,
@@ -22,12 +22,15 @@
         urgency?: number,
         document?: Document
     };
+    showDetails?: boolean;
+  }
 
+  let { document, item = $bindable(), showDetails = false }: Props = $props();
+
+    // Set document reference after item is properly initialized
     if (document) {
         item.document = document;
     }
-
-    export let showDetails: boolean = false;
 
     const code: string = item.signal || item.test;
     const key = code.toLowerCase().replace(/ /g, '_');
@@ -176,7 +179,7 @@
 
         <td class="-empty">
             <div class="actions">
-                <button on:click={() =>         ui.emit('modal.healthProperty', item )}>
+                <button onclick={() =>         ui.emit('modal.healthProperty', item )}>
                     <svg>
                         <use href="/icons.svg#chart-line"></use>
                     </svg>

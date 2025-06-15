@@ -28,7 +28,7 @@
     }
     let alwaysOn = ['cholesterol', 'glucose', 'magnesium', 'triglycerides']
     //console.log($profile?.health?.signals )
-    $: props = (($profile) ? [
+    let props = $derived((($profile) ? [
 
         {
             property: 'age',
@@ -90,14 +90,14 @@
             };
         }
         return p
-    })
+    }))
     
 
 
 
-    $: isHealthSet  = Object.keys($profile?.health || {}).length > 0;
-    $: isVcardSet  = Object.keys($profile?.vcard || {}).length > 0;
-    $: isInsuranceSet  = Object.keys($profile?.insurance || {}).length > 0;
+    let isHealthSet  = $derived(Object.keys($profile?.health || {}).length > 0);
+    let isVcardSet  = $derived(Object.keys($profile?.vcard || {}).length > 0);
+    let isInsuranceSet  = $derived(Object.keys($profile?.insurance || {}).length > 0);
 
 
 
@@ -174,7 +174,7 @@
             {/if}
         {/each}
         <div class="tile">
-            <button class="button --large" on:click={() => ui.emit('modal.healthForm')}>
+            <button class="button --large" onclick={() => ui.emit('modal.healthForm')}>
                 {$t('app.profile.edit-health-profile')}
             </button>
         </div>

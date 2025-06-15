@@ -3,15 +3,19 @@
     import type { AppRecord } from '$lib/apps/types.d';
     import { onMount } from 'svelte';
 
-    export let data: any;
-    export let app: AppRecord = data.app ;
+    interface Props {
+        data: any;
+        app?: AppRecord;
+    }
+
+    let { data, app = data.app }: Props = $props();
     console.log('App record', data.app);
 
     function close() {
         sharedItems.set([]);
         history.back(-1);
     }
-    let id: null | string = null;
+    let id: null | string = $state(null);
 
     onMount(()=> {
         const items = sharedItems.get();
@@ -32,7 +36,7 @@
 
 {#if app && app.connect}
 <div class="app">
-        <button on:click={close} class='close'><svg>
+        <button onclick={close} class='close'><svg>
             <use href="/sprite.svg#close" />
         </svg>
         </button>

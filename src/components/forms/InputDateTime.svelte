@@ -1,22 +1,38 @@
 <script lang="ts">
-    export let value: string;
-    export let placeholder: string = 'Date and time';
-    export let id: string = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    export let name: string = id;
-    export let type = 'datetime-local';
-    export let required: boolean = false;
-    export let label: string | undefined = undefined;
-    export let style: string = '';
+    import { run, createBubbler } from 'svelte/legacy';
 
-    let className: string = 'input';
-    export {
-        className as class
+    const bubble = createBubbler();
+
+    interface Props {
+        value: string;
+        placeholder?: string;
+        id?: string;
+        name?: string;
+        type?: string;
+        required?: boolean;
+        label?: string | undefined;
+        style?: string;
+        class?: string;
+        children?: import('svelte').Snippet;
     }
 
+    let {
+        value = $bindable(),
+        placeholder = 'Date and time',
+        id = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+        name = id,
+        type = 'datetime-local',
+        required = false,
+        label = undefined,
+        style = '',
+        class: className = 'input',
+        children
+    }: Props = $props();
+    
 
-    let transformedValue: string = toLocalDateTime(value);
 
-    $: if (transformedValue) value = fromLocalDateTime(transformedValue);
+    let transformedValue: string = $state(toLocalDateTime(value));
+
 
     function toLocalDateTime(input: string) {
         try {
@@ -46,26 +62,29 @@
             return localDate.toISOString().split('T')[0];
         }
     }
+    run(() => {
+        if (transformedValue) value = fromLocalDateTime(transformedValue);
+    });
 </script>
-    {#if $$slots.default || label}
+    {#if children || label}
         <label class="label" for={id}>
             {#if label}
                 {label}
             {:else}
-                <slot/>
+                {@render children?.()}
             {/if}
         </label>
     {/if}
     {#if type === 'datetime-local'}
-        <input type="datetime-local" {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} on:change on:blur on:focus/>
+        <input type="datetime-local" {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} onchange={bubble('change')} onblur={bubble('blur')} onfocus={bubble('focus')}/>
     {:else if type === 'datetime'}
-        <input type="datetime"  {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} on:change on:blur on:focus/>
+        <input type="datetime"  {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} onchange={bubble('change')} onblur={bubble('blur')} onfocus={bubble('focus')}/>
     {:else if type === 'date-local'}
-        <input type="date-local"  {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} on:change on:blur on:focus/>
+        <input type="date-local"  {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} onchange={bubble('change')} onblur={bubble('blur')} onfocus={bubble('focus')}/>
     {:else if type === 'date'}
-        <input type="date"  {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} on:change on:blur on:focus/>
+        <input type="date"  {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} onchange={bubble('change')} onblur={bubble('blur')} onfocus={bubble('focus')}/>
     {:else if type === 'time'}
-        <input type="time"  {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} on:change on:blur on:focus/>
+        <input type="time"  {id} {name} class={className} bind:value={transformedValue} {placeholder} {required} {style} onchange={bubble('change')} onblur={bubble('blur')} onfocus={bubble('focus')}/>
     {/if}
 
 

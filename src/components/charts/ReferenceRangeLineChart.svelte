@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
 import { select, line, curveCardinal, scaleTime, scaleLinear, extent, min, max, axisBottom, axisLeft } from 'd3';
 import { onMount } from 'svelte';
 import { date }  from '$lib/datetime';
@@ -6,24 +8,38 @@ import { date }  from '$lib/datetime';
 
 let currentDate = new Date();
 let id = Math.random().toString(36).substring(7);
-export let unit: string = 'unknown';
-export let reference: string = 'unknown';
-export let margin = {top: 20, right: 10, bottom: 40, left: 50};
-export let rangeGap = 2;
-export let series: LabItem[] = [];
 
-let referenceRange: [number, number] = [ Number(reference.split('-')[0]), Number(reference.split('-')[1]) ];;
-let normalExtent = referenceRange[1] - referenceRange[0];
+    interface Props {
+        unit?: string;
+        reference?: string;
+        margin?: any;
+        rangeGap?: number;
+        series?: LabItem[];
+        ranges?: Range[];
+    }
 
-console.log(series, referenceRange, normalExtent);
+    let {
+        unit = 'unknown',
+        reference = 'unknown',
+        margin = {top: 20, right: 10, bottom: 40, left: 50},
+        rangeGap = 2,
+        series = []
+    }: Props = $props();
 
-export let ranges: Range[] = [
-    { name: 'low', min: referenceRange[0] - normalExtent, max: referenceRange[0]},
-    { name: 'normal', min: referenceRange[0], max: referenceRange[1] },
-    { name: 'high', min: referenceRange[1], max: referenceRange[1] + normalExtent }
-]
+    // Initialize these after props are available
+    let referenceRange: [number, number] = [ Number(reference.split('-')[0]), Number(reference.split('-')[1]) ];
+    let normalExtent = referenceRange[1] - referenceRange[0];
 
-let svgElement: SVGAElement;
+    // Set default ranges after referenceRange is calculated
+    let ranges = $derived([
+        { name: 'low', min: referenceRange[0] - normalExtent, max: referenceRange[0]},
+        { name: 'normal', min: referenceRange[0], max: referenceRange[1] },
+        { name: 'high', min: referenceRange[1], max: referenceRange[1] + normalExtent }
+    ]);
+
+    console.log(series, referenceRange, normalExtent);
+
+let svgElement: SVGAElement = $state();
 
 function renderChart(series: Signal[] = []) {
 
@@ -273,9 +289,9 @@ function renderChart(series: Signal[] = []) {
 
 }
 
-$: {
+run(() => {
     if (svgElement) renderChart(series);
-}
+});
 
 onMount(() => {
         

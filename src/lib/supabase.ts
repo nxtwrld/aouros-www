@@ -24,16 +24,20 @@ export function setClient(client: SupabaseClient, clientName: string = 'default'
 
 
 export function getClient(clientName: string = 'default'): SupabaseClient {
+    if (!PUBLIC_SUPABASE_URL || !PUBLIC_SUPABASE_ANON_KEY) {
+        throw new Error('Supabase environment variables are not set');
+    }
+
     const client = clients.get(clientName);
     if (client == undefined) {
-        console.log('Supabase - creating client:', clientName, clients);
+        console.log('Supabase - creating client:', clientName, { url: PUBLIC_SUPABASE_URL });
         if (clientName == 'default') {
-            clients.set('default', createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY))
-            return getClient();
+            const newClient = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+            clients.set('default', newClient);
+            return newClient;
         } else {
-            throw new Error (`Supabase client ${clientName} noe found`)
+            throw new Error(`Supabase client ${clientName} not found`);
         }
-        
     }
     console.log('Supabase - getting client:', clientName);
     return client;

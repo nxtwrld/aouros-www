@@ -20,22 +20,20 @@
     import { updateSignals } from '$lib/health/signals';
     import DocumentTile from '$components/documents/DocumentTile.svelte';
     
-    let documents: DocumentNew[] = [];
-    let results: DocumentNew[] = [];//empResults;
+    let documents: DocumentNew[] = $state([]);
+    let results: DocumentNew[] = $state([]);//empResults;
     let byProfileDetected: {
         profile: Profile,
         reports: DocumentNew[]
-    }[] = [];
-    let invalids: DocumentNew[]= [];
-    let tasks: Task[] = [];
-    let savedDocuments: Document[] = [];
+    }[] = $state([]);
+    let invalids: DocumentNew[]= $state([]);
+    let tasks: Task[] = $state([]);
+    let savedDocuments: Document[] = $state([]);
 
     let currentFiles: File[] = [];
     let processingFiles: File[] = [];
-    let processedCount: number = 0;
-    $: analyzingInProgress = assessingState === AssessingState.ASSESSING || processingState === ProcessingState.PROCESSING;
+    let processedCount: number = $state(0);
 
-    $: remainingScans = ($user?.subscriptionStats?.scans || 0) - processedCount;
 
     enum AssessingState {
         IDLE = 'IDLE',
@@ -46,8 +44,8 @@
         IDLE = 'IDLE',
         PROCESSING = 'PROCESSING',
     }
-    let processingState = ProcessingState.IDLE;
-    let assessingState = AssessingState.IDLE;
+    let processingState = $state(ProcessingState.IDLE);
+    let assessingState = $state(AssessingState.IDLE);
 
 
     function fileInput(e: any) {     
@@ -233,7 +231,7 @@
     }
 
 
-    let savingDocumentsInProgress: boolean = false;
+    let savingDocumentsInProgress: boolean = $state(false);
 
     async function add() {
         savingDocumentsInProgress = true;
@@ -350,8 +348,10 @@
         */
     }
 
-    let previewReport: DocumentNew | null = null;
+    let previewReport: DocumentNew | null = $state(null);
 
+    let analyzingInProgress = $derived(assessingState === AssessingState.ASSESSING || processingState === ProcessingState.PROCESSING);
+    let remainingScans = $derived(($user?.subscriptionStats?.scans || 0) - processedCount);
 </script>
 
 <div class="page -empty">
@@ -365,7 +365,7 @@
 
     <h3 class="h3 heading">{ $t('app.import.import-reports-scan-or-images') }</h3>
 
-    <input type="file" id="upload-file" class="-none" accept=".pdf,.jpg,.jpeg,.png,.webp,.webm" on:change={fileInput} />
+    <input type="file" id="upload-file" class="-none" accept=".pdf,.jpg,.jpeg,.png,.webp,.webm" onchange={fileInput} />
     
     <div class="import-canvas">
         <div class="imports">
@@ -424,7 +424,7 @@
         <div class="actions">
             
             {#if tasks.length > 0 || analyzingInProgress}
-            <button on:click={assess} class="button -primary -large" disabled={tasks.length == 0 || analyzingInProgress}>
+            <button onclick={assess} class="button -primary -large" disabled={tasks.length == 0 || analyzingInProgress}>
                 {#if analyzingInProgress}
                     <div class="button-loading">
                         <LoaderThinking />
@@ -435,7 +435,7 @@
             </button>
             {/if}
             {#if byProfileDetected.length > 0 && !analyzingInProgress}
-            <button class="button -large" on:click={add} disabled={results.length == 0 || savingDocumentsInProgress}>
+            <button class="button -large" onclick={add} disabled={results.length == 0 || savingDocumentsInProgress}>
                 {#if savingDocumentsInProgress}
                     <div class="button-loading">
                         <LoaderThinking />

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import steps from '$components/onboarding/steps';
@@ -8,7 +10,7 @@
 	import { prepareKey, encrypt as encryptAES, exportKey } from '$lib/encryption/aes.js';
 	import { encrypt as encryptRSA, pemToKey } from '$lib/encryption/rsa.js';
 
-	let STEP = 0;
+	let STEP = $state(0);
 
 	interface EditData {
 		bio: {
@@ -35,25 +37,16 @@
 	}
 
 
-	export let data;
-	export let form;
+	let { data, form } = $props();
 
 
-	let readyNext: boolean = false;
-	let hash = '';
+	let readyNext: boolean = $state(false);
+	let hash = $state('');
 	let global: any = undefined;
 ;
 
-	let { session, profile } = data;
-	$: ({ session, profile } = data);
+	let { session, profile } = $state(data);
 
-	$: {
-		if (hash == '') {
-			setLocation(STEP.toString());
-		} else {
-			STEP = parseInt(hash);
-		}
-	}
 
 	function setLocation(loc: string) {
 		if (global) global.location.hash = loc;
@@ -69,11 +62,11 @@
 		});
 	})
 
-	let profileForm: HTMLFormElement
-	let loading = false;
-	let error: string | null = null;
+	let profileForm: HTMLFormElement = $state()
+	let loading = $state(false);
+	let error: string | null = $state(null);
 
-	let editData: EditData = {
+	let editData: EditData = $state({
 		bio: {
 			email: session.user.email,
 			fullName: form?.fullName ?? profile?.fullName ?? '',
@@ -91,7 +84,7 @@
 			publicKey: profile?.publicKey ?? undefined,
 			passphrase: profile?.passphrase ?? undefined
 		}
-	}
+	})
 
 	const handleSubmit: SubmitFunction = async ({formElement, formData, action, cancel}) => {
 		//console.log('editData', editData);
@@ -191,6 +184,16 @@
 		location.hash = step.toString();
 	}
 	
+	//let { session, profile } = $derived(data);
+	run(() => {
+		if (hash == '') {
+			setLocation(STEP.toString());
+		} else {
+			STEP = parseInt(hash);
+		}
+	});
+
+	const SvelteComponent = $derived(steps[STEP].component);
 </script>
 
 <div class="flex -center view-dark">
@@ -200,7 +203,7 @@
 			<div class="form-instructions -error">{error.message}</div>
 		{/if}
 		<div class="form-contents">
-		<svelte:component this={steps[STEP].component} bind:data={editData} {profileForm}  bind:ready={readyNext} />
+		<SvelteComponent bind:data={editData} {profileForm}  bind:ready={readyNext} />
 		</div>
 
 		<form
@@ -217,7 +220,7 @@
 				<button
 					type="button"
 					class="button -block"
-					on:click={() => setStep(STEP - 1)}
+					onclick={() => setStep(STEP - 1)}
 				>
 					Back
 				</button>
@@ -234,7 +237,7 @@
 				<button
 					type="button"
 					class="button -block -primary"
-					on:click={() => setStep(STEP + 1)}
+					onclick={() => setStep(STEP + 1)}
 					disabled={!readyNext}
 				>
 					Next

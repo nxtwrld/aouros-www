@@ -7,11 +7,15 @@
     import DocumentToolbar from '$components/documents/DocumentToolbar.svelte';
     import AppConnect from '$components/apps/AppConnect.svelte';
 
-    export let  data: {
+    interface Props {
+        data: {
         document_id: string;
+    };
     }
 
-    let document: Document | null = null;
+    let { data }: Props = $props();
+
+    let document: Document | null = $state(null);
     onMount(async () => {
         document = await getDocument(data.document_id);
     });

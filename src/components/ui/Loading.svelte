@@ -1,11 +1,16 @@
 <script lang="ts">
-    export let type: 'line' | 'big' | 'small' = 'big';
+  interface Props {
+    type?: 'line' | 'big' | 'small';
+    children?: import('svelte').Snippet;
+  }
+
+  let { type = 'big', children }: Props = $props();
 </script>
 
 <div class="loader-container -{type}">
 
     <div class="loader"></div>
-    <slot />
+    {@render children?.()}
 </div>
 
 

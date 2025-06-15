@@ -24,12 +24,13 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
   }
 
 
-  console.log('loading.auth...')
   /**
    * Declare a dependency so the layout can be invalidated, for example, on
    * session refresh.
    */
   depends('supabase:auth')
+  
+  // Create supabase client with proper error handling
   const supabase = isBrowser()
     ? createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         global: {
@@ -42,26 +43,24 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
         },
         cookies: {
           getAll() {
-            return data.cookies
+            return data?.cookies || []
           },
         },
       })
+      
   /**
-   * It's fine to use `getSession` here, because on the client, `getSession` is
-   * safe, and on the server, it reads `session` from the `LayoutData`, which
-   * safely checked the session using `safeGetSession`.
+   * Use session and user data from server (via safeGetSession)
+   * instead of calling getSession/getUser directly
    */
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const session = data?.session || null
+  const user = data?.user || null
 
-  
   await waitLocale()
 
-  CurrentSession.set(session)
+  // Only set session and client if we have valid data
+  if (session) {
+    CurrentSession.set(session)
+  }
   setClient(supabase)
 
   return { session, supabase, user }

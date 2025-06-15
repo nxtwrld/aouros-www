@@ -1,13 +1,19 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import { onMount } from 'svelte';
 
-    export let value: string;
-    export let focus: boolean = false;
-    export let size: number = 1;
+    interface Props {
+        value: string;
+        focus?: boolean;
+        size?: number;
+    }
 
-    let element: HTMLTextAreaElement;
+    let { value = $bindable(), focus = false, size = 1 }: Props = $props();
 
-    let oldValue = value;
+    let element: HTMLTextAreaElement = $state();
+
+    let oldValue = $state(value);
 
     function keydown(e: KeyboardEvent) {
         if (e.key === 'Enter') {
@@ -16,13 +22,6 @@
         sizeTextarea();
     }
 
-    $: {
-        if (oldValue !== value) {
-            sizeTextarea();
-            oldValue = value;
-        }
-        
-    }
 
     function sizeTextarea()  {
         setTimeout(function(){
@@ -38,11 +37,18 @@
         if (focus) element.focus();
     })
 
+    run(() => {
+        if (oldValue !== value) {
+            sizeTextarea();
+            oldValue = value;
+        }
+        
+    });
 </script>
 
 
 <div class="block block-findings">
-    <textarea bind:this={element} class="editable" bind:value={value} />
+    <textarea bind:this={element} class="editable" bind:value={value}></textarea>
 </div>
 
 

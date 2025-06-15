@@ -3,20 +3,51 @@
 	import { enhance } from '$app/forms'
 	import type { ActionData, SubmitFunction } from './$types.js'
 
-	export let form: ActionData;
+	interface Props {
+		form: ActionData;
+	}
 
-	let loading: boolean = false;
+	let { form = $bindable() }: Props = $props();
 
-	const handleSubmit: SubmitFunction = () => {
+	let loading: boolean = $state(false);
+	let submitted: boolean = $state(false);
+
+	const handleSubmit: SubmitFunction = ({ formData, cancel }) => {
+		console.log('[Auth Form] Submit attempt - loading:', loading, 'submitted:', submitted);
+		
+		// Prevent multiple submissions
+		if (loading || submitted) {
+			console.log('[Auth Form] Blocking duplicate submission');
+			cancel(); // This actually prevents the submission
+			return;
+		}
+		
 		loading = true;
-		return async ({ update }) => {
-			update()
+		submitted = true;
+		
+		console.log('[Auth Form] Submitting email:', formData.get('email'));
+		
+		return async ({ result, update }) => {
+			console.log('[Auth Form] Form result:', result);
+			
+			await update();
+			
 			loading = false;
+			
+			// Only reset submitted state if there was an error
+			if (result.type === 'failure') {
+				submitted = false;
+				console.log('[Auth Form] Resetting submitted state due to error');
+			} else {
+				console.log('[Auth Form] Keeping submitted state - success');
+			}
 		}
 	}
 
 	function resetForm() {
-		form = {};
+		form = null;
+		submitted = false;
+		loading = false;
 	}
 </script>
 
@@ -24,7 +55,13 @@
 	<title>Authentication</title>
 </svelte:head>
 
-<form class="flex -column form modal" method="POST" use:enhance={handleSubmit}>
+<form class="flex -column form modal" method="POST" use:enhance={handleSubmit} onsubmit={(e) => {
+	if (loading || submitted) {
+		console.log('[Auth Form] Preventing form submit via event listener');
+		e.preventDefault();
+		return false;
+	}
+}}>
 		<img src="/icon.svg" alt="Aouros app" class="logo" />
 
 		<h1 class="h1">Authentication</h1>
@@ -32,7 +69,7 @@
 		<div class="success">
 			<p class="form-instructions -success">{form?.message}</p>
 			<div class="form-actions">
-				<button class="button -block" on:click={resetForm}>Send again</button>
+				<button class="button -block" onclick={resetForm}>Send again</button>
 			</div>
 		</div>
 		{:else}
@@ -44,6 +81,8 @@
 			</div>
 			{/if}
 
+			<!-- Hidden field to pass redirect path -->
+			<input type="hidden" name="redirectPath" value="/med" />
 
 			<div class="input">
 				<label for="email">Email address</label>
@@ -54,6 +93,7 @@
 					type="email"
 					placeholder="Your email"
 					value={form?.email ?? ''}
+					disabled={loading}
 				/>
 			</div>
 			{#if form?.errors?.email}
@@ -62,8 +102,8 @@
 			</span>
 			{/if}
 			<div class="form-actions">
-				<button class="button -primary -block" disabled={loading}>
-					{ loading ? 'Loading' : 'Send magic link' }
+				<button class="button -primary -block" disabled={loading || submitted} type="submit">
+					{ loading ? 'Sending...' : submitted ? 'Email sent!' : 'Send magic link' }
 				</button>
 			</div>
 		{/if}

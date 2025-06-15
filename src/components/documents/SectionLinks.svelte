@@ -1,16 +1,20 @@
 <script lang="ts">
 
 
-export let data: { 
+    interface Props {
+        data?: { 
     id: string;
     type: 'document' | 'other';
- }[] = [];
+ }[];
+    }
 
- $: byType = data.reduce((acc, {type, id}) => {
+    let { data = [] }: Props = $props();
+
+ let byType = $derived(data.reduce((acc, {type, id}) => {
     if (!acc[type]) acc[type] = [];
     acc[type].push(id);
     return acc;
- }, {}) as Record<string, string[]>;
+ }, {}) as Record<string, string[]>);
 
 </script>
 

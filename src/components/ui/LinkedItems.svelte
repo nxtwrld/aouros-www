@@ -5,13 +5,29 @@
 
     const dispatch = createEventDispatcher();
 
-    export let items: any[] = [];
-    export let removable: boolean = false;
-    export let layout: 'rows' | 'icons'= 'rows';
-    export let max: number = 0;
-    export let type: string = 'item';
+   interface Props {
+      items?: any[];
+      removable?: boolean;
+      layout?: 'rows' | 'icons';
+      max?: number;
+      type?: string;
+      view?: import('svelte').Snippet<[any]>;
+      empty?: import('svelte').Snippet;
+      add?: import('svelte').Snippet<[any]>;
+   }
 
-    $: count = items.filter(item => type === item.type || type === 'item').length;
+   let {
+      items = $bindable([]),
+      removable = false,
+      layout = 'rows',
+      max = 0,
+      type = 'item',
+      view,
+      empty,
+      add
+   }: Props = $props();
+
+    let count = $derived(items.filter(item => type === item.type || type === 'item').length);
 
     // unlink item
     function unlink(item: any) {
@@ -36,9 +52,9 @@
         {#each items as item}
             {#if type === item.type || type === 'item'}
             <div class="linked-item">
-                <slot name="view" {item} />
+                {@render view?.({ item, })}
                 {#if removable}
-                <button class="-unlink" type="button" on:click={() => unlink(item)}>
+                <button class="-unlink" type="button" onclick={() => unlink(item)}>
                     <svg class="icon">
                         <use href="/sprite.svg#close"></use>
                     </svg>
@@ -49,14 +65,14 @@
         {/each}
     
    {:else} 
-        {#if $$slots.empty}
-            <slot name="empty" />
+        {#if empty}
+            {@render empty?.()}
         {:else}
             <Empty>No items linked</Empty>
         {/if}
     {/if}
-    {#if $$slots.add}
-        <div class="linked-item"><slot name="add" {link}/></div>
+    {#if add}
+        <div class="linked-item">{@render add?.({ link, })}</div>
     {/if}
 </div>
 
@@ -74,7 +90,7 @@
         container: links /  inline-size;
         margin-bottom: var(--gap);
     }
-    .links:has(> .empty) {
+    .links:has(:global(> .empty)) {
         min-height: 4rem;
     }
 

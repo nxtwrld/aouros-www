@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { createBubbler, preventDefault } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 	import { passwordStrength } from 'check-password-strength';
     import { prepareKeys } from '$lib/encryption/rsa';
     import { createHash } from '$lib/encryption/hash';
@@ -8,7 +11,17 @@
     
 
     export const ready: boolean = true;
-    export let data: {
+
+    let passphrase = $state(generatePassphrase());
+    let testPassphrase: string = '';
+    let automaticSavingCapable: boolean = $state(false);
+
+    let strength = $derived(passwordStrength(passphrase).value);
+
+
+
+    interface Props {
+        data: {
         bio: {
             email: string;
         }
@@ -20,22 +33,16 @@
             passphrase?: string;
         };
     };
+        profileForm: HTMLFormElement;
+    }
 
-    let passphrase = generatePassphrase();
-    let testPassphrase: string = '';
-    let automaticSavingCapable: boolean = false;
+    let { data = $bindable(), profileForm }: Props = $props();
 
-    $: strength = passwordStrength(passphrase).value;
-
-
-
-    export let profileForm: HTMLFormElement;
-
-    let autoPassphrase: 'settingup' | 'create' | 'custom' |  'test' | 'success' | 'fail' = (data.privacy.enabled && data.privacy.privateKey && data.privacy.publicKey) ? 'success' :  'settingup';
+    let autoPassphrase: 'settingup' | 'create' | 'custom' |  'test' | 'success' | 'fail' = $state((data.privacy.enabled && data.privacy.privateKey && data.privacy.publicKey) ? 'success' :  'settingup');
     let testPassphraseElement: HTMLInputElement | undefined = undefined;
 
-    let isCustomPassphrase: boolean = false;
-    let viewPassphrase: boolean = false;
+    let isCustomPassphrase: boolean = $state(false);
+    let viewPassphrase: boolean = $state(false);
 
     async function setPassphrase() {
         console.log('setPassphrase', passphrase);
@@ -153,7 +160,7 @@
 <h2 class="h2">{ $t('app.onboarding.privacy-and-amp-encryption') } ({ $t('app.onboarding.optional') })</h2>
 
 <div class="input">
-    <input type="checkbox" id="enabled" bind:checked={data.privacy.enabled} on:click={forceKeySetup} />
+    <input type="checkbox" id="enabled" bind:checked={data.privacy.enabled} onclick={forceKeySetup} />
     <label for="enabled">{ $t('app.onboarding.enable-total-privacy') }</label>
 </div>
 
@@ -178,62 +185,62 @@
     {#if autoPassphrase == 'create'}
 
             <div class="flex -center -column">
-                <button class="button -large" on:click={setPassphrase}>{ $t('app.onboarding.set-passphrase') }</button>
+                <button class="button -large" onclick={setPassphrase}>{ $t('app.onboarding.set-passphrase') }</button>
             </div>
             
                 <p class="p  form-message">Click <strong>Set Passphrase</strong> and follow the instructions given by your system.</p>
 
                 {#if viewPassphrase}
                 <div class="input">
-                    <input type="text" bind:value={passphrase} on:focus={clickedToCopy} />
+                    <input type="text" bind:value={passphrase} onfocus={clickedToCopy} />
 
                 </div>
-                <p class="p"><button class="a" on:click={() => navigator.clipboard.writeText(passphrase)}>{ $t('app.onboarding.copy-to-clipboard') }</button> { $t('app.onboarding.or') } <button class="a" type="button" on:click={() => viewPassphrase = false}>{ $t('app.onboarding.hide-passphrase') }</button></p>
-                <p class="p"><button class="a" on:click={ignorePasswordManager}>{ $t('app.onboarding.i-stored-or-remembered-the-passphrase-myself') }</button></p>
+                <p class="p"><button class="a" onclick={() => navigator.clipboard.writeText(passphrase)}>{ $t('app.onboarding.copy-to-clipboard') }</button> { $t('app.onboarding.or') } <button class="a" type="button" onclick={() => viewPassphrase = false}>{ $t('app.onboarding.hide-passphrase') }</button></p>
+                <p class="p"><button class="a" onclick={ignorePasswordManager}>{ $t('app.onboarding.i-stored-or-remembered-the-passphrase-myself') }</button></p>
                 {:else}
-                <p class="p"><button class="a" on:click={() => viewPassphrase = true}>{ $t('app.onboarding.view-passphrase') }</button></p>
+                <p class="p"><button class="a" onclick={() => viewPassphrase = true}>{ $t('app.onboarding.view-passphrase') }</button></p>
                 {/if}
-                <p class="p">{ $t('app.onboarding.to-set-your-own-custom-passphrase') }<button class="a" on:click={setCustomPassword}>{ $t('app.onboarding.click-here') }</button></p>
+                <p class="p">{ $t('app.onboarding.to-set-your-own-custom-passphrase') }<button class="a" onclick={setCustomPassword}>{ $t('app.onboarding.click-here') }</button></p>
 
 
     {:else if autoPassphrase == 'custom'}
-        <form method="POST" name="login" on:submit|preventDefault>
+        <form method="POST" name="login" onsubmit={preventDefault(bubble('submit'))}>
             <div class="automatic-passphrase">
             <input type="text" name="username" autocomplete="username" value={data.bio.email} />
 
             </div>
             <div class="input">
-                <input type="password" name="password" autocomplete="new-password" bind:value={passphrase} on:click={clickedToCopy} />
+                <input type="password" name="password" autocomplete="new-password" bind:value={passphrase} onclick={clickedToCopy} />
             </div>
             <p class="p">{strength}</p>
             {#if automaticSavingCapable}
             <div class="flex -center -column">
             
-                    <button class="button -large" type="submit" on:click={setPassphrase}>{ $t('app.onboarding.set-passphrase') }</button>
+                    <button class="button -large" type="submit" onclick={setPassphrase}>{ $t('app.onboarding.set-passphrase') }</button>
 
                     {#if isCustomPassphrase}
-                    <button class="a" on:click={ignorePasswordManager}>{ $t('app.onboarding.privacy.i-dont-need-to-store-it') }</button>
+                    <button class="a" onclick={ignorePasswordManager}>{ $t('app.onboarding.privacy.i-dont-need-to-store-it') }</button>
                     {/if}
 
             </div>
                 <p class="p  form-message">Click <strong>Set Passphrase</strong> and follow the instructions given by your system.</p>
-                <p class="p">{ $t('app.onboarding.privacy.to-generate-a-random-passphrase') } <button class="a" on:click={setAutomaticPassword}>{ $t('click-here') }.</button></p>
+                <p class="p">{ $t('app.onboarding.privacy.to-generate-a-random-passphrase') } <button class="a" onclick={setAutomaticPassword}>{ $t('click-here') }.</button></p>
             {:else}
-            <p class="p form-message">{ $t('app.onboarding.privacy.store-this-password-securely') } <button class="a" on:click={() => navigator.clipboard.writeText(passphrase)}>{ $t('app.onboarding.copy-to-clipboard') }</button></p>
-            <button class="button -large" on:click={ignorePasswordManager}>{ $t('app.onboarding.privacy.i-have-it-stored') }</button>
+            <p class="p form-message">{ $t('app.onboarding.privacy.store-this-password-securely') } <button class="a" onclick={() => navigator.clipboard.writeText(passphrase)}>{ $t('app.onboarding.copy-to-clipboard') }</button></p>
+            <button class="button -large" onclick={ignorePasswordManager}>{ $t('app.onboarding.privacy.i-have-it-stored') }</button>
             {/if}
         </form>
     {:else if autoPassphrase == 'test'}
-        <button class="button -large" on:click={checkPassphrase}>{ $t('app.onboarding.privacy.check-saved-passphrase') }</button>
+        <button class="button -large" onclick={checkPassphrase}>{ $t('app.onboarding.privacy.check-saved-passphrase') }</button>
         <p class="p  form-message">Click <strong>Check passphrase</strong> and authenticate password from your system to confirm saving</p>
     {:else if autoPassphrase == 'success'}
         <p class="p form-message -success">{ $t('app.onboarding.privacy.passphrase-is-saved-in-password-manager') }</p>
-        <p class="p form-message">{ $t('app.onboarding.privacy.your-total-privacy-is-configured') } <button class="a" on:click={resetAll}>{ $t('app.onboarding.privacy.configure-again') }</button></p>
+        <p class="p form-message">{ $t('app.onboarding.privacy.your-total-privacy-is-configured') } <button class="a" onclick={resetAll}>{ $t('app.onboarding.privacy.configure-again') }</button></p>
     {:else if autoPassphrase == 'fail'}
         <p class="p form-message -fail">{ $t('app.onboarding.privacy.passphrase-is-not-saved-in-password-manager') }</p>
 
         <div class="flex -center">
-            <button class="button" on:click={resetAutomaticPassword}>{ $t('app.onboarding.privacy.try-again') }</button>
+            <button class="button" onclick={resetAutomaticPassword}>{ $t('app.onboarding.privacy.try-again') }</button>
         </div>
     {/if}
 

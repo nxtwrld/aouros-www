@@ -1,27 +1,33 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
 	import Avatar from './Avatar.svelte';
     import { onMount } from 'svelte';
     import Languages, { type LanguageType } from '$lib/languages';
     import user from '$lib/user';
     import { t } from '$lib/i18n';
 
-    export let ready: boolean = false;
-    export let data: {
+    interface Props {
+        ready?: boolean;
+        data: {
         bio: {
             email: string;
             fullName: string;
             avatarUrl: string;
             language: LanguageType;
         }
+    };
+        profileForm: HTMLFormElement;
     }
-    export let profileForm: HTMLFormElement;
 
-    $: {
+    let { ready = $bindable(false), data = $bindable(), profileForm }: Props = $props();
+
+    run(() => {
 
         if (data.bio.fullName && data.bio.fullName?.trim() != '') {
             ready = true;
         }
-     }
+     });
 
      onMount(() => {
         // load browser language and set it as default if available
