@@ -12,6 +12,7 @@
     import { profile } from '$lib/profiles';
     import { float32Flatten } from '$lib/array';
     import { ANALYZE_STEPS } from '$lib/types.d';
+    import { state as uiState } from '$lib/ui';
   
     
     const MIN_AUDIO_SIZE: number = 10000 * 8;
@@ -463,6 +464,14 @@
     .audio-recorder.-running {
         left: calc(100% / 6 * 5);
         bottom: 1.5rem;
+    }
+
+    /* Adjust position when viewer is open */
+    :global(main.layout.-viewer) .audio-recorder {
+        left: calc(33vw + 67vw / 2); /* Viewer width + half of remaining content width */
+    }
+    :global(main.layout.-viewer) .audio-recorder.-running {
+        left: calc(33vw + 67vw / 6 * 5); /* Adjust running position for viewer */
     }
 
     .canvas-analysis {
