@@ -204,7 +204,7 @@
             {#if prop.type === 'time-series' && prop.items}
                 {#each prop.items as item}
                      {#if item.type == 'date'}
-                   
+                        <!-- Date fields are handled elsewhere -->
                     {:else}
                     <HealthFormField prop={item} bind:data={inputs[prop.key][item.key]} />
                     {/if}

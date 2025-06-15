@@ -321,9 +321,6 @@
     .search-input-box .hint .value {
         color: transparent;
     }
-    .search-input-box .hint .value-rest {
-        color: var(--color-gray-500);
-    }
     .search-input-box .hint .command {
         color: var(--color-interactivity);
         font-weight: 700;

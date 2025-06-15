@@ -1,10 +1,10 @@
 import { error, json,   } from '@sveltejs/kit';
 
 
-export async function GET({ request, params, locals: { supabase, safeGetSession }}) {
+export async function GET({ request, params, locals: { supabase, safeGetSession, user }}) {
     
     const { session } = await safeGetSession();
-    if (!session) {
+    if (!session || !user) {
         return error(401, 'Unauthorized')
     }
     const url = new URL(request.url);
@@ -21,11 +21,11 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
 }
 
 // upload new avatar
-export async function POST({ request, params, locals: { supabase, safeGetSession }}) {
+export async function POST({ request, params, locals: { supabase, safeGetSession, user }}) {
 
     const { session } = await safeGetSession();
     
-    if (!session) {
+    if (!session || !user) {
         return error(401, 'Unauthorized')
     }
 

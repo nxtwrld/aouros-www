@@ -268,8 +268,4 @@
     .tile:last-child:first-child {
         grid-column: 1 / -1;
     }
-    button.tile:hover {
-        --background-color: var(--color-white);
-
-    }
 </style>

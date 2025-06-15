@@ -19,7 +19,7 @@
     console.log(doc);
 </script>
 
-<button class="report {doc.state}" onclick={() => dispatch('click', doc)} transition:scale>
+<div class="report {doc.state}" onclick={() => dispatch('click', doc)} transition:scale role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dispatch('click', doc); } }} aria-label="Open document: {doc.title}">
     
     <div class="preview">
         {#if doc.pages?.[0]?.thumbnail}
@@ -36,7 +36,7 @@
     <div class="title">{doc.title}</div>
 
     {#if removable && !(doc.state === DocumentState.PROCESSING || doc.state == TaskState.ASSESSING)}
-        <button class="remove" onclick={stopPropagation(() => dispatch('remove', doc))}>
+        <button class="remove" aria-label="Remove document" onclick={stopPropagation(() => dispatch('remove', doc))}>
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <use href="/icons.svg#close" />
             </svg>
@@ -47,7 +47,7 @@
             {doc.state}
         </div>
     {/if}
-</button>
+</div>
 
 
 <style>

@@ -217,18 +217,6 @@
     .grid-tile .title {
         text-align: right;
     }
-    .grid-tile .date {
-        padding: .3rem 0;
-        font-size: 1rem;
-        font-weight: 300;
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
-        align-items: center;
-    }
-    .grid-tile .date.-outdate {
-        color: var(--color-negative)
-    }
     .grid-tile-wrapper .icon {
         width: 3rem;
         height: 3rem;

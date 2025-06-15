@@ -1079,7 +1079,7 @@
         {:else}
             {$t('anatomy.'+ selected.name)}
         {/if}
-        <button on:click={resetFocus}>
+        <button on:click={resetFocus} aria-label="Reset focus">
             <svg>
                 <use href="/icons.svg#close"></use>
             </svg>

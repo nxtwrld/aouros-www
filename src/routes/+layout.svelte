@@ -11,9 +11,10 @@
 	let supabase = $derived(data?.supabase);
 
 	onMount(() => {
-		if (!supabase) return;
+		const currentSupabase = data?.supabase;
+		if (!currentSupabase) return;
 		
-		const authListener = supabase.auth.onAuthStateChange((event, session) => {
+		const authListener = currentSupabase.auth.onAuthStateChange((event, sessionData) => {
 			// Only invalidate on actual auth changes, not initial load
 			if (event !== 'INITIAL_SESSION') {
 				invalidate('supabase:auth');

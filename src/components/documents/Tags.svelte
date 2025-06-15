@@ -53,10 +53,10 @@
 			{#if active}
             	<button class="tag -object" class:-highlight={tag == $focused.object} onclick={(event) => focus(event, tag)}>{tag}</button>
 			{:else}
-				<span class="tag -object" class:-highlight={tag == $focused.object} onclick={() => dispatch('click', tag)}>{tag}</span>	
+				<button class="tag -object" class:-highlight={tag == $focused.object} onclick={() => dispatch('click', tag)}>{tag}</button>
 			{/if}
         {:else}
-    		<span class="tag" onclick={() => dispatch('click', tag)}>{tag}</span>
+    		<button class="tag" onclick={() => dispatch('click', tag)}>{tag}</button>
         {/if}
 	{/each}
 </div>

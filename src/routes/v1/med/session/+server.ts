@@ -3,13 +3,13 @@ import { error, json } from '@sveltejs/kit';
 import { analyze } from '$lib/session/analyzeConversation';
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request, locals: { supabase, safeGetSession } }) {
+export async function POST({ request, locals: { supabase, safeGetSession, user } }) {
 	//const str = url.searchParams.get('drug');
 
 
     const { session } = await safeGetSession()
 
-    if (!session) {
+    if (!session || !user) {
         error(401, { message: 'Unauthorized' });
     }
 

@@ -37,7 +37,7 @@
             <div class="heading">
                 <h3 class="h3 heading">{title}</h3>
                 <div class="actions">
-                    <button class="-close" onclick={() => dispatch('close')}>
+                    <button class="-close" aria-label="Close overlay" onclick={() => dispatch('close')}>
                         <svg>
                             <use href="/icons.svg#close" />
                         </svg>
@@ -51,7 +51,7 @@
                 {@render children?.()}
 
                 {#if preventer}
-                <button onclick={() => showPreviewDisabled = true} class="preview-preventer">
+                <button onclick={() => showPreviewDisabled = true} class="preview-preventer" aria-label="Preview disabled">
                 </button>
                 {/if}
             </div>

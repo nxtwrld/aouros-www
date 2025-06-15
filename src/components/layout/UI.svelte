@@ -14,6 +14,12 @@
     import Sounds from '$components/ui/Sounds.svelte';
     import Viewer from './Viewer.svelte';
 
+    interface Props {
+        children?: import('svelte').Snippet;
+    }
+
+    let { children }: Props = $props();
+
     // Fixed: Convert to proper Svelte 5 reactive state
     let dialogs = $state({
         healthForm: false,
@@ -84,7 +90,7 @@
         {#if $uiState.viewer}
             <section class="layout-viewer" transition:fade><Viewer /></section>
         {/if}
-        <section class="layout-content"><slot/></section>
+        <section class="layout-content">{@render children()}</section>
     </main>
 
 

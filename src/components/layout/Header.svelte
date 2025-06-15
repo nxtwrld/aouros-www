@@ -9,12 +9,12 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
     import { goto } from "$app/navigation";
     import MenuBurger from "$components/ui/MenuBurger.svelte";
     import ui from "$lib/ui";
-    import { state, Overlay } from "$lib/ui";
+    import { state as uiState, Overlay } from "$lib/ui";
     import { t } from "$lib/i18n";
     import ProfileImage from "$components/profile/ProfileImage.svelte";
 
-    function isActive(path: string, currentPath: string, state: any) {
-        if ($state.overlay !== Overlay.none) return false;
+    function isActive(path: string, currentPath: string) {
+        if ($uiState.overlay !== Overlay.none) return false;
         return currentPath.startsWith(path);
     }
 
@@ -75,7 +75,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
 
             {#if $profile}
                 {#if $profile.id}
-                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname, $state)}>
+                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname)}>
                         {#if $profile.avatarUrl}
                         <div class="icon profile-image">
                             <img src="/v1/med/profiles/{$profile.id}/avatar?path={$profile.avatarUrl}" alt="avatar" />
@@ -84,10 +84,10 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                         {$profile.fullName}
                     </a>
                     <!--div class="spacer"></div-->
-                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname, $state)}>{ $t('app.nav.documents') }</a>
-                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname, $state)}>{ $t('app.nav.history') }</a>
+                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname)}>{ $t('app.nav.documents') }</a>
+                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>{ $t('app.nav.history') }</a>
                     {#if $user.isMedical}
-                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname, $state)}>{ $t('app.nav.new-session') }</a>
+                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>{ $t('app.nav.new-session') }</a>
                     {/if}
                 {:else}
                     <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{$profile.name}</div>
@@ -100,7 +100,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                 {/if}
             {/if}
             <!--a href="/med/import" class:-active={$page.url.pathname == '/med/import/'}>Import</a-->
-            <button on:click={() => ui.emit('overlay.import')} class:-active={$state.overlay == Overlay.import}>{ $t('app.nav.import') }</button>
+            <button on:click={() => ui.emit('overlay.import')} class:-active={$uiState.overlay == Overlay.import}>{ $t('app.nav.import') }</button>
         </div>
         {#if $user}
         <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
@@ -118,7 +118,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
             </ul>
         </div>
         {/if}
-        <button on:click={() => emit('find')} class="icon"><svg >
+        <button on:click={() => emit('find')} class="icon" aria-label="Search"><svg >
             <use href="/icons.svg#search"></use>
         </svg></button>
 
