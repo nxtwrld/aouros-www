@@ -77,7 +77,7 @@ export async function PUT({ request, params, locals: { supabase, safeGetSession,
         })
         .eq('user_id', params.pid)
         .eq('id', params.did);
-//        .eq('keys.user_id', session.user.id);
+//        .eq('keys.user_id', user.id);
 
     if (documentUpdateError) {
         console.error('Error updating document', documentUpdateError);

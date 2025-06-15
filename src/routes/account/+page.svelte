@@ -45,7 +45,7 @@
 	let global: any = undefined;
 ;
 
-	let { session, profile } = $state(data);
+	let { session, profile, userEmail } = $state(data);
 
 
 	function setLocation(loc: string) {
@@ -68,7 +68,7 @@
 
 	let editData: EditData = $state({
 		bio: {
-			email: session.user.email,
+			email: userEmail || '',
 			fullName: form?.fullName ?? profile?.fullName ?? '',
 			avatarUrl: profile?.avatarUrl ?? '',
 			language: form?.language ?? profile?.language ?? 'en'
@@ -96,7 +96,9 @@
 		formData.append('subscription', editData.subscription);
 		formData.append('insurance', JSON.stringify(editData.insurance));
 		formData.append('health', JSON.stringify(editData.health));
-		formData.append('passphrase', !editData.privacy.enabled ? editData.privacy.passphrase : undefined);
+		if (!editData.privacy.enabled && editData.privacy.passphrase) {
+			formData.append('passphrase', editData.privacy.passphrase);
+		}
 
 		formData.append('publicKey', editData.privacy.publicKey as string);
 		formData.append('privateKey', editData.privacy.privateKey as string);

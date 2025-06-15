@@ -26,14 +26,16 @@
 		}
 		
 		try {
-			// Check if we already have a session (maybe it was set by URL fragments)
-			const { data: initialSession } = await $page.data.supabase.auth.getSession();
-			console.log('[Client Code Confirm] Initial session check:', {
-				hasSession: !!initialSession.session,
-				userId: initialSession.session?.user?.id
+			// Check if we already have a session (this is safe during auth flow)
+			// Note: We use getUser() for validation instead of relying on session cookies
+			const { data: validUser, error: userError } = await $page.data.supabase.auth.getUser();
+			console.log('[Client Code Confirm] Initial auth check:', {
+				hasUser: !!validUser.user,
+				userId: validUser.user?.id,
+				userError: userError?.message
 			});
 			
-			if (initialSession.session) {
+			if (validUser.user && !userError) {
 				console.log('[Client Code Confirm] Already authenticated, redirecting to:', next);
 				await invalidateAll();
 				goto(next, { replaceState: true });
@@ -70,14 +72,16 @@
 			while (attempts < maxAttempts) {
 				await new Promise(resolve => setTimeout(resolve, 500));
 				
-				const { data: delayedSession } = await $page.data.supabase.auth.getSession();
-				console.log(`[Client Code Confirm] Session check attempt ${attempts + 1}:`, {
-					hasSession: !!delayedSession.session,
-					userId: delayedSession.session?.user?.id
+				// Use getUser() for validated authentication check
+				const { data: delayedUser, error: delayedError } = await $page.data.supabase.auth.getUser();
+				console.log(`[Client Code Confirm] Auth check attempt ${attempts + 1}:`, {
+					hasUser: !!delayedUser.user,
+					userId: delayedUser.user?.id,
+					error: delayedError?.message
 				});
 				
-				if (delayedSession.session) {
-					console.log('[Client Code Confirm] Session found, redirecting to:', next);
+				if (delayedUser.user && !delayedError) {
+					console.log('[Client Code Confirm] Authentication confirmed, redirecting to:', next);
 					await invalidateAll();
 					goto(next, { replaceState: true });
 					return;

@@ -40,7 +40,7 @@ export async function POST({ request, locals: { supabase, safeGetSession, user }
             return error(401, { message: 'Unauthorized' });
         }
 
-    const subscription = await loadSubscription();
+    const subscription = await loadSubscription(user.id);
     //console.log('user', subscription);
     if (!subscription) {
         error(404, { message: 'Subscription not found' });
@@ -104,7 +104,7 @@ export async function POST({ request, locals: { supabase, safeGetSession, user }
 
     // 4. update subscription
     subscription.profiles -= 1;
-    const u = await updateSubscription(subscription);
+            const u = await updateSubscription(subscription, user.id);
 
         return json(profileData);
     } catch (authError) {

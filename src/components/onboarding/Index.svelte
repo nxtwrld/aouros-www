@@ -60,7 +60,7 @@
 
 	let editData: EditData = $state({
 		bio: {
-			email: session.user.email,
+			email: '', // TODO: Fix when this component is needed
 			fullName: form?.fullName ?? profile?.fullName ?? '',
 			avatarUrl: profile?.avatarUrl ?? '',
 			birthDate: form?.birthDate ?? profile?.birthDate ?? '',

@@ -24,7 +24,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession,
     redirect(303, '/med');
   }
 
-  return { session, profile };
+  return { session, profile, userEmail: user.email };
 
 
 }

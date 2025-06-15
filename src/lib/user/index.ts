@@ -63,30 +63,16 @@ export const session = {
 
 
 export async function setUser(profile: UserFirstTime | User, userSession?: any) {
-    // Use provided userSession or try to get it from client
+    // Use provided userSession or fallback to profile data (no client-side auth calls during hydration)
     let actualUserSession = userSession;
     
     if (!actualUserSession) {
-        const supabase = getClient();
-        try {
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (userError || !user) {
-                console.warn('[User] Could not get user session during setUser, proceeding with profile data');
-                // Continue without session validation during hydration
-                actualUserSession = { 
-                    id: profile.auth_id || profile.id, 
-                    email: (profile as any).email 
-                };
-            } else {
-                actualUserSession = user;
-            }
-        } catch (error) {
-            console.warn('[User] Auth error during setUser, using profile data:', error);
-            actualUserSession = { 
-                id: profile.auth_id || profile.id, 
-                email: (profile as any).email 
-            };
-        }
+        // Don't make client-side auth calls during hydration - use profile data directly
+        console.log('[User] No user session provided, using profile data for hydration');
+        actualUserSession = { 
+            id: profile.auth_id || profile.id, 
+            email: (profile as any).email || 'unknown@example.com'
+        };
     }
 
     if (profile && (profile as User).fullName) {
