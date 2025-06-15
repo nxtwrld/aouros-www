@@ -12,6 +12,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
     import { state as uiState, Overlay } from "$lib/ui";
     import { t } from "$lib/i18n";
     import ProfileImage from "$components/profile/ProfileImage.svelte";
+    import type { Profile } from "$lib/types.d";
 
     function isActive(path: string, currentPath: string) {
         if ($uiState.overlay !== Overlay.none) return false;
@@ -90,7 +91,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                     <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>{ $t('app.nav.new-session') }</a>
                     {/if}
                 {:else}
-                    <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{$profile.name}</div>
+                    <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{'fullName' in $profile ? $profile.fullName : 'New Profile'}</div>
                     <div class="spacer"></div>
                 {/if}
             {:else}
@@ -105,7 +106,13 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
         {#if $user}
         <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
             <button on:click|stopPropagation={() => toggleMenu(Menu.user)}>
-              <ProfileImage profile={profiles.get($user.id)} size={2} />
+              <ProfileImage profile={$user.id ? (() => {
+                try {
+                  return profiles.get($user.id) as Profile;
+                } catch {
+                  return null;
+                }
+              })() : null} size={2} />
             </button>
             <ul class="menu">
                 <li>

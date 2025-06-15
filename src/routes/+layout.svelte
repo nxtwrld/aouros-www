@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { setClient } from '$lib/supabase';
+	import { setClient, getClient } from '$lib/supabase';
 	import '../css/index.css';
 
 	let { data, children } = $props();
@@ -24,7 +24,7 @@
 		return () => authListener.data.subscription.unsubscribe();
 	});
 
-	// Keep existing setClient call for compatibility
+	// Set client for compatibility - now handles re-initialization gracefully
 	setClient(supabase);
 </script>
 

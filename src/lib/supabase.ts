@@ -15,9 +15,14 @@ clients.set('default', createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KE
 
 export function setClient(client: SupabaseClient, clientName: string = 'default') {
     console.log('Supabase - setting client:', clientName);
-    if (clients.get(clientName) != undefined) {
-        //throw new Error(`Supabase client ${clientName} already exists`);
-        console.warn(`Supabase client ${clientName} already exists`);
+    const existingClient = clients.get(clientName);
+    if (existingClient != undefined) {
+        // Only warn if trying to set a different client instance
+        if (existingClient !== client) {
+            console.warn(`Supabase client ${clientName} already exists with different instance`);
+        }
+        // Don't warn for same client instance (common during hydration)
+        return;
     }
     clients.set(clientName, client);
 }

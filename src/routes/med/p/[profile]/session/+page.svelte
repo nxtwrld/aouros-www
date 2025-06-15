@@ -355,7 +355,7 @@
 
 
 {#if view !== Views.report}
-    <div class="audio-recorder" class:-running={view != Views.start}>
+    <div class="audio-recorder" class:-running={view != Views.start} class:-active={audioState === AudioState.listening || audioState === AudioState.speaking}>
         <AudioButton bind:state={audioState} {hasResults} bind:speechChunks={speechChunks} on:speech-end={() => processData()} on:speech-start={speechStart} />
     </div>
 {/if}
@@ -454,8 +454,11 @@
         transform: translate(-50%, calc(50% - 3rem));
         z-index: 1001;
         pointer-events: none;
-        transition: bottom .3s, left .3s;
+        transition: bottom .3s, left .3s, z-index .1s;
         transition-timing-function: ease-in;
+    }
+    .audio-recorder.-active {
+        z-index: 200000;
     }
     .audio-recorder.-running {
         left: calc(100% / 6 * 5);

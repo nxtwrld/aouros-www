@@ -17,7 +17,7 @@
         action?: () => void;
     }
 
-    let commands: Command[] = $state([
+    let baseCommands: Command[] = [
         {
             command: 'view',
             translation: $t('app.search.commands.view-profile'),
@@ -34,7 +34,19 @@
             translation: $t('app.search.commands.view-history'),
             path: '/med/p/[UID]/history'
         }
-    ]);
+    ];
+
+    let commands: Command[] = $derived.by(() => {
+        const cmds = [...baseCommands];
+        if ($user && 'isMedical' in $user && $user.isMedical) {
+            cmds.push({
+                command: 'session',
+                translation: $t('app.search.commands.start-an-interview-session'),
+                path: '/med/p/[UID]/session'
+            });
+        }
+        return cmds;
+    });
 
     let systemCommands: Command[] = [
         {
@@ -207,21 +219,7 @@
             off.forEach(f => f());
         }
     });
-    run(() => {
-        if ($user) {
-            if ($user.isMedical) {
-                commands = [
-                    ...commands,
-                    {
-                        command: 'session',
-                        translation: $t('app.search.commands.start-an-interview-session'),
-                        path: '/med/p/[UID]/session'
-                    }
-                ]
-            }
-        }
-    });
-    run(() => {
+    $effect(() => {
         search(inputValue);
     });
 </script>
