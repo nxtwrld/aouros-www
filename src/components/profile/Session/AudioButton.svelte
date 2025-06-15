@@ -1,22 +1,32 @@
-<!-- @migration-task Error while migrating Svelte code: can't migrate `let micAnimationContainer: HTMLDivElement;` to `$state` because there's a variable named state.
-     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
     import { AudioState, getAudio, getAudioVAD, convertBlobToMp3, convertFloat32ToMp3, type AudioControlsVad} from '$lib/audio/microphone';
     import { throttle } from 'throttle-debounce';
-    import { onDestroy, createEventDispatcher, onMount } from 'svelte';
+    import { onDestroy, onMount } from 'svelte';
     import shortcuts from '$lib/shortcuts';
 
-    const dispatch = createEventDispatcher();
+    interface Props {
+        hasResults?: boolean;
+        speechChunks?: Float32Array[];
+        state?: AudioState;
+        onspeechstart?: () => void;
+        onspeechend?: (event: { speechChunks: Float32Array[] }) => void;
+        onfeatures?: (features: any) => void;
+    }
 
-    export let hasResults = false;
-    export let speechChunks: Float32Array[] =[];
-    export let state: AudioState = AudioState.ready;
+    let { 
+        hasResults = false,
+        speechChunks = $bindable([]),
+        state = $bindable(AudioState.ready),
+        onspeechstart,
+        onspeechend,
+        onfeatures
+    }: Props = $props();
 
     let audio: AudioControlsVad | Error;
 
     let micAnimationContainer: HTMLDivElement;
 
-    $: isRunning = state === AudioState.listening || state === AudioState.speaking;
+    let isRunning = $derived(state === AudioState.listening || state === AudioState.speaking);
 
     const micTick = throttle(200, (energy: number) => {
         const tickElement = document.createElement('div');
@@ -45,18 +55,22 @@
         audio.onFeatures = (d) => {
             //console.log(d.energy)
             if (d.energy > 0.001) micTick(d.energy);
-            dispatch('features', d);
+            onfeatures?.(d);
         }
         audio.onSpeechStart = () => {
-            state = audio.state;
-            dispatch('speech-start');
+            if (!(audio instanceof Error)) {
+                state = audio.state;
+            }
+            onspeechstart?.();
         }   
         audio.onSpeechEnd = (data: Float32Array) => {
            // console.log(data);
-           state = audio.state;
+           if (!(audio instanceof Error)) {
+                state = audio.state;
+           }
             speechChunks.push(data);
          //   console.log(convertFloat32ToMp3(data));
-            dispatch('speech-end', {
+            onspeechend?.({
                 speechChunks
             });
             
@@ -67,12 +81,12 @@
     }
 
     async function stopSession() {
-        if (audio) {
+        if (audio && !(audio instanceof Error)) {
             audio.stop();
             state = audio.state;
         }
 
-        dispatch('speech-end', {
+        onspeechend?.({
             speechChunks
         });
     }
@@ -104,7 +118,7 @@
 
 
 <div class="record-audio {state}" class:-has-results={hasResults} bind:this={micAnimationContainer}>
-    <button class="control {state}" class:-running={isRunning} on:click|stopPropagation={toggleSession}>
+    <button class="control {state}" class:-running={isRunning} onclick={(e) => { e.stopPropagation(); toggleSession(); }}>
         {#if state == AudioState.stopping}
         ....
         {:else if state === AudioState.listening ||  state === AudioState.speaking}

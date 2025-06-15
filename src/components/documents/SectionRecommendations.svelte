@@ -7,9 +7,11 @@
 
     let { data }: Props = $props();
 
-    function sortByUrgency(a, b) {
+    function sortByUrgency(a: any, b: any) {
         return b.urgency - a.urgency;
     }
+
+    let sortedData = $derived(data ? [...data].sort(sortByUrgency) : []);
 
 </script>
 
@@ -18,7 +20,7 @@
     <h3 class="h3 heading -sticky">{ $t('report.recommendations') }</h3>
 
     <ul class="list-items">
-        {#each data.sort(sortByUrgency) as { urgency, description}}
+        {#each sortedData as { urgency, description}}
         <li class="panel urgency-{urgency}">
             {description}
         </li>

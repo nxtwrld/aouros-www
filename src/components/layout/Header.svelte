@@ -69,7 +69,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
         <div class="navigation toolbar" class:-open={activeMenu == Menu.tools}>
 
             
-            {#if $user.subscription != 'individual'}
+            {#if $user && 'subscription' in $user && $user.subscription != 'individual'}
                 <a href="/med/p/" class:-active={$page.url.pathname == '/med/p/'}>{ $t('app.nav.profiles') }</a>
             {/if}
 
@@ -86,7 +86,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                     <!--div class="spacer"></div-->
                     <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname)}>{ $t('app.nav.documents') }</a>
                     <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>{ $t('app.nav.history') }</a>
-                    {#if $user.isMedical}
+                    {#if $user && 'isMedical' in $user && $user.isMedical}
                     <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>{ $t('app.nav.new-session') }</a>
                     {/if}
                 {:else}
@@ -95,7 +95,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                 {/if}
             {:else}
                 <div class="spacer"></div>
-                {#if $user.subscription != 'individual'}
+                {#if $user && 'subscription' in $user && $user.subscription != 'individual'}
                 <a href="/med/p/addprofile/">{ $t('app.nav.add-profile') }</a>
                 {/if}
             {/if}
@@ -110,7 +110,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
             <ul class="menu">
                 <li>
                     <div class="user">
-                        <h3 class="h3">{$user.fullName}</h3>
+                        <h3 class="h3">{'fullName' in $user ? $user.fullName : $user.email}</h3>
 
                     </div>
                 </li>

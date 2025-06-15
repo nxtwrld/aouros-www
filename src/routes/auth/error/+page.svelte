@@ -1,11 +1,12 @@
 <script lang="ts">
   import { page } from '$app/stores';
   
-  $: error = $page.url.searchParams.get('error') || 'An unknown error occurred';
-  $: errorDetails = $page.url.searchParams.get('errorDetails');
-  $: redirectUrl = $page.url.searchParams.get('redirect') || '/auth';
+  // Convert reactive assignments to $derived
+  let error = $derived($page.url.searchParams.get('error') || 'An unknown error occurred');
+  let errorDetails = $derived($page.url.searchParams.get('errorDetails'));
+  let redirectUrl = $derived($page.url.searchParams.get('redirect') || '/auth');
   
-  let showDetails = false;
+  let showDetails = $state(false);
 </script>
 
 <svelte:head>
@@ -52,7 +53,7 @@
       {#if errorDetails}
         <div class="text-center">
           <button 
-            on:click={() => showDetails = !showDetails}
+            onclick={() => showDetails = !showDetails}
             class="text-sm text-gray-500 hover:text-gray-700 underline"
           >
             {showDetails ? 'Hide' : 'Show'} Technical Details

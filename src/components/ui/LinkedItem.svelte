@@ -1,28 +1,41 @@
-<!-- @migration-task Error while migrating Svelte code: This migration would change the name of a slot making the component unusable -->
 <script lang="ts">
     
-    export let title: string | undefined = undefined;
-    export let href: string | undefined = undefined;
-    export let type: string = 'link';
-    export let passive: boolean = false;
-
-    let className: string = '';
-    export {
-        className as class
+    interface Props {
+        title?: string;
+        href?: string;
+        type?: string;
+        passive?: boolean;
+        class?: string;
+        onclick?: () => void;
+        children?: import('svelte').Snippet;
+        icon?: import('svelte').Snippet;
+        titleSlot?: import('svelte').Snippet;
     }
+    
+    let { 
+        title = undefined, 
+        href = undefined, 
+        type = 'link', 
+        passive = false, 
+        class: className = '',
+        onclick,
+        children,
+        icon,
+        titleSlot
+    }: Props = $props();
 
 </script>
 
 {#if passive}
     <div class="link {className} link-{type}">
         <div class="link-content">
-            <slot />
+            {@render children?.()}
         </div>
 
         <h4 class="link-title">
-            {#if $$slots.icon}
+            {#if icon}
                 <div class="link-icon">
-                    <slot name="icon" />
+                    {@render icon()}
                 </div>
             {:else}
                 <svg class="link-icon">
@@ -34,39 +47,39 @@
     </div>
 
 {:else if href}
-    <a {href} class="link {className} link-{type}" on:click>
+    <a {href} class="link {className} link-{type}" {onclick}>
         <div class="link-content">
-            <slot />
+            {@render children?.()}
         </div>
 
         <h4 class="link-title">
-            {#if $$slots.icon}
+            {#if icon}
                 <div class="link-icon">
-                    <slot name="icon" />
+                    {@render icon()}
                 </div>
             {:else}
                 <svg class="link-icon">
                     <use href="/sprite.svg#{type}"></use>
                 </svg>
             {/if}
-            {#if $$slots.title}
-                <slot name="title" />
+            {#if titleSlot}
+                {@render titleSlot()}
             {:else}
                 {title}
             {/if}
         </h4>
     </a>
 {:else}
-    <button class="link {className} link-{type}" on:click>
+    <button class="link {className} link-{type}" {onclick}>
         <div class="link-content">
-            <slot />
+            {@render children?.()}
         </div>
         <h4 class="link-title">
             <svg class="link-icon">
                 <use href="/sprite.svg#{type}"></use>
             </svg>
-            {#if $$slots.title}
-                <slot name="title" />
+            {#if titleSlot}
+                {@render titleSlot()}
             {:else}
                 {title}
             {/if}

@@ -1,11 +1,13 @@
-<!-- @migration-task Error while migrating Svelte code: `<tr>` cannot be a child of `<table>`. `<table>` only allows these children: `<caption>`, `<colgroup>`, `<tbody>`, `<thead>`, `<tfoot>`, `<style>`, `<script>`, `<template>`. The browser will 'repair' the HTML (by moving, removing, or inserting elements) which breaks Svelte's assumptions about the structure of your components.
-https://svelte.dev/e/node_invalid_placement -->
 <script lang="ts">
     import focused from '$lib/focused';
     import ui from '$lib/ui';
     import { t } from '$lib/i18n';
 
-    export let data: any;
+    interface Props {
+        data: any;
+    }
+
+    let { data }: Props = $props();
 
     function showBodyPart(part: string) {
         ui.emit('viewer', { object: normalize(part) })
@@ -15,7 +17,7 @@ https://svelte.dev/e/node_invalid_placement -->
         return str.replace(/ /ig, '_');
     }
 
-    $: hasTreatment = data && data.some((item: any) => item.treatment);
+    let hasTreatment = $derived(data && data.some((item: any) => item.treatment));
 
     function translate(str: string) {
         const translation = $t('anatomy.'+str);
@@ -50,7 +52,7 @@ https://svelte.dev/e/node_invalid_placement -->
             </td>
             <td class="-empty -actions">
                 <div class="actions">
-                <button on:click={() => showBodyPart(identification)}>
+                <button onclick={() => showBodyPart(identification)}>
                     <svg>
                         <use href="/icons.svg#anatomy" />
                     </svg>

@@ -381,7 +381,7 @@
                 <ImportProfile bind:profile={profileDetected.profile} />
                 {#each profileDetected.reports as doc}
                     <div class="report-import">    
-                        <ImportDocument {doc} on:click={() => previewReport = doc}  on:remove={() => removeItem('results', doc)} />
+                        <ImportDocument {doc} onclick={() => previewReport = doc}  onremove={() => removeItem('results', doc)} />
                         {#key JSON.stringify(profileDetected.profile)}
                         <SelectProfile contact={profileDetected.profile} bind:selected={profileDetected.profile}  />
                         {/key}
@@ -396,12 +396,12 @@
             {/each}
             {#each invalids as doc}
             <div class="report-import">
-                <ImportDocument {doc} on:remove={() => removeItem('invalids', doc)}  />
+                <ImportDocument {doc} onremove={() => removeItem('invalids', doc)}  />
             </div>
             {/each}
             {#each tasks as task}
             <div class="report-import">
-                <ImportDocument doc={task} on:remove={() => removeItem('tasks', task)} />
+                <ImportDocument doc={task} onremove={() => removeItem('tasks', task)} />
             </div>
             {/each}
             <div class="report-import">
@@ -453,7 +453,7 @@
 
 </div>
 {#if previewReport}
-    <ScreenOverlay title={previewReport.content.title} preventer={true} on:close={() => previewReport = null}>
+    <ScreenOverlay title={previewReport.content.title} preventer={true} onclose={() => previewReport = null}>
         <DocumentView document={previewReport} />
     </ScreenOverlay>
 {/if}

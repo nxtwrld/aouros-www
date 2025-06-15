@@ -1,31 +1,27 @@
 <script lang="ts">
     import SignalDetail from "./SignalDetail.svelte";
-    import { createEventDispatcher } from "svelte";
     import defaults from '$data/lab.properties.defaults.json';
     import ui from '$lib/ui';
     import { t } from '$lib/i18n';
 
     import type { Document } from '$lib/documents/types.d';
 
-    //import profile from '$lib/user/profile';
+    interface Props {
+        document: Document;
+        item: {
+            signal: string,
+            test: string,
+            value: string | number,
+            unit: string,
+            reference: string,
+            urgency?: number,
+            document?: Document
+        };
+        showDetails?: boolean;
+        onshowdetails?: (event: { code: string, showDetails: boolean }) => void;
+    }
 
-    const dispatch = createEventDispatcher();
-    
-  interface Props {
-    document: Document;
-    item: {
-        signal: string,
-        test: string,
-        value: string | number,
-        unit: string,
-        reference: string,
-        urgency?: number,
-        document?: Document
-    };
-    showDetails?: boolean;
-  }
-
-  let { document, item = $bindable(), showDetails = false }: Props = $props();
+    let { document, item, showDetails = false, onshowdetails }: Props = $props();
 
     // Set document reference after item is properly initialized
     if (document) {
