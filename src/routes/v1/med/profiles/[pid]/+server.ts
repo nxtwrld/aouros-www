@@ -4,12 +4,12 @@ import { error, json } from '@sveltejs/kit';
 
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function GET({ request, params, locals: { supabase, safeGetSession }}) {
+export async function GET({ request, params, locals: { supabase, safeGetSession, user }}) {
 
 
     const { session } = await safeGetSession();
 
-    if (!session) {
+    if (!session || !user) {
       return error(401, { message: 'Unauthorized' });
     }
 
@@ -17,7 +17,7 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
       .from('profiles_links')
       .select('profiles!profiles_links_profile_id_fkey(id, fullName, language, avatarUrl, publicKey), status')
       .eq('profile_id', params.pid)
-      .eq('parent_id', session.user.id).single();
+      .eq('parent_id', user.id).single();
 
     if (errorDb) {
         return error(500, { message: 'Database error' });
@@ -28,26 +28,26 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
     return json(data);
 }
 
-export async function DELETE({ request, params, locals: { supabase, safeGetSession }}) {
+export async function DELETE({ request, params, locals: { supabase, safeGetSession, user }}) {
   const { session } = await safeGetSession();
 
-  if (!session) {
+  if (!session || !user) {
     return error(401, { message: 'Unauthorized' });
   }
 
   // map proper profile and parent ids
   const url = new URL(request.url);
   let profile_id = params.pid;
-  let parent_id = session.user.id;
+  let parent_id = user.id;
 
   // we are deleting a profile link from a parent
   if(url.searchParams.get('link_type') == 'parent') {
-    profile_id = session.user.id;
+    profile_id = user.id;
     parent_id = params.pid;
   }
 
 
-  if (profile_id != session.user.id) {
+  if (profile_id != user.id) {
     // let's check if the profile is a virtual profile and you are the owner of it and if so, delete the whole profile
     const { data: profile, error: errorProfile} = await supabase
         .from('profiles')
@@ -58,7 +58,7 @@ export async function DELETE({ request, params, locals: { supabase, safeGetSessi
         return error(500, { message: 'Database error' });
     }
 
-    if (profile.auth_id == null && profile.owner_id == session.user.id) {
+    if (profile.auth_id == null && profile.owner_id == user.id) {
       // delete the profile if it has not auth_id (virutal profile) and you are the owner of it
         const { error: errorDelete} = await supabase.from('profiles').delete()
             .eq('id', profile_id);

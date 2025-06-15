@@ -3,10 +3,10 @@ import type { Actions, PageServerLoad } from './$types';
 import { verifyHash } from '$lib/encryption/hash';
 //import { loadUser } from '$lib/user/server';
 
-export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession }, fetch }) => {
+export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession, user }, fetch }) => {
   const { session } = await safeGetSession()
 
-  if (!session) {
+  if (!session || !user) {
     redirect(303, '/auth')
   }
 
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession 
 }
 
 export const actions: Actions = {
-  update: async ({ request, locals: { supabase, safeGetSession } }) => {
+  update: async ({ request, locals: { supabase, safeGetSession, user } }) => {
     const formData = await request.formData()
     const fullName = formData.get('fullName') as string
     const avatarUrl = formData.get('avatarUrl') as string
@@ -44,7 +44,7 @@ export const actions: Actions = {
 
     const { session } = await safeGetSession()
 
-    if (!session || !session.user) {
+    if (!session || !user) {
       return fail(403, { error: 'Unauthorized'})
     }
 
@@ -63,14 +63,14 @@ export const actions: Actions = {
       publicKey,
       updated_at: new Date(),
     })
-    .eq('owner_id', session?.user.id)
-    .eq('auth_id', session?.user.id)
+    .eq('owner_id', user.id)
+    .eq('auth_id', user.id)
 
     if (profileError) {
       console.log('profile error', profileError);
       return fail(500, {
         error: profileError,
-        auth_id: session?.user.id,
+        auth_id: user.id,
         fullName,
         avatarUrl,
         subscription,
@@ -85,7 +85,7 @@ export const actions: Actions = {
 
     // store privateKey in separate protected table
     const { error: keyError } = await supabase.from('private_keys').upsert({
-      id: session?.user.id,
+      id: user.id,
       privateKey,
       key_hash,
       key_pass: passphrase,
@@ -96,7 +96,7 @@ export const actions: Actions = {
     if (keyError) {
       console.log('key error', keyError);
       // clear profile data
-      await clear(['profiles'], supabase, session);
+      await clear(['profiles'], supabase, user);
       return fail(500, {
         error: keyError,
         fullName,
@@ -120,7 +120,7 @@ export const actions: Actions = {
     
     if (errorProfileLink) {
         console.log('Error saving profile link', errorProfileLink)
-        await clear(['profiles', 'private_keys'], supabase, session);
+        await clear(['profiles', 'private_keys'], supabase, user);
         return error(500, { message: 'Error saving profile link' });
     }
         */
@@ -128,35 +128,35 @@ export const actions: Actions = {
 
 
     // create default profile documents
-    await Promise.all(documents.map(async (doc) => {
+    await Promise.all(documents.map(async (doc: any) => {
 
       const { type, metadata, content, keys } = doc;
 
       console.log('document', type);
       const { data: documentInsert, error: documentInsertError } = await supabase.from('documents')
           .insert([{ 
-              user_id: session?.user.id, 
+              user_id: user.id, 
               type, 
               metadata, 
               content,
-              author_id: session?.user.id,
+              author_id: user.id,
               attachments: []
-          }]).select('id)');
+          }]).select('id');
 
       if (documentInsertError) {
           console.error('Error inserting document', documentInsertError);
-          await clear(['profiles', 'private_keys', 'profiles_links', 'document', 'keys'], supabase, session);
+          await clear(['profiles', 'private_keys', 'profiles_links', 'document', 'keys'], supabase, user);
           return error(500, { message: 'Error inserting document' });
       }
 
       const document_id = documentInsert[0].id;
       
 
-      keys.forEach((key) => {
-          key.user_id = session?.user.id;
-          key.owner_id = session?.user.id;
+      keys.forEach((key: any) => {
+          key.user_id = user.id;
+          key.owner_id = user.id;
           key.document_id = document_id;
-          key.author_id = session?.user.id;
+          key.author_id = user.id;
           console.log('key', key);
       });
 
@@ -167,7 +167,7 @@ export const actions: Actions = {
 
       if (keysInsertError) {
           console.error('Error inserting keys', keysInsertError);
-          await clear(['profiles', 'private_keys', 'profiles_links', 'documents', 'keys'], supabase, session);
+          await clear(['profiles', 'private_keys', 'profiles_links', 'documents', 'keys'], supabase, user);
           return error(500, { message: 'Error inserting keys' });
       }
     }));
@@ -188,14 +188,14 @@ export const actions: Actions = {
 
 
 
-function clear(clearing: string[], supabase: any, session: any) {
+function clear(clearing: string[], supabase: any, user: any) {
   return Promise.all(clearing.map(async (table) => {
       switch (table) {
         case 'profiles':
           await supabase.from('profiles').upsert(
             { 
-              id: session?.user.id,
-              auth_id: session?.user.id,
+              id: user.id,
+              auth_id: user.id,
               fullName: null,
               avatarUrl: null,
               subscription: null,
@@ -204,16 +204,16 @@ function clear(clearing: string[], supabase: any, session: any) {
           )
           break;
         case 'private_keys':
-          await supabase.from('private_keys').delete().eq('id', session?.user.id) 
+          await supabase.from('private_keys').delete().eq('id', user.id) 
           break;
         case 'profiles_links':
-          //await supabase.from('profiles_links').delete().eq('parent_id', session?.user.id)
+          //await supabase.from('profiles_links').delete().eq('parent_id', user.id)
           break;
         case 'documents':
-          await supabase.from('documents').delete().eq('user_id', session?.user.id)
+          await supabase.from('documents').delete().eq('user_id', user.id)
           break;
         case 'keys':
-          await supabase.from('keys').delete().eq('user_id', session?.user.id)
+          await supabase.from('keys').delete().eq('user_id', user.id)
           break;
 
       }

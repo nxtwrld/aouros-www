@@ -1,14 +1,17 @@
 import { error, json   } from '@sveltejs/kit';
 import { type Attachment } from '$lib/documents/types.d';
 
-export async function GET({ request, params, locals: { supabase, safeGetSession }}) {
+export async function GET({ request, params, locals: { supabase, safeGetSession, user }}) {
     
     const { session } = await safeGetSession();
-    if (!session) {
+    if (!session || !user) {
         return error(401, 'Unauthorized')
     }
     const url = new URL(request.url);
     const path = url.searchParams.get('path');
+    if (!path) {
+        return error(400, 'Path parameter required');
+    }
     const storagePath = params.pid + '_' + path;
     console.log('path', path);
     const { data, error : errorDownload } = await supabase.storage.from('attachments').download(path)
@@ -21,15 +24,15 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
 }
 
 // upload new avatar
-export async function POST({ request, params, locals: { supabase, safeGetSession }}) {
+export async function POST({ request, params, locals: { supabase, safeGetSession, user }}) {
 
     const { session } = await safeGetSession();
     
-    if (!session) {
+    if (!session || !user) {
         return error(401, 'Unauthorized')
     }
 
-    const userID = session.user.id;
+    const userID = user.id;
 
 
     const { file: fileData} = await request.json();
@@ -60,10 +63,10 @@ export async function POST({ request, params, locals: { supabase, safeGetSession
          } as Attachment);
 }
 
-export async function DELETE({ request, params, locals: { supabase, safeGetSession }}) {
+export async function DELETE({ request, params, locals: { supabase, safeGetSession, user }}) {
         
         const { session } = await safeGetSession();
-        if (!session) {
+        if (!session || !user) {
             return error(401, 'Unauthorized')
         }
         const url = new URL(request.url);

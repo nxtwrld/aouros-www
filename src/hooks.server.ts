@@ -4,9 +4,11 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
 const supabase: Handle = async ({ event, resolve }) => {
-  // Only log non-API requests to reduce noise
-  if (!event.url.pathname.startsWith('/v1/')) {
-    console.log(`[STEP 1] 🚀 Starting request: ${event.request.method} ${event.url.pathname}`)
+  // Reduced logging to only errors and auth-related requests
+  const shouldLog = !event.url.pathname.startsWith('/v1/') && 
+                    (event.url.pathname.startsWith('/auth') || event.url.pathname === '/med' || event.url.pathname === '/account');
+  if (shouldLog) {
+    console.log(`[REQ] ${event.request.method} ${event.url.pathname}`)
   }
   
   /**
@@ -66,9 +68,9 @@ const supabase: Handle = async ({ event, resolve }) => {
     },
   })
 
-  // Only log errors and non-API requests
-  if (response.status >= 400 || !event.url.pathname.startsWith('/v1/')) {
-    console.log(`[STEP 4] ✅ Request resolved with status: ${response.status} for ${event.url.pathname}`)
+  // Only log errors and important requests
+  if (response.status >= 400 || shouldLog) {
+    console.log(`[RES] ${response.status} ${event.url.pathname}`)
   }
   return response
 }
@@ -84,13 +86,11 @@ const authGuard: Handle = async ({ event, resolve }) => {
     const isProtectedRoute = protectedRoutes.some(route => event.url.pathname.startsWith(route))
     
     if (!event.locals.session && isProtectedRoute) {
-      console.log(`[AUTH] 🔄 Redirecting unauthenticated user from ${event.url.pathname} to /auth`)
       redirect(303, '/auth')
     }
 
     // Redirect authenticated users away from auth page
     if (event.locals.session && event.url.pathname === '/auth') {
-      console.log(`[AUTH] 🔄 Redirecting authenticated user to /med`)
       redirect(303, '/med')
     }
 

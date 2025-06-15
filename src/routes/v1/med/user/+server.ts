@@ -2,32 +2,27 @@
 import { error, json } from '@sveltejs/kit';
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function GET({ request, locals: { supabase, safeGetSession }}) {
+export async function GET({ request, locals: { supabase, safeGetSession, user }}) {
 
-    console.log('GET user');
+    // Removed noisy console.log
     
     try {
         const { session } = await safeGetSession();
 
-        if (!session) {
+        if (!session || !user) {
             return error(401, { message: 'Unauthorized' });
         }
 
-        const { data: { user: userSession }, error: userError } = await supabase.auth.getUser();
-        if (userError || !userSession) {
-            console.error('[API] /v1/med/user - Auth error:', userError);
-            return error(401, { message: 'Authentication failed' });
-        }
     const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select(`fullName, subscription, publicKey, avatarUrl, auth_id, id, language, private_keys(privateKey, key_hash, key_pass)`)
-    .eq('auth_id', userSession?.id)
+    .eq('auth_id', user.id)
     .single()
 
     const { data: subscription, error: subscriptionError } = await supabase
     .from('subscriptions')
     .select('profiles, scans')
-    .eq('id', userSession?.id)
+    .eq('id', user.id)
     .single()
 
 

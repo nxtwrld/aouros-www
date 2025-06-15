@@ -3,12 +3,12 @@ import { error, json } from '@sveltejs/kit';
 
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function GET({ request, params, locals: { supabase, safeGetSession }}) {
+export async function GET({ request, params, locals: { supabase, safeGetSession, user }}) {
 
 
     const { session } = await safeGetSession();
 
-    if (!session) {
+    if (!session || !user) {
       return error(401, { message: 'Unauthorized' });
     }
 
@@ -16,7 +16,7 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
     const { data: documentsLoad, error: documentsError } = await supabase.from('documents').select('id, metadata, content, type, attachments, user_id, author_id, keys!inner(key, owner_id)')
         .eq('user_id', params.pid)
         .eq('id', params.did)
-        .eq('keys.user_id', session.user.id).single();
+        .eq('keys.user_id', user.id).single();
 
 
     if (documentsError) {
@@ -35,20 +35,20 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
  * @param param0 
  * @returns 
  */
-export async function PUT({ request, params, locals: { supabase, safeGetSession }}) {
+export async function PUT({ request, params, locals: { supabase, safeGetSession, user }}) {
 
     const { session } = await safeGetSession();
 
-    if (!session) {
+    if (!session || !user) {
       return error(401, { message: 'Unauthorized' });
     }
 
 
-    // check if session.user.id has proper keys to update document
+    // check if user has proper keys to update document
     const { data: documentKeys, error: documentKeysError } = await supabase.from('keys').select('id, key, owner_id, user_id')
         .eq('document_id', params.did)
         .eq('owner_id', params.pid)
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .single();
 
     if (documentKeysError) {
@@ -95,11 +95,11 @@ export async function PUT({ request, params, locals: { supabase, safeGetSession 
  * @returns 
  */
 
-export async function DELETE({ request, params, locals: { supabase, safeGetSession }}) {
+export async function DELETE({ request, params, locals: { supabase, safeGetSession, user }}) {
 
     const { session } = await safeGetSession();
 
-    if (!session) {
+    if (!session || !user) {
       return error(401, { message: 'Unauthorized' });
     }
 

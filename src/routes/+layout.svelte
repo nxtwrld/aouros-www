@@ -13,9 +13,11 @@
 	onMount(() => {
 		if (!supabase) return;
 		
-		const authListener = supabase.auth.onAuthStateChange(() => {
-			// Always invalidate on auth state change to be safe
-			invalidate('supabase:auth');
+		const authListener = supabase.auth.onAuthStateChange((event, session) => {
+			// Only invalidate on actual auth changes, not initial load
+			if (event !== 'INITIAL_SESSION') {
+				invalidate('supabase:auth');
+			}
 		});
 
 		return () => authListener.data.subscription.unsubscribe();
