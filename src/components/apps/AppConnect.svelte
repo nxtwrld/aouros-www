@@ -10,7 +10,7 @@
 
     interface Props {
         type?: AppConnectionTypeEnum;
-        shared?: Item | undefined;
+        shared?: any | undefined;
         tags?: string[];
         children?: import('svelte').Snippet;
     }
@@ -27,31 +27,37 @@
 
     let selectedApp: AppRecord | undefined = $state(undefined);
 
-    let items: Link[] = cleanItems(shared);
+    let items: any[] = cleanItems(shared);
 
     if (shared) {
         console.log('Shared', shared);
         /*
-        getAllLinkedItems(shared).then((itemsShared: Item[]) => {
+        getAllLinkedItems(shared).then((itemsShared: any[]) => {
             items = itemsShared.map(item => {
                 return {
                     type: item.type,
                     title: item.data?.title || item.data?.question || item.data?.fn,
                     uid: item.data.uid
                 }
-            }) as Link[];
+            }) as any[];
         });*/
     }
 
-    function cleanItems(items) {
+    function cleanItems(items: any[]): any[] {
         return items.map(item => {
-            if (item.content.signals) item.content.signals.forEach(signal => {
-                delete signal.document
-            });
-            delete item.key;
-            delete item.attachments;
-            delete item.content.attachments;
-            return item;
+            // Create a deep copy to avoid mutating the original
+            const cleanItem = JSON.parse(JSON.stringify(item));
+            
+            if (cleanItem.content.signals) {
+                cleanItem.content.signals.forEach((signal: any) => {
+                    delete signal.document;
+                });
+            }
+            delete cleanItem.key;
+            delete cleanItem.attachments;
+            delete cleanItem.content.attachments;
+            
+            return cleanItem;
         });
     }
 
