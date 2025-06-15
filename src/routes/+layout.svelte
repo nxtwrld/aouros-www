@@ -24,8 +24,12 @@
 		return () => authListener.data.subscription.unsubscribe();
 	});
 
-	// Set client for compatibility - now handles re-initialization gracefully
-	setClient(supabase);
+	// Set client for compatibility using effect to avoid self-reference
+	$effect(() => {
+		if (data?.supabase) {
+			setClient(data.supabase);
+		}
+	});
 </script>
 
 {@render children()}

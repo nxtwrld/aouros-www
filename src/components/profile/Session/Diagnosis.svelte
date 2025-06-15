@@ -122,7 +122,7 @@
         <div>{symptom.duration}</div>
         <div>{symptom.bodyParts}</div>
         <div class="actions">
-            <button class="list-action remove" onclick={stopPropagation(() => removeItem(symptom, analysis.symptoms))}>
+            <button class="list-action remove" aria-label="Remove symptom" onclick={stopPropagation(() => removeItem(symptom, analysis.symptoms))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>
@@ -147,12 +147,12 @@
         <div>{diagnosis.basis}</div>
         <div>{diagnosis.probability}</div>
         <div class="actions">
-            <button class="list-action pin" onclick={stopPropagation(() => togglePin(diagnosis))}>
+            <button class="list-action pin" aria-label="Pin diagnosis" onclick={stopPropagation(() => togglePin(diagnosis))}>
                 <svg>
                     <use href="/icons.svg#pin"></use>
                 </svg>
             </button>
-            <button class="list-action remove" onclick={stopPropagation(() => removeItem(diagnosis, analysis.diagnosis))}>
+            <button class="list-action remove" aria-label="Remove diagnosis" onclick={stopPropagation(() => removeItem(diagnosis, analysis.diagnosis))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>
@@ -172,12 +172,12 @@
     <div class="list-item" class:-pinned={treatment.pinned}  onclick={() => togglePin(treatment)}>
         <div class="list-title">{treatment.description}</div>
         <div class="actions">
-            <button class="list-action pin" onclick={stopPropagation(() => togglePin(treatment))}>
+            <button class="list-action pin" aria-label="Pin treatment" onclick={stopPropagation(() => togglePin(treatment))}>
                 <svg>
                     <use href="/icons.svg#pin"></use>
                 </svg>
             </button>
-            <button class="list-action remove" onclick={stopPropagation(() => removeItem(treatment, analysis.treatment))}>
+            <button class="list-action remove" aria-label="Remove treatment" onclick={stopPropagation(() => removeItem(treatment, analysis.treatment))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>
@@ -199,12 +199,12 @@
         <div class="list-title">{followUp.name}</div>
         <div class="list-description">{followUp.reason}</div>
         <div class="actions">
-            <button class="list-action pin" onclick={stopPropagation(() => togglePin(followUp))}>
+            <button class="list-action pin" aria-label="Pin follow-up" onclick={stopPropagation(() => togglePin(followUp))}>
                 <svg>
                     <use href="/icons.svg#pin"></use>
                 </svg>
             </button>
-            <button class="list-action remove" onclick={stopPropagation(() => removeItem(followUp, analysis.followUp))}>
+            <button class="list-action remove" aria-label="Remove follow-up" onclick={stopPropagation(() => removeItem(followUp, analysis.followUp))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>
@@ -228,12 +228,12 @@
             <div class="sub">{medication.time_of_day}</div>
         </div>
         <div class="actions">
-            <button class="list-action pin" onclick={stopPropagation(() => togglePin(medication))}>
+            <button class="list-action pin" aria-label="Pin medication" onclick={stopPropagation(() => togglePin(medication))}>
                 <svg>
                     <use href="/icons.svg#pin"></use>
                 </svg>
             </button>
-            <button class="list-action remove" onclick={stopPropagation(() => removeItem(medication, analysis.medication))}>
+            <button class="list-action remove" aria-label="Remove medication" onclick={stopPropagation(() => removeItem(medication, analysis.medication))}>
                 <svg>
                     <use href="/icons.svg#minus"></use>
                 </svg>

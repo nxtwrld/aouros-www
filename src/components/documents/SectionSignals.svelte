@@ -56,9 +56,4 @@
         /* turn of margin to accomodate the table spacing */
         margin-bottom: 0;
     }
-    .report {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 .2rem ;
-    }
 </style>

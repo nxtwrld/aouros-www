@@ -205,7 +205,7 @@
     }
     
     .record-audio .control.-running:hover,
-    .record-audio .control.-running:active
+    .record-audio .control.-running:active,
     .record-audio .control.-running.speaking:hover,
     .record-audio .control.-running.speaking:active {
         color: var(--color-negative);

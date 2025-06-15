@@ -136,18 +136,18 @@
             <FinalizeReportBlock bind:value={report[block.name]} />
             {/if}
             <div class="actions">
-                <button onclick={() => deleteBlock(block.id)} class="danger"><svg>
+                <button onclick={() => deleteBlock(block.id)} class="danger" aria-label="Delete block"><svg>
                     <use href="/icons.svg#minus">
                 </svg></button>
-                <button onclick={() => moveBlock(block.id, -1)}><svg>
+                <button onclick={() => moveBlock(block.id, -1)} aria-label="Move block up"><svg>
                     <use href="/icons.svg#arrow-round-up">
                 </svg></button>
-                <button onclick={() => moveBlock(block.id, 1)}><svg>
+                <button onclick={() => moveBlock(block.id, 1)} aria-label="Move block down"><svg>
                     <use href="/icons.svg#arrow-round-down">
                 </svg></button>
             </div>
         </div>
-        <button class="add" onclick={() => addBlock(index+1)}>
+        <button class="add" aria-label="Add new block" onclick={() => addBlock(index+1)}>
             <svg>
                 <use href="/icons.svg#plus">
             </svg>

@@ -49,13 +49,13 @@
     });
 </script>
 
-<div class="overlay flex -center" role="dialog" aria-modal="true" tabindex="-1" onclick={(e) => {
+<div class="overlay flex -center" role="dialog" aria-modal="true" tabindex="0" onmousedown={(e) => {
     // Only close if clicking directly on the overlay, not on child elements
     if (e.target === e.currentTarget) {
         closeModal();
     }
 }} class:-shade={showShade}  bind:this={modalContainer} onkeydown={handleKeydown} transition:fade>
-    <div class="modal-content" role="document" onclick={(e) => e.stopPropagation()} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }} transition:scale>
+    <div class="modal-content" role="document" onclick={(e) => e.stopPropagation()} transition:scale>
         <button class="close" aria-label="Close modal" onclick={closeModal}>
             <svg>
                 <use href="/icons.svg#close"></use>

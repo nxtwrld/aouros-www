@@ -52,7 +52,7 @@
             </td>
             <td class="-empty -actions">
                 <div class="actions">
-                <button onclick={() => showBodyPart(identification)}>
+                <button onclick={() => showBodyPart(identification)} aria-label="View body part anatomy">
                     <svg>
                         <use href="/icons.svg#anatomy" />
                     </svg>

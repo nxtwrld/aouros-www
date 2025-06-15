@@ -366,13 +366,13 @@
 {#if view === Views.start}
     <div class="canvas canvas-start">
         <div>
-            <div class="uhint" onclick={testAnalyze}>
+            <button class="uhint" onclick={testAnalyze} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); testAnalyze(); } }} aria-label="Test analysis with sample data">
                 {#if audioState === AudioState.listening || audioState === AudioState.speaking}
                     Listening...
                 {:else}
                     Start recording your session by clicking the microphone button.
                 {/if}
-            </div>
+            </button>
 
         </div>
     </div>

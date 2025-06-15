@@ -175,7 +175,7 @@
 
         <td class="-empty">
             <div class="actions">
-                <button onclick={() =>         ui.emit('modal.healthProperty', item )}>
+                <button onclick={() =>         ui.emit('modal.healthProperty', item )} aria-label="View signal chart">
                     <svg>
                         <use href="/icons.svg#chart-line"></use>
                     </svg>
