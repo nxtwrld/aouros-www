@@ -45,12 +45,14 @@
         console.log('UI mounted');
         const offs = [
             ui.listen('modal.healthProperty', (config: any) => {
-                console.log('modal.healthProperty', config);
-                dialogs.healthProperty = config || true;
+                console.log('modal.healthProperty event received with config:', config);
+                console.log('Setting dialogs.healthProperty to:', config === false ? false : (config || true));
+                dialogs.healthProperty = config === false ? false : (config || true);
             }),
             ui.listen('modal.healthForm', (config: any) => {
-                console.log('modal.healthForm', config);
-                dialogs.healthForm = config || true;
+                console.log('modal.healthForm event received with config:', config);
+                console.log('Setting dialogs.healthForm to:', config === false ? false : (config || true));
+                dialogs.healthForm = config === false ? false : (config || true);
             }),
             ui.listen('overlay.import', (state: boolean = true) => {
                 console.log('import');
@@ -101,13 +103,25 @@
     {/if}
 
     {#if dialogs.healthForm}
-        <Modal on:close={() => dialogs.healthForm = false}>
-            <HealthForm config={dialogs.healthForm}  on:abort={() => dialogs.healthForm = false}/>
+        <Modal on:close={() => {
+            console.log('Health form modal close event fired');
+            dialogs.healthForm = false;
+        }}>
+            <HealthForm config={dialogs.healthForm}  on:abort={() => {
+                console.log('Health form abort event fired');
+                dialogs.healthForm = false;
+            }}/>
         </Modal>
     {/if}
     {#if dialogs.healthProperty}
-        <Modal on:close={() => dialogs.healthProperty = false}>
-            <HealthProperty property={dialogs.healthProperty}  on:abort={() => dialogs.healthProperty = false}/>
+        <Modal on:close={() => {
+            console.log('Health property modal close event fired');
+            dialogs.healthProperty = false;
+        }}>
+            <HealthProperty property={dialogs.healthProperty}  on:abort={() => {
+                console.log('Health property abort event fired');
+                dialogs.healthProperty = false;
+            }}/>
         </Modal>
     {/if}
 
