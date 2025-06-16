@@ -70,6 +70,19 @@ function renderChart(series: Signal[] = []) {
         d.value = +d.value;
     });
 
+    // Remove duplicate entries with same date and value (after formatting)
+    const deduplicatedSeries = series.filter((item, index, arr) => {
+        return !arr.slice(0, index).some(prevItem => 
+            prevItem.date.getTime() === item.date.getTime() && 
+            prevItem.value === item.value
+        );
+    });
+
+    console.log(`Original series: ${series.length}, After deduplication: ${deduplicatedSeries.length}`);
+    
+    // Use deduplicated data for the rest of the function
+    series = deduplicatedSeries;
+
     const xExtent = extent(series, function(d: LabItem) { return d.date; });
     const xRange = xExtent[1] - xExtent[0];
 
@@ -187,7 +200,7 @@ function renderChart(series: Signal[] = []) {
 
     // define the line
     const valueline = line()
-        .curve(curveCardinal)
+        .curve(curveCardinal.tension(0))
         .x(function(d: LabItem) { return x(d.date); })
         .y(function(d: LabItem) { return y(d.value); });
 
