@@ -6,17 +6,22 @@
     import { goto } from '$app/navigation';
     import { t } from '$lib/i18n';
     import { createEventDispatcher } from 'svelte';
-    /*import xp, { spendCredits } from '$lib/xp/store';*/
+    
 
     
-    export let app: AppRecord;
-    export let items: Link[] = [];
+    interface Props {
+        /*import xp, { spendCredits } from '$lib/xp/store';*/
+        app: AppRecord;
+        items?: Link[];
+    }
+
+    let { app, items = [] }: Props = $props();
     
     console.log('App', app);
     console.log('Items', items);
     
     const dispatch = createEventDispatcher();
-    let reviewData: boolean = false;
+    let reviewData: boolean = $state(false);
 
     function confirm() {
         if(app) {
@@ -93,12 +98,12 @@
     {/if}
 
     <div class="buttons-row">
-        <button class="button" on:click={() => dispatch('abort')}>{ $t('app.cancel') }</button>
+        <button class="button" onclick={() => dispatch('abort')}>{ $t('app.cancel') }</button>
 
         {#if !reviewData}
-            <button class="button -primary" on:click={() => reviewData = !reviewData}>{ $t('app.continue') }</button>
+            <button class="button -primary" onclick={() => reviewData = !reviewData}>{ $t('app.continue') }</button>
         {:else}
-            <button class="button -primary" on:click={confirm}>{ $t('app-cconect.get') }</button>
+            <button class="button -primary" onclick={confirm}>{ $t('app-cconect.get') }</button>
         {/if}
     </div>
 </div>

@@ -1,28 +1,45 @@
 <script lang="ts">
-    export let value: string = '';
-    export let placeholder: string = 'Files';
-    export let accept: string | undefined = undefined;
+    import { createBubbler, stopPropagation } from 'svelte/legacy';
 
-    export let id: string = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    export let name: string = id;
-    export let required: boolean = false;
-    export let label: string | undefined = 'Browse file';
-    export let style: string = '';
+    const bubble = createBubbler();
 
-    let className: string = 'button';
-    export {
-        className as class
+
+    interface Props {
+        value?: string;
+        placeholder?: string;
+        accept?: string | undefined;
+        id?: string;
+        name?: string;
+        required?: boolean;
+        label?: string | undefined;
+        style?: string;
+        class?: string;
+        children?: import('svelte').Snippet;
     }
+
+    let {
+        value = $bindable(''),
+        placeholder = 'Files',
+        accept = undefined,
+        id = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+        name = id,
+        required = false,
+        label = 'Browse file',
+        style = '',
+        class: className = 'button',
+        children
+    }: Props = $props();
+    
 </script>
 
 
 
 <label class="styled-file {className}" for={id}>
-    <input type="file" {id} {name} class={className} {accept} bind:value {placeholder} {required} {style} on:click|stopPropagation 
-        on:change on:blur on:focus on:keypress/>
-        {#if ($$slots.default || label)}
-            {#if $$slots.default}
-                <slot/>
+    <input type="file" {id} {name} class={className} {accept} bind:value {placeholder} {required} {style} onclick={stopPropagation(bubble('click'))} 
+        onchange={bubble('change')} onblur={bubble('blur')} onfocus={bubble('focus')} onkeypress={bubble('keypress')}/>
+        {#if (children || label)}
+            {#if children}
+                {@render children?.()}
             {:else}
                 {label}
             {/if}

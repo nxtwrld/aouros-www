@@ -62,46 +62,51 @@ export const session = {
 }
 
 
-export async function setUser(profile: UserFirstTime | User) {
-    const supabase = getClient();
+export async function setUser(profile: UserFirstTime | User, userSession?: any) {
+    // Use provided userSession or fallback to profile data (no client-side auth calls during hydration)
+    let actualUserSession = userSession;
     
-    const { data: { user: userSession }, error: userError } = await supabase.auth.getUser();
-    if (userError || !userSession) {
-        throw userError;
+    if (!actualUserSession) {
+        // Don't make client-side auth calls during hydration - use profile data directly
+        console.log('[User] No user session provided, using profile data for hydration');
+        actualUserSession = { 
+            id: profile.auth_id || profile.id, 
+            email: (profile as any).email || 'unknown@example.com'
+        };
     }
 
-    if (!userSession) {
-        throw new Error('No user session');
-    }
-
-    if (profile && profile.fullName) {
+    if (profile && (profile as User).fullName) {
         // move to server
         //const subscriptionStats = await loadSubscription();
         
+        const userProfile = profile as any; // Cast to handle type issues during migration
 
-        profile.privateKey = profile.private_keys.privateKey;
-        profile.key_hash = profile.private_keys.key_hash;
-        const key_pass = profile.private_keys.key_pass;
+        userProfile.privateKey = userProfile.private_keys?.privateKey;
+        userProfile.key_hash = userProfile.private_keys?.key_hash;
+        const key_pass = userProfile.private_keys?.key_pass;
 
-        delete profile.private_keys;
+        delete userProfile.private_keys;
 
 
         user.set({
-            ...profile,
+            ...userProfile,
             unlocked: undefined,
-            isMedical: (profile.subscription === 'medical' || profile.subscription === 'gp'),
-            email: userSession.email as string,
+            isMedical: (userProfile.subscription === 'medical' || userProfile.subscription === 'gp'),
+            email: actualUserSession.email as string,
             //subscriptionStats
         })
 
-        await unlock(key_pass);
+        if (key_pass) {
+            await unlock(key_pass);
+        }
 
         return get(user);
     } else {
         user.set({
-            id: userSession.id,
-            auth_id: userSession.id,
-            email: userSession.email as string,
+            id: actualUserSession.id,
+            auth_id: actualUserSession.id,
+            email: actualUserSession.email as string,
+            language: (profile as any).language || 'en',
             unlocked: undefined
         })
         return null;
@@ -123,26 +128,33 @@ function getId(): string | null {
 async function unlock(passphrase: string | null): Promise<boolean> {
     const { update } = user;
     const $user = get(user);
-    if (!$user) {
+    if (!$user || !passphrase) {
         return false;
     }
-    const { key_hash } = $user;
-    // check if key matches our hash
+    
+    // Type guard to ensure we have a full User object
+    const fullUser = $user as any;
+    if (!fullUser.key_hash || !fullUser.privateKey || !fullUser.publicKey) {
+        console.warn('[User] Missing encryption data for unlock');
+        return false;
+    }
+    
+    const { key_hash } = fullUser;
+    
+    try {
+        const unlocked = await verifyHash(passphrase, key_hash);
+        console.log('Unlocking', unlocked);
 
-    const unlocked = (passphrase) ? await verifyHash(passphrase, key_hash) : false;
+        if (unlocked) {
+            // decrypt keys
+            const privateKeyString = await decryptString(fullUser.privateKey, passphrase);
+            
+            if (!privateKeyString || privateKeyString.indexOf('-----BEGIN PRIVATE KEY-----') !== 0) {
+                return false;
+            }
 
-    console.log('Unlocking', unlocked);
-
-    if (unlocked) {
-        // decrypt keys
-        const privateKeyString = await decryptString($user.privateKey, passphrase);
-        
-        if (!privateKeyString || privateKeyString.indexOf('-----BEGIN PRIVATE KEY-----') !== 0) {
-            return false;
-        }
-
-        const privateKey = await pemToKey(privateKeyString, true);
-        const publicKey = await pemToKey($user.publicKey, false);
+            const privateKey = await pemToKey(privateKeyString, true);
+            const publicKey = await pemToKey(fullUser.publicKey, false);
         keyPair.set(publicKey, privateKey);
         update((user) => {
             if (user) {
@@ -151,18 +163,29 @@ async function unlock(passphrase: string | null): Promise<boolean> {
             }
             return user;
         })
-        return true;
-    } else {
-        console.log('Unlock failed');
-        keyPair.destroy();
+            return true;
+        } else {
+            console.log('Unlock failed');
+            keyPair.destroy();
 
+            update((user) => {
+                if (user) {
+                    user.unlocked = false;
+                }
+                return user;
+            });
+            return false;
+        }
+    } catch (error) {
+        console.error('[User] Error during unlock:', error);
+        keyPair.destroy();
         update((user) => {
             if (user) {
                 user.unlocked = false;
             }
             return user;
         });
-        return false
+        return false;
     }
 }
 

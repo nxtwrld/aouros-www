@@ -1,3 +1,5 @@
+<!-- @migration-task Error while migrating Svelte code: can't migrate `let loadedLayers: string[] = [];` to `$state` because there's a variable named state.
+     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { onMount, onDestroy, createEventDispatcher } from 'svelte';
@@ -259,6 +261,11 @@
     onMount(() => {
         if (container) init();
         console.log('🧍', 'Mounted');
+        
+        // Capture initial store values for hydration
+        let initialFocused = $focused;
+        let initialStore = $store;
+        
         const unsubscibeFocus = focused.subscribe((f) => {
             if (!ready) return;
             setHighlight(f.object);
@@ -273,6 +280,24 @@
                 clearContext();
            }
         });
+
+        // Apply initial values after initialization
+        const checkReady = () => {
+            if (ready) {
+                // Apply initial focused state if it exists
+                if (initialFocused && initialFocused.object) {
+                    setHighlight(initialFocused.object);
+                }
+                // Apply initial store context if it exists
+                if (initialStore && initialStore.context) {
+                    setContext(initialStore.context);
+                }
+            } else {
+                // Check again if not ready yet
+                setTimeout(checkReady, 100);
+            }
+        };
+        checkReady();
 
         return () => {
             unsubscibeFocus();
@@ -794,7 +819,7 @@
             color: 3,
             opacity: .3,
             rename: 'shade_skin',
-            material:  new THREE.MeshStandardMaterial({
+            material:  new THREE.MeshPhysicalMaterial({
                 metalness: 0.2,
                 roughness: 0.5,
                 //envMapIntensity: 0.9,
@@ -1077,7 +1102,7 @@
         {:else}
             {$t('anatomy.'+ selected.name)}
         {/if}
-        <button on:click={resetFocus}>
+        <button on:click={resetFocus} aria-label="Reset focus">
             <svg>
                 <use href="/icons.svg#close"></use>
             </svg>

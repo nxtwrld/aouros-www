@@ -12,6 +12,7 @@
     import { profile } from '$lib/profiles';
     import { float32Flatten } from '$lib/array';
     import { ANALYZE_STEPS } from '$lib/types.d';
+    import { state as uiState } from '$lib/ui';
   
     
     const MIN_AUDIO_SIZE: number = 10000 * 8;
@@ -24,9 +25,9 @@
         "report"
     }
 
-    let view: Views = Views.start;
+    let view: Views = $state(Views.start);
 
-    let models = [
+    let models = $state([
             {
                 name: 'GP',
                 active: true,
@@ -45,22 +46,22 @@
                 available: false,
                 disabled: true
             }
-        ];
+        ]);
 
     let texts: string[] = [];
-    let audioState: AudioState = AudioState.ready;
+    let audioState: AudioState = $state(AudioState.ready);
 
 
-    let analysis: any = {};
+    let analysis: any = $state({});
 
     let silenceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
-    let speechChunks: Float32Array[] =[];
+    let speechChunks: Float32Array[] =$state([]);
 
 
-    $: hasResults = view !== Views.start;
+    let hasResults = $derived(view !== Views.start);
 
 
-    let newSpeech: boolean = false;
+    let newSpeech: boolean = $state(false);
 
     function speechStart() {
         newSpeech = true;
@@ -159,7 +160,7 @@
     }
 
     let lastAnalyzedTextLength: number = 0;
-    let activeModels: string[] = [];
+    let activeModels: string[] = $state([]);
     let analysisTimer: ReturnType<typeof setTimeout> | undefined = undefined;  
 
 
@@ -264,9 +265,9 @@
     }
 
 
-    let finalizeReportState = 'idle';
-    let report: any = undefined;
-    let finalReport: any = undefined;
+    let finalizeReportState = $state('idle');
+    let report: any = $state(undefined);
+    let finalReport: any = $state(undefined);
     let finalizationData: string = '';
     async function finalizeReport() {
         if (finalizeReportState === 'processing') {
@@ -355,7 +356,7 @@
 
 
 {#if view !== Views.report}
-    <div class="audio-recorder" class:-running={view != Views.start}>
+    <div class="audio-recorder" class:-running={view != Views.start} class:-active={audioState === AudioState.listening || audioState === AudioState.speaking}>
         <AudioButton bind:state={audioState} {hasResults} bind:speechChunks={speechChunks} on:speech-end={() => processData()} on:speech-start={speechStart} />
     </div>
 {/if}
@@ -366,13 +367,13 @@
 {#if view === Views.start}
     <div class="canvas canvas-start">
         <div>
-            <div class="uhint" on:click={testAnalyze}>
+            <button class="uhint" onclick={testAnalyze} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); testAnalyze(); } }} aria-label="Test analysis with sample data">
                 {#if audioState === AudioState.listening || audioState === AudioState.speaking}
                     Listening...
                 {:else}
                     Start recording your session by clicking the microphone button.
                 {/if}
-            </div>
+            </button>
 
         </div>
     </div>
@@ -390,7 +391,7 @@
                                 <div>Finalizing</div> <LoaderThinking />
                             </div>
                         {:else}
-                            <button class="button -primary" on:click={finalizeReport}>Finalize Report</button>
+                            <button class="button -primary" onclick={finalizeReport}>Finalize Report</button>
                         {/if}
 
                 </div>
@@ -426,9 +427,9 @@
                     <use href="/icons-o.svg#report"></use>
                 </svg>
                 <h3 class="h3">Report</h3>
-                <button class="button" on:click={backToAnalysis}>Back</button>
-                <button class="button" on:click={copyReportText}>Copy</button>
-                <button class="button" on:click={printReport}>Print</button>
+                <button class="button" onclick={backToAnalysis}>Back</button>
+                <button class="button" onclick={copyReportText}>Copy</button>
+                <button class="button" onclick={printReport}>Print</button>
                 <button class="button -primary">Save</button>
             </div>
             <div class="report-background">
@@ -454,12 +455,23 @@
         transform: translate(-50%, calc(50% - 3rem));
         z-index: 1001;
         pointer-events: none;
-        transition: bottom .3s, left .3s;
+        transition: bottom .3s, left .3s, z-index .1s;
         transition-timing-function: ease-in;
+    }
+    .audio-recorder.-active {
+        z-index: 200000;
     }
     .audio-recorder.-running {
         left: calc(100% / 6 * 5);
         bottom: 1.5rem;
+    }
+
+    /* Adjust position when viewer is open */
+    :global(main.layout.-viewer) .audio-recorder {
+        left: calc(33vw + 67vw / 2); /* Viewer width + half of remaining content width */
+    }
+    :global(main.layout.-viewer) .audio-recorder.-running {
+        left: calc(33vw + 67vw / 6 * 5); /* Adjust running position for viewer */
     }
 
     .canvas-analysis {

@@ -1,9 +1,11 @@
 <script lang="ts">
 
-    export let value: number;
-    export let reference: string;
 
-    export let referenceRange: {
+
+    interface Props {
+        value: number;
+        reference: string;
+        referenceRange?: {
         low: {
             value: number,
             unit: string
@@ -12,7 +14,15 @@
             value: number,
             unit: string
         }
-    } = {
+    };
+        labels?: boolean;
+        showValue?: boolean;
+    }
+
+    let {
+        value,
+        reference,
+        referenceRange = {
         low: {
             value: Number(reference.split('-')[0]),
             unit: ''
@@ -21,10 +31,10 @@
             value: Number(reference.split('-')[1]),
             unit: ''
         }
-    }
-
-    export let labels: boolean = true;
-    export let showValue: boolean = true;
+    },
+        labels = true,
+        showValue = true
+    }: Props = $props();
 
     // project reference and range to a 0-100 scale
     const referenceRangeLowPercent: number = 35;
@@ -34,7 +44,7 @@
     let scaleStartsAt: number = referenceRange.low.value - (referenceRangeLowPercent * onPercentOnScale);
 
     let referenceRangeValuePercent = (value - scaleStartsAt) / onPercentOnScale;
-    let status: 'ok' | 'low' | 'high' = 'ok';
+    let status: 'ok' | 'low' | 'high' = $state('ok');
     if (value < referenceRange.low.value) {
         status = 'low';
     } else if (value > referenceRange.high.value) {

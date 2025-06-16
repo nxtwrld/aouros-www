@@ -7,20 +7,22 @@
 	import { throttle } from 'throttle-debounce';
 
 
-    export let tags: string[] = [];
 
 	const dispatch = createEventDispatcher();
 
-	$: safeTags = tags.map(tag => tag.replace(/ /g, '_'));
 
-	export let focusable: boolean = true;
-	export let active: boolean = true;
+	interface Props {
+		tags?: string[];
+		focusable?: boolean;
+		active?: boolean;
+	}
 
-	$: focusableTags = safeTags.filter((tag) => isObject(tag));
+	let { tags = [], focusable = true, active = true }: Props = $props();
+
 
 	
 
-	let tagContainer: HTMLElement;
+	let tagContainer: HTMLElement = $state();
 
 	function focus(event: MouseEvent, tag: string) {
 		event.preventDefault();
@@ -41,18 +43,20 @@
 		});
 	});
 
+	let safeTags = $derived(tags.map(tag => tag.replace(/ /g, '_')));
+	let focusableTags = $derived(safeTags.filter((tag) => isObject(tag)));
 </script>
 
 <div class="tags" bind:this={tagContainer}>
 	{#each tags as tag}
         {#if isObject(tag.replace(/ /g, '_'))}
 			{#if active}
-            	<button class="tag -object" class:-highlight={tag == $focused.object} on:click={(event) => focus(event, tag)}>{tag}</button>
+            	<button class="tag -object" class:-highlight={tag == $focused.object} onclick={(event) => focus(event, tag)}>{tag}</button>
 			{:else}
-				<span class="tag -object" class:-highlight={tag == $focused.object} on:click={() => dispatch('click', tag)}>{tag}</span>	
+				<button class="tag -object" class:-highlight={tag == $focused.object} onclick={() => dispatch('click', tag)}>{tag}</button>
 			{/if}
         {:else}
-    		<span class="tag" on:click={() => dispatch('click', tag)}>{tag}</span>
+    		<button class="tag" onclick={() => dispatch('click', tag)}>{tag}</button>
         {/if}
 	{/each}
 </div>

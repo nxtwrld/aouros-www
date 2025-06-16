@@ -15,25 +15,34 @@ clients.set('default', createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KE
 
 export function setClient(client: SupabaseClient, clientName: string = 'default') {
     console.log('Supabase - setting client:', clientName);
-    if (clients.get(clientName) != undefined) {
-        //throw new Error(`Supabase client ${clientName} already exists`);
-        console.warn(`Supabase client ${clientName} already exists`);
+    const existingClient = clients.get(clientName);
+    if (existingClient != undefined) {
+        // Only warn if trying to set a different client instance
+        if (existingClient !== client) {
+            console.warn(`Supabase client ${clientName} already exists with different instance`);
+        }
+        // Don't warn for same client instance (common during hydration)
+        return;
     }
     clients.set(clientName, client);
 }
 
 
 export function getClient(clientName: string = 'default'): SupabaseClient {
+    if (!PUBLIC_SUPABASE_URL || !PUBLIC_SUPABASE_ANON_KEY) {
+        throw new Error('Supabase environment variables are not set');
+    }
+
     const client = clients.get(clientName);
     if (client == undefined) {
-        console.log('Supabase - creating client:', clientName, clients);
+        console.log('Supabase - creating client:', clientName, { url: PUBLIC_SUPABASE_URL });
         if (clientName == 'default') {
-            clients.set('default', createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY))
-            return getClient();
+            const newClient = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY);
+            clients.set('default', newClient);
+            return newClient;
         } else {
-            throw new Error (`Supabase client ${clientName} noe found`)
+            throw new Error(`Supabase client ${clientName} not found`);
         }
-        
     }
     console.log('Supabase - getting client:', clientName);
     return client;

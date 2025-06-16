@@ -1,14 +1,21 @@
 <script lang="ts">
-    export let value: string | number | undefined = undefined;
-    export let href: string | undefined = undefined;
-    export let icon: string | undefined = undefined;
-    export let label: string | undefined = undefined;
+    import type { Snippet } from 'svelte';
 
-    const SLOTS = $$props.$$slots || {};
+    interface Props {
+        value?: string | number | undefined;
+        href?: string | undefined;
+        icon?: string | undefined;
+        label?: string | undefined;
+        children?: Snippet;
+        valueSlot?: Snippet;
+        units?: Snippet;
+    }
+
+    let { value = undefined, href = undefined, icon = undefined, label = undefined, children, valueSlot, units }: Props = $props();
 
 </script>
 
-{#if (value !== undefined && value !== null) || SLOTS.value}
+{#if (value !== undefined && value !== null) || valueSlot}
     <div class="prop-row" class:-icon={icon}>
         {#if icon}
         <div class="prop-icon">
@@ -23,28 +30,28 @@
             {#if label}
                 {label}
             {:else}
-                <slot />
+                {@render children?.()}
             {/if}
         </div>
         <div class="prop-value">
         {#if href !== undefined}
             <a {href} class="a">
-                {#if SLOTS.value}
-                    <slot name="value" />
+                {#if valueSlot}
+                    {@render valueSlot()}
                {:else}
                     {value}
                 {/if}</a>
         {:else}
-            {#if SLOTS.value}
-                <slot name="value" />
+            {#if valueSlot}
+                {@render valueSlot()}
             {:else}
                 {value}
             {/if}
         {/if}
         </div>
-        {#if SLOTS.units}
+        {#if units}
         <div class="prop-units">
-            <slot name="units" />
+            {@render units()}
         </div>
         {/if}
     </div>

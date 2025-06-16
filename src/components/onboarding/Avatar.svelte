@@ -1,17 +1,28 @@
 <!-- src/routes/account/Avatar.svelte -->
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { onMount, createEventDispatcher } from 'svelte';
 	import { t } from '$lib/i18n';
 
-	export let size = 10;
-	export let url: string;
-	export let id: string;
-	export let editable: boolean = false;
+	interface Props {
+		size?: number;
+		url: string;
+		id: string;
+		editable?: boolean;
+	}
 
-	let avatarUrl: string | null = null
-	let uploading = false
-	let files: FileList
-	let loaded: boolean = false;
+	let {
+		size = 10,
+		url = $bindable(),
+		id,
+		editable = false
+	}: Props = $props();
+
+	let avatarUrl: string | null = $state(null)
+	let uploading = $state(false)
+	let files: FileList = $state()
+	let loaded: boolean = $state(false);
 
 	const dispatch = createEventDispatcher()
 
@@ -76,7 +87,9 @@
 		});
 	}
 
-	$: if (loaded && url) downloadImage(url)
+	run(() => {
+		if (loaded && url) downloadImage(url)
+	});
 
 	onMount(() => {
 		loaded = true;
@@ -112,7 +125,7 @@
 			accept="image/*"
             class="button"
 			bind:files
-			on:change={uploadAvatar}
+			onchange={uploadAvatar}
 			disabled={uploading}
 		/>
 	</div>

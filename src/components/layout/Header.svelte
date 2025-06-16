@@ -1,3 +1,5 @@
+<!-- @migration-task Error while migrating Svelte code: Cannot subscribe to stores that are not declared at the top level of the component
+https://svelte.dev/e/store_invalid_scoped_subscription -->
 <script lang="ts">
     import { profile, profiles } from "$lib/profiles";
     import { page } from "$app/stores";
@@ -7,12 +9,13 @@
     import { goto } from "$app/navigation";
     import MenuBurger from "$components/ui/MenuBurger.svelte";
     import ui from "$lib/ui";
-    import { state, Overlay } from "$lib/ui";
+    import { state as uiState, Overlay } from "$lib/ui";
     import { t } from "$lib/i18n";
     import ProfileImage from "$components/profile/ProfileImage.svelte";
+    import type { Profile } from "$lib/types.d";
 
-    function isActive(path: string, currentPath: string, state: any) {
-        if ($state.overlay !== Overlay.none) return false;
+    function isActive(path: string, currentPath: string) {
+        if ($uiState.overlay !== Overlay.none) return false;
         return currentPath.startsWith(path);
     }
 
@@ -67,13 +70,13 @@
         <div class="navigation toolbar" class:-open={activeMenu == Menu.tools}>
 
             
-            {#if $user.subscription != 'individual'}
+            {#if $user && 'subscription' in $user && $user.subscription != 'individual'}
                 <a href="/med/p/" class:-active={$page.url.pathname == '/med/p/'}>{ $t('app.nav.profiles') }</a>
             {/if}
 
             {#if $profile}
                 {#if $profile.id}
-                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname, $state)}>
+                    <a class="profile" href="/med/p/{$profile.id}" class:-active={isActive('/med/p/' +$profile.id , $page.url.pathname)}>
                         {#if $profile.avatarUrl}
                         <div class="icon profile-image">
                             <img src="/v1/med/profiles/{$profile.id}/avatar?path={$profile.avatarUrl}" alt="avatar" />
@@ -82,33 +85,39 @@
                         {$profile.fullName}
                     </a>
                     <!--div class="spacer"></div-->
-                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname, $state)}>{ $t('app.nav.documents') }</a>
-                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname, $state)}>{ $t('app.nav.history') }</a>
-                    {#if $user.isMedical}
-                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname, $state)}>{ $t('app.nav.new-session') }</a>
+                    <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname)}>{ $t('app.nav.documents') }</a>
+                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>{ $t('app.nav.history') }</a>
+                    {#if $user && 'isMedical' in $user && $user.isMedical}
+                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>{ $t('app.nav.new-session') }</a>
                     {/if}
                 {:else}
-                    <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{$profile.name}</div>
+                    <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{'fullName' in $profile ? $profile.fullName : 'New Profile'}</div>
                     <div class="spacer"></div>
                 {/if}
             {:else}
                 <div class="spacer"></div>
-                {#if $user.subscription != 'individual'}
+                {#if $user && 'subscription' in $user && $user.subscription != 'individual'}
                 <a href="/med/p/addprofile/">{ $t('app.nav.add-profile') }</a>
                 {/if}
             {/if}
             <!--a href="/med/import" class:-active={$page.url.pathname == '/med/import/'}>Import</a-->
-            <button on:click={() => ui.emit('overlay.import')} class:-active={$state.overlay == Overlay.import}>{ $t('app.nav.import') }</button>
+            <button on:click={() => ui.emit('overlay.import')} class:-active={$uiState.overlay == Overlay.import}>{ $t('app.nav.import') }</button>
         </div>
         {#if $user}
         <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
             <button on:click|stopPropagation={() => toggleMenu(Menu.user)}>
-              <ProfileImage profile={profiles.get($user.id)} size={2} />
+              <ProfileImage profile={$user.id ? (() => {
+                try {
+                  return profiles.get($user.id) as Profile;
+                } catch {
+                  return null;
+                }
+              })() : null} size={2} />
             </button>
             <ul class="menu">
                 <li>
                     <div class="user">
-                        <h3 class="h3">{$user.fullName}</h3>
+                        <h3 class="h3">{'fullName' in $user ? $user.fullName : $user.email}</h3>
 
                     </div>
                 </li>
@@ -116,7 +125,7 @@
             </ul>
         </div>
         {/if}
-        <button on:click={() => emit('find')} class="icon"><svg >
+        <button on:click={() => emit('find')} class="icon" aria-label="Search"><svg >
             <use href="/icons.svg#search"></use>
         </svg></button>
 

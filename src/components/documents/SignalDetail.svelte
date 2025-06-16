@@ -8,24 +8,25 @@
     import { Tabs, TabHeads, TabHead, TabPanel } from "$components/ui/tabs";
     import defaults from '$data/lab.properties.defaults.json';
 
-    export let code: string = 'unknown';
-    export let value: string | number = 'unknown';
-    export let unit: string = 'unknown';
-    export let status: string = 'ok';
-    export let observation: any = {};
 
-    export let item: {
+
+
+
+
+    interface Props {
+        code?: string;
+        value?: string | number;
+        unit?: string;
+        status?: string;
+        observation?: any;
+        item?: {
         test: string,
         value: string | number,
         unit: string,
         reference: string
-    } | undefined = undefined;
-
-
-    export let report: any = {};
-
-
-    export let referenceRange: {
+    } | undefined;
+        report?: any;
+        referenceRange?: {
         low: {
             value: number,
             unit: string
@@ -34,7 +35,19 @@
             value: number,
             unit: string
         }
-    } | null = null;
+    } | null;
+    }
+
+    let {
+        code = 'unknown',
+        value = 'unknown',
+        unit = 'unknown',
+        status = 'ok',
+        observation = {},
+        item = undefined,
+        report = {},
+        referenceRange = null
+    }: Props = $props();
 
     // blood and urine can have different values - we need to provide a way to map them to the same code
     function getMeasurementInfoCode(code: string, unit: string) {
@@ -52,10 +65,10 @@
     }
 
 
-    let kb: any = undefined;
-    let level: any = undefined;
+    let kb: any = $state(undefined);
+    let level: any = $state(undefined);
 
-    let tabs: Tabs;
+    let tabs: Tabs = $state();
     onMount(() => {
         const key = getMeasurementInfoCode(code, unit);
         fetch('/knowledgebase/lab/'+ key+'.json')
@@ -145,7 +158,7 @@
     
 
             {:else}
-                <p class="p">Your values are comfortably within the normal range, which is excellent. While everything looks good now, it's always wise to keep an eye on <button on:click={() => showTab(1)} class="a">overall trends over time</button>. Regular monitoring can help ensure that your health remains on the right track.</p>
+                <p class="p">Your values are comfortably within the normal range, which is excellent. While everything looks good now, it's always wise to keep an eye on <button onclick={() => showTab(1)} class="a">overall trends over time</button>. Regular monitoring can help ensure that your health remains on the right track.</p>
             {/if}
         </div>
 

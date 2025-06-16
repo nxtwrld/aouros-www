@@ -6,10 +6,21 @@
 
     const dispatch = createEventDispatcher();
 
-    export let title: string | undefined = undefined;
-    export let preventer: boolean = false;
+    interface Props {
+        title?: string | undefined;
+        preventer?: boolean;
+        heading?: import('svelte').Snippet;
+        children?: import('svelte').Snippet;
+    }
 
-    let showPreviewDisabled = false;
+    let {
+        title = undefined,
+        preventer = false,
+        heading,
+        children
+    }: Props = $props();
+
+    let showPreviewDisabled = $state(false);
     console.log(preventer)
 </script>
 
@@ -20,13 +31,13 @@
     <div class="screen-preview">
 
 
-        {#if $$slots.heading}
-            <slot name="heading" />
+        {#if heading}
+            {@render heading?.()}
         {:else}
             <div class="heading">
                 <h3 class="h3 heading">{title}</h3>
                 <div class="actions">
-                    <button class="-close" on:click={() => dispatch('close')}>
+                    <button class="-close" aria-label="Close overlay" onclick={() => dispatch('close')}>
                         <svg>
                             <use href="/icons.svg#close" />
                         </svg>
@@ -37,10 +48,10 @@
 
         <div class="page -empty">
             <div class="preview-container">
-                <slot />
+                {@render children?.()}
 
                 {#if preventer}
-                <button on:click={() => showPreviewDisabled = true} class="preview-preventer">
+                <button onclick={() => showPreviewDisabled = true} class="preview-preventer" aria-label="Preview disabled">
                 </button>
                 {/if}
             </div>

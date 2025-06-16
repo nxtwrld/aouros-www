@@ -3,7 +3,11 @@
     import ui from '$lib/ui';
     import { t } from '$lib/i18n';
 
-    export let data: any;
+    interface Props {
+        data: any;
+    }
+
+    let { data }: Props = $props();
 
     function showBodyPart(part: string) {
         ui.emit('viewer', { object: normalize(part) })
@@ -13,7 +17,7 @@
         return str.replace(/ /ig, '_');
     }
 
-    $: hasTreatment = data && data.some((item: any) => item.treatment);
+    let hasTreatment = $derived(data && data.some((item: any) => item.treatment));
 
     function translate(str: string) {
         const translation = $t('anatomy.'+str);
@@ -31,6 +35,7 @@
     <h3 class="h3 heading -sticky">{ $t('report.anatomy.body') }</h3>
 
     <table  class="table-list">
+        <tbody>
         <tr>
             <th>{ $t('report.anatomy.body-part') }</th>
             <th></th>
@@ -47,7 +52,7 @@
             </td>
             <td class="-empty -actions">
                 <div class="actions">
-                <button on:click={() => showBodyPart(identification)}>
+                <button onclick={() => showBodyPart(identification)} aria-label="View body part anatomy">
                     <svg>
                         <use href="/icons.svg#anatomy" />
                     </svg>
@@ -70,6 +75,7 @@
 
         </tr>
         {/each}
+    </tbody>
     </table>
 
 

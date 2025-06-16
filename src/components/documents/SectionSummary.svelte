@@ -1,6 +1,10 @@
 <script lang="ts">
     import Markdown from "$components/ui/Markdown.svelte";
-    export let data: any;
+    interface Props {
+        data: any;
+    }
+
+    let { data }: Props = $props();
 </script>
 
 

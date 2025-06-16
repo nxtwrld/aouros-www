@@ -2,19 +2,19 @@ import { error, json } from '@sveltejs/kit';
 import { loadSubscription, updateSubscription } from '$lib/user/subscriptions.server.js';
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function GET({ request, locals: { supabase, safeGetSession }}) {
+export async function GET({ request, locals: { supabase, safeGetSession, user }}) {
+
+    try {
+        const { session } = await safeGetSession();
+
+        if (!session || !user) {
+            return error(401, { message: 'Unauthorized' });
+        }
 
 
-    const { session } = await safeGetSession();
-
-    if (!session) {
-      return error(401, { message: 'Unauthorized' });
-    }
-
-
-    const { data , error: errorDb } = await supabase.from('profiles_links')
-        .select('profiles!profiles_links_profile_id_fkey(id, auth_id, owner_id, fullName, language, avatarUrl, publicKey), status')
-        .eq('parent_id', session.user.id);
+        const { data , error: errorDb } = await supabase.from('profiles_links')
+            .select('profiles!profiles_links_profile_id_fkey(id, auth_id, owner_id, fullName, language, avatarUrl, publicKey), status')
+            .eq('parent_id', user.id);
 
     //console.log('profiles data', data);
 
@@ -23,24 +23,24 @@ export async function GET({ request, locals: { supabase, safeGetSession }}) {
     }
 
 
-    return json(data);
+        return json(data);
+    } catch (authError) {
+        console.error('[API] /v1/med/profiles - Unexpected error:', authError);
+        return error(500, { message: 'Internal server error' });
+    }
 }
 
 
-export async function POST({ request, locals: { supabase, safeGetSession }}) {
+export async function POST({ request, locals: { supabase, safeGetSession, user }}) {
 
-    const { session } = await safeGetSession();
+    try {
+        const { session } = await safeGetSession();
 
-    if (!session) {
-        return error(401, { message: 'Unauthorized' });
-    }
-    const { data: { user }, error: errorGettingUser } = await supabase.auth.getUser();
+        if (!session || !user) {
+            return error(401, { message: 'Unauthorized' });
+        }
 
-    if (errorGettingUser || !user) {
-        return error(500, { message: 'Error getting user' });
-    }
-
-    const subscription = await loadSubscription();
+    const subscription = await loadSubscription(user.id);
     //console.log('user', subscription);
     if (!subscription) {
         error(404, { message: 'Subscription not found' });
@@ -104,9 +104,13 @@ export async function POST({ request, locals: { supabase, safeGetSession }}) {
 
     // 4. update subscription
     subscription.profiles -= 1;
-    const u = await updateSubscription(subscription);
+            const u = await updateSubscription(subscription, user.id);
 
-    return json(profileData);
+        return json(profileData);
+    } catch (authError) {
+        console.error('[API] /v1/med/profiles POST - Unexpected error:', authError);
+        return error(500, { message: 'Internal server error' });
+    }
 }
 
 

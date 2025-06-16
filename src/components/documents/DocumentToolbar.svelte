@@ -4,7 +4,11 @@
     import { goto } from '$app/navigation';
 
 
-    export let document: Document;
+    interface Props {
+        document: Document;
+    }
+
+    let { document }: Props = $props();
 
     async function remove() {
         console.log('remove document', document);
@@ -16,7 +20,7 @@
 
 </script>
 <div class="toolbar">
-    <button class="" on:click={remove}>Remove</button>
+    <button class="" onclick={remove}>Remove</button>
 </div>
 
 

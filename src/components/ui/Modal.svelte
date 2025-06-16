@@ -1,16 +1,26 @@
 <script lang="ts">
+    import { createBubbler, stopPropagation } from 'svelte/legacy';
+
+    const bubble = createBubbler();
     import { onMount, createEventDispatcher } from 'svelte';
     import { scale, fade } from 'svelte/transition';
     const dispatch = createEventDispatcher();
 
     export function closeModal() {
+        console.log('Modal closeModal function called, dispatching close event');
         dispatch('close');
+        console.log('Modal close event dispatched');
     }
 
-    export let style: string | undefined = undefined;
+    interface Props {
+        style?: string | undefined;
+        children?: import('svelte').Snippet;
+    }
 
-    let showShade: boolean = false;
-    let modalContainer: HTMLDivElement;
+    let { style = undefined, children }: Props = $props();
+
+    let showShade: boolean = $state(false);
+    let modalContainer: HTMLDivElement | undefined = $state();
 
     function handleKeydown(event: KeyboardEvent) {
         if (event.key === 'Escape') {
@@ -19,6 +29,8 @@
     }
 
     onMount(() => {
+        if (!modalContainer) return;
+        
         // add the modal to end of DOM to escape the parent component's styles
         (document.getElementById('app-window') || document.body).appendChild(modalContainer);
         showShade = true;
@@ -27,18 +39,30 @@
         if (focusable.length > 0) {
             (focusable[0] as HTMLElement).focus();
         }
+
+        // Cleanup function to remove the modal from DOM when component is destroyed
+        return () => {
+            if (modalContainer && modalContainer.parentNode) {
+                modalContainer.parentNode.removeChild(modalContainer);
+            }
+        };
     });
 </script>
 
-<div class="overlay flex -center" on:mousedown={closeModal} class:-shade={showShade}  bind:this={modalContainer} on:keydown={handleKeydown} transition:fade>
-    <div class="modal-content" on:mousedown|stopPropagation transition:scale>
-        <button class="close" on:click={closeModal}>
+<div class="overlay flex -center" role="dialog" aria-modal="true" tabindex="0" onmousedown={(e) => {
+    // Only close if clicking directly on the overlay, not on child elements
+    if (e.target === e.currentTarget) {
+        closeModal();
+    }
+}} class:-shade={showShade}  bind:this={modalContainer} onkeydown={handleKeydown} transition:fade>
+    <div class="modal-content" role="document" onclick={(e) => e.stopPropagation()} transition:scale>
+        <button class="close" aria-label="Close modal" onclick={closeModal}>
             <svg>
                 <use href="/icons.svg#close"></use>
             </svg>
         </button>
         <div class="modal" {style}>
-            <slot />
+            {@render children?.()}
         </div>
     </div>
 </div>

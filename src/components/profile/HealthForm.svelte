@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import { definitions as FORM_DEFINITION } from '$lib/health/dataTypes';
     import HealthFormField from './HealthFormField.svelte';
     import { createEventDispatcher } from 'svelte';
@@ -7,27 +9,19 @@
 
     const dispatch = createEventDispatcher();
 
-    export let config: {
-        keys: string[];
-        values: any[];
-        property: any;
-    } | true = true;
     
-    enum BloodType {
-        'A+' = 'A+', 
-        'A-' = 'A-', 
-        'B+' = 'B+', 
-        'B-' = 'B-', 
-        'AB+' = 'AB+', 
-        'AB-' = 'AB-', 
-        'O+' = 'O+', 
-        'O-' = 'O-'
-    }
+    const BloodType = {
+        'A+': 'A+', 
+        'A-': 'A-', 
+        'B+': 'B+', 
+        'B-': 'B-', 
+        'AB+': 'AB+', 
+        'AB-': 'AB-', 
+        'O+': 'O+', 
+        'O-': 'O-'
+    } as const;
 
 
-    $: {
-        data = mapInputsToData(inputs);
-    }
 
     console.log('property', config.property);
 
@@ -75,11 +69,20 @@
         return acc;
     }, [] as { title: string, properties: string[] }[]);
 
-    export let data: any = {};
 
-    export let inputs: {
+    interface Props {
+        config?: {
+        keys: string[];
+        values: any[];
+        property: any;
+    } | true;
+        data?: any;
+        inputs?: {
         [key: string]: any;
-    } = mapFromToInputs();
+    };
+    }
+
+    let { config = true, data = $bindable({}), inputs = $bindable(mapFromToInputs()) }: Props = $props();
 
  
     function mapFromToInputs() {
@@ -170,12 +173,15 @@
 
 
     // Manage actiov tabs
-    let activeTab: number = 0;
+    let activeTab: number = $state(0);
     function showTab(index: number) {
         activeTab = index;
     }
 
 
+    run(() => {
+        data = mapInputsToData(inputs);
+    });
 </script>
 
 
@@ -185,7 +191,7 @@
     {#if TABS.length > 1}
         <div class="tab-heads">
         {#each TABS as tab, index}
-            <button on:click={() => showTab(index)} class:-active={index == activeTab}>{ $t('profile.health.tabs.' + tab.title)}</button>
+            <button onclick={() => showTab(index)} class:-active={index == activeTab}>{ $t('profile.health.tabs.' + tab.title)}</button>
         {/each}
         </div>
     {/if}
@@ -198,7 +204,7 @@
             {#if prop.type === 'time-series' && prop.items}
                 {#each prop.items as item}
                      {#if item.type == 'date'}
-                   
+                        <!-- Date fields are handled elsewhere -->
                     {:else}
                     <HealthFormField prop={item} bind:data={inputs[prop.key][item.key]} />
                     {/if}
@@ -209,7 +215,7 @@
                         <HealthFormField prop={item} bind:data={inputs[prop.key][index][item.key]} />
                     {/each}
                 {/each}
-                <button class="button" on:click={() => addArrayItem(prop)}>Add</button>
+                <button class="button" onclick={() => addArrayItem(prop)}>Add</button>
             {:else}
                 <HealthFormField {prop} bind:data={inputs[prop.key]} />
             {/if}

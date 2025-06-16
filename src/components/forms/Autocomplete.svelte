@@ -5,27 +5,41 @@
 
     const dispatch = createEventDispatcher();
 
-    export let value: string;
-    export let label: string | undefined = undefined;
-    export let placeholder: string = 'Select';
-    export let options: SelectOptions = [];
-    export let required: boolean = false;
-    export let bindValue: boolean = false;
-    export let id: string = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    export let name: string = id;  
-    let className: string = 'input';
-    export {
-        className as class
+    interface Props {
+        value: string;
+        label?: string | undefined;
+        placeholder?: string;
+        options?: SelectOptions;
+        required?: boolean;
+        bindValue?: boolean;
+        id?: string;
+        name?: string;
+        class?: string;
+        children?: import('svelte').Snippet;
     }
+
+    let {
+        value = $bindable(),
+        label = undefined,
+        placeholder = 'Select',
+        options = [],
+        required = false,
+        bindValue = false,
+        id = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+        name = id,
+        class: className = 'input',
+        children
+    }: Props = $props();
+    
 
 </script>
 
-{#if $$slots.default || label}
+{#if children || label}
 <label class="label" for={id}>
     {#if label}
         {label}
     {:else}
-        <slot/>
+        {@render children?.()}
     {/if}
 </label>
 {/if}
@@ -36,8 +50,11 @@
         bind:value={value}  {placeholder} {required} noResultsText="Custom" noInputStyles={true}
         onBlur={() => dispatch('blur')} onChange={() => dispatch('change')} onFocus={() => dispatch('focus')} 
     >
-        <span slot="no-results">No results</span>
-        <span slot="loading">Loading</span>
+        <!-- @migration-task: migrate this slot by hand, `no-results` is an invalid identifier -->
+    <span slot="no-results">No results</span>
+        {#snippet loading()}
+                <span >Loading</span>
+            {/snippet}
 
     </Autocomplete>
 

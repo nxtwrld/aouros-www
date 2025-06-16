@@ -9,16 +9,22 @@
     import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
     import { beforeNavigate, afterNavigate } from '$app/navigation';
-    import { Overlay, state } from '$lib/ui';
+    import { Overlay, state as uiState } from '$lib/ui';
     import shortcuts from '$lib/shortcuts';
     import Sounds from '$components/ui/Sounds.svelte';
     import Viewer from './Viewer.svelte';
 
+    interface Props {
+        children?: import('svelte').Snippet;
+    }
 
-    const dialogs = {
+    let { children }: Props = $props();
+
+    // Fixed: Convert to proper Svelte 5 reactive state
+    let dialogs = $state({
         healthForm: false,
         healthProperty: false
-    };
+    });
 
 
     // close all dialogs on navigation
@@ -29,9 +35,9 @@
     function manageOverlay() {
         if (location.hash.indexOf('#overlay-') == 0) {
             const overlay = location.hash.replace('#overlay-', '');
-            if (Object.values(Overlay).includes(overlay as Overlay)) $state.overlay = overlay as Overlay;
+            if (Object.values(Overlay).includes(overlay as Overlay)) $uiState.overlay = overlay as Overlay;
         } else {
-            $state.overlay = Overlay.none;
+            $uiState.overlay = Overlay.none;
         }
     }
 
@@ -39,12 +45,14 @@
         console.log('UI mounted');
         const offs = [
             ui.listen('modal.healthProperty', (config: any) => {
-                console.log('modal.healthProperty', config);
-                dialogs.healthProperty = config || true;
+                console.log('modal.healthProperty event received with config:', config);
+                console.log('Setting dialogs.healthProperty to:', config === false ? false : (config || true));
+                dialogs.healthProperty = config === false ? false : (config || true);
             }),
             ui.listen('modal.healthForm', (config: any) => {
-                console.log('modal.healthForm', config);
-                dialogs.healthForm = config || true;
+                console.log('modal.healthForm event received with config:', config);
+                console.log('Setting dialogs.healthForm to:', config === false ? false : (config || true));
+                dialogs.healthForm = config === false ? false : (config || true);
             }),
             ui.listen('overlay.import', (state: boolean = true) => {
                 console.log('import');
@@ -56,9 +64,9 @@
                 }
                 //$state.overlay = Overlay.import;
             }),
-            ui.listen('viewer', (config) => {
-                $state.viewer = true;
-                //$state.overlay = Overlay.none;
+            ui.listen('viewer', (config: any) => {
+                $uiState.viewer = true;
+                //$uiState.overlay = Overlay.none;
             }),
             shortcuts.listen('Escape', () => {
                 if (location.hash.indexOf('#overlay-') == 0) {
@@ -80,28 +88,40 @@
 
 <DropFiles>
     <Header></Header>
-    <main class="layout" class:-viewer={$state.viewer}>
-        {#if $state.viewer}
+    <main class="layout" class:-viewer={$uiState.viewer}>
+        {#if $uiState.viewer}
             <section class="layout-viewer" transition:fade><Viewer /></section>
         {/if}
-        <section class="layout-content"><slot/></section>
+        <section class="layout-content">{@render children()}</section>
     </main>
 
 
-    {#if $state.overlay == Overlay.import}
+    {#if $uiState.overlay == Overlay.import}
         <div class="virtual-page" transition:fade>
             <Import />
             </div>
     {/if}
 
     {#if dialogs.healthForm}
-        <Modal on:close={() => dialogs.healthForm = false}>
-            <HealthForm config={dialogs.healthForm}  on:abort={() => dialogs.healthForm = false}/>
+        <Modal on:close={() => {
+            console.log('Health form modal close event fired');
+            dialogs.healthForm = false;
+        }}>
+            <HealthForm config={dialogs.healthForm}  on:abort={() => {
+                console.log('Health form abort event fired');
+                dialogs.healthForm = false;
+            }}/>
         </Modal>
     {/if}
     {#if dialogs.healthProperty}
-        <Modal on:close={() => dialogs.healthProperty = false}>
-            <HealthProperty property={dialogs.healthProperty}  on:abort={() => dialogs.healthProperty = false}/>
+        <Modal on:close={() => {
+            console.log('Health property modal close event fired');
+            dialogs.healthProperty = false;
+        }}>
+            <HealthProperty property={dialogs.healthProperty}  on:abort={() => {
+                console.log('Health property abort event fired');
+                dialogs.healthProperty = false;
+            }}/>
         </Modal>
     {/if}
 
@@ -114,7 +134,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 1000;
+        z-index: 100000;
         background: var(--background);
     }
 </style>

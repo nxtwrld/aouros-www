@@ -4,13 +4,17 @@
     import { t } from '$lib/i18n';
     import user from '$lib/user';
     
-    export let data: {
+    interface Props {
+        data: {
         text: string;
         original: string;
         language: string;
     };
+    }
 
-    let viewOriginal: boolean = false;
+    let { data }: Props = $props();
+
+    let viewOriginal: boolean = $state(false);
 
 </script>
 
@@ -24,7 +28,7 @@
     {#if $user?.language != data.language && data.text != data.original && data.text && data.text != ''}
         <div class="panel">
             <Flag country={data.language} /> { $t('report.translated-from', { values: { language: $t('languages.'+ data.language) }}) }
-            <button class="a" on:click={() => viewOriginal = !viewOriginal}>{ $t('report.toggle-original-contents') }</button>
+            <button class="a" onclick={() => viewOriginal = !viewOriginal}>{ $t('report.toggle-original-contents') }</button>
         </div>
         <div class="panel">
             <Markdown text={viewOriginal ? data.original : data.text} />

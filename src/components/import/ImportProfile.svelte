@@ -6,12 +6,16 @@
     import { scale } from 'svelte/transition';
     import { PROFILE_NEW_ID } from '$lib/profiles/tools';
     
-    export let profile: Profile;
 
-    export let initialProfile: Profile = structuredClone(profile);
+    interface Props {
+        profile: Profile;
+        initialProfile?: Profile;
+    }
 
-    $: isNewProfile = profile.id === PROFILE_NEW_ID;
-    let showProfile: boolean = false;
+    let { profile = $bindable(), initialProfile = structuredClone(profile) }: Props = $props();
+
+    let isNewProfile = $derived(profile.id === PROFILE_NEW_ID);
+    let showProfile: boolean = $state(false);
 
 
     function reset() {
@@ -24,7 +28,7 @@
 </script>
 
 
-<button class="profile" class:-new={isNewProfile} on:click={() => showProfile = true}  transition:scale>
+<button class="profile" class:-new={isNewProfile} onclick={() => showProfile = true}  transition:scale>
     <div class="avatar">
         <ProfileImage profile={('id' in profile) ? profile: null} />
     </div>
@@ -42,17 +46,19 @@
 {#if showProfile}
     <ScreenOverlay  on:close={done}>
         
-        <div slot="heading" class="heading">
-            <h3 class="h3 heading">{isNewProfile ? 'New Profile' : 'Profile'} - {profile.fullName}</h3>
-            <div class="actions">
-                <button class="-danger" on:click={reset}>
-                    Reset
-                </button>
-                <button class="-primary" on:click={done}>
-                    Done
-                </button>
+        {#snippet heading()}
+                <div  class="heading">
+                <h3 class="h3 heading">{isNewProfile ? 'New Profile' : 'Profile'} - {profile.fullName}</h3>
+                <div class="actions">
+                    <button class="-danger" onclick={reset}>
+                        Reset
+                    </button>
+                    <button class="-primary" onclick={done}>
+                        Done
+                    </button>
+                </div>
             </div>
-        </div>
+            {/snippet}
         <div class="page -empty">
             <ProfileEdit bind:profile={profile} />
         </div>

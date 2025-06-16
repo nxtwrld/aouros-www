@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
     import type { Writable } from 'svelte/store';
 
     export interface TabInterface {
@@ -20,6 +20,11 @@
 <script lang="ts">
 	import { setContext, onDestroy } from 'svelte';
 	import { writable } from 'svelte/store';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	const tabs: number[] = [];
 	const panels: number[] = [];
@@ -70,5 +75,5 @@
 </script>
 
 <div class="tabs">
-	<slot></slot>
+	{@render children?.()}
 </div>

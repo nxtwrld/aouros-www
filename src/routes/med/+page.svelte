@@ -12,7 +12,7 @@
     }
 */
     onMount(() => {
-        if ($user && $user.subscription == 'individual') {
+        if ($user && $user.id && 'subscription' in $user && $user.subscription == 'individual') {
             goto('/med/p/'+$user.id);
         } else {
             goto('/med/p');
@@ -25,5 +25,5 @@
 
 <p>Aouros helps you with your medical reports management. Just scan you medical report and Aouros will help you understand it:</p>
 
-<button class="a" on:click={()=> ui.emit('overlay.import')}>Import files</button>
+<button class="a" onclick={()=> ui.emit('overlay.import')}>Import files</button>
 

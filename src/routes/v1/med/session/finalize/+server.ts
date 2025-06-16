@@ -3,11 +3,11 @@ import { error, json } from '@sveltejs/kit';
 import { finalize } from '$lib/session/finalizeReport';
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request, locals: { supabase, safeGetSession } }) {
+export async function POST({ request, locals: { supabase, safeGetSession, user } }) {
 
     const { session } = await safeGetSession()
 
-    if (!session) {
+    if (!session || !user) {
         error(401, { message: 'Unauthorized' });
     }
 

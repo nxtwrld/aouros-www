@@ -6,15 +6,15 @@ import { loadSubscription, updateSubscription } from '$lib/user/subscriptions.se
 
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request, locals: { supabase, safeGetSession }}) {
+export async function POST({ request, locals: { supabase, safeGetSession, user }}) {
 	//const str = url.searchParams.get('drug');
 
     const { session } = await safeGetSession()
 
-    if (!session) {
+    if (!session || !user) {
         error(401, { message: 'Unauthorized' });
     }
-    const subscription = await loadSubscription();
+    const subscription = await loadSubscription(user.id);
     //console.log('user', subscription);
     if (!subscription) {
         error(404, { message: 'Subscription not found' });
@@ -33,7 +33,7 @@ export async function POST({ request, locals: { supabase, safeGetSession }}) {
     const result = await assess(data);
     
     subscription.scans -= 1;
-    const u = await updateSubscription(subscription);
+    const u = await updateSubscription(subscription, user.id);
 
     return json(result);
 }

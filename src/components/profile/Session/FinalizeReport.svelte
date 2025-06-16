@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import { slide } from "svelte/transition";
     import FinalizeReportBlock from "./FinalizeReportBlock.svelte";
     import { profile } from '$lib/profiles';
@@ -41,12 +43,16 @@
 
     };
 
-    export let report: Report;
-    export let finalReport: ReportFinal = {};
+    interface Props {
+        report: Report;
+        finalReport?: ReportFinal;
+    }
+
+    let { report = $bindable(), finalReport = $bindable({}) }: Props = $props();
     
 
 
-    let template =  [
+    let template =  $state([
         {
             id: 'findings',
             name: ReportComponent.Findings,
@@ -71,18 +77,18 @@
             id: 'doctor',
             name: ReportComponent.Doctor,
         }
-    ]
+    ])
 
     console.log(report)
 
-    $: {
+    run(() => {
         finalReport = {};
         template.forEach(b => {
             if (report && report[b.name]) {
                 finalReport[b.name] = report[b.name];
             }
         })
-    }
+    });
 
     function deleteBlock(id: string) {
         template = [...template.filter(b => b.id !== id)]
@@ -130,18 +136,18 @@
             <FinalizeReportBlock bind:value={report[block.name]} />
             {/if}
             <div class="actions">
-                <button on:click={() => deleteBlock(block.id)} class="danger"><svg>
+                <button onclick={() => deleteBlock(block.id)} class="danger" aria-label="Delete block"><svg>
                     <use href="/icons.svg#minus">
                 </svg></button>
-                <button on:click={() => moveBlock(block.id, -1)}><svg>
+                <button onclick={() => moveBlock(block.id, -1)} aria-label="Move block up"><svg>
                     <use href="/icons.svg#arrow-round-up">
                 </svg></button>
-                <button on:click={() => moveBlock(block.id, 1)}><svg>
+                <button onclick={() => moveBlock(block.id, 1)} aria-label="Move block down"><svg>
                     <use href="/icons.svg#arrow-round-down">
                 </svg></button>
             </div>
         </div>
-        <button class="add" on:click={() => addBlock(index+1)}>
+        <button class="add" aria-label="Add new block" onclick={() => addBlock(index+1)}>
             <svg>
                 <use href="/icons.svg#plus">
             </svg>

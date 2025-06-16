@@ -1,6 +1,10 @@
 <script lang="ts">
     import App from '$components/apps/App.svelte';
-    export let data: any = undefined;
+    interface Props {
+        data?: any;
+    }
+
+    let { data = undefined }: Props = $props();
 </script>
 
 

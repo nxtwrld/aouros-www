@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 
     export enum LinkType {
         Report = 'report',
@@ -12,25 +12,36 @@
 <script lang="ts">
     import Modal from '$components/ui/Modal.svelte';
 
-    export let object: any;
-    export let reference: any;
-    export let type: LinkType;
-    export let label: string = 'Link';
 
-    let className: string = 'button';
-    export {
-        className as class
+    
+
+    interface Props {
+        object: any;
+        reference: any;
+        type: LinkType;
+        label?: string;
+        class?: string;
+        showDialog?: boolean;
+        children?: import('svelte').Snippet;
     }
 
-    export let showDialog: boolean = false;
+    let {
+        object,
+        reference,
+        type,
+        label = 'Link',
+        class: className = 'button',
+        showDialog = $bindable(false),
+        children
+    }: Props = $props();
 
     function link() {
         console.log('linking', object, reference, type);
     }
 </script>
-<button class={className} on:click={() => showDialog = true}>
-    {#if $$slots.default}
-        <slot />
+<button class={className} onclick={() => showDialog = true}>
+    {#if children}
+        {@render children?.()}
     {:else}
         {label}
     {/if}

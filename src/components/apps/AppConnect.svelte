@@ -8,40 +8,56 @@
     //import type { Link } from "$lib/common.types.d";
     import './style.css';
 
-    export let type: AppConnectionTypeEnum = AppConnectionType.Report;
-    export let shared: Item | undefined = undefined;
-    export let tags: string[] = [];
+    interface Props {
+        type?: AppConnectionTypeEnum;
+        shared?: any | undefined;
+        tags?: string[];
+        children?: import('svelte').Snippet;
+    }
 
-    let showLeavingWarning: boolean = false;
-    let showShareDialog: boolean = false;
+    let {
+        type = AppConnectionType.Report,
+        shared = undefined,
+        tags = [],
+        children
+    }: Props = $props();
 
-    let selectedApp: AppRecord | undefined = undefined;
+    let showLeavingWarning: boolean = $state(false);
+    let showShareDialog: boolean = $state(false);
 
-    let items: Link[] = cleanItems(shared);
+    let selectedApp: AppRecord | undefined = $state(undefined);
+
+    let items: any[] = cleanItems(shared);
 
     if (shared) {
         console.log('Shared', shared);
         /*
-        getAllLinkedItems(shared).then((itemsShared: Item[]) => {
+        getAllLinkedItems(shared).then((itemsShared: any[]) => {
             items = itemsShared.map(item => {
                 return {
                     type: item.type,
                     title: item.data?.title || item.data?.question || item.data?.fn,
                     uid: item.data.uid
                 }
-            }) as Link[];
+            }) as any[];
         });*/
     }
 
-    function cleanItems(items) {
+    function cleanItems(items: any[]): any[] {
         return items.map(item => {
-            if (item.content.signals) item.content.signals.forEach(signal => {
-                delete signal.document
-            });
-            delete item.key;
-            delete item.attachments;
-            delete item.content.attachments;
-            return item;
+            // Create a deep copy to avoid mutating the original
+            const cleanItem = JSON.parse(JSON.stringify(item));
+            
+            if (cleanItem.content.signals) {
+                cleanItem.content.signals.forEach((signal: any) => {
+                    delete signal.document;
+                });
+            }
+            delete cleanItem.key;
+            delete cleanItem.attachments;
+            delete cleanItem.content.attachments;
+            
+            return cleanItem;
         });
     }
 
@@ -102,7 +118,7 @@
 
 <div class="apps">
         {#if shared && false}
-            <button on:click={share}>
+            <button onclick={share}>
                 <svg class="app-icon">
                     <use xlink:href="/icons.svg#share"></use>
                 </svg>
@@ -111,15 +127,15 @@
         {/if}
 
         
-        <button on:click={download}>
+        <button onclick={download}>
             <svg class="app-icon">
                 <use xlink:href="/icons.svg#download"></use>
             </svg>
             <span>Download</span>
         </button>
-    <slot />
+    {@render children?.()}
 {#each $apps.filter(filterApps) as app}
-        <button on:click={() => openApp(app)} >
+        <button onclick={() => openApp(app)} >
             <img src={app.icon} alt={app.name} class="app-icon" />
             <span>{app.name}</span>
             <span class="app-credits">{app.credits}</span>

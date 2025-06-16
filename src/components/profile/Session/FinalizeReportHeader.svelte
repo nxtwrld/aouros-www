@@ -2,7 +2,11 @@
     import { profile } from '$lib/profiles';
 
     
-    export let report: any;
+    interface Props {
+        report: any;
+    }
+
+    let { report = $bindable() }: Props = $props();
     report.date = new Date();
 </script>
 

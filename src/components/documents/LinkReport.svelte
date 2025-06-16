@@ -12,15 +12,23 @@
     const dispatch = createEventDispatcher();
 
 
-    export let data: ReportLink | undefined = undefined;
 
-    export let showModal: boolean = false;
 
-    let className: string = 'button';
+   interface Props {
+      data?: ReportLink | undefined;
+      showModal?: boolean;
+      class?: string;
+      children?: import('svelte').Snippet;
+   }
 
-    export {
-        className as class
-    }
+   let {
+      data = undefined,
+      showModal = $bindable(false),
+      class: className = 'button',
+      children
+   }: Props = $props();
+
+    
 
 
     function linkReportForm() {
@@ -37,7 +45,7 @@
     }
 </script>
 
-<button type="button" class="{className}" on:click={linkReportForm}><slot /></button>
+<button type="button" class="{className}" onclick={linkReportForm}>{@render children?.()}</button>
    
 
 
@@ -48,7 +56,7 @@
         <h3 class="h3">Link Report</h3>
         <div class="list">
             {#each $store as item}
-            <button on:click={() => link(item)} class="item panel">
+            <button onclick={() => link(item)} class="item panel">
                 <div class="icon">
                     <Label type="{item.metadata.category}" />
                 </div>
@@ -60,7 +68,7 @@
             {/each}
         </div>
         <div class="buttons-row">
-            <button class="button -negative" on:click={() => showModal = false}>Cancel</button>
+            <button class="button -negative" onclick={() => showModal = false}>Cancel</button>
         </div>
     </Modal>
 {/if}

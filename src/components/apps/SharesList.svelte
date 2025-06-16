@@ -6,7 +6,11 @@
     import contacts from '$lib/contact/store';
 	import ListSwipe from "$components/ui/ListSwipe.svelte";
 
-    export let shares: ShareRecord[] = [];
+    interface Props {
+        shares?: ShareRecord[];
+    }
+
+    let { shares = [] }: Props = $props();
 
     async function removeShare(share: ShareRecord) {
         let contact = contacts.get(share.contact);
@@ -26,7 +30,7 @@
                 Items linked: {share.links.length}
             </a>
             <div class="tools">
-                <button class="tool -negative" on:click={() => removeShare(share)}>
+                <button class="tool -negative" onclick={() => removeShare(share)}>
                     <svg>
                         <use href="/sprite.svg#remove" />
                     </svg>

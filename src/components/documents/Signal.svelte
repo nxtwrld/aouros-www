@@ -1,33 +1,32 @@
 <script lang="ts">
     import SignalDetail from "./SignalDetail.svelte";
-    import { createEventDispatcher } from "svelte";
     import defaults from '$data/lab.properties.defaults.json';
     import ui from '$lib/ui';
     import { t } from '$lib/i18n';
 
     import type { Document } from '$lib/documents/types.d';
 
-    export let document: Document;
-    //import profile from '$lib/user/profile';
+    interface Props {
+        document: Document;
+        item: {
+            signal: string,
+            test: string,
+            value: string | number,
+            unit: string,
+            reference: string,
+            urgency?: number,
+            document?: Document
+        };
+        showDetails?: boolean;
+        onshowdetails?: (event: { code: string, showDetails: boolean }) => void;
+    }
 
-    const dispatch = createEventDispatcher();
-    
+    let { document, item, showDetails = false, onshowdetails }: Props = $props();
 
-    export let item: {
-        signal: string,
-        test: string,
-        value: string | number,
-        unit: string,
-        reference: string,
-        urgency?: number,
-        document?: Document
-    };
-
+    // Set document reference after item is properly initialized
     if (document) {
         item.document = document;
     }
-
-    export let showDetails: boolean = false;
 
     const code: string = item.signal || item.test;
     const key = code.toLowerCase().replace(/ /g, '_');
@@ -176,7 +175,7 @@
 
         <td class="-empty">
             <div class="actions">
-                <button on:click={() =>         ui.emit('modal.healthProperty', item )}>
+                <button onclick={() =>         ui.emit('modal.healthProperty', item )} aria-label="View signal chart">
                     <svg>
                         <use href="/icons.svg#chart-line"></use>
                     </svg>

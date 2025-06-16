@@ -1,30 +1,13 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
 
     import type { VCard } from '$lib/contact/types.d';
 	
     export const ready: boolean = true;
-    export let data: {
-        vcard: VCard
-    };
 
-    $: {
 
-        Object.entries(vcard).forEach(([key, value]) => {
-            const path = key.split('__');
-            if (path.length === 1) {
-                data.vcard[path[0]] = value;
-                return;
-            }
-            if (!data.vcard[path[0]]) {
-                data.vcard[path[0]] = {};
-            }
-            data.vcard[path[0]][path[1]] = value;
-            
-        })        
-        //console.log(data.vcard);
-    }
-
-    let vcard = {
+    let vcard = $state({
         n__honorificPrefixes: '',
         n__givenName: '',
         n__familyName: '',
@@ -47,7 +30,7 @@
             postalCode: '',
         }],
         note: ''
-    }
+    })
 
     const FORM = [
         {
@@ -117,9 +100,16 @@
         contacts: ['email', 'tel'],
         adr: ['adr']
     }
-    let currentSet: 'n' | 'contacts' | 'adr' = 'n';
+    let currentSet: 'n' | 'contacts' | 'adr' = $state('n');
 
-    export let profileForm: HTMLFormElement;
+    interface Props {
+        data: {
+        vcard: VCard
+    };
+        profileForm: HTMLFormElement;
+    }
+
+    let { data = $bindable(), profileForm }: Props = $props();
 
 
     function addItem(id) {
@@ -133,6 +123,22 @@
         vcard[id].splice(index, 1);
         vcard[id] = [...vcard[id]];
     }
+    run(() => {
+
+        Object.entries(vcard).forEach(([key, value]) => {
+            const path = key.split('__');
+            if (path.length === 1) {
+                data.vcard[path[0]] = value;
+                return;
+            }
+            if (!data.vcard[path[0]]) {
+                data.vcard[path[0]] = {};
+            }
+            data.vcard[path[0]][path[1]] = value;
+            
+        })        
+        //console.log(data.vcard);
+    });
 </script>
 
 
@@ -140,7 +146,7 @@
 
 <div class="tab-heads">
 {#each Object.keys(formSets) as key}
-    <button  on:click={() => currentSet = key} class:-active={currentSet == key}>{key}</button>
+    <button  onclick={() => currentSet = key} class:-active={currentSet == key}>{key}</button>
 {/each}
 </div>
 
@@ -178,14 +184,14 @@
                     </div>
                 {/each}
                 </div>
-                <button class="button" on:click={() => removeItem(id, index)}>
+                <button class="button" onclick={() => removeItem(id, index)}>
                     <svg>
                         <use href="/icons.svg#close" />
                     </svg>
                 </button>
             </div>
             {/each}
-            <button class="button" on:click={() => addItem(id)}>Add</button>
+            <button class="button" onclick={() => addItem(id)}>Add</button>
         </div>
         {/if}
 

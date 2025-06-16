@@ -1,28 +1,35 @@
-<script>
-	import { goto, invalidate } from '$app/navigation';
+<script lang="ts">
+	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { setClient } from '$lib/supabase';
+	import { setClient, getClient } from '$lib/supabase';
 	import '../css/index.css';
 
-	export let data;
-	$: ({ session, supabase } = data);
-
-
+	let { data, children } = $props();
+	
+	// Break reactive loop: use $derived.by to avoid self-reference
+	let session = $derived(data?.session || null);
+	let supabase = $derived(data?.supabase);
 
 	onMount(() => {
-		console.log('supabase setClient from layout.svelte')
-		setClient(supabase);
+		const currentSupabase = data?.supabase;
+		if (!currentSupabase) return;
 		
-		const { data } = supabase.auth.onAuthStateChange((event, newSession) => {
-			console.log('supabase:auth change', newSession, session);
-			if (newSession?.expires_at !== session?.expires_at) {
-				console.log('supabase:auth expired', newSession);
-				invalidate('supabase:auth')
-				//goto('/auth', { replaceState: true });
+		const authListener = currentSupabase.auth.onAuthStateChange((event, sessionData) => {
+			// Only invalidate on actual auth changes, not initial load
+			if (event !== 'INITIAL_SESSION') {
+				invalidate('supabase:auth');
 			}
-		})
-		return () => data.subscription.unsubscribe();
+		});
+
+		return () => authListener.data.subscription.unsubscribe();
+	});
+
+	// Set client for compatibility using effect to avoid self-reference
+	$effect(() => {
+		if (data?.supabase) {
+			setClient(data.supabase);
+		}
 	});
 </script>
 
-<slot />
+{@render children()}

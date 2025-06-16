@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { createBubbler, stopPropagation } from 'svelte/legacy';
+
+    const bubble = createBubbler();
     import { type Profile } from '$lib/types.d';
     import { getAge } from '$lib/datetime';
     import { goto } from '$app/navigation';
@@ -45,7 +48,7 @@
 <div class="list-items list-items-{view}">
 {#each $profiles as profile}
     <div class="list-item -click -{profile.status}">
-        <button  class="content" on:click={() => openProfile(profile)}>
+        <button  class="content" onclick={() => openProfile(profile)}>
             <div class="image">
                 <ProfileImage {profile} size={view === Views.GRID ? 8 : 4} />
             </div>
@@ -54,7 +57,7 @@
             <div class="dob">{#if profile.health?.birthDate}{profile.health?.birthDate}{/if}</div>
             <div class="tel">
                 {#if profile.vcard?.tel?.[0]?.value}
-                <a href="tel:{profile.vcard?.tel?.[0]?.value}" on:click|stopPropagation>{profile.vcard?.tel?.[0]?.value}</a>
+                <a href="tel:{profile.vcard?.tel?.[0]?.value}" onclick={stopPropagation(bubble('click'))}>{profile.vcard?.tel?.[0]?.value}</a>
                 {/if}
             </div>
         </button>
@@ -62,10 +65,10 @@
             {#if profile.status == 'approved'}
             <a href={ROOT_PATH + profile.id} class="button">{ $t('app.profiles.open') }</a>
             {:else}
-            <button class="button -request" on:click|stopPropagation={() => requestAccess(profile.id)}>{ $t('app.profiles.request-access') }</button>
+            <button class="button -request" onclick={stopPropagation(() => requestAccess(profile.id))}>{ $t('app.profiles.request-access') }</button>
             {/if}
             {#if profile.id != $user.id}
-            <button on:click|stopPropagation={() => deleteUser(profile.id)} class="button -danger">
+            <button onclick={stopPropagation(() => deleteUser(profile.id))} class="button -danger">
                 {#if profile.auth_id}
                 { $t('app.profiles.unlink') }
                 {:else}

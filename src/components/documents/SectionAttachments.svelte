@@ -11,9 +11,13 @@
         url?: string;
         file?: ArrayBuffer;
     }
-    export let data: Attachment[]
 
-    export let key: string | undefined = undefined;
+  interface Props {
+    data: Attachment[];
+    key?: string | undefined;
+  }
+
+  let { data, key = undefined }: Props = $props();
 
     console.log(data);
 
@@ -57,7 +61,7 @@
 
     <div class="attachments">
         {#each data as attachment}
-            <button class="attachment" on:click={() => downloadAttachment(attachment)}>
+            <button class="attachment" onclick={() => downloadAttachment(attachment)}>
                 {#if attachment.thumbnail}
                 <img src={attachment.thumbnail} alt={attachment.type} />
                 {/if}

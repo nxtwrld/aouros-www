@@ -2,11 +2,7 @@ import { getClient} from '$lib/supabase';
 
 async function logout() {
     const supabase = getClient();
-    const { data : { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-        return;
-    }
+    // No need to check if user exists - just sign out
     return await supabase?.auth.signOut();
 }
 

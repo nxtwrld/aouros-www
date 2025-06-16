@@ -4,7 +4,7 @@ import { createBrowserClient, createServerClient, isBrowser, parse } from '@supa
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public'
 import type { LayoutLoad } from './$types'
 import { setClient } from '$lib/supabase'
-import { session } from "$lib/user";
+import { session as CurrentSession } from "$lib/user";
 import '$lib/i18n' // Import to initialize. Important :)
 import { locale, waitLocale } from 'svelte-i18n';
 
@@ -24,83 +24,44 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
   }
 
 
-  console.log('loading.auth...')
   /**
    * Declare a dependency so the layout can be invalidated, for example, on
    * session refresh.
    */
   depends('supabase:auth')
   
-  const supabase =/* isBrowser()
+  // Create supabase client with proper error handling
+  const supabase = isBrowser()
     ? createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         global: {
           fetch,
         },
-        cookies: {
-          get(key) {
-            const cookie = parse(document.cookie)
-            //console.log('COOKIE', key, cookie[key])
-            return cookie[key]
-          },
-        },
-        cookieOptions: { httpOnly: false }
       })
-      
-    : */createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
+    : createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
         global: {
           fetch,
         },
         cookies: {
-          get() {
-            return JSON.stringify(data.session)
+          getAll() {
+            return data?.cookies || []
           },
         },
-        cookieOptions: { httpOnly: false }
       })
-    
-  console.log('supabase setClient from layout.ts')
-  setClient(supabase)
-
+      
   /**
-   * It's fine to use `getSession` here, because on the client, `getSession` is
-   * safe, and on the server, it reads `session` from the `LayoutData`, which
-   * safely checked the session using `safeGetSession`.
+   * Use session and user data from server (via safeGetSession)
+   * instead of calling getSession/getUser directly
    */
-/*
-  const tasks = await Promise.all([
-    supabase.auth.getSession(),
-    supabase.auth.getUser(),
-    waitLocale()
-  ])
+  const session = data?.session || null
+  const user = data?.user || null
 
-  const currentSession = tasks[0].data.session
-  const user = tasks[1].data.user*/
-  /*
-  const {
-    data: { session: currentSession },
-  } = await supabase.auth.getSession()
-      */
-
-  const currentSession = isBrowser()
-    ? (await supabase.auth.getSession()).data.session 
-    : data.session;
-/*
-  const {
-    data: { user } 
-  } = (currentSession) ? await supabase.auth.getUser() : { data: { user: null } }
-*/
-  
-  const user = data.user;
-  
   await waitLocale()
 
-  //console.log('TASKS', tasks);
-  if (currentSession == null) console.log('session is null. client browser: ',isBrowser());
-  else console.log('sesion is correct');
-  
-  session.set(currentSession);
+  // Only set session and client if we have valid data
+  if (session) {
+    CurrentSession.set(session)
+  }
+  setClient(supabase)
 
-
-
-  return { supabase, session: currentSession, user }
+  return { session, supabase, user }
 }

@@ -2,10 +2,14 @@
     import { t } from '$lib/i18n';
     import insuranceProviders from '$data/insurance.providers.json';
 
-    export let data: {
+    interface Props {
+        data: {
         provider: string;
         number: string;
     };
+    }
+
+    let { data = $bindable() }: Props = $props();
 
 </script>
 

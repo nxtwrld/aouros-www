@@ -1,12 +1,23 @@
 <script lang="ts">
     import Input from "./Input.svelte";
 
-    export let value: string[] = [];
-    export let id: string = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    export let placeholder: string = 'Add Tags';
-    export let label: string | undefined = undefined;
+    interface Props {
+        value?: string[];
+        id?: string;
+        placeholder?: string;
+        label?: string | undefined;
+        children?: import('svelte').Snippet;
+    }
 
-    let newTag: string = '';
+    let {
+        value = $bindable([]),
+        id = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+        placeholder = 'Add Tags',
+        label = undefined,
+        children
+    }: Props = $props();
+
+    let newTag: string = $state('');
 
     function removeTag(index: number) {
         value.splice(index, 1);
@@ -27,19 +38,19 @@
     }
 </script>
 
-{#if $$slots.default || label}
+{#if children || label}
     <label class="label" for={id}>
         {#if label}
             {label}
         {:else}
-            <slot/>
+            {@render children?.()}
         {/if}
     </label>
 {/if}
 
 <div class="tags">
     {#each value as tag, index}
-        <button type="button" class="tag" on:click={() => removeTag(index)}>
+        <button type="button" class="tag" onclick={() => removeTag(index)}>
             <span>{tag}</span>
 
             <svg>
@@ -49,7 +60,7 @@
     {/each}
     <div class="input-inline">
         <Input {id} bind:value={newTag} {placeholder} type="text" on:keypress={keyPress} />
-        <button class="button" type="button" on:click={addTag}>Add</button>
+        <button class="button" type="button" onclick={addTag}>Add</button>
     </div>
 </div>
 

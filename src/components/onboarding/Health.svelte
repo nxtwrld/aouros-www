@@ -1,22 +1,32 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
 	
 
     
     import { SexEnum, BloodType } from '$lib/types.d';
     import { t } from '$lib/i18n';
 
-    export let ready: boolean = false;
-    export let data: {
+    
+    interface Props {
+        ready?: boolean;
+        data: {
         health: {
             biologicalSex?: SexEnum;
             birthDate?: string;
             bloodType?:  BloodType;
         }
+    };
+        profileForm: HTMLFormElement;
     }
-    
-    export let profileForm: HTMLFormElement;
 
-    $: {
+    let { ready = $bindable(false), data = $bindable(), profileForm }: Props = $props();
+
+
+    let bloodType: BloodType | undefined = $state(data.health.bloodType || undefined);
+    let biologicalSex: SexEnum | undefined = $state(data.health.biologicalSex || undefined);
+    let birthDate: string | undefined = $state(data.health.birthDate || undefined);
+    run(() => {
 
         if (birthDate && birthDate != '') {
             data.health.birthDate = birthDate
@@ -40,11 +50,7 @@
         } else {
             ready = false;
         }
-    }
-
-    let bloodType: BloodType | undefined = data.health.bloodType || undefined;
-    let biologicalSex: SexEnum | undefined = data.health.biologicalSex || undefined;
-    let birthDate: string | undefined = data.health.birthDate || undefined;
+    });
 </script>
 
 

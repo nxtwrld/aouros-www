@@ -1,12 +1,8 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import { onMount } from "svelte";
 
-    export let conversation: {
-        speaker: string,
-        text: string,
-        stress: string,
-        urgency: string
-    }[] = [];
 
     enum Stress {
         low = 'low',
@@ -19,15 +15,20 @@
         high = 'high'
     }
 
-    export let newSpeech: boolean = false;
-
-    let scrollEl: HTMLDivElement;
-
-    $:{ 
-        if (newSpeech) {
-            scollToEnd();
-        }
+    interface Props {
+        conversation?: {
+        speaker: string,
+        text: string,
+        stress: string,
+        urgency: string
+    }[];
+        newSpeech?: boolean;
     }
+
+    let { conversation = [], newSpeech = false }: Props = $props();
+
+    let scrollEl: HTMLDivElement = $state();
+
 
     function scollToEnd() {
         scrollEl.scrollBy({
@@ -38,6 +39,11 @@
 
     onMount(() => {
         scollToEnd();
+    });
+    run(() => { 
+        if (newSpeech) {
+            scollToEnd();
+        }
     });
 </script>
 

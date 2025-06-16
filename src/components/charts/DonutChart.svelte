@@ -3,13 +3,17 @@
     import * as d3 from 'd3';
 
 
-    export let data: { name?: string;
-                        value: number }[] = [];
 
-    export let colors: string[] = d3.quantize(t => d3.interpolateSpectral(t * 0.8 + 0.1), data.length).reverse();
-    export let thickness: number = .67;
+    interface Props {
+        data?: { name?: string;
+                        value: number }[];
+        colors?: string[];
+        thickness?: number;
+    }
 
-    let svgElement: SVGSVGElement;
+    let { data = [], colors = d3.quantize(t => d3.interpolateSpectral(t * 0.8 + 0.1), data.length).reverse(), thickness = .67 }: Props = $props();
+
+    let svgElement: SVGSVGElement = $state();
     // set the dimensions and margins of the graph
     const width: number = 500;
     const height: number = 500;

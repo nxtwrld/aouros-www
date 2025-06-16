@@ -1,20 +1,43 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import Prop from "./Prop.svelte";
     import { importPublicKeySpki } from '$lib/encryption/rsa';
 
-    export let placeholder: string = '';
-    export let id: string = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    export let name: string = id;
-    export let required: boolean = false;
-    export let label: string | undefined = undefined;
-    export let value = '';
+    interface Props {
+        placeholder?: string;
+        id?: string;
+        name?: string;
+        required?: boolean;
+        label?: string | undefined;
+        value?: string;
+        children?: import('svelte').Snippet;
+    }
+
+    let {
+        placeholder = '',
+        id = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+        name = id,
+        required = false,
+        label = undefined,
+        value = $bindable(''),
+        children
+    }: Props = $props();
 
 
-    let key: CryptoKey | undefined;
-    let error: string | undefined;
+    let key: CryptoKey | undefined = $state();
+    let error: string | undefined = $state();
 
 
-    $: {
+
+
+    async function importKey(pem: string) {
+        return importPublicKeySpki(pem);
+    }
+
+
+
+    run(() => {
         if (value !== '') {
             console.log('importing key')
             importKey(value).then((k) => {
@@ -27,22 +50,14 @@
                 error = e?.message || "Invalid Key format";
             })
         }
-    }
-
-
-    async function importKey(pem: string) {
-        return importPublicKeySpki(pem);
-    }
-
-
-
+    });
 </script>
 
 {#if label !== undefined}
 <label for={id} class="label">{label}</label>
 {/if}
-{#if $$slots.default}
-    <label for={id} class="label"><slot/></label>
+{#if children}
+    <label for={id} class="label">{@render children?.()}</label>
 
 {/if}
 

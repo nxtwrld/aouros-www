@@ -9,8 +9,12 @@
     }
 
     const uid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    export let models: Model[] = [];
-    export let activeModels: string[] = [];
+    interface Props {
+        models?: Model[];
+        activeModels?: string[];
+    }
+
+    let { models = [], activeModels = [] }: Props = $props();
     
 </script>
 

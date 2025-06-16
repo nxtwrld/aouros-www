@@ -1,23 +1,41 @@
 <script lang="ts">
+    import { run, createBubbler } from 'svelte/legacy';
+
+    const bubble = createBubbler();
 	import { onMount } from "svelte";
 
-    export let value: string;
-    export let placeholder: string = '';
-    export let resizable: boolean = true;
-    export let id: string = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16);
-    export let name: string = id;
-    export let required: boolean = false;
-    export let label: string | undefined = undefined;
-    export let focus: boolean = false;
-    export let size: number = 1;
 
-    let className: string = 'textarea';
-    let oldValue = value;
-    export {
-        className as class
+    interface Props {
+        value: string;
+        placeholder?: string;
+        resizable?: boolean;
+        id?: string;
+        name?: string;
+        required?: boolean;
+        label?: string | undefined;
+        focus?: boolean;
+        size?: number;
+        class?: string;
+        children?: import('svelte').Snippet;
     }
 
-    let element: HTMLTextAreaElement;
+    let {
+        value = $bindable(),
+        placeholder = '',
+        resizable = true,
+        id = (window as any)?.crypto.getRandomValues(new Uint32Array(1))[0].toString(16),
+        name = id,
+        required = false,
+        label = undefined,
+        focus = false,
+        size = 1,
+        class: className = 'textarea',
+        children
+    }: Props = $props();
+    let oldValue = $state(value);
+    
+
+    let element: HTMLTextAreaElement = $state();
     function keydown(e: KeyboardEvent) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -25,13 +43,6 @@
         sizeTextarea();
     }
 
-    $: {
-        if (oldValue !== value) {
-            sizeTextarea();
-            oldValue = value;
-        }
-        
-    }
 
     function sizeTextarea()  {
         if (!resizable) return;
@@ -49,19 +60,26 @@
     })
 
 
+    run(() => {
+        if (oldValue !== value) {
+            sizeTextarea();
+            oldValue = value;
+        }
+        
+    });
 </script>
 
-{#if $$slots.default || label}
+{#if children || label}
 <label class="label" for={id}>
     {#if label}
         {label}
     {:else}
-        <slot/>
+        {@render children?.()}
     {/if}
 </label>
 {/if}
 
-<textarea bind:this={element} bind:value={value} {id} {name} {placeholder} class={className} on:keydown={keydown} on:change {required}></textarea>
+<textarea bind:this={element} bind:value={value} {id} {name} {placeholder} class={className} onkeydown={keydown} onchange={bubble('change')} {required}></textarea>
 
 <style>
 

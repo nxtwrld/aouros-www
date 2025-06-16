@@ -1,78 +1,32 @@
 import { createServerClient } from '@supabase/ssr';
-
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-import { setClient } from '$lib/supabase';
-
-
-const options: Handle = async ({ event, resolve }) => {
-  /* SETUP CORDS for /api routes */
-  if(event.request.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-      }
-    });
-  }
-
-  return resolve(event);
-  /*
-  const response = resolve(event);
-  if (event.url.pathname.startsWith('/api')) {
-    response.headers.append('Access-Control-Allow-Origin', `*`);
-  }
-
-  return response;*/
-  
-};
-
 
 const supabase: Handle = async ({ event, resolve }) => {
-
-  /* SETUP CORDS for /api routes */
-  /*
-    if(event.request.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': '*',
-        }
-      });
-    }
-
-
+  // Reduced logging to only errors and auth-related requests
+  const shouldLog = !event.url.pathname.startsWith('/v1/') && 
+                    (event.url.pathname.startsWith('/auth') || event.url.pathname === '/med' || event.url.pathname === '/account');
+  if (shouldLog) {
+    console.log(`[REQ] ${event.request.method} ${event.url.pathname}`)
+  }
+  
   /**
    * Creates a Supabase client specific to this server request.
-   *
    * The Supabase client gets the Auth token from the request cookies.
    */
   event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
-
-      get: (key) => event.cookies.get(key),
-      /**
-       * SvelteKit's cookies API requires `path` to be explicitly set in
-       * the cookie options. Setting `path` to `/` replicates previous/
-       * standard behavior.
-       */
-      set: (key, value, options) => {
-        //console.log('SET COOKIE', key, value, options)
+      get: (key: string) => event.cookies.get(key),
+      set: (key: string, value: string, options: any) => {
         event.cookies.set(key, value, { ...options, path: '/' })
       },
-      remove: (key, options) => {
+      remove: (key: string, options: any) => {
         event.cookies.delete(key, { ...options, path: '/' })
       },
     },
-    cookieOptions: { httpOnly: false },
   })
 
-
-  // CHECK IF IT IS ENOUGH TO SET CLIENT IN LAYOUT
-  //setClient(event.locals.supabase);
   /**
    * Unlike `supabase.auth.getSession()`, which returns the session _without_
    * validating the JWT, this function also calls `getUser()` to validate the
@@ -81,31 +35,29 @@ const supabase: Handle = async ({ event, resolve }) => {
   event.locals.safeGetSession = async () => {
     const {
       data: { session },
-      error: sessionError,
     } = await event.locals.supabase.auth.getSession()
-
-    if (sessionError) {
-      // JWT validation has failed
-      console.error('Error getting session:', sessionError.message)
-    }
+    
     if (!session) {
-      console.log('session is null', session);
       return { session: null, user: null }
     }
 
-    const {
-      data: { user },
-      error: userError,
-    } = await event.locals.supabase.auth.getUser()
-    if (userError) {
-      // JWT validation has failed
-      console.error('Error getting user:', userError.message)
+    try {
+      const {
+        data: { user },
+        error,
+      } = await event.locals.supabase.auth.getUser()
+      
+      if (error) {
+        return { session: null, user: null }
+      }
+      
+      return { session, user }
+    } catch (authError: any) {
       return { session: null, user: null }
     }
-
-    return { session, user }
   }
 
+  // CRITICAL: Await the response to ensure cookies are properly set
   const response = await resolve(event, {
     filterSerializedResponseHeaders(name) {
       /**
@@ -116,35 +68,50 @@ const supabase: Handle = async ({ event, resolve }) => {
     },
   })
 
-  if (event.url.pathname.startsWith('/v1')) {
-        response.headers.append('Access-Control-Allow-Origin', `*`);
+  // Only log errors and important requests
+  if (response.status >= 400 || shouldLog) {
+    console.log(`[RES] ${response.status} ${event.url.pathname}`)
   }
-
-  return response;
+  return response
 }
 
 const authGuard: Handle = async ({ event, resolve }) => {
-  console.log('event::::::::::::::::::::::::::::::::', event.url.pathname )
-  const { session, user } = await event.locals.safeGetSession()
+  try {
+    const { session, user } = await event.locals.safeGetSession()
+    event.locals.session = session
+    event.locals.user = user
 
-  event.locals.session = session;
-  event.locals.user = user;
+    // Protect routes that require authentication
+    const protectedRoutes = ['/private', '/med']
+    const isProtectedRoute = protectedRoutes.some(route => event.url.pathname.startsWith(route))
+    
+    if (!event.locals.session && isProtectedRoute) {
+      redirect(303, '/auth')
+    }
 
-  if (!event.locals.session && event.url.pathname.startsWith('/med')) {
-    return new Response(null, {
-      status: 303,
-      headers: { location: '/auth?redirect='+ event.url.pathname }
-    })
+    // Redirect authenticated users away from auth page
+    if (event.locals.session && event.url.pathname === '/auth') {
+      redirect(303, '/med')
+    }
+
+    return resolve(event)
+  } catch (error) {
+    console.error(`[AUTH ERROR] ❌ Auth guard failed for ${event.url.pathname}:`, error)
+    throw error
   }
-
-  if (event.locals.session && event.url.pathname === '/auth') {
-    return new Response(null, {
-      status: 303,
-      headers: { location: '/account' }
-    })
-  }
-
-  return resolve(event)
 }
 
-export const handle: Handle = sequence(options, supabase, authGuard);
+const errorHandler: Handle = async ({ event, resolve }) => {
+  try {
+    const response = await resolve(event)
+    return response
+  } catch (error) {
+    console.error(`[ERROR] ❌ Unhandled error in ${event.request.method} ${event.url.pathname}:`, {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack?.slice(0, 200) : undefined
+    })
+    throw error
+  }
+}
+
+export const handle: Handle = sequence(supabase, authGuard, errorHandler)

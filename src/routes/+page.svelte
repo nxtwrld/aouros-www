@@ -10,10 +10,10 @@
 
 <div class="placer">
     <div>
-        <img src="/icon.svg" alt="aouros logo" />
+        <img src="/icon.svg" alt="mediqom logo" />
 
-        <h1>qureio</h1>
-        <h2>quantified curiosity</h2>
+        <h1>mediqom</h1>
+        <h2>Medical Intelligence to Query, Organize, and Monitor</h2>
         <!--h2>query cure</h2-->
     </div>
 </div>

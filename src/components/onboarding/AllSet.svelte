@@ -2,9 +2,13 @@
     import { t } from '$lib/i18n';
 
     export const ready: boolean = true;
-    export let data: {};
     
-    export let profileForm: HTMLFormElement;
+    interface Props {
+        data: {};
+        profileForm: HTMLFormElement;
+    }
+
+    let { data, profileForm }: Props = $props();
 </script>
 
 

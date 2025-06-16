@@ -1,7 +1,12 @@
 <script lang="ts">
 
-    export let tips: string[] = [];
-    export let icon: string = 'tips';
+    interface Props {
+        tips?: string[];
+        icon?: string;
+        children?: import('svelte').Snippet;
+    }
+
+    let { tips = [], icon = 'tips', children }: Props = $props();
 
 </script>
 {#if tips.length > 0}
@@ -11,7 +16,7 @@
 </svg>
 
 <div class="tips-list">
-    <h3><slot /></h3>
+    <h3>{@render children?.()}</h3>
     <ul>
         {#each tips as tip}
             <li>{tip}</li>

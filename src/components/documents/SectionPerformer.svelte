@@ -2,7 +2,11 @@
     import ProfileImage from "$components/profile/ProfileImage.svelte";
     import { t } from "$lib/i18n";
 
-    export let data: any;
+    interface Props {
+        data: any;
+    }
+
+    let { data }: Props = $props();
     console.log('Performer', data)
 </script>
 
@@ -17,14 +21,14 @@
         <div class="actions -vertical">
             {#if data.tel && data.tel[0] && data.email[0].value}
             {@const tel = data.tel[0]}
-            <a href="tel:{data.email[0].value}">
+            <a href="tel:{data.email[0].value}" aria-label="Call phone number">
                 <svg>
                     <use href="/icons.svg#phone" />
                 </svg>
             </a>
             {/if}
             {#if data.email && data.email[0] && data.email[0].value}
-            <a href="mailto:{data.email[0].value}">
+            <a href="mailto:{data.email[0].value}" aria-label="Send email">
                 <svg>
                     <use href="/icons.svg#email" />
                 </svg>
@@ -32,7 +36,7 @@
             {/if}
             {#if data.adr && data.adr[0]}  
                 {@const address = data.adr[0]}
-                <a href="https://www.google.com/maps/search/?q={address['street-address']}+{address.locality}+{address['postal-code']}" target="_blank">
+                <a href="https://www.google.com/maps/search/?q={address['street-address']}+{address.locality}+{address['postal-code']}" target="_blank" aria-label="View location on maps">
                     <svg>
                         <use href="/icons.svg#location-medical" />
                     </svg>
@@ -145,7 +149,6 @@
         background-color: var(--color-background);
     }
 
-    .card .actions button,
     .card .actions a {
         width: var(--toolbar-height);
         height: var(--toolbar-height);
@@ -157,21 +160,17 @@
         align-items: center;
         padding: .5rem;
     }
-    .card .actions button svg,
     .card .actions a svg {
         fill: currentColor;
         height: 100%;
         width: 100%;
     }
     
-    .card:hover .actions button,
     .card:hover .actions a {
         background-color: var(--color-white);
     }
-    .card:hover .actions button:hover,
     .card:hover .actions a:hover {
         background-color: var(--color-interactivity);
         color: var(--color-interactivity-text);
-
     }
 </style>

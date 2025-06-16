@@ -1,6 +1,10 @@
 <script lang="ts">
     import { date as formatter } from '$lib/datetime';
-    export let date: string;
+    interface Props {
+        date: string;
+    }
+
+    let { date }: Props = $props();
 </script>
 
 <span class="badge-horizontal">

@@ -11,8 +11,12 @@
     import SectionAttachments from './SectionAttachments.svelte';
     import type { Document } from '$lib/documents/types.d';
 
-    export let document: Document;
-    //console.log('DOCUMENT', document);
+    interface Props {
+        document: Document; //console.log('DOCUMENT', document);
+    }
+
+    let { document }: Props = $props();
+    
 </script>
 
 

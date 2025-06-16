@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import { createEventDispatcher } from "svelte";
 	import Input from '$components/forms/Input.svelte';
     import Textarea from '$components/forms/Textarea.svelte';
@@ -15,56 +17,26 @@
 
     const dispatch = createEventDispatcher();
 
-    export let items: Link[] = [];
-
-    let contact: VCard | undefined = undefined;
-
-    const lastStep: number = 5;
-    let step: 0 | 1 | 2 | 3 | 4 | 5 = 0;
-
-    let password: string = '';
-    let message: string = '';
-    let url: string = 'https://aouros.com/ext/adasdasdaqdqwdasdqwwde2342tf342fwqefqwefsac';
-
-    let selectedRoute: number = 0;
-
-    $: sharedMessage = createMessagBody(items, url, password, message);
-    $: slidesCount = lastStep + 1;
-
-
-    $: {
-        if (contact && contact.publicKey != '') {
-            // TODO!!
-            getKeyDetails(contact);
-        }
-
-        if (url != '' && password != '' && message == '') {
-
-            message = `Dear ${contact?.fn || 'Sir/Madame'}, 
-I would like to share my medical records with you. 
-Please, use the following link to access them: ${url}  
-
-Password: ${password}
-
-Kindest regards, 
-            `;
-        }
+    interface Props {
+        items?: Link[];
     }
 
-    $: stepTitle = getTitle(step);
-    $: isNextAllowed = checkIsNextAllowed(step, contact, password, uploadProgress);
-    $: route = routes[selectedRoute];
-    $: routes = (contact) ? [...(contact.email || []).map(e => {
-        return {
-            ...e,
-            type: 'email'
-        };
-    }), ... (contact.tel || []).map(e => {
-        return {
-            ...e,
-            type: 'tel'
-        };
-    })] : []
+    let { items = [] }: Props = $props();
+
+    let contact: VCard | undefined = $state(undefined);
+
+    const lastStep: number = 5;
+    let step: 0 | 1 | 2 | 3 | 4 | 5 = $state(0);
+
+    let password: string = $state('');
+    let message: string = $state('');
+    let url: string = $state('https://aouros.com/ext/adasdasdaqdqwdasdqwwde2342tf342fwqefqwefsac');
+
+    let selectedRoute: number = $state(0);
+
+
+
+
 
     function getKeyDetails(contact: VCard) {
         // import spki key and get details
@@ -171,6 +143,40 @@ Kindest regards,
     function abort() {
         dispatch('abort');
     }
+    run(() => {
+        if (contact && contact.publicKey != '') {
+            // TODO!!
+            getKeyDetails(contact);
+        }
+
+        if (url != '' && password != '' && message == '') {
+
+            message = `Dear ${contact?.fn || 'Sir/Madame'}, 
+I would like to share my medical records with you. 
+Please, use the following link to access them: ${url}  
+
+Password: ${password}
+
+Kindest regards, 
+            `;
+        }
+    });
+    let sharedMessage = $derived(createMessagBody(items, url, password, message));
+    let slidesCount = $derived(lastStep + 1);
+    let stepTitle = $derived(getTitle(step));
+    let isNextAllowed = $derived(checkIsNextAllowed(step, contact, password, uploadProgress));
+    let routes = $derived((contact) ? [...(contact.email || []).map(e => {
+        return {
+            ...e,
+            type: 'email'
+        };
+    }), ... (contact.tel || []).map(e => {
+        return {
+            ...e,
+            type: 'tel'
+        };
+    })] : [])
+    let route = $derived(routes[selectedRoute]);
 </script>
 
 <h3 class="h3">{stepTitle}</h3>
@@ -228,7 +234,7 @@ Kindest regards,
                         <Input type="password" bind:value={password} placeholder="Password protect your record" label="Password" required copyable autocomplete="off" />
                     </div>
                     <div>
-                        <button class="button" on:click={generatePassword}>Generate</button>
+                        <button class="button" onclick={generatePassword}>Generate</button>
                     </div>
                 </div>
                 {/if}
@@ -272,7 +278,7 @@ Kindest regards,
     </div>
     <div class="buttons-row">
         
-        <button class="button" on:click={previous}>
+        <button class="button" onclick={previous}>
             {#if step == 0}
                 Cancel
             {:else}
@@ -286,11 +292,11 @@ Kindest regards,
             {:else if routes[selectedRoute].type == 'tel'}
                 <a href="sms:{route.value}?body={sharedMessage.body}" class="button" >Open sms app</a>
             {/if}
-            <button class="button -primary" on:click={abort}>Done</button>
+            <button class="button -primary" onclick={abort}>Done</button>
         {:else if step == lastStep -2}
-        <button class="button -primary" on:click={createShare} disabled={isNextAllowed}>Create Share</button>
+        <button class="button -primary" onclick={createShare} disabled={isNextAllowed}>Create Share</button>
         {:else}
-            <button class="button -primary" on:click={next} disabled={isNextAllowed}>Next</button>
+            <button class="button -primary" onclick={next} disabled={isNextAllowed}>Next</button>
         {/if}
         
     </div>

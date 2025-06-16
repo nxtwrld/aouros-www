@@ -1,12 +1,6 @@
 <script lang="ts">
 	import insuranceProviders from '$data/insurance.providers.json';
     export const ready: boolean = true;
-    export let data: {
-        insurance: {
-            number: string;
-            provider: string;
-        }
-    };
 
     const INSURANCE_COMPANIES: {
         code: string;
@@ -14,7 +8,17 @@
         name: string;
     }[] = [...insuranceProviders];
     
-    export let profileForm: HTMLFormElement;
+    interface Props {
+        data: {
+        insurance: {
+            number: string;
+            provider: string;
+        }
+    };
+        profileForm: HTMLFormElement;
+    }
+
+    let { data = $bindable(), profileForm }: Props = $props();
 </script>
 
 

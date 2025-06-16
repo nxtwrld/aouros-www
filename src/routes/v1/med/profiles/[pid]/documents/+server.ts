@@ -4,7 +4,7 @@ const DOCUMENT_TYPES = ['document', 'profile', 'health'];
 const UNIQUE_TYPES = ['profile', 'health'];
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function GET({ request, params, locals: { supabase, safeGetSession }}) {
+export async function GET({ request, params, locals: { supabase, safeGetSession, user }}) {
 
 
     const { session } = await safeGetSession();
@@ -12,7 +12,7 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
     const url = new URL(request.url);
     const types = url.searchParams.get('types')?.split(',') || DOCUMENT_TYPES;
     const full = url.searchParams.get('full') === 'true';
-    if (!session) {
+    if (!session || !user) {
       return error(401, { message: 'Unauthorized' });
     }
     const query = full 
@@ -21,7 +21,7 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
 
     const { data: documentsLoad, error: documentsError } = await supabase.from('documents').select(query)
         .eq('user_id', params.pid)
-        .eq('keys.user_id', session.user.id)
+        .eq('keys.user_id', user.id)
         .in('type', types);
 
 
@@ -34,10 +34,10 @@ export async function GET({ request, params, locals: { supabase, safeGetSession 
 }
 
 
-export async function POST({ request, params, locals: { supabase, safeGetSession }}) {
+export async function POST({ request, params, locals: { supabase, safeGetSession, user }}) {
     const { session } = await safeGetSession();
 
-    if (!session) {
+    if (!session || !user) {
       return error(401, { message: 'Unauthorized' });
     }
 
@@ -73,9 +73,9 @@ export async function POST({ request, params, locals: { supabase, safeGetSession
             user_id: params.pid, 
             type, 
             metadata, content,
-            author_id: session.user.id,
+            author_id: user.id,
             attachments
-        }]).select('id)');
+        }]).select('id');
 
     if (documentInsertError) {
         console.error('Error inserting document', documentInsertError);
@@ -85,9 +85,9 @@ export async function POST({ request, params, locals: { supabase, safeGetSession
     const document_id = documentInsert[0].id;
     
 
-    keys.forEach((key) => {
+    keys.forEach((key: any) => {
         key.document_id = document_id;
-        key.author_id = session.user.id;
+        key.author_id = user.id;
     });
     
     const { data: keysInsert, error: keysInsertError } = await supabase.from('keys')
