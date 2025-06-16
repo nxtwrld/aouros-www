@@ -51,32 +51,189 @@
     let texts: string[] = [];
     let audioState: AudioState = $state(AudioState.ready);
 
+    // Real-time session management
+    let sessionId: string | null = $state(null);
+    let useRealtime: boolean = $state(true); // Enable real-time by default
+    let realtimeTranscripts: any[] = $state([]);
 
     let analysis: any = $state({});
 
     let silenceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
     let speechChunks: Float32Array[] =$state([]);
 
-
     let hasResults = $derived(view !== Views.start);
-
 
     let newSpeech: boolean = $state(false);
 
+    // Initialize real-time session
+    async function initializeSession() {
+        console.log('🚀 Initializing real-time session...', { 
+            useRealtime, 
+            sessionId, 
+            currentSessionId: sessionId,
+            willInitialize: useRealtime && !sessionId 
+        });
+        
+        if (useRealtime && !sessionId) {
+            try {
+                console.log('📡 Making request to /v1/session/start...');
+                const requestBody = {
+                    language: 'cs',
+                    models: models.filter(m => m.active).map(m => m.name)
+                };
+                console.log('📡 Request body:', requestBody);
+                
+                const response = await fetch('/v1/session/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                console.log('📡 Session start response status:', response.status);
+                
+                if (!response.ok) {
+                    console.error('❌ Session start failed with status:', response.status);
+                    const errorText = await response.text();
+                    console.error('❌ Error response:', errorText);
+                    throw new Error(`Session start failed: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('📡 Session start response data:', result);
+                
+                if (result.sessionId) {
+                    sessionId = result.sessionId;
+                    console.log('✅ Real-time session initialized successfully:', sessionId);
+                    console.log('✅ Session features:', result.features);
+                    console.log('✅ SSE URL:', result.sseUrl);
+                    console.log('✅ Audio URL:', result.audioUrl);
+                    
+                    // Verify sessionId is actually set
+                    console.log('🔍 Verification - sessionId after assignment:', sessionId);
+                    
+                    return true;
+                } else {
+                    console.error('❌ Failed to initialize session - no sessionId in response:', result);
+                    useRealtime = false; // Fall back to traditional processing
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Session initialization error:', error);
+                useRealtime = false; // Fall back to traditional processing
+                return false;
+            }
+        } else {
+            console.log('⏭️ Skipping session initialization:', { 
+                useRealtime, 
+                hasSessionId: !!sessionId,
+                reason: !useRealtime ? 'realtime disabled' : 'session already exists'
+            });
+            return !!sessionId;
+        }
+    }
+
+    // Handle real-time transcripts
+    function handleRealtimeTranscript(transcript: any) {
+        console.log('📝 Real-time transcript received in session page:', transcript);
+        realtimeTranscripts = [...realtimeTranscripts, transcript];
+        
+        // Update texts array for display
+        if (transcript.is_final) {
+            console.log('✅ Final transcript, adding to texts:', transcript.text);
+            texts = [...texts, transcript.text];
+            
+            // Switch to analysis view as soon as we have meaningful content
+            const totalTextLength = texts.join(' ').length;
+            const shouldSwitchToAnalysis = totalTextLength > 20 && view === Views.start;
+            
+            console.log('📊 Transcript view switch decision:', {
+                totalTextLength,
+                currentView: view,
+                shouldSwitch: shouldSwitchToAnalysis,
+                transcriptText: transcript.text
+            });
+            
+            if (shouldSwitchToAnalysis) {
+                console.log('🔄 Switching to analysis view based on transcript content');
+                view = Views.analysis;
+            }
+        }
+    }
+
+    // Handle real-time analysis updates
+    function handleRealtimeAnalysis(analysisUpdate: any) {
+        console.log('🔬 Real-time analysis received in session page:', analysisUpdate);
+        console.log('🔬 Analysis update structure:', {
+            hasDiagnosis: !!analysisUpdate.diagnosis,
+            diagnosisLength: analysisUpdate.diagnosis?.length || 0,
+            diagnosisType: typeof analysisUpdate.diagnosis,
+            hasTreatment: !!analysisUpdate.treatment,
+            treatmentLength: analysisUpdate.treatment?.length || 0,
+            treatmentType: typeof analysisUpdate.treatment,
+            hasIncremental: !!analysisUpdate.incremental,
+            fullKeys: Object.keys(analysisUpdate)
+        });
+        
+        // Merge with existing analysis
+        const oldAnalysis = { ...analysis };
+        analysis = { ...analysis, ...analysisUpdate };
+        
+        console.log('🔬 Analysis state after merge:', {
+            oldDiagnosisLength: oldAnalysis.diagnosis?.length || 0,
+            newDiagnosisLength: analysis.diagnosis?.length || 0,
+            oldTreatmentLength: oldAnalysis.treatment?.length || 0,
+            newTreatmentLength: analysis.treatment?.length || 0,
+            currentView: view,
+            Views: Views
+        });
+        
+        // Switch to analysis view if we have meaningful results
+        const shouldSwitchView = (analysisUpdate.diagnosis?.length > 0 || 
+                                 analysisUpdate.treatment?.length > 0 ||
+                                 analysis.diagnosis?.length > 0 ||
+                                 analysis.treatment?.length > 0);
+        
+        console.log('🔬 View switch decision:', {
+            shouldSwitchView,
+            currentView: view,
+            targetView: Views.analysis,
+            conditions: {
+                updateHasDiagnosis: analysisUpdate.diagnosis?.length > 0,
+                updateHasTreatment: analysisUpdate.treatment?.length > 0,
+                analysisHasDiagnosis: analysis.diagnosis?.length > 0,
+                analysisHasTreatment: analysis.treatment?.length > 0
+            }
+        });
+        
+        if (shouldSwitchView) {
+            console.log('🔄 Switching to analysis view due to real-time results');
+            view = Views.analysis;
+        } else {
+            console.log('⏸️ Not switching view - no meaningful analysis results yet');
+        }
+    }
+
     function speechStart() {
         newSpeech = true;
-        console.log('Speech started');
+        console.log('🗣️ Speech started in session page');
+        
         if (silenceTimer) {
-            // cancel waiting for silence
             clearTimeout(silenceTimer);
         }
         if (analysisTimer) {
-            // cancel waiting for silence
             clearTimeout(analysisTimer);
         }
     }
 
-
+    // Initialize session on page load instead of waiting for speech
+    async function ensureSessionReady() {
+        if (useRealtime && !sessionId) {
+            console.log('🚀 Ensuring session is ready...');
+            await initializeSession();
+        }
+    }
 
     let processingStatus = 'idle';
     let waitingRequest: boolean = false;
@@ -347,8 +504,48 @@
     }
 
     onMount(() => {
-        //socket.emit('eventFromClient', 'Hello from client')
-        //testAnalyze();
+        console.log('🏁 Session page mounted', { useRealtime, sessionId });
+        
+        // Initialize session immediately if real-time is enabled
+        if (useRealtime) {
+            console.log('🚀 Auto-initializing session on mount...');
+            ensureSessionReady();
+        }
+        
+        // Add test function to verify backend is working
+        window.testSessionAPI = async () => {
+            console.log('🧪 Testing session API...');
+            try {
+                const response = await fetch('/v1/session/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        language: 'cs',
+                        models: ['GP']
+                    })
+                });
+                console.log('🧪 Test response status:', response.status);
+                const result = await response.json();
+                console.log('🧪 Test response data:', result);
+                return result;
+            } catch (error) {
+                console.error('🧪 Test failed:', error);
+                return error;
+            }
+        };
+        
+        console.log('🧪 Added window.testSessionAPI() - call this in console to test backend');
+        
+        // Log initial state
+        console.log('📊 Initial session state:', {
+            view,
+            useRealtime,
+            sessionId,
+            models: models.filter(m => m.active).map(m => m.name),
+            audioState
+        });
     })
 
 
@@ -357,7 +554,17 @@
 
 {#if view !== Views.report}
     <div class="audio-recorder" class:-running={view != Views.start} class:-active={audioState === AudioState.listening || audioState === AudioState.speaking}>
-        <AudioButton bind:state={audioState} {hasResults} bind:speechChunks={speechChunks} on:speech-end={() => processData()} on:speech-start={speechStart} />
+        <AudioButton 
+            bind:state={audioState} 
+            {hasResults} 
+            bind:speechChunks={speechChunks} 
+            sessionId={sessionId || undefined}
+            {useRealtime}
+            on:speech-end={() => processData()} 
+            on:speech-start={speechStart}
+            ontranscript={handleRealtimeTranscript}
+            onanalysis={handleRealtimeAnalysis}
+        />
     </div>
 {/if}
 <div class="models">
