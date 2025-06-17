@@ -4,7 +4,7 @@ import { transcribeAudioChunk } from '$lib/session/realtime-transcription';
 import type { PartialTranscript } from '$lib/session/manager';
 import OpenAI from 'openai';
 import { env } from '$env/dynamic/private';
-import { getFeedbackForAI } from '../../feedback/+server';
+import { getFeedbackForAI } from '$lib/ai/feedback.js';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
