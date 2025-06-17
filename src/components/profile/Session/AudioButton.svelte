@@ -1,32 +1,65 @@
 <script lang="ts">
     import { AudioState, getAudio, getAudioVAD, convertBlobToMp3, convertFloat32ToMp3, type AudioControlsVad} from '$lib/audio/microphone';
+    // @ts-ignore - throttle-debounce has type issues but works fine
     import { throttle } from 'throttle-debounce';
     import { onDestroy, onMount } from 'svelte';
     import shortcuts from '$lib/shortcuts';
+    import { SessionWebSocketClient } from '$lib/session/websocket-client';
+    import { HttpSessionClient } from '$lib/session/http-client';
+    import { SSEClient } from '$lib/session/sse-client';
+    import type { PartialTranscript } from '$lib/session/manager';
 
     interface Props {
         hasResults?: boolean;
         speechChunks?: Float32Array[];
         state?: AudioState;
+        sessionId?: string;
+        useRealtime?: boolean;
+        language?: string;
+        models?: string[];
         onspeechstart?: () => void;
         onspeechend?: (event: { speechChunks: Float32Array[] }) => void;
         onfeatures?: (features: any) => void;
+        ontranscript?: (transcript: PartialTranscript) => void;
+        onanalysis?: (analysis: any) => void;
+        onsessioncreated?: (sessionId: string) => void;
     }
 
     let { 
         hasResults = false,
         speechChunks = $bindable([]),
         state = $bindable(AudioState.ready),
+        sessionId = $bindable(),
+        useRealtime = false,
+        language = 'en',
+        models = ['GP'],
         onspeechstart,
         onspeechend,
-        onfeatures
+        onfeatures,
+        ontranscript,
+        onanalysis,
+        onsessioncreated
     }: Props = $props();
 
     let audio: AudioControlsVad | Error;
+    let sseClient: SSEClient | null = null;
 
     let micAnimationContainer: HTMLDivElement;
 
     let isRunning = $derived(state === AudioState.listening || state === AudioState.speaking);
+    let isRealtimeReady = $derived(useRealtime && sessionId && sseClient && (sseClient as SSEClient).isConnected);
+
+    // Add comprehensive logging
+    $effect(() => {
+        console.log('🎯 AudioButton State Update:', {
+            state,
+            useRealtime,
+            sessionId,
+            hasSSEClient: sseClient !== null,
+            sseConnected: sseClient ? sseClient.isConnected : false,
+            isRealtimeReady
+        });
+    });
 
     const micTick = throttle(200, (energy: number) => {
         const tickElement = document.createElement('div');
@@ -40,76 +73,230 @@
         
     });
 
+    async function createSession(): Promise<string | null> {
+        console.log('🚀 Creating new session...', { language, models });
+        
+        try {
+            const response = await fetch('/v1/session/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    language,
+                    models: models.filter(model => model && model.trim())
+                })
+            });
+            
+            console.log('📡 Session creation response status:', response.status);
+            
+            if (!response.ok) {
+                console.error('❌ Session creation failed with status:', response.status);
+                const errorText = await response.text();
+                console.error('❌ Error response:', errorText);
+                throw new Error(`Session creation failed: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('📡 Session creation response data:', result);
+            
+            if (result.sessionId) {
+                console.log('✅ Session created successfully:', result.sessionId);
+                return result.sessionId;
+            } else {
+                console.error('❌ No sessionId in response:', result);
+                return null;
+            }
+        } catch (error) {
+            console.error('❌ Session creation error:', error);
+            return null;
+        }
+    }
+
+    async function initializeSSEClient(): Promise<boolean> {
+        console.log('📡 Initializing SSE client...', { useRealtime, sessionId, sseClient });
+        
+        if (useRealtime && sessionId && !sseClient) {
+            console.log('📡 Creating new SSEClient...');
+            sseClient = new SSEClient({
+                sessionId,
+                onTranscript: (transcript) => {
+                    console.log('📝 SSE transcript received:', transcript);
+                    ontranscript?.(transcript);
+                },
+                onAnalysis: (analysis) => {
+                    console.log('🔬 SSE analysis received:', analysis);
+                    onanalysis?.(analysis);
+                },
+                onError: (error) => {
+                    console.error('❌ SSE client error:', error);
+                },
+                onStatus: (status) => {
+                    console.log('📊 SSE session status:', status);
+                }
+            });
+
+            try {
+                console.log('📡 Starting SSE connection...');
+                const connected = await sseClient.connect();
+                console.log('📡 SSE connection result:', connected);
+                if (connected) {
+                    console.log('✅ SSE connected successfully');
+                    return true;
+                } else {
+                    console.error('❌ Failed to connect SSE');
+                    sseClient = null;
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ SSE connection failed:', error);
+                sseClient = null;
+                return false;
+            }
+        } else {
+            console.log('⏭️ Skipping SSE initialization:', {
+                useRealtime,
+                sessionId,
+                alreadyHasClient: sseClient !== null
+            });
+            return false;
+        }
+    }
 
     async function startSession() {
+        console.log('🎙️ Starting audio session...', { useRealtime, sessionId });
+        
+        // Create session if we don't have one and real-time is enabled
+        if (useRealtime && !sessionId) {
+            console.log('🆕 Creating session before starting recording...');
+            const newSessionId = await createSession();
+            if (newSessionId) {
+                sessionId = newSessionId;
+                onsessioncreated?.(sessionId);
+                console.log('✅ Session created and stored:', sessionId);
+            } else {
+                console.error('❌ Failed to create session, falling back to traditional processing');
+                useRealtime = false;
+            }
+        }
+        
+        // Initialize SSE client for real-time processing if enabled
+        if (useRealtime && sessionId) {
+            const sseInitialized = await initializeSSEClient();
+            if (!sseInitialized) {
+                console.error('❌ Failed to initialize SSE client, falling back to traditional processing');
+                useRealtime = false;
+            }
+        }
+
         audio = await getAudioVAD({
             analyzer: true
         });
         state = AudioState.listening;
-        //return;
 
         if (audio instanceof Error) {
-            console.error(audio);
+            console.error('❌ Audio initialization failed:', audio);
             return;
         }
+
+        console.log('✅ Audio initialized successfully');
+
         audio.onFeatures = (d) => {
-            //console.log(d.energy)
             if (d.energy > 0.001) micTick(d.energy);
             onfeatures?.(d);
         }
+
         audio.onSpeechStart = () => {
+            console.log('🗣️ Speech started');
             if (!(audio instanceof Error)) {
                 state = audio.state;
             }
             onspeechstart?.();
         }   
+
         audio.onSpeechEnd = (data: Float32Array) => {
-           // console.log(data);
+            console.log('🔇 Speech ended, processing audio chunk...', {
+                chunkSize: data.length,
+                useRealtime,
+                sseConnected: sseClient ? sseClient.isConnected : false
+            });
+
            if (!(audio instanceof Error)) {
                 state = audio.state;
            }
-            speechChunks.push(data);
-         //   console.log(convertFloat32ToMp3(data));
-            onspeechend?.({
-                speechChunks
-            });
-            
+
+           // Handle real-time processing vs traditional batch
+           if (useRealtime && sseClient && sseClient.isConnected) {
+               console.log('📡 Sending audio chunk to SSE client...', data.length);
+               sseClient.sendAudioChunk(data);
+           } else {
+               console.log('📦 Using traditional batch processing...', {
+                   useRealtime,
+                   hasSSEClient: sseClient !== null,
+                   sseConnected: sseClient ? sseClient.isConnected : false
+               });
+               // Use traditional batch processing
+               speechChunks.push(data);
+               onspeechend?.({
+                   speechChunks
+               });
+           }
         }
+
         audio.start();
-        //transcript.on('data', console.log);
         state = audio.state;
+        console.log('🎙️ Audio recording started');
     }
 
     async function stopSession() {
+        console.log('🛑 Stopping audio session...');
+        
         if (audio && !(audio instanceof Error)) {
             audio.stop();
             state = audio.state;
         }
 
-        onspeechend?.({
-            speechChunks
-        });
+        // Clean up SSE client
+        if (sseClient) {
+            console.log('📡 Disconnecting SSE client...');
+            sseClient.disconnect();
+            sseClient = null;
+        }
+
+        // Send final speech chunks for traditional processing
+        if (!useRealtime) {
+            onspeechend?.({
+                speechChunks
+            });
+        }
+        
+        console.log('✅ Audio session stopped');
     }
 
     function toggleSession() {
+        console.log('🔄 Toggling session...', { currentState: state });
+        
         if (state === AudioState.stopping) {
+            console.log('⏳ Session is stopping, ignoring toggle');
             return;
         } else if (state === AudioState.listening || state === AudioState.speaking) {  
-            console.log('stopping audio session');
+            console.log('🛑 Stopping audio session');
             stopSession();
         } else {
-            console.log('starting audio session');
+            console.log('▶️ Starting audio session');
             startSession();            
         }
     }
 
     onMount(() => {
+        console.log('🏁 AudioButton mounted');
         return shortcuts.listen('Space', () => {
             toggleSession();
         });
     });
 
     onDestroy(() => {
+        console.log('💀 AudioButton destroying...');
         stopSession();
     })
 
@@ -118,7 +305,7 @@
 
 
 <div class="record-audio {state}" class:-has-results={hasResults} bind:this={micAnimationContainer}>
-    <button class="control {state}" class:-running={isRunning} onclick={(e) => { e.stopPropagation(); toggleSession(); }}>
+    <button class="control {state}" class:-running={isRunning} onclick={(e: Event) => { e.stopPropagation(); toggleSession(); }}>
         {#if state == AudioState.stopping}
         ....
         {:else if state === AudioState.listening ||  state === AudioState.speaking}
