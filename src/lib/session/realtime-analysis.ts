@@ -1,5 +1,6 @@
 import { analyze } from '$lib/session/analyzeConversation';
 import { ANALYZE_STEPS } from '$lib/types.d';
+import { logger } from '$lib/logging/logger';
 
 export interface RealtimeAnalysisResult {
     diagnosis?: any[];
@@ -42,7 +43,7 @@ export async function analyzeTranscriptionRealtime(
         const hasEnoughContent = newContentLength >= minMeaningfulContent;
         const hasWaitedLongEnough = timeSinceLastAnalysis > maxWaitTime;
 
-        console.log('🔍 Content batching analysis check:', {
+        logger.analysis.debug('Content batching analysis check:', {
             sessionKey,
             newContentLength,
             timeSinceLastAnalysis: Math.round(timeSinceLastAnalysis / 1000) + 's',
@@ -62,17 +63,17 @@ export async function analyzeTranscriptionRealtime(
 
         // Skip if not enough content AND not enough time has passed
         if (!hasEnoughContent && !hasWaitedLongEnough) {
-            console.log('⏸️ Batching content - waiting for more meaningful chunk');
+            logger.analysis.debug('Batching content - waiting for more meaningful chunk');
             return null;
         }
 
         // Prevent concurrent analysis
         if (buffer.pendingAnalysis) {
-            console.log('⏸️ Analysis already in progress - batching will continue');
+            logger.analysis.debug('Analysis already in progress - batching will continue');
             return null;
         }
 
-        console.log('✅ Processing accumulated content batch:', {
+        logger.analysis.info('Processing accumulated content batch:', {
             reason: hasEnoughContent ? 'meaningful_content' : 'max_wait_reached',
             contentChunk: fullText.substring(buffer.lastAnalyzedLength, buffer.lastAnalyzedLength + 150) + '...',
             feedbackContext: feedbackContext ? 'included' : 'none'
@@ -91,7 +92,7 @@ export async function analyzeTranscriptionRealtime(
             feedbackContext: feedbackContext // Add feedback context to the request
         };
 
-        console.log('🔍 Analysis request for batched content:', {
+        logger.analysis.debug('Analysis request for batched content:', {
             textLength: analysisRequest.text.length,
             language: analysisRequest.language,
             inputLanguage: language,
@@ -102,7 +103,7 @@ export async function analyzeTranscriptionRealtime(
         // Use existing analyze function
         const result = await analyze(analysisRequest);
 
-        console.log('🔍 Raw analysis result:', result);
+        logger.analysis.debug('Raw analysis result:', result);
 
         // Update buffer
         buffer.lastAnalyzedLength = fullText.length;
@@ -115,7 +116,7 @@ export async function analyzeTranscriptionRealtime(
                                  result.treatment?.length > 0 || 
                                  result.medication?.length > 0;
 
-        console.log('🔍 Medical content analysis:', {
+        logger.analysis.debug('Medical content analysis:', {
             hasDiagnosis: !!result.diagnosis,
             diagnosisLength: result.diagnosis?.length || 0,
             hasTreatment: !!result.treatment,
@@ -126,7 +127,7 @@ export async function analyzeTranscriptionRealtime(
         });
 
         if (!hasMedicalContent) {
-            console.log('⚠️ No medical content detected in batched analysis');
+            logger.analysis.warn('No medical content detected in batched analysis');
             return {
                 diagnosis: result.diagnosis || [],
                 treatment: result.treatment || [],
@@ -148,7 +149,7 @@ export async function analyzeTranscriptionRealtime(
         };
 
     } catch (error) {
-        console.error('❌ Batched analysis error:', error);
+        logger.analysis.error('Batched analysis error:', error);
         
         // Reset pending flag on error
         const sessionKey = `${language}_${models.join('_')}`;
@@ -177,7 +178,7 @@ export async function analyzeProgressively(
             text: fullText
         };
 
-        console.log('🔍 Progressive analysis request:', {
+        logger.analysis.debug('Progressive analysis request:', {
             step: step,
             textLength: analysisRequest.text.length,
             language: analysisRequest.language,
@@ -202,7 +203,7 @@ export async function analyzeProgressively(
         };
 
     } catch (error) {
-        console.error('Progressive analysis error:', error);
+        logger.analysis.error('Progressive analysis error:', error);
         return null;
     }
 }

@@ -3,6 +3,7 @@
     import { profile } from '$lib/profiles';
     import Documents from '$components/documents/Index.svelte';
     import { t } from '$lib/i18n';
+    import { log } from '$lib/logging/logger';
     
 
     interface Props {
@@ -15,7 +16,7 @@
     }
 
     let { data }: Props = $props();
-    console.log('data', data);
+    log.ui.debug('data', data);
 </script>
 
 <div class="page -empty">

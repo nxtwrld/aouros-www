@@ -7,6 +7,7 @@ import Errors from '$lib/Errors';
 import type { Profile } from "$lib/types.d";
 import { DocumentType, type DocumentPreload, type DocumentEncrypted, type Document, type DocumentNew, type Attachment } from '$lib/documents/types.d';
 import { base64ToArrayBuffer } from '$lib/arrays';
+import { logger } from '$lib/logging/logger';
 
 
 const documents: Writable<(DocumentPreload | Document)[]> = writable([])
@@ -41,20 +42,17 @@ function updateIndex() {
         const user_id = doc.user_id;
         if (!profileStores[user_id]) {
             (() => {
-
                 profileStores[user_id] = derived(documents, ($documents, set) => {
                     const userDocuments = $documents.filter(doc => 
                         doc.user_id === user_id
                         && doc.type === 'document'
                     );
-                    console.log('Update profile store', user_id, userDocuments);
+                    logger.documents.debug('Update profile store', { user_id, userDocuments });
                     set(userDocuments);
                 });
             })();
         }
-
-    })
- //   console.log('Updated index', Object.entries(byID).map(([k, v]) => console.log(k, get(v))));
+    });
 }
 
 export async function getDocument(id: string): Promise<Document | undefined> {
@@ -146,7 +144,7 @@ export async function loadDocument(id: string, profile_id: string | null = null)
 
     const documentEncrypted = await fetch('/v1/med/profiles/' + (profile_id) + '/documents/' + id)
         .then(r => r.json()).catch(e => {
-            console.error(e);
+            logger.documents.error('Failed to fetch document', { error: e });
             throw new Error(Errors.NetworkError);
         });
     // decrypt content data
@@ -166,18 +164,16 @@ export async function loadDocument(id: string, profile_id: string | null = null)
                 author_id: documentEncrypted.author_id,
                 attachments: documentEncrypted.attachments || []
             });
-
         }
         if (index >= 0) {
             docs[index].content = JSON.parse(documentDecrypted[1]);
             document = docs[index] as Document;
             byID[id] = document;
-            console.log('Document loaded', docs[index]);
+            logger.documents.info('Document loaded', { document: docs[index] });
         }
         return docs;
     })
     updateIndex();
-
 
     return byID[id] as Document;
 }
@@ -190,7 +186,6 @@ export async function updateDocument(documentData: Document) {
         throw new Error(Errors.DocumentNotFound);
     }
     const user_id = user.getId();
-    //const key = document.key;
     const key = await user.keyPair.decrypt(document.key); 
 
     // prepare new metadata
@@ -205,12 +200,12 @@ export async function updateDocument(documentData: Document) {
     });
     const {data: attachmentsEncrypted} = await encrypt(attachmentsToEncrypt, key);
 
-    console.log('Update attachments', attachmentsEncrypted);
+    logger.documents.debug('Update attachments', { attachmentsEncrypted });
     const attachmentsUrls = await saveAttachements(attachmentsEncrypted, document.user_id);
 
     // remap attachments to 
     let i = 0;
-    console.log('Update attachments', document);
+    logger.documents.debug('Update attachments', { document });
     document.content.attachments = (document.attachments || []).map((a) => {
         const url = a.url || attachmentsUrls[i];
         const path = a.path || attachmentsUrls[i].path;
@@ -236,12 +231,10 @@ export async function updateDocument(documentData: Document) {
             attachments: document.content.attachments.map(a => a.url)
         })
     }).then(r => r.json()).catch(async (e) => {
-        console.error(e);
+        logger.documents.error('Failed to update document', { error: e });
         await removeAttachments(attachmentsUrls);
         throw new Error(Errors.NetworkError);
     });
-
-
 }
 
 
@@ -284,7 +277,7 @@ export async function addDocument(document: DocumentNew): Promise<Document> {
             thumbnail: a.thumbnail
         }
     });
-    console.log('Add document', document);
+    logger.documents.info('Add document', { document });
     // encrypt document, metadata using the same key as attachments
     const { data: enc } = await encrypt([JSON.stringify(document.content), JSON.stringify(metadata)], key);
     const keys = [{
@@ -324,7 +317,7 @@ export async function addDocument(document: DocumentNew): Promise<Document> {
         })
         .then(r => r.json())
         .catch(async (e) => {
-            console.error(e);
+            logger.documents.error('Failed to add document', { error: e });
 
             await removeAttachments(attachmentsUrls);
 
@@ -345,7 +338,7 @@ export async function removeDocument(id: string): Promise<void> {
     }
     const user_id = user.getId();
     const key = await user.keyPair.decrypt(document.key); 
-    console.log(document);
+    logger.documents.info('Remove document', { document });
     // remove attachments
     if (document?.content?.attachments) await removeAttachments(document?.content?.attachments);
     // remove document
@@ -355,7 +348,7 @@ export async function removeDocument(id: string): Promise<void> {
             'Content-Type': 'application/json',
         }
     }).then(r => r.json()).catch(e => {
-        console.error(e);
+        logger.documents.error('Failed to remove document', { error: e });
         throw new Error(Errors.NetworkError);
     });
 
@@ -375,7 +368,7 @@ export async function removeDocument(id: string): Promise<void> {
 
 async function saveAttachements(attachments: string[], profile_id: string): Promise<Attachment[]> {
     
-    console.log('Save attachments to storage', attachments);
+    logger.documents.debug('Save attachments to storage', { attachments });
     const user_id = profile_id || user.getId();
     // store attachments
     const urls = await Promise.all(attachments.map(async (attachment, i) => {
@@ -397,7 +390,7 @@ async function saveAttachements(attachments: string[], profile_id: string): Prom
 
 async function removeAttachments(attachments: Attachment[]): Promise<void> {
     
-    console.log('Delete attachments from storage', attachments);
+    logger.documents.debug('Delete attachments from storage', { attachments });
     await Promise.all(attachments.map(async (attachment) => {
         const response = await fetch('/v1/med/profiles/' + user.getId() + '/attachments?path=' + attachment.path, {
             method: 'DELETE',

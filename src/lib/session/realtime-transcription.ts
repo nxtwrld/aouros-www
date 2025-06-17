@@ -1,5 +1,6 @@
 import { transcribeAudio as whisperTranscribe } from '$lib/audio/whisper';
 import { transcribeAudio as assemblyTranscribe } from '$lib/audio/assemblyai';
+import { logger } from '$lib/logging/logger';
 
 export interface TranscriptionResult {
     text: string;
@@ -30,7 +31,7 @@ export async function transcribeAudioChunk(
         
         return null;
     } catch (error) {
-        console.error('Real-time transcription error:', error);
+        logger.transcript.error('Real-time transcription error:', error);
         return null;
     }
 }
@@ -55,7 +56,7 @@ export async function transcribeAudioChunkAssembly(
         
         return null;
     } catch (error) {
-        console.error('AssemblyAI real-time transcription error:', error);
+        logger.transcript.error('AssemblyAI real-time transcription error:', error);
         return null;
     }
 }

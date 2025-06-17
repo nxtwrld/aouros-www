@@ -1,4 +1,5 @@
 import type { LayoutServerLoad } from './$types'
+import { log } from '$lib/logging/logger'
 
 export const load: LayoutServerLoad = async ({ locals: { safeGetSession }, cookies, url }) => {
   try {
@@ -11,7 +12,7 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession }, cooki
       cookies: allCookies,
     }
   } catch (error) {
-    console.error(`[LAYOUT ERROR] ❌ Layout server load failed for ${url.pathname}:`, error)
+    log.api.error(`[LAYOUT ERROR] Layout server load failed for ${url.pathname}:`, error)
     throw error
   }
 }

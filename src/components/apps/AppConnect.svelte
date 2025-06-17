@@ -7,6 +7,7 @@
     import AppGet from './AppGet.svelte';
     //import type { Link } from "$lib/common.types.d";
     import './style.css';
+    import { logger } from '$lib/logging/logger';
 
     interface Props {
         type?: AppConnectionTypeEnum;
@@ -30,7 +31,7 @@
     let items: any[] = cleanItems(shared);
 
     if (shared) {
-        console.log('Shared', shared);
+        logger.api.debug('Shared items', shared);
         /*
         getAllLinkedItems(shared).then((itemsShared: any[]) => {
             items = itemsShared.map(item => {

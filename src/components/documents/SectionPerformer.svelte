@@ -1,13 +1,14 @@
 <script lang="ts">
     import ProfileImage from "$components/profile/ProfileImage.svelte";
     import { t } from "$lib/i18n";
+    import { logger } from '$lib/logging/logger';
 
     interface Props {
         data: any;
     }
 
     let { data }: Props = $props();
-    console.log('Performer', data)
+    logger.api.debug('Performer data:', data)
 </script>
 
 {#if data}

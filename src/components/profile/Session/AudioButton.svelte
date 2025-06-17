@@ -4,10 +4,9 @@
     import { throttle } from 'throttle-debounce';
     import { onDestroy, onMount } from 'svelte';
     import shortcuts from '$lib/shortcuts';
-    import { SessionWebSocketClient } from '$lib/session/websocket-client';
-    import { HttpSessionClient } from '$lib/session/http-client';
     import { SSEClient } from '$lib/session/sse-client';
     import type { PartialTranscript } from '$lib/session/manager';
+    import { log } from '$lib/logging/logger';
 
     interface Props {
         hasResults?: boolean;
@@ -51,7 +50,7 @@
 
     // Add comprehensive logging
     $effect(() => {
-        console.log('🎯 AudioButton State Update:', {
+        log.audio.debug('AudioButton State Update:', {
             state,
             useRealtime,
             sessionId,
@@ -74,7 +73,7 @@
     });
 
     async function createSession(): Promise<string | null> {
-        console.log('🚀 Creating new session...', { language, models });
+        log.session.info('Creating new session...', { language, models });
         
         try {
             const response = await fetch('/v1/session/start', {
@@ -88,73 +87,73 @@
                 })
             });
             
-            console.log('📡 Session creation response status:', response.status);
+            log.session.debug('Session creation response status:', response.status);
             
             if (!response.ok) {
-                console.error('❌ Session creation failed with status:', response.status);
+                log.session.error('Session creation failed with status:', response.status);
                 const errorText = await response.text();
-                console.error('❌ Error response:', errorText);
+                log.session.error('Error response:', errorText);
                 throw new Error(`Session creation failed: ${response.status}`);
             }
             
             const result = await response.json();
-            console.log('📡 Session creation response data:', result);
+            log.session.debug('Session creation response data:', result);
             
             if (result.sessionId) {
-                console.log('✅ Session created successfully:', result.sessionId);
+                log.session.info('Session created successfully:', result.sessionId);
                 return result.sessionId;
             } else {
-                console.error('❌ No sessionId in response:', result);
+                log.session.error('No sessionId in response:', result);
                 return null;
             }
         } catch (error) {
-            console.error('❌ Session creation error:', error);
+            log.session.error('Session creation error:', error);
             return null;
         }
     }
 
     async function initializeSSEClient(): Promise<boolean> {
-        console.log('📡 Initializing SSE client...', { useRealtime, sessionId, sseClient });
+        log.audio.debug('Initializing SSE client...', { useRealtime, sessionId, sseClient });
         
         if (useRealtime && sessionId && !sseClient) {
-            console.log('📡 Creating new SSEClient...');
+            log.audio.debug('Creating new SSEClient...');
             sseClient = new SSEClient({
                 sessionId,
                 onTranscript: (transcript) => {
-                    console.log('📝 SSE transcript received:', transcript);
+                    log.audio.info('SSE transcript received:', transcript);
                     ontranscript?.(transcript);
                 },
                 onAnalysis: (analysis) => {
-                    console.log('🔬 SSE analysis received:', analysis);
+                    log.audio.info('SSE analysis received:', analysis);
                     onanalysis?.(analysis);
                 },
                 onError: (error) => {
-                    console.error('❌ SSE client error:', error);
+                    log.audio.error('SSE client error:', error);
                 },
                 onStatus: (status) => {
-                    console.log('📊 SSE session status:', status);
+                    log.audio.debug('SSE session status:', status);
                 }
             });
 
             try {
-                console.log('📡 Starting SSE connection...');
+                log.audio.debug('Starting SSE connection...');
                 const connected = await sseClient.connect();
-                console.log('📡 SSE connection result:', connected);
+                log.audio.debug('SSE connection result:', connected);
                 if (connected) {
-                    console.log('✅ SSE connected successfully');
+                    log.audio.info('SSE connected successfully');
                     return true;
                 } else {
-                    console.error('❌ Failed to connect SSE');
+                    log.audio.error('Failed to connect SSE');
                     sseClient = null;
                     return false;
                 }
             } catch (error) {
-                console.error('❌ SSE connection failed:', error);
+                log.audio.error('SSE connection failed:', error);
                 sseClient = null;
                 return false;
             }
         } else {
-            console.log('⏭️ Skipping SSE initialization:', {
+            log.audio.debug('Skipping SSE initialization:', {
                 useRealtime,
                 sessionId,
                 alreadyHasClient: sseClient !== null
@@ -164,18 +163,18 @@
     }
 
     async function startSession() {
-        console.log('🎙️ Starting audio session...', { useRealtime, sessionId });
+        log.audio.info('Starting audio session...', { useRealtime, sessionId });
         
         // Create session if we don't have one and real-time is enabled
         if (useRealtime && !sessionId) {
-            console.log('🆕 Creating session before starting recording...');
+            log.audio.info('Creating session before starting recording...');
             const newSessionId = await createSession();
             if (newSessionId) {
                 sessionId = newSessionId;
                 onsessioncreated?.(sessionId);
-                console.log('✅ Session created and stored:', sessionId);
+                log.audio.info('Session created and stored:', sessionId);
             } else {
-                console.error('❌ Failed to create session, falling back to traditional processing');
+                log.audio.error('Failed to create session, falling back to traditional processing');
                 useRealtime = false;
             }
         }
@@ -184,7 +183,7 @@
         if (useRealtime && sessionId) {
             const sseInitialized = await initializeSSEClient();
             if (!sseInitialized) {
-                console.error('❌ Failed to initialize SSE client, falling back to traditional processing');
+                log.audio.error('Failed to initialize SSE client, falling back to traditional processing');
                 useRealtime = false;
             }
         }
@@ -195,11 +194,11 @@
         state = AudioState.listening;
 
         if (audio instanceof Error) {
-            console.error('❌ Audio initialization failed:', audio);
+            log.audio.error('Audio initialization failed:', audio);
             return;
         }
 
-        console.log('✅ Audio initialized successfully');
+        log.audio.info('Audio initialized successfully');
 
         audio.onFeatures = (d) => {
             if (d.energy > 0.001) micTick(d.energy);
@@ -207,7 +206,7 @@
         }
 
         audio.onSpeechStart = () => {
-            console.log('🗣️ Speech started');
+            log.audio.info('Speech started');
             if (!(audio instanceof Error)) {
                 state = audio.state;
             }
@@ -215,7 +214,7 @@
         }   
 
         audio.onSpeechEnd = (data: Float32Array) => {
-            console.log('🔇 Speech ended, processing audio chunk...', {
+            log.audio.info('Speech ended, processing audio chunk...', {
                 chunkSize: data.length,
                 useRealtime,
                 sseConnected: sseClient ? sseClient.isConnected : false
@@ -227,10 +226,10 @@
 
            // Handle real-time processing vs traditional batch
            if (useRealtime && sseClient && sseClient.isConnected) {
-               console.log('📡 Sending audio chunk to SSE client...', data.length);
+               log.audio.debug('Sending audio chunk to SSE client...', data.length);
                sseClient.sendAudioChunk(data);
            } else {
-               console.log('📦 Using traditional batch processing...', {
+               log.audio.debug('Using traditional batch processing...', {
                    useRealtime,
                    hasSSEClient: sseClient !== null,
                    sseConnected: sseClient ? sseClient.isConnected : false
@@ -245,11 +244,11 @@
 
         audio.start();
         state = audio.state;
-        console.log('🎙️ Audio recording started');
+        log.audio.info('Audio recording started');
     }
 
     async function stopSession() {
-        console.log('🛑 Stopping audio session...');
+        log.audio.info('Stopping audio session...');
         
         if (audio && !(audio instanceof Error)) {
             audio.stop();
@@ -258,7 +257,7 @@
 
         // Clean up SSE client
         if (sseClient) {
-            console.log('📡 Disconnecting SSE client...');
+            log.audio.debug('Disconnecting SSE client...');
             sseClient.disconnect();
             sseClient = null;
         }
@@ -270,33 +269,33 @@
             });
         }
         
-        console.log('✅ Audio session stopped');
+        log.audio.info('Audio session stopped');
     }
 
     function toggleSession() {
-        console.log('🔄 Toggling session...', { currentState: state });
+        log.audio.debug('Toggling session...', { currentState: state });
         
         if (state === AudioState.stopping) {
-            console.log('⏳ Session is stopping, ignoring toggle');
+            log.audio.debug('Session is stopping, ignoring toggle');
             return;
         } else if (state === AudioState.listening || state === AudioState.speaking) {  
-            console.log('🛑 Stopping audio session');
+            log.audio.info('Stopping audio session');
             stopSession();
         } else {
-            console.log('▶️ Starting audio session');
+            log.audio.info('Starting audio session');
             startSession();            
         }
     }
 
     onMount(() => {
-        console.log('🏁 AudioButton mounted');
+        log.audio.debug('AudioButton mounted');
         return shortcuts.listen('Space', () => {
             toggleSession();
         });
     });
 
     onDestroy(() => {
-        console.log('💀 AudioButton destroying...');
+        log.audio.debug('AudioButton destroying...');
         stopSession();
     })
 

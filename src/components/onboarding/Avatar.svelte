@@ -4,6 +4,7 @@
 
 	import { onMount, createEventDispatcher } from 'svelte';
 	import { t } from '$lib/i18n';
+	import { logger } from '$lib/logging/logger';
 
 	interface Props {
 		size?: number;
@@ -39,7 +40,7 @@
 				avatarUrl = base64data as string;
 			}
 		} catch (error) {
-			console.log('Error downloading image: ', error)
+			logger.api.error('Error downloading image: ', error)
 		}
 	}
 
@@ -63,7 +64,7 @@
 			})
 			.then((res) => res.json())
 			.catch((error) => {
-				console.log('error', error)
+				logger.api.error('Error uploading avatar:', error)
 			})
 
 			url = filename;

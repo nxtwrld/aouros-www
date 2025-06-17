@@ -13,6 +13,7 @@
     import shortcuts from '$lib/shortcuts';
     import Sounds from '$components/ui/Sounds.svelte';
     import Viewer from './Viewer.svelte';
+    import { logger } from '$lib/logging/logger';
 
     interface Props {
         children?: import('svelte').Snippet;
@@ -42,37 +43,34 @@
     }
 
     onMount(() => {
-        console.log('UI mounted');
+        logger.ui.info('UI mounted');
         const offs = [
             ui.listen('modal.healthProperty', (config: any) => {
-                console.log('modal.healthProperty event received with config:', config);
-                console.log('Setting dialogs.healthProperty to:', config === false ? false : (config || true));
+                logger.ui.debug('modal.healthProperty event received with config:', config);
+                logger.ui.debug('Setting dialogs.healthProperty to:', config === false ? false : (config || true));
                 dialogs.healthProperty = config === false ? false : (config || true);
             }),
             ui.listen('modal.healthForm', (config: any) => {
-                console.log('modal.healthForm event received with config:', config);
-                console.log('Setting dialogs.healthForm to:', config === false ? false : (config || true));
+                logger.ui.debug('modal.healthForm event received with config:', config);
+                logger.ui.debug('Setting dialogs.healthForm to:', config === false ? false : (config || true));
                 dialogs.healthForm = config === false ? false : (config || true);
             }),
             ui.listen('overlay.import', (state: boolean = true) => {
-                console.log('import');
+                logger.ui.debug('import');
                 if (state == true) location.hash = '#overlay-import';
                 else  {
                     if (location.hash.indexOf('#overlay-') == 0) {
                     history.back();
                 }
                 }
-                //$state.overlay = Overlay.import;
             }),
             ui.listen('viewer', (config: any) => {
                 $uiState.viewer = true;
-                //$uiState.overlay = Overlay.none;
             }),
             shortcuts.listen('Escape', () => {
                 if (location.hash.indexOf('#overlay-') == 0) {
                     history.back();
                 }
-                //$state.overlay = Overlay.none;
             })
         ]
 
@@ -104,22 +102,22 @@
 
     {#if dialogs.healthForm}
         <Modal on:close={() => {
-            console.log('Health form modal close event fired');
+            logger.ui.debug('Health form modal close event fired');
             dialogs.healthForm = false;
         }}>
             <HealthForm config={dialogs.healthForm}  on:abort={() => {
-                console.log('Health form abort event fired');
+                logger.ui.debug('Health form abort event fired');
                 dialogs.healthForm = false;
             }}/>
         </Modal>
     {/if}
     {#if dialogs.healthProperty}
         <Modal on:close={() => {
-            console.log('Health property modal close event fired');
+            logger.ui.debug('Health property modal close event fired');
             dialogs.healthProperty = false;
         }}>
             <HealthProperty property={dialogs.healthProperty}  on:abort={() => {
-                console.log('Health property abort event fired');
+                logger.ui.debug('Health property abort event fired');
                 dialogs.healthProperty = false;
             }}/>
         </Modal>

@@ -11,12 +11,13 @@ import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from '$lib/types.d';
 import { env } from '$env/dynamic/private';
+import { logger } from '$lib/logging/logger';
 
 // Select diagnosis configuration based on environment variable
 const PROMPT_CONFIG = 'enhanced'; // or 'fast' or 'enhanced'
 const diagnosis = DIAGNOSIS_CONFIGS[PROMPT_CONFIG as keyof typeof DIAGNOSIS_CONFIGS] || DIAGNOSIS_CONFIGS.enhanced;
 
-console.log(`🧠 Using ${PROMPT_CONFIG} prompt configuration`);
+logger.analysis.info(`Using ${PROMPT_CONFIG} prompt configuration`);
 
 const DEBUG = env.DEBUG_CONVERSATION  === 'true';
 /**
@@ -129,14 +130,13 @@ let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 (transcript.parameters.properties.symptoms.items.properties.bodyParts.items.enum as string[]) = [...tags];
 
 export async function analyze(input : Input): Promise<Analysis> {
-
     const tokenUsage : TokenUsage = {
       total: 0
     };
 
     const currentLanguage = input.language || 'English';
 
-    console.log('🌐 Analysis Language Settings:', {
+    logger.analysis.debug('Analysis Language Settings:', {
         inputLanguage: input.language,
         currentLanguage: currentLanguage,
         type: input.type,
@@ -148,7 +148,7 @@ export async function analyze(input : Input): Promise<Analysis> {
     if (input.previousAnalysis && input.type === Types.diagnosis) {
         const contextSummary = createPreviousContextSummary(input.previousAnalysis);
         analysisText = contextSummary + analysisText;
-        console.log('🔄 Added previous context to analysis:', contextSummary.substring(0, 200) + '...');
+        logger.analysis.debug('Added previous context to analysis:', contextSummary.substring(0, 200) + '...');
     }
 
     localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLanguage);
@@ -156,7 +156,7 @@ export async function analyze(input : Input): Promise<Analysis> {
     // Log the updated schema description to verify language replacement
     const schemaKey = input.type;
     if (localizedSchemas[schemaKey]) {
-        console.log('🔍 Schema language check:', {
+        logger.analysis.debug('Schema language check:', {
             schemaType: schemaKey,
             originalContains: schemas[schemaKey]?.description?.includes('[LANGUAGE]'),
             updatedDescription: localizedSchemas[schemaKey]?.description?.substring(0, 200) + '...',
@@ -164,25 +164,25 @@ export async function analyze(input : Input): Promise<Analysis> {
         });
     }
 
-    console.log('Schema updated...', input.type)
+    logger.analysis.debug('Schema updated...', input.type);
   
     if (DEBUG) {
         await sleep(1500);
         return Promise.resolve(TEST_DATA[input.type][Math.floor(Math.random() * TEST_DATA[input.type].length)] as Analysis);
     }
 
-    console.log('evaluating...')
+    logger.analysis.debug('Evaluating...');
     // get basic item info with enhanced context
     let data = await evaluate([{
         type: 'text',
         text: analysisText
     }] , input.type, tokenUsage, currentLanguage) as Analysis;
-    console.log('input assesed...');
+    logger.analysis.debug('Input assessed...');
 
     // Merge with previous analysis if available
     if (input.previousAnalysis && input.type === Types.diagnosis) {
         data = mergeAnalysis(data, input.previousAnalysis);
-        console.log('🔄 Merged with previous analysis');
+        logger.analysis.debug('Merged with previous analysis');
     }
 
 /*
@@ -193,8 +193,7 @@ export async function analyze(input : Input): Promise<Analysis> {
 */
     data.tokenUsage = tokenUsage;
 
-    console.log('All done...', data.tokenUsage.total)
-    // return item
+    logger.analysis.info('Analysis complete', { totalTokens: data.tokenUsage.total });
     return data;
 }
 
@@ -202,13 +201,12 @@ export async function analyze(input : Input): Promise<Analysis> {
 
 
 export async function evaluate(content: Content[], type: Types, tokenUsage: TokenUsage, language: string = 'English'): Promise<Analysis> {
+    const schema = localizedSchemas[type];
+    logger.analysis.debug('Schema', { type, language });
 
-  const schema = localizedSchemas[type];
-  console.log('Schema', type, 'Language:', language)
+    if (!schema) error(500, { message: 'Invalid type ' + type });
 
-  if (!schema) error(500, { message: 'Invalid type ' + type });
-
-  return await fetchGpt(content, schema, tokenUsage, language) as Analysis;
+    return await fetchGpt(content, schema, tokenUsage, language) as Analysis;
 }
 
 

@@ -2,6 +2,7 @@
     import { sharedItems } from '$lib/apps/store';
     import type { AppRecord } from '$lib/apps/types.d';
     import { onMount } from 'svelte';
+    import { logger } from '$lib/logging/logger';
 
     interface Props {
         data: any;
@@ -9,7 +10,7 @@
     }
 
     let { data, app = data.app }: Props = $props();
-    console.log('App record', data.app);
+    logger.api.debug('App record', data.app);
 
     function close() {
         sharedItems.set([]);
@@ -19,7 +20,7 @@
 
     onMount(()=> {
         const items = sharedItems.get();
-        console.log('Items to be stored....', items);
+        logger.api.debug('Items to be stored....', items);
         fetch(app.connect.uri + '/api/connect', {
             method: 'POST',
             headers: {
@@ -27,7 +28,7 @@
             },
             body: JSON.stringify({ items })
         }).then(res => res.json()).then(res => {
-            console.log('Connect response', res);
+            logger.api.debug('Connect response', res);
             id = res.id;
         });
     })

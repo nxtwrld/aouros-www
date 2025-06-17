@@ -14,6 +14,7 @@
     import { ANALYZE_STEPS } from '$lib/types.d';
     import { AnalysisMerger } from '$lib/session/analysis-merger';
     import { sessionStorage, loadSessionData, removeSessionData, hasStoredSessionData, type StoredSessionData } from '$lib/session/local-storage';
+    import { log } from '$lib/logging/logger';
   
     
     const MIN_AUDIO_SIZE: number = 10000 * 8;
@@ -165,12 +166,12 @@
 
     // Handle real-time transcripts
     function handleRealtimeTranscript(transcript: any) {
-        console.log('📝 Real-time transcript received in session page:', transcript);
+        log.session.debug('Real-time transcript received in session page:', transcript);
         realtimeTranscripts = [...realtimeTranscripts, transcript];
         
         // Update texts array for display
         if (transcript.is_final) {
-            console.log('✅ Final transcript, adding to texts:', transcript.text);
+            log.session.info('Final transcript, adding to texts:', transcript.text);
             texts = [...texts, transcript.text];
             
             // Update analysis.conversation for the Transcript component
@@ -186,7 +187,7 @@
                 urgency: 'medium' // Default urgency level
             }];
             
-            console.log('📝 Added to conversation:', {
+            log.session.debug('Added to conversation:', {
                 speaker: transcript.speaker,
                 text: transcript.text.substring(0, 50) + '...',
                 conversationLength: analysis.conversation.length
@@ -196,7 +197,7 @@
             const totalTextLength = texts.join(' ').length;
             const shouldSwitchToAnalysis = totalTextLength > 20 && view === Views.start;
             
-            console.log('📊 Transcript view switch decision:', {
+            log.session.debug('Transcript view switch decision:', {
                 totalTextLength,
                 currentView: view,
                 shouldSwitch: shouldSwitchToAnalysis,
@@ -205,14 +206,14 @@
             });
             
             if (shouldSwitchToAnalysis) {
-                console.log('🔄 Switching to analysis view based on transcript content');
+                log.session.info('Switching to analysis view based on transcript content');
                 view = Views.analysis;
             }
             
             // Trigger incremental analysis using hybrid approach for test transcripts
             const isTestTranscript = transcript.id?.startsWith('test_transcript_');
             if (isTestTranscript && shouldTriggerHybridAnalysis()) {
-                console.log('🔬 Triggering hybrid analysis based on conversation cadence');
+                log.session.info('Triggering hybrid analysis based on conversation cadence');
                 setTimeout(() => {
                     analyzeTranscription(ANALYZE_STEPS.transcript, true);
                 }, 1000); // Short delay to avoid overwhelming the system
@@ -222,8 +223,8 @@
 
     // Handle real-time analysis updates
     function handleRealtimeAnalysis(analysisUpdate: any) {
-        console.log('🔬 Real-time analysis received in session page:', analysisUpdate);
-        console.log('🔬 Analysis update structure:', {
+        log.session.info('Real-time analysis received in session page:', analysisUpdate);
+        log.session.debug('Analysis update structure:', {
             hasDiagnosis: !!analysisUpdate.diagnosis,
             diagnosisLength: analysisUpdate.diagnosis?.length || 0,
             diagnosisType: typeof analysisUpdate.diagnosis,
@@ -238,7 +239,7 @@
         const oldAnalysis = $state.snapshot(analysis);
         analysis = { ...analysis, ...analysisUpdate };
         
-        console.log('🔬 Analysis state after merge:', {
+        log.session.debug('Analysis state after merge:', {
             oldDiagnosisLength: oldAnalysis.diagnosis?.length || 0,
             newDiagnosisLength: $state.snapshot(analysis).diagnosis?.length || 0,
             oldTreatmentLength: oldAnalysis.treatment?.length || 0,
@@ -254,7 +255,7 @@
                                  analysisSnapshot.diagnosis?.length > 0 ||
                                  analysisSnapshot.treatment?.length > 0);
         
-        console.log('🔬 View switch decision:', {
+        log.session.debug('View switch decision:', {
             shouldSwitchView,
             currentView: view,
             targetView: Views.analysis,
@@ -267,10 +268,10 @@
         });
         
         if (shouldSwitchView) {
-            console.log('🔄 Switching to analysis view due to real-time results');
+            log.session.info('Switching to analysis view due to real-time results');
             view = Views.analysis;
         } else {
-            console.log('⏸️ Not switching view - no meaningful analysis results yet');
+            log.session.debug('Not switching view - no meaningful analysis results yet');
         }
     }
 
@@ -285,29 +286,29 @@
         // we are already processing a batch
         if (processingStatus === 'processing') {
             waitingRequest = true;
-            console.log('Already processing previous batch');
+            log.session.debug('Already processing previous batch');
             return;
         }
 
         // no data to process
         if (speechChunks.length === 0) {
-            console.log('No data to process');
+            log.session.debug('No data to process');
             return;
         }
 
         // we are not ready to transcribe - we want to wait for more data
         if (!shouldWeTranscript() && !forceTranscription) {
-            console.log('Not enough data to process');
+            log.session.debug('Not enough data to process');
             silenceTimer = setTimeout(() => {
                 // force the transcription after 10 seconds of silence
-                console.log('Forcing transcription');
+                log.session.debug('Forcing transcription');
                 processData(true);
             }, DEFAULT_WAIT_TIME);
             return;
         }
         waitingRequest = false;
         processingStatus = 'processing';
-        console.log('Processing audio data');
+        log.session.debug('Processing audio data');
 
         const chunk: Float32Array = float32Flatten(speechChunks);
         speechChunks = [];
@@ -331,14 +332,14 @@
                 body: formData
             });
             const transcript = await results.json();
-            console.log('Transcript result', transcript);
+            log.session.debug('Transcript result', transcript);
             
             texts = [...texts, transcript.text];
             processingStatus = 'idle';
             analyzeTranscription(ANALYZE_STEPS.transcript, forceTranscription);
 
         } catch (e) {
-            console.error(e);
+            log.session.error(e);
             processingStatus = 'idle';
         }
        
@@ -347,7 +348,7 @@
 
     function shouldWeTranscript(): boolean {
         const size = speechChunks.reduce((acc, chunk) => acc + chunk.length, 0);
-        console.log('Audio size: ', size, size > MIN_AUDIO_SIZE);
+        log.session.debug('Audio size: ', size, size > MIN_AUDIO_SIZE);
 
         if (size > MIN_AUDIO_SIZE) {
             return true;
@@ -366,7 +367,7 @@
         
 
         if (processingStatus === 'processing') {
-            console.log('Already processing next batch - wait for it to finish');
+            log.session.debug('Already processing next batch - wait for it to finish');
             return;
         }
 
@@ -377,20 +378,20 @@
         let text = texts.join('\r\n');
 
         if (type == ANALYZE_STEPS.transcript && text.length === lastAnalyzedTextLength) {
-            console.log('No new data to analyze');
+            log.session.debug('No new data to analyze');
             return;
         }
 
         if (type == ANALYZE_STEPS.transcript && text.length === lastAnalyzedTextLength + MIN_TEXT_LENGTH && !forceAnalysis) {
-            console.log('Not enough data to analyze');
+            log.session.debug('Not enough data to analyze');
             analysisTimer = setTimeout(() => {
-                console.log('Forcing analysis');
+                log.session.debug('Forcing analysis');
                 analyzeTranscription(type, true);
             }, DEFAULT_WAIT_TIME);
             return;
         }
 
-        console.log('Analyzing', type);
+        log.session.debug('Analyzing', type);
 
         // currently running models
         activeModels = models.filter(m => m.active).map(m => m.name);
@@ -419,7 +420,7 @@
 
         // check if the conversation is medical - if not, end the analysis
         if (result.hasOwnProperty('isMedicalConversation') && result.isMedicalConversation === false) {
-            console.log('Not a medical conversation. Ending analysis.');
+            log.session.info('Not a medical conversation. Ending analysis.');
             return;
         }
         
@@ -448,7 +449,7 @@
             // Update merge statistics for UI feedback
             mergeStats = analysisMerger.getStats();
             
-            console.log('🔄 Analysis merged with gradual refinement:', {
+            log.session.debug('Analysis merged with gradual refinement:', {
                 diagnosis: diagnosisResult.summary,
                 treatment: treatmentResult.summary,
                 medication: medicationResult.summary,
@@ -463,7 +464,7 @@
         
         view = Views.analysis;
 
-        console.log('Analysis complete', $state.snapshot(analysis));
+        log.session.debug('Analysis complete', $state.snapshot(analysis));
         
         // if the analysis is complete, start the next step, if we are not already processing a new batch, wait for it to finish
         if (type == ANALYZE_STEPS.transcript && processingStatus === 'idle' && !waitingRequest) {
@@ -474,7 +475,7 @@
     }
 
     function resetAnalysis() {
-        console.log('🔄 Resetting analysis state...');
+        log.session.debug('Resetting analysis state...');
         analysisMerger.clear();
         analysis = { conversation: [] };
         texts = [];
@@ -483,7 +484,7 @@
         view = Views.start;
         hasRestoredData = false;
         dataRestoredFromSessionId = null;
-        console.log('✅ Analysis state reset complete');
+        log.session.debug('Analysis state reset complete');
     }
 
     /**
@@ -492,21 +493,21 @@
     function tryRestoreSessionData(sessionIdToRestore?: string): boolean {
         // Only try to restore data if we're running in the browser
         if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-            console.log('⚠️ Not running in browser, skipping session data restoration');
+            log.session.warn('Not running in browser, skipping session data restoration');
             return false;
         }
 
-        console.log('🔍 Checking for stored session data...', { sessionIdToRestore, currentSessionId: sessionId });
+        log.session.debug('Checking for stored session data...', { sessionIdToRestore, currentSessionId: sessionId });
         
         let targetSessionId = sessionIdToRestore || sessionId;
         
         // If no specific session ID provided, try to find the most recent session
         if (!targetSessionId) {
             const storedSessions = sessionStorage.getStoredSessions();
-            console.log('📋 Available stored sessions:', storedSessions);
+            log.session.debug('Available stored sessions:', storedSessions);
             
             if (storedSessions.length === 0) {
-                console.log('📭 No stored sessions found');
+                log.session.info('No stored sessions found');
                 return false;
             }
             
@@ -524,11 +525,11 @@
             }
             
             if (!mostRecentSession) {
-                console.log('📭 No valid sessions found to restore');
+                log.session.info('No valid sessions found to restore');
                 return false;
             }
             
-            console.log('🎯 Found most recent session to restore:', {
+            log.session.info('Found most recent session to restore:', {
                 sessionId: targetSessionId,
                 lastUpdated: new Date(mostRecentTime).toLocaleString(),
                 view: mostRecentSession.view,
@@ -538,24 +539,24 @@
 
         // Ensure we have a valid session ID at this point
         if (!targetSessionId) {
-            console.log('❌ No valid session ID found for restoration');
+            log.session.error('No valid session ID found for restoration');
             return false;
         }
 
         // Check if we have stored data for the target session
         if (!hasStoredSessionData(targetSessionId)) {
-            console.log('📭 No stored data found for session:', targetSessionId);
+            log.session.debug('No stored data found for session:', targetSessionId);
             return false;
         }
 
         // Load the stored data
         const storedData = loadSessionData(targetSessionId);
         if (!storedData) {
-            console.log('❌ Failed to load stored session data');
+            log.session.error('Failed to load stored session data');
             return false;
         }
 
-        console.log('📂 Restoring session data from local storage:', {
+        log.session.info('Restoring session data from local storage:', {
             sessionId: targetSessionId,
             view: storedData.view,
             analysisKeys: Object.keys(storedData.analysisData),
@@ -597,7 +598,7 @@
             hasRestoredData = true;
             dataRestoredFromSessionId = targetSessionId;
 
-            console.log('✅ Session data restored successfully', {
+            log.session.info('Session data restored successfully', {
                 sessionId: targetSessionId,
                 restoredView: Object.keys(Views)[view] || 'unknown',
                 analysisKeys: Object.keys(analysis),
@@ -608,7 +609,7 @@
 
             return true;
         } catch (error) {
-            console.error('❌ Failed to restore session data:', error);
+            log.session.error('Failed to restore session data:', error);
             return false;
         }
     }
@@ -617,7 +618,7 @@
      * Set up auto-saving for the current session
      */
     function setupSessionAutoSave(currentSessionId: string) {
-        console.log('💾 Setting up auto-save for session:', currentSessionId);
+        log.session.debug('Setting up auto-save for session:', currentSessionId);
 
         // Clean up any existing auto-save
         if (autoSaveCleanup) {
@@ -638,14 +639,14 @@
             };
         });
 
-        console.log('✅ Auto-save setup complete for session:', currentSessionId);
+        log.session.debug('Auto-save setup complete for session:', currentSessionId);
     }
 
     /**
      * End the current session and clean up local storage
      */
     function endSession() {
-        console.log('🏁 Ending session...');
+        log.session.info('Ending session...');
 
         // Clean up auto-save
         if (autoSaveCleanup) {
@@ -656,7 +657,7 @@
         // Remove stored data for current session
         if (sessionId) {
             removeSessionData(sessionId);
-            console.log('🗑️ Removed session data for:', sessionId);
+            log.session.info('Removed session data for:', sessionId);
         }
 
         // Reset analysis state
@@ -665,7 +666,7 @@
         // Clear session ID
         sessionId = null;
 
-        console.log('✅ Session ended and cleaned up');
+        log.session.info('Session ended and cleaned up');
     }
 
     /**
@@ -674,7 +675,7 @@
     function forceSaveSession() {
         if (!sessionId) return;
 
-        console.log('💾 Force saving session data...');
+        log.session.debug('Force saving session data...');
         sessionStorage.forceSaveCurrentSession(() => {
             const viewString = Object.keys(Views)[view] || 'start';
             return {
@@ -736,7 +737,7 @@
         
         const currentState = JSON.stringify(analysis);
         if (finalizationData == currentState) {
-            console.log('current state...no need to finalize');
+            log.session.debug('current state...no need to finalize');
             view = Views.report;
             return;
         }
@@ -757,7 +758,7 @@
             doctor: {}
         };
 
-        console.log('Finalized', toFinalize);
+        log.session.debug('Finalized', toFinalize);
         const result = await fetch('/v1/med/session/finalize', {
             method: 'POST',
             headers: {
@@ -772,7 +773,7 @@
         finalReport = report;
         report.doctor = 'doctor signature'
 
-        console.log($state.snapshot(report));
+        log.session.debug($state.snapshot(report));
         view = Views.report;
         finalizeReportState = 'idle';
     }
@@ -809,12 +810,12 @@
     }
 
     onMount(async () => {
-        console.log('🏁 Session page mounted', { useRealtime, sessionId, currentView: view });
+        log.session.info('Session page mounted', { useRealtime, sessionId, currentView: view });
         
         // Try to restore session data from local storage first
         const restored = tryRestoreSessionData();
         if (restored) {
-            console.log('🔄 Session data restored from local storage', {
+            log.session.info('Session data restored from local storage', {
                 sessionId,
                 currentView: view,
                 analysisKeys: Object.keys(analysis),
@@ -826,12 +827,12 @@
                 setupSessionAutoSave(sessionId);
             }
         } else {
-            console.log('📭 No session data to restore - starting fresh');
+            log.session.info('No session data to restore - starting fresh');
         }
         
         // Add test function to verify backend is working
         (window as any).testSessionAPI = async () => {
-            console.log('🧪 Testing session API...');
+            log.session.debug('Testing session API...');
             try {
                 const response = await fetch('/v1/session/start', {
                     method: 'POST',
@@ -843,17 +844,17 @@
                         models: ['GP']
                     })
                 });
-                console.log('🧪 Test response status:', response.status);
+                log.session.debug('Test response status:', response.status);
                 const result = await response.json();
-                console.log('🧪 Test response data:', result);
+                log.session.debug('Test response data:', result);
                 return result;
             } catch (error) {
-                console.error('🧪 Test failed:', error);
+                log.session.error('Test failed:', error);
                 return error;
             }
         };
         
-        console.log('🧪 Added window.testSessionAPI() - call this in console to test backend');
+        log.session.debug('Added window.testSessionAPI() - call this in console to test backend');
         
         // Add test transcript functions in development mode
         try {
@@ -877,7 +878,7 @@
                 
                 // Stream transcript with real-time simulation
                 stream: async (transcriptName: string, options?: any) => {
-                    console.log('🎬 Starting test transcript stream...');
+                    log.session.debug('Starting test transcript stream...');
                     
                     // Reset current state with analysis merger
                     resetAnalysis();
@@ -885,8 +886,8 @@
                     return streamTestTranscript(transcriptName as any, {
                         onTranscript: handleRealtimeTranscript,
                         onComplete: async () => {
-                            console.log('✅ Test transcript streaming completed!');
-                            console.log('🔬 Triggering AI analysis...');
+                            log.session.debug('Test transcript streaming completed!');
+                            log.session.debug('Triggering AI analysis...');
                             
                             // Wait a moment for UI to update
                             await new Promise(resolve => setTimeout(resolve, 500));
@@ -894,9 +895,9 @@
                             // Trigger AI analysis using the legacy system
                             try {
                                 await analyzeTranscription(ANALYZE_STEPS.transcript, true);
-                                console.log('🎯 AI analysis completed!');
+                                log.session.debug('AI analysis completed!');
                             } catch (error) {
-                                console.error('❌ AI analysis failed:', error);
+                                log.session.error('AI analysis failed:', error);
                             }
                         },
                         delay: 1500, // Default 1.5 second delay
@@ -913,7 +914,7 @@
                 
                 // Load instantly without streaming
                 instant: async (transcriptName: string) => {
-                    console.log('⚡ Loading test transcript instantly...');
+                    log.session.debug('Loading test transcript instantly...');
                     
                     const transcripts = await loadTestTranscript(transcriptName as any);
                     
@@ -925,8 +926,8 @@
                         handleRealtimeTranscript(transcript);
                     }
                     
-                    console.log('✅ Test transcript loaded instantly!');
-                    console.log('🔬 Triggering AI analysis...');
+                    log.session.debug('Test transcript loaded instantly!');
+                    log.session.debug('Triggering AI analysis...');
                     
                     // Wait a moment for UI to update
                     await new Promise(resolve => setTimeout(resolve, 500));
@@ -934,43 +935,43 @@
                     // Trigger AI analysis using the legacy system
                     try {
                         await analyzeTranscription(ANALYZE_STEPS.transcript, true);
-                        console.log('🎯 AI analysis completed!');
+                        log.session.debug('AI analysis completed!');
                     } catch (error) {
-                        console.error('❌ AI analysis failed:', error);
+                        log.session.error('AI analysis failed:', error);
                     }
                 }
             };
             
-            console.log('🧪 Test transcript functions added to window.testTranscripts:');
-            console.log('  📋 window.testTranscripts.list() - List available transcripts');
-            console.log('  ℹ️  window.testTranscripts.info("chestpain") - Get transcript info');
-            console.log('  🎬 window.testTranscripts.stream("chestpain") - Stream with delays');
-            console.log('  ⚡ window.testTranscripts.instant("chestpain") - Load instantly');
-            console.log('  🕐 window.testTranscripts.realtimeStream("chestpain") - Realistic timing');
-            console.log('  💨 window.testTranscripts.chestpain() - Quick chest pain test');
-            console.log('');
-            console.log('🔄 Analysis Functions:');
-            console.log('  🧪 window.triggerAnalysis() - Manual analysis trigger with merge stats');
-            console.log('  🔄 window.resetAnalysis() - Reset analysis merger state');
-            console.log('');
-            console.log('🌐 Language Configuration:');
-            console.log(`  Current UI Language: ${UI_LANGUAGE === 'en' ? 'English' : 'Czech'}`);
-            console.log(`  Analysis Language: ${getLanguageForAPI('analysis')}`);
-            console.log('  To change language, modify UI_LANGUAGE in session page');
-            console.log('  🔍 window.checkLanguage() - Check current language settings');
-            console.log('  🧪 window.testAnalysisLanguage("english") - Test analysis language');
-            console.log('  🧪 window.testAnalysisLanguage("czech") - Test analysis in Czech');
-            console.log('');
-            console.log('📊 Analysis Merger: Gradual refinement active - items will accumulate and refine instead of jumping!');
+            log.session.debug('Test transcript functions added to window.testTranscripts:');
+            log.session.debug('  📋 window.testTranscripts.list() - List available transcripts');
+            log.session.debug('  ℹ️  window.testTranscripts.info("chestpain") - Get transcript info');
+            log.session.debug('  🎬 window.testTranscripts.stream("chestpain") - Stream with delays');
+            log.session.debug('  ⚡ window.testTranscripts.instant("chestpain") - Load instantly');
+            log.session.debug('  🕐 window.testTranscripts.realtimeStream("chestpain") - Realistic timing');
+            log.session.debug('  💨 window.testTranscripts.chestpain() - Quick chest pain test');
+            log.session.debug('');
+            log.session.debug('🔄 Analysis Functions:');
+            log.session.debug('  🧪 window.triggerAnalysis() - Manual analysis trigger with merge stats');
+            log.session.debug('  🔄 window.resetAnalysis() - Reset analysis merger state');
+            log.session.debug('');
+            log.session.debug('🌐 Language Configuration:');
+            log.session.debug(`  Current UI Language: ${UI_LANGUAGE === 'en' ? 'English' : 'Czech'}`);
+            log.session.debug(`  Analysis Language: ${getLanguageForAPI('analysis')}`);
+            log.session.debug('  To change language, modify UI_LANGUAGE in session page');
+            log.session.debug('  🔍 window.checkLanguage() - Check current language settings');
+            log.session.debug('  🧪 window.testAnalysisLanguage("english") - Test analysis language');
+            log.session.debug('  🧪 window.testAnalysisLanguage("czech") - Test analysis in Czech');
+            log.session.debug('');
+            log.session.debug('📊 Analysis Merger: Gradual refinement active - items will accumulate and refine instead of jumping!');
             
             // Add manual analysis trigger for testing
             (window as any).triggerAnalysis = async () => {
-                console.log('🔬 Manual analysis trigger...');
+                log.session.debug('Manual analysis trigger...');
                 try {
                     await analyzeTranscription(ANALYZE_STEPS.transcript, true);
-                    console.log('✅ Manual analysis completed!');
+                    log.session.debug('Manual analysis completed!');
                 } catch (error) {
-                    console.error('❌ Manual analysis failed:', error);
+                    log.session.error('Manual analysis failed:', error);
                 }
             };
 
@@ -1003,19 +1004,19 @@
                 // Debug localStorage state
                 debugStorage: () => {
                     const sessions = sessionStorage.getStoredSessions();
-                    console.log('🔍 Debug Storage State:');
-                    console.log('- Available sessions:', sessions);
-                    console.log('- Current sessionId:', sessionId);
-                    console.log('- Current view:', Object.keys(Views)[view] || 'unknown');
-                    console.log('- Has restored data:', hasRestoredData);
-                    console.log('- Analysis keys:', Object.keys(analysis));
-                    console.log('- Texts length:', texts.length);
-                    console.log('- Realtime transcripts:', realtimeTranscripts.length);
+                    log.session.debug('Debug Storage State:');
+                    log.session.debug('- Available sessions:', sessions);
+                    log.session.debug('- Current sessionId:', sessionId);
+                    log.session.debug('- Current view:', Object.keys(Views)[view] || 'unknown');
+                    log.session.debug('- Has restored data:', hasRestoredData);
+                    log.session.debug('- Analysis keys:', Object.keys(analysis));
+                    log.session.debug('- Texts length:', texts.length);
+                    log.session.debug('- Realtime transcripts:', realtimeTranscripts.length);
                     
                     sessions.forEach(id => {
                         const data = loadSessionData(id);
                         if (data) {
-                            console.log(`📋 Session ${id.substring(0, 8)}:`, {
+                            log.session.debug(`📋 Session ${id.substring(0, 8)}:`, {
                                 view: data.view,
                                 lastUpdated: new Date(data.lastUpdated).toLocaleString(),
                                 analysisKeys: Object.keys(data.analysisData),
@@ -1031,34 +1032,34 @@
                     const confirmed = confirm('Are you sure you want to clear ALL stored session data?');
                     if (confirmed) {
                         sessionStorage.clearAllSessions();
-                        console.log('🧹 All session data cleared');
+                        log.session.debug('All session data cleared');
                     }
                 }
             };
 
-            console.log('💾 Session management functions added:');
-            console.log('  📊 window.sessionUtils.getCurrentSession() - Get current session info');
-            console.log('  💾 window.sessionUtils.forceSave() - Force save current session');
-            console.log('  🏁 window.sessionUtils.endSession() - End and cleanup session');
-            console.log('  🔍 window.sessionUtils.hasStoredData(sessionId?) - Check for stored data');
-            console.log('  📂 window.sessionUtils.tryRestore(sessionId?) - Try restore data');
-            console.log('  🔍 window.sessionUtils.debugStorage() - Debug localStorage state');
-            console.log('  🧹 window.sessionUtils.clearAll() - Clear all stored data (with confirmation)');
-            console.log('');
-            console.log('🔧 Debugging tip: If session restoration is not working:');
-            console.log('  1. Run window.sessionUtils.debugStorage() to see stored sessions');
-            console.log('  2. Run window.sessionUtils.tryRestore() to manually restore');
-            console.log('  3. Check the console for restoration logs starting with 🔍 or 📂');
+            log.session.debug('Session management functions added:');
+            log.session.debug('  📊 window.sessionUtils.getCurrentSession() - Get current session info');
+            log.session.debug('  💾 window.sessionUtils.forceSave() - Force save current session');
+            log.session.debug('  🏁 window.sessionUtils.endSession() - End and cleanup session');
+            log.session.debug('  🔍 window.sessionUtils.hasStoredData(sessionId?) - Check for stored data');
+            log.session.debug('  📂 window.sessionUtils.tryRestore(sessionId?) - Try restore data');
+            log.session.debug('  🔍 window.sessionUtils.debugStorage() - Debug localStorage state');
+            log.session.debug('  🧹 window.sessionUtils.clearAll() - Clear all stored data (with confirmation)');
+            log.session.debug('');
+            log.session.debug('🔧 Debugging tip: If session restoration is not working:');
+            log.session.debug('  1. Run window.sessionUtils.debugStorage() to see stored sessions');
+            log.session.debug('  2. Run window.sessionUtils.tryRestore() to manually restore');
+            log.session.debug('  3. Check the console for restoration logs starting with 🔍 or 📂');
 
             // Add language check function
             (window as any).checkLanguage = () => {
-                console.log('🌐 Language Configuration Check:');
-                console.log(`  UI_LANGUAGE: ${UI_LANGUAGE}`);
-                console.log(`  Session API Language: ${getLanguageForAPI('session')}`);
-                console.log(`  Analysis API Language: ${getLanguageForAPI('analysis')}`);
-                console.log('');
-                console.log('💡 To change language, update UI_LANGUAGE in the session page:');
-                console.log(`  const UI_LANGUAGE = 'en'; // Change to 'cs' for Czech`);
+                log.session.debug('Language Configuration Check:');
+                log.session.debug(`  UI_LANGUAGE: ${UI_LANGUAGE}`);
+                log.session.debug(`  Session API Language: ${getLanguageForAPI('session')}`);
+                log.session.debug(`  Analysis API Language: ${getLanguageForAPI('analysis')}`);
+                log.session.debug('');
+                log.session.debug('💡 To change language, update UI_LANGUAGE in the session page:');
+                log.session.debug(`  const UI_LANGUAGE = 'en'; // Change to 'cs' for Czech`);
                 return {
                     ui: UI_LANGUAGE,
                     session: getLanguageForAPI('session'),
@@ -1068,7 +1069,7 @@
 
             // Add test analysis function with specific language
             (window as any).testAnalysisLanguage = async (language = 'english') => {
-                console.log(`🧪 Testing analysis with language: ${language}`);
+                log.session.debug(`🧪 Testing analysis with language: ${language}`);
                 
                 const testText = `
                 Doctor: Hello, what brings you here today?
@@ -1093,25 +1094,25 @@
                     });
                     
                     const result = await response.json();
-                    console.log('🎯 Analysis Result:', result);
-                    console.log('🔍 Treatment suggestions language check:');
+                    log.session.debug('Analysis Result:', result);
+                    log.session.debug('Treatment suggestions language check:');
                     if (result.treatment && result.treatment.length > 0) {
                         result.treatment.forEach((treatment, index) => {
-                            console.log(`  ${index + 1}. "${treatment.description}"`);
+                            log.session.debug(`  ${index + 1}. "${treatment.description}"`);
                         });
                     }
                     return result;
                 } catch (error) {
-                    console.error('❌ Analysis test failed:', error);
+                    log.session.error('Analysis test failed:', error);
                     return error;
                 }
             };
         } catch (error) {
-            console.log('⚠️ Test transcript functions not available (production mode)');
+            log.session.debug('Test transcript functions not available (production mode)');
         }
         
         // Log initial state
-        console.log('📊 Initial session state:', {
+        log.session.debug('Initial session state:', {
             view,
             useRealtime,
             sessionId,
@@ -1121,7 +1122,7 @@
     });
 
     onDestroy(() => {
-        console.log('💀 Session page destroying...');
+        log.session.debug('Session page destroying...');
         
         // Force save before component destruction
         forceSaveSession();
@@ -1132,7 +1133,7 @@
             autoSaveCleanup = null;
         }
         
-        console.log('✅ Session page cleanup complete');
+        log.session.debug('Session page cleanup complete');
     });
 
 
@@ -1173,7 +1174,7 @@
             }}
             onspeechend={({ speechChunks }) => {
                 if (!useRealtime) {
-                    console.log('Speech ended with chunks:', speechChunks.length);
+                    log.session.debug('Speech ended with chunks:', speechChunks.length);
                     processData();
                 }
             }}
@@ -1183,7 +1184,7 @@
             ontranscript={handleRealtimeTranscript}
             onanalysis={handleRealtimeAnalysis}
             onsessioncreated={(createdSessionId) => {
-                console.log('📡 Session created callback received:', createdSessionId);
+                log.session.debug('Session created callback received:', createdSessionId);
                 sessionId = createdSessionId;
                 
                 // Set up auto-saving for the new session

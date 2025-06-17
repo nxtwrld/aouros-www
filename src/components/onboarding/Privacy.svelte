@@ -1,14 +1,14 @@
 <script lang="ts">
     import { createBubbler, preventDefault } from 'svelte/legacy';
-
-    const bubble = createBubbler();
-	import { passwordStrength } from 'check-password-strength';
+    import { passwordStrength } from 'check-password-strength';
     import { prepareKeys } from '$lib/encryption/rsa';
     import { createHash } from '$lib/encryption/hash';
     import { generatePassphrase } from '$lib/encryption/passphrase';
     import { onMount } from 'svelte';
     import { t } from '$lib/i18n';
-    
+    import { logger } from '$lib/logging/logger';
+
+    const bubble = createBubbler();
 
     export const ready: boolean = true;
 
@@ -45,7 +45,7 @@
     let viewPassphrase: boolean = $state(false);
 
     async function setPassphrase() {
-        console.log('setPassphrase', passphrase);
+        logger.api.debug('Setting passphrase', passphrase);
 
         const passwordCredential = new PasswordCredential({ id: data.bio.email, password: passphrase });
         await navigator.credentials.store(passwordCredential);
@@ -119,7 +119,7 @@
     }
 
     async function resetAll() {
-        console.log('resetAll');
+        logger.api.debug('Resetting all privacy settings');
         await setKeys();
         autoPassphrase = automaticSavingCapable ? 'create' : 'custom';
         passphrase = generatePassphrase();
