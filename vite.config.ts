@@ -46,6 +46,28 @@ export default defineConfig({
 		//topLevelAwait(),
 		sveltekit()
 	],
+	server: {
+		watch: {
+			usePolling: true,
+			interval: 1000,
+			ignored: [
+				'**/.DS_Store',
+				'**/.git/**',
+				'**/node_modules/**',
+				'**/.cursor/**',
+				'**/.cursor-tutor/**',
+				'**/.vercel/**',
+				'**/.svelte-kit/**',
+				'**/build/**',
+				'**/dist/**',
+				'**/.vscode/**',
+				'**/.idea/**',
+				'**/*.log',
+				'**/*.tmp',
+				'**/*.temp'
+			]
+		}
+	},
 	optimizeDeps: {
 		//force: true,
 		exclude: [

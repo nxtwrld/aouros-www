@@ -15,24 +15,30 @@
         state?: AudioState;
         sessionId?: string;
         useRealtime?: boolean;
+        language?: string;
+        models?: string[];
         onspeechstart?: () => void;
         onspeechend?: (event: { speechChunks: Float32Array[] }) => void;
         onfeatures?: (features: any) => void;
         ontranscript?: (transcript: PartialTranscript) => void;
         onanalysis?: (analysis: any) => void;
+        onsessioncreated?: (sessionId: string) => void;
     }
 
     let { 
         hasResults = false,
         speechChunks = $bindable([]),
         state = $bindable(AudioState.ready),
-        sessionId,
+        sessionId = $bindable(),
         useRealtime = false,
+        language = 'en',
+        models = ['GP'],
         onspeechstart,
         onspeechend,
         onfeatures,
         ontranscript,
-        onanalysis
+        onanalysis,
+        onsessioncreated
     }: Props = $props();
 
     let audio: AudioControlsVad | Error;
@@ -67,7 +73,47 @@
         
     });
 
-    async function initializeSSEClient() {
+    async function createSession(): Promise<string | null> {
+        console.log('🚀 Creating new session...', { language, models });
+        
+        try {
+            const response = await fetch('/v1/session/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    language,
+                    models: models.filter(model => model && model.trim())
+                })
+            });
+            
+            console.log('📡 Session creation response status:', response.status);
+            
+            if (!response.ok) {
+                console.error('❌ Session creation failed with status:', response.status);
+                const errorText = await response.text();
+                console.error('❌ Error response:', errorText);
+                throw new Error(`Session creation failed: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('📡 Session creation response data:', result);
+            
+            if (result.sessionId) {
+                console.log('✅ Session created successfully:', result.sessionId);
+                return result.sessionId;
+            } else {
+                console.error('❌ No sessionId in response:', result);
+                return null;
+            }
+        } catch (error) {
+            console.error('❌ Session creation error:', error);
+            return null;
+        }
+    }
+
+    async function initializeSSEClient(): Promise<boolean> {
         console.log('📡 Initializing SSE client...', { useRealtime, sessionId, sseClient });
         
         if (useRealtime && sessionId && !sseClient) {
@@ -120,9 +166,27 @@
     async function startSession() {
         console.log('🎙️ Starting audio session...', { useRealtime, sessionId });
         
+        // Create session if we don't have one and real-time is enabled
+        if (useRealtime && !sessionId) {
+            console.log('🆕 Creating session before starting recording...');
+            const newSessionId = await createSession();
+            if (newSessionId) {
+                sessionId = newSessionId;
+                onsessioncreated?.(sessionId);
+                console.log('✅ Session created and stored:', sessionId);
+            } else {
+                console.error('❌ Failed to create session, falling back to traditional processing');
+                useRealtime = false;
+            }
+        }
+        
         // Initialize SSE client for real-time processing if enabled
         if (useRealtime && sessionId) {
-            await initializeSSEClient();
+            const sseInitialized = await initializeSSEClient();
+            if (!sseInitialized) {
+                console.error('❌ Failed to initialize SSE client, falling back to traditional processing');
+                useRealtime = false;
+            }
         }
 
         audio = await getAudioVAD({

@@ -1,8 +1,7 @@
-
 import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
 import { error } from '@sveltejs/kit';
 import transcript from '$lib/session/session.transcript';
-import diagnosis from '$lib/configurations/session.diagnosis';
+import { DIAGNOSIS_CONFIGS } from '$lib/configurations/session.diagnosis';
 import tags from '$lib/configurations/tags';
 import propertiesDefition from '$data/lab.properties.defaults.json';
 import { fetchGpt } from '$lib/ai/gpt';
@@ -13,6 +12,11 @@ import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from '$lib/types.d';
 import { env } from '$env/dynamic/private';
 
+// Select diagnosis configuration based on environment variable
+const PROMPT_CONFIG = 'enhanced'; // or 'fast' or 'enhanced'
+const diagnosis = DIAGNOSIS_CONFIGS[PROMPT_CONFIG as keyof typeof DIAGNOSIS_CONFIGS] || DIAGNOSIS_CONFIGS.enhanced;
+
+console.log(`🧠 Using ${PROMPT_CONFIG} prompt configuration`);
 
 const DEBUG = env.DEBUG_CONVERSATION  === 'true';
 /**
@@ -35,31 +39,63 @@ export interface Analysis {
 
     }[];
     diagnosis: {
+        id?: string;
         name: string;
         origin: string;
         basis: string;
         probability: number;
+        supportingSymptoms?: string[];
+        rationale?: string;
+        code?: string;
     }[];
     treatment: {
+        id?: string;
         description: string;
         origin: string;
+        targetDiagnosis?: string[];
+        effectiveness?: string;
     }[];
     followUp: {
+        id?: string;
         type: string;
         name: string;
         reason: string;
         origin: string;
+        urgency?: string;
     }[];
     medication: {
+        id?: string;
         name: string;
         dosage: number;
         days: string;
         days_of_week: string[];
         time_of_day: string;
         origin: string;
+        purpose?: string;
+        alternatives?: string[];
     }[];
-
-    
+    clarifyingQuestions?: {
+        id?: string;
+        question: string;
+        category?: string;
+        intent?: string;
+        priority?: string;
+        relatedItems?: string[];
+        rationale?: string;
+        timeframe?: string;
+    }[];
+    doctorRecommendations?: {
+        id?: string;
+        recommendation: string;
+        category?: string;
+        priority?: string;
+        timeframe?: string;
+        rationale?: string;
+        implementation?: string;
+        expectedOutcome?: string;
+        alternatives?: string[];
+    }[];
+    signals?: any[];
 }
 
 
@@ -70,33 +106,27 @@ type Input = {
     text?: string;
     type: Types;
     language?: string;
+    previousAnalysis?: Partial<Analysis>; // Add previous context for gradual refinement
 };
 
 
 (signals.items.properties.signal.enum as string[]) = Object.keys(propertiesDefition);
-diagnosis.parameters.properties.signals = signals;
-
-
+// Only add signals to diagnosis schema if it has the signals property
+if (diagnosis.parameters?.properties && 'signals' in diagnosis.parameters.properties) {
+    diagnosis.parameters.properties.signals = signals;
+}
 
 const schemas: {
     [key: string]: FunctionDefinition
 } = {
     diagnosis: diagnosis as FunctionDefinition,
     transcript: transcript as FunctionDefinition
-
 };
 
 let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 
 // extend common schemas
-
-
 (transcript.parameters.properties.symptoms.items.properties.bodyParts.items.enum as string[]) = [...tags];
-
-
-
-
-
 
 export async function analyze(input : Input): Promise<Analysis> {
 
@@ -106,23 +136,54 @@ export async function analyze(input : Input): Promise<Analysis> {
 
     const currentLanguage = input.language || 'English';
 
+    console.log('🌐 Analysis Language Settings:', {
+        inputLanguage: input.language,
+        currentLanguage: currentLanguage,
+        type: input.type,
+        hasPreviousAnalysis: !!input.previousAnalysis
+    });
+
+    // Create enhanced content with previous context
+    let analysisText = input.text || '';
+    if (input.previousAnalysis && input.type === Types.diagnosis) {
+        const contextSummary = createPreviousContextSummary(input.previousAnalysis);
+        analysisText = contextSummary + analysisText;
+        console.log('🔄 Added previous context to analysis:', contextSummary.substring(0, 200) + '...');
+    }
+
     localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLanguage);
 
+    // Log the updated schema description to verify language replacement
+    const schemaKey = input.type;
+    if (localizedSchemas[schemaKey]) {
+        console.log('🔍 Schema language check:', {
+            schemaType: schemaKey,
+            originalContains: schemas[schemaKey]?.description?.includes('[LANGUAGE]'),
+            updatedDescription: localizedSchemas[schemaKey]?.description?.substring(0, 200) + '...',
+            languageReplaced: localizedSchemas[schemaKey]?.description?.includes(currentLanguage)
+        });
+    }
 
     console.log('Schema updated...', input.type)
   
     if (DEBUG) {
         await sleep(1500);
-        return Promise.resolve(TEST_DATA[input.type][Math.floor(Math.random() * TEST_DATA[input.type].length)]);
+        return Promise.resolve(TEST_DATA[input.type][Math.floor(Math.random() * TEST_DATA[input.type].length)] as Analysis);
     }
 
     console.log('evaluating...')
-    // get basic item info
+    // get basic item info with enhanced context
     let data = await evaluate([{
         type: 'text',
-        text: input.text
-    }] , input.type, tokenUsage) as Analysis;
+        text: analysisText
+    }] , input.type, tokenUsage, currentLanguage) as Analysis;
     console.log('input assesed...');
+
+    // Merge with previous analysis if available
+    if (input.previousAnalysis && input.type === Types.diagnosis) {
+        data = mergeAnalysis(data, input.previousAnalysis);
+        console.log('🔄 Merged with previous analysis');
+    }
 
 /*
     data.fhir = await evaluate([{
@@ -140,16 +201,14 @@ export async function analyze(input : Input): Promise<Analysis> {
 
 
 
-export async function evaluate(content: Content[], type: Types, tokenUsage: TokenUsage): Promise<Analysis> {
-
+export async function evaluate(content: Content[], type: Types, tokenUsage: TokenUsage, language: string = 'English'): Promise<Analysis> {
 
   const schema = localizedSchemas[type];
-  console.log('Schema', type)
+  console.log('Schema', type, 'Language:', language)
 
   if (!schema) error(500, { message: 'Invalid type ' + type });
 
-
-  return await fetchGpt(content, schema, tokenUsage) as Analysis;;
+  return await fetchGpt(content, schema, tokenUsage, language) as Analysis;
 }
 
 
@@ -427,4 +486,80 @@ const TEST_DATA = {
             }
         ]
     }]
+}
+
+// Utility function to generate content-based IDs for items
+function generateItemId(item: any, type: string): string {
+    const content = type === 'diagnosis' ? item.name : 
+                   type === 'treatment' ? item.description :
+                   type === 'medication' ? item.name :
+                   type === 'followUp' ? item.name :
+                   type === 'clarifyingQuestions' ? item.question :
+                   type === 'doctorRecommendations' ? item.recommendation :
+                   JSON.stringify(item);
+    
+    // Simple hash function for consistent IDs
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+        const char = content.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    return `${type}_${Math.abs(hash).toString(36)}`;
+}
+
+// Utility function to create previous context summary for AI
+function createPreviousContextSummary(previousAnalysis: Partial<Analysis>): string {
+    const summaryParts: string[] = [];
+    
+    if (previousAnalysis.diagnosis?.length) {
+        const diagnosisList = previousAnalysis.diagnosis
+            .map(d => `${d.name} (confidence: ${d.probability || 0})`)
+            .join(', ');
+        summaryParts.push(`Previous diagnoses: ${diagnosisList}`);
+    }
+    
+    if (previousAnalysis.treatment?.length) {
+        const treatmentList = previousAnalysis.treatment
+            .map(t => t.description)
+            .join('; ');
+        summaryParts.push(`Previous treatments: ${treatmentList}`);
+    }
+    
+    if (previousAnalysis.medication?.length) {
+        const medicationList = previousAnalysis.medication
+            .map(m => `${m.name} ${m.dosage}mg`)
+            .join(', ');
+        summaryParts.push(`Previous medications: ${medicationList}`);
+    }
+    
+    if (previousAnalysis.clarifyingQuestions?.length) {
+        const questionCount = previousAnalysis.clarifyingQuestions.length;
+        summaryParts.push(`${questionCount} questions already suggested`);
+    }
+    
+    if (previousAnalysis.doctorRecommendations?.length) {
+        const recommendationCount = previousAnalysis.doctorRecommendations.length;
+        summaryParts.push(`${recommendationCount} recommendations already provided`);
+    }
+    
+    return summaryParts.length > 0 
+        ? `\n\nPREVIOUS ANALYSIS CONTEXT:\n${summaryParts.join('\n')}\n\nINSTRUCTIONS: Build upon the previous analysis rather than starting fresh. Refine confidence scores and add details based on new evidence. Only suggest new items if they are genuinely different from what was previously identified. Maintain continuity for better user experience.\n\n`
+        : '';
+}
+
+// Utility function to merge two analysis objects
+function mergeAnalysis(newAnalysis: Analysis, previousAnalysis: Partial<Analysis>): Analysis {
+    const mergedAnalysis = { ...newAnalysis };
+    
+    // Ensure arrays exist before merging
+    mergedAnalysis.diagnosis = [...(newAnalysis.diagnosis || []), ...(previousAnalysis.diagnosis || [])];
+    mergedAnalysis.treatment = [...(newAnalysis.treatment || []), ...(previousAnalysis.treatment || [])];
+    mergedAnalysis.medication = [...(newAnalysis.medication || []), ...(previousAnalysis.medication || [])];
+    mergedAnalysis.followUp = [...(newAnalysis.followUp || []), ...(previousAnalysis.followUp || [])];
+    mergedAnalysis.clarifyingQuestions = [...(newAnalysis.clarifyingQuestions || []), ...(previousAnalysis.clarifyingQuestions || [])];
+    mergedAnalysis.doctorRecommendations = [...(newAnalysis.doctorRecommendations || []), ...(previousAnalysis.doctorRecommendations || [])];
+    mergedAnalysis.signals = [...(newAnalysis.signals || []), ...(previousAnalysis.signals || [])];
+    
+    return mergedAnalysis;
 }

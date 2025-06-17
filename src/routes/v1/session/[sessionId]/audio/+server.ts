@@ -4,6 +4,7 @@ import { transcribeAudioChunk } from '$lib/session/realtime-transcription';
 import type { PartialTranscript } from '$lib/session/manager';
 import OpenAI from 'openai';
 import { env } from '$env/dynamic/private';
+import { getFeedbackForAI } from '../../feedback/+server';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -103,7 +104,7 @@ export async function POST({ params, request, locals: { supabase, safeGetSession
     }
 }
 
-// Determine if we should trigger analysis
+// Determine if we should trigger analysis using hybrid approach
 function shouldTriggerAnalysis(sessionData: any): boolean {
     if (!sessionData.transcripts || sessionData.transcripts.length === 0) {
         console.log('🚫 No transcripts to analyze');
@@ -120,37 +121,105 @@ function shouldTriggerAnalysis(sessionData: any): boolean {
     const lastProcessedIndex = sessionData.analysisState?.lastProcessedTranscriptIndex || 0;
     const unprocessedTranscripts = sessionData.transcripts.slice(lastProcessedIndex);
     const unprocessedText = unprocessedTranscripts
-        .filter(t => t.is_final)
-        .map(t => t.text)
+        .filter((t: any) => t.is_final)
+        .map((t: any) => t.text)
         .join(' ');
 
-    // Smart batching strategy
+    // Hybrid approach thresholds
+    const INTERVAL_THRESHOLD = 30000; // 30 seconds
+    const MIN_CHARACTERS = 200; // Minimum meaningful content
+    const MAX_CHARACTERS = 500; // Maximum before forcing analysis
+    const MIN_EXCHANGES = 2; // Minimum conversational exchanges
+    
     const unprocessedLength = unprocessedText.length;
     const timeSinceLastAnalysis = Date.now() - (sessionData.analysisState?.lastAnalysisTime || 0);
     
-    // Meaningful content thresholds
-    const minMeaningfulContent = 100; // At least 100 characters for analysis
-    const maxWaitTime = 15000; // Maximum 15 seconds before forcing analysis
-    const hasEnoughContent = unprocessedLength >= minMeaningfulContent;
-    const hasWaitedLongEnough = timeSinceLastAnalysis > maxWaitTime;
+    // Primary trigger: 30-second intervals
+    const intervalReached = timeSinceLastAnalysis >= INTERVAL_THRESHOLD;
     
-    // Also trigger on significant content accumulation
-    const significantContent = unprocessedLength >= 200; // Large chunk = immediate analysis
+    // Secondary conditions
+    const hasMinimalContent = unprocessedLength >= MIN_CHARACTERS;
+    const hasSignificantContent = unprocessedLength >= MAX_CHARACTERS;
     
-    console.log('🤔 Smart batching analysis decision:', {
+    // Speaker change detection (both parties contributing)
+    const speakers = [...new Set(unprocessedTranscripts.map((t: any) => t.speaker).filter(Boolean))];
+    const hasSpeakerChanges = speakers.length >= 2;
+    
+    // Content quality checks
+    const hasEnoughExchanges = unprocessedTranscripts.length >= MIN_EXCHANGES;
+    const avgTranscriptLength = unprocessedLength / Math.max(unprocessedTranscripts.length, 1);
+    const hasSubstantialExchanges = avgTranscriptLength >= 20; // Average 20+ chars per exchange
+    
+    // Skip conditions
+    const onlyShortResponses = avgTranscriptLength < 10 && unprocessedLength < 100;
+    const onlyFillerWords = isFillerContent(unprocessedText);
+    const singleSpeakerDominating = !hasSpeakerChanges && unprocessedTranscripts.length >= 3;
+    
+    // Skip analysis if content is not meaningful
+    if (onlyShortResponses || onlyFillerWords || singleSpeakerDominating) {
+        console.log('🚫 Skipping analysis - low quality content:', {
+            onlyShortResponses,
+            onlyFillerWords,
+            singleSpeakerDominating,
+            avgTranscriptLength,
+            speakers: speakers.length
+        });
+        return false;
+    }
+    
+    // Trigger conditions (in order of priority)
+    const shouldTrigger = (
+        hasSignificantContent || // Force if too much content accumulated
+        (intervalReached && hasMinimalContent && hasSpeakerChanges) || // Ideal: 30s + content + speakers
+        (intervalReached && hasMinimalContent && hasEnoughExchanges && hasSubstantialExchanges) // Fallback: 30s + quality content
+    );
+    
+    console.log('🤔 Hybrid analysis decision:', {
         unprocessedTranscripts: unprocessedTranscripts.length,
         unprocessedLength,
         timeSinceLastAnalysis: Math.round(timeSinceLastAnalysis / 1000) + 's',
+        speakers: speakers.length,
+        speakerList: speakers,
+        avgTranscriptLength: Math.round(avgTranscriptLength),
         conditions: {
-            hasEnoughContent: `${unprocessedLength} >= ${minMeaningfulContent}`,
-            hasWaitedLongEnough: `${Math.round(timeSinceLastAnalysis / 1000)}s >= ${maxWaitTime/1000}s`,
-            significantContent: `${unprocessedLength} >= 200`
+            intervalReached: `${Math.round(timeSinceLastAnalysis / 1000)}s >= ${INTERVAL_THRESHOLD/1000}s`,
+            hasMinimalContent: `${unprocessedLength} >= ${MIN_CHARACTERS}`,
+            hasSignificantContent: `${unprocessedLength} >= ${MAX_CHARACTERS}`,
+            hasSpeakerChanges: `${speakers.length} >= 2`,
+            hasEnoughExchanges: `${unprocessedTranscripts.length} >= ${MIN_EXCHANGES}`,
+            hasSubstantialExchanges: `${Math.round(avgTranscriptLength)} >= 20`
         },
-        willTrigger: hasEnoughContent || hasWaitedLongEnough || significantContent,
+        skipConditions: {
+            onlyShortResponses,
+            onlyFillerWords,
+            singleSpeakerDominating
+        },
+        willTrigger: shouldTrigger,
         unprocessedText: unprocessedText.substring(0, 100) + (unprocessedText.length > 100 ? '...' : '')
     });
 
-    return hasEnoughContent || hasWaitedLongEnough || significantContent;
+    return shouldTrigger;
+}
+
+// Helper function to detect filler content
+function isFillerContent(text: string): boolean {
+    const fillerPatterns = [
+        /^(yes|no|ok|okay|mm-?hmm?|uh-?huh|yeah|right|sure|exactly|indeed|i see|got it|understood|alright)[\s.!?]*$/i,
+        /^(ano|ne|dobře|jasně|rozumím|chápu|aha|mhm|hmm|přesně|souhlasím|v pořádku)[\s.!?]*$/i, // Czech equivalents
+        /^[\s.!?]*$/,  // Only punctuation/whitespace
+        /^(.)\1{3,}$/, // Repeated characters (aaa, ...)
+    ];
+    
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    if (sentences.length === 0) return true;
+    
+    const fillerSentences = sentences.filter(sentence => 
+        fillerPatterns.some(pattern => pattern.test(sentence.trim()))
+    );
+    
+    // Consider it filler if 80% or more sentences are filler
+    const fillerRatio = fillerSentences.length / sentences.length;
+    return fillerRatio >= 0.8;
 }
 
 // Incremental analysis using ChatGPT thread
@@ -213,6 +282,9 @@ async function runChatGPTAnalysis(sessionId: string, threadId: string, newStatem
 
         console.log('🤖 Using ChatGPT assistant:', assistantId);
 
+        // Get doctor feedback context for AI learning
+        const feedbackContext = getFeedbackForAI();
+        
         // Run analysis with streaming
         const run = await openai.beta.threads.runs.create(threadId, {
             assistant_id: assistantId,
@@ -220,8 +292,14 @@ async function runChatGPTAnalysis(sessionId: string, threadId: string, newStatem
                 Analyze this new patient statement in the context of our ongoing conversation.
                 Provide ONLY INCREMENTAL UPDATES to your previous analysis.
                 Focus on: diagnosis updates, treatment modifications, new medication suggestions, follow-up changes.
-                Return updates in JSON format with fields: diagnosis, treatment, medication, followUp.
+                Return updates in JSON format with fields: diagnosis, treatment, medication, followUp, clarifyingQuestions, doctorRecommendations.
                 Be concise and only mention changes or new insights.
+                
+                IMPORTANT: Consider the following doctor feedback patterns when making suggestions:
+                ${feedbackContext}
+                
+                Adapt your suggestions to align with patterns that doctors have previously approved and avoid patterns they have rejected.
+                Mark AI-generated suggestions with "origin": "suggestion" to enable doctor feedback collection.
             `,
             stream: true
         });
@@ -293,11 +371,15 @@ async function runFallbackAnalysis(sessionId: string) {
         console.log('🔍 Importing realtime analysis module...');
         const { analyzeTranscriptionRealtime } = await import('$lib/session/realtime-analysis');
         
+        // Get doctor feedback context for AI learning
+        const feedbackContext = getFeedbackForAI();
+        
         console.log('🔍 Calling analyzeTranscriptionRealtime...');
         const analysis = await analyzeTranscriptionRealtime(
             fullText,
             sessionData.language,
-            sessionData.models
+            sessionData.models,
+            feedbackContext
         );
 
         console.log('📊 Fallback analysis result:', {

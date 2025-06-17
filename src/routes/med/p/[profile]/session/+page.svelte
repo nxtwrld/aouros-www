@@ -12,7 +12,7 @@
     import { profile } from '$lib/profiles';
     import { float32Flatten } from '$lib/array';
     import { ANALYZE_STEPS } from '$lib/types.d';
-    import { state as uiState } from '$lib/ui';
+    import { AnalysisMerger } from '$lib/session/analysis-merger';
   
     
     const MIN_AUDIO_SIZE: number = 10000 * 8;
@@ -48,6 +48,19 @@
             }
         ]);
 
+    // Language configuration - change this to set the UI language
+    const UI_LANGUAGE = 'en'; // 'en' for English, 'cs' for Czech
+    
+    // Get proper language codes for different APIs
+    function getLanguageForAPI(api: 'session' | 'analysis'): string {
+        if (api === 'session') {
+            return UI_LANGUAGE; // 'en' or 'cs'
+        } else if (api === 'analysis') {
+            return UI_LANGUAGE === 'en' ? 'english' : 'czech'; // Full language names for analysis API
+        }
+        return UI_LANGUAGE;
+    }
+
     let texts: string[] = [];
     let audioState: AudioState = $state(AudioState.ready);
 
@@ -65,73 +78,83 @@
 
     let newSpeech: boolean = $state(false);
 
-    // Initialize real-time session
-    async function initializeSession() {
-        console.log('🚀 Initializing real-time session...', { 
-            useRealtime, 
-            sessionId, 
-            currentSessionId: sessionId,
-            willInitialize: useRealtime && !sessionId 
-        });
+    // Initialize the analysis merger for gradual refinement
+    const analysisMerger = new AnalysisMerger();
+    let mergeStats = $state({ diagnosis: { total: 0, new: 0, updated: 0 } });
+
+    // Hybrid analysis trigger logic for frontend
+    let lastAnalysisTime = 0;
+    function shouldTriggerHybridAnalysis(): boolean {
+        if (realtimeTranscripts.length === 0) return false;
         
-        if (useRealtime && !sessionId) {
-            try {
-                console.log('📡 Making request to /v1/session/start...');
-                const requestBody = {
-                    language: 'cs',
-                    models: models.filter(m => m.active).map(m => m.name)
-                };
-                console.log('📡 Request body:', requestBody);
-                
-                const response = await fetch('/v1/session/start', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                console.log('📡 Session start response status:', response.status);
-                
-                if (!response.ok) {
-                    console.error('❌ Session start failed with status:', response.status);
-                    const errorText = await response.text();
-                    console.error('❌ Error response:', errorText);
-                    throw new Error(`Session start failed: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                console.log('📡 Session start response data:', result);
-                
-                if (result.sessionId) {
-                    sessionId = result.sessionId;
-                    console.log('✅ Real-time session initialized successfully:', sessionId);
-                    console.log('✅ Session features:', result.features);
-                    console.log('✅ SSE URL:', result.sseUrl);
-                    console.log('✅ Audio URL:', result.audioUrl);
-                    
-                    // Verify sessionId is actually set
-                    console.log('🔍 Verification - sessionId after assignment:', sessionId);
-                    
-                    return true;
-                } else {
-                    console.error('❌ Failed to initialize session - no sessionId in response:', result);
-                    useRealtime = false; // Fall back to traditional processing
-                    return false;
-                }
-            } catch (error) {
-                console.error('❌ Session initialization error:', error);
-                useRealtime = false; // Fall back to traditional processing
-                return false;
-            }
-        } else {
-            console.log('⏭️ Skipping session initialization:', { 
-                useRealtime, 
-                hasSessionId: !!sessionId,
-                reason: !useRealtime ? 'realtime disabled' : 'session already exists'
-            });
-            return !!sessionId;
+        // Hybrid approach thresholds
+        const INTERVAL_THRESHOLD = 30000; // 30 seconds
+        const MIN_CHARACTERS = 200; // Minimum meaningful content
+        const MAX_CHARACTERS = 500; // Maximum before forcing analysis
+        const MIN_EXCHANGES = 2; // Minimum conversational exchanges
+        
+        const totalText = realtimeTranscripts.map(t => t.text).join(' ');
+        const timeSinceLastAnalysis = Date.now() - lastAnalysisTime;
+        
+        // Primary trigger: 30-second intervals
+        const intervalReached = timeSinceLastAnalysis >= INTERVAL_THRESHOLD;
+        
+        // Secondary conditions
+        const hasMinimalContent = totalText.length >= MIN_CHARACTERS;
+        const hasSignificantContent = totalText.length >= MAX_CHARACTERS;
+        
+        // Speaker change detection
+        const speakers = [...new Set(realtimeTranscripts.map(t => t.speaker).filter(Boolean))];
+        const hasSpeakerChanges = speakers.length >= 2;
+        
+        // Content quality checks
+        const hasEnoughExchanges = realtimeTranscripts.length >= MIN_EXCHANGES;
+        const avgTranscriptLength = totalText.length / Math.max(realtimeTranscripts.length, 1);
+        const hasSubstantialExchanges = avgTranscriptLength >= 20;
+        
+        // Skip conditions
+        const onlyShortResponses = avgTranscriptLength < 10 && totalText.length < 100;
+        const onlyFillerWords = isFillerContentFrontend(totalText);
+        const singleSpeakerDominating = !hasSpeakerChanges && realtimeTranscripts.length >= 3;
+        
+        // Skip analysis if content is not meaningful
+        if (onlyShortResponses || onlyFillerWords || singleSpeakerDominating) {
+            return false;
         }
+        
+        // Trigger conditions
+        const shouldTrigger = (
+            hasSignificantContent || // Force if too much content accumulated
+            (intervalReached && hasMinimalContent && hasSpeakerChanges) || // Ideal: 30s + content + speakers
+            (intervalReached && hasMinimalContent && hasEnoughExchanges && hasSubstantialExchanges) // Fallback: 30s + quality content
+        );
+        
+        if (shouldTrigger) {
+            lastAnalysisTime = Date.now();
+        }
+        
+        return shouldTrigger;
+    }
+    
+    // Helper function to detect filler content (frontend version)
+    function isFillerContentFrontend(text: string): boolean {
+        const fillerPatterns = [
+            /^(yes|no|ok|okay|mm-?hmm?|uh-?huh|yeah|right|sure|exactly|indeed|i see|got it|understood|alright)[\s.!?]*$/i,
+            /^(ano|ne|dobře|jasně|rozumím|chápu|aha|mhm|hmm|přesně|souhlasím|v pořádku)[\s.!?]*$/i, // Czech equivalents
+            /^[\s.!?]*$/,  // Only punctuation/whitespace
+            /^(.)\1{3,}$/, // Repeated characters (aaa, ...)
+        ];
+        
+        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        if (sentences.length === 0) return true;
+        
+        const fillerSentences = sentences.filter(sentence => 
+            fillerPatterns.some(pattern => pattern.test(sentence.trim()))
+        );
+        
+        // Consider it filler if 80% or more sentences are filler
+        const fillerRatio = fillerSentences.length / sentences.length;
+        return fillerRatio >= 0.8;
     }
 
     // Handle real-time transcripts
@@ -144,6 +167,25 @@
             console.log('✅ Final transcript, adding to texts:', transcript.text);
             texts = [...texts, transcript.text];
             
+            // Update analysis.conversation for the Transcript component
+            if (!analysis.conversation) {
+                analysis.conversation = [];
+            }
+            
+            // Convert transcript to conversation format expected by Transcript component
+            analysis.conversation = [...analysis.conversation, {
+                speaker: transcript.speaker || 'patient',
+                text: transcript.text,
+                stress: 'medium', // Default stress level
+                urgency: 'medium' // Default urgency level
+            }];
+            
+            console.log('📝 Added to conversation:', {
+                speaker: transcript.speaker,
+                text: transcript.text.substring(0, 50) + '...',
+                conversationLength: analysis.conversation.length
+            });
+            
             // Switch to analysis view as soon as we have meaningful content
             const totalTextLength = texts.join(' ').length;
             const shouldSwitchToAnalysis = totalTextLength > 20 && view === Views.start;
@@ -152,12 +194,22 @@
                 totalTextLength,
                 currentView: view,
                 shouldSwitch: shouldSwitchToAnalysis,
-                transcriptText: transcript.text
+                transcriptText: transcript.text,
+                conversationEntries: analysis.conversation.length
             });
             
             if (shouldSwitchToAnalysis) {
                 console.log('🔄 Switching to analysis view based on transcript content');
                 view = Views.analysis;
+            }
+            
+            // Trigger incremental analysis using hybrid approach for test transcripts
+            const isTestTranscript = transcript.id?.startsWith('test_transcript_');
+            if (isTestTranscript && shouldTriggerHybridAnalysis()) {
+                console.log('🔬 Triggering hybrid analysis based on conversation cadence');
+                setTimeout(() => {
+                    analyzeTranscription(ANALYZE_STEPS.transcript, true);
+                }, 1000); // Short delay to avoid overwhelming the system
             }
         }
     }
@@ -177,23 +229,24 @@
         });
         
         // Merge with existing analysis
-        const oldAnalysis = { ...analysis };
+        const oldAnalysis = $state.snapshot(analysis);
         analysis = { ...analysis, ...analysisUpdate };
         
         console.log('🔬 Analysis state after merge:', {
             oldDiagnosisLength: oldAnalysis.diagnosis?.length || 0,
-            newDiagnosisLength: analysis.diagnosis?.length || 0,
+            newDiagnosisLength: $state.snapshot(analysis).diagnosis?.length || 0,
             oldTreatmentLength: oldAnalysis.treatment?.length || 0,
-            newTreatmentLength: analysis.treatment?.length || 0,
+            newTreatmentLength: $state.snapshot(analysis).treatment?.length || 0,
             currentView: view,
             Views: Views
         });
         
         // Switch to analysis view if we have meaningful results
+        const analysisSnapshot = $state.snapshot(analysis);
         const shouldSwitchView = (analysisUpdate.diagnosis?.length > 0 || 
                                  analysisUpdate.treatment?.length > 0 ||
-                                 analysis.diagnosis?.length > 0 ||
-                                 analysis.treatment?.length > 0);
+                                 analysisSnapshot.diagnosis?.length > 0 ||
+                                 analysisSnapshot.treatment?.length > 0);
         
         console.log('🔬 View switch decision:', {
             shouldSwitchView,
@@ -202,8 +255,8 @@
             conditions: {
                 updateHasDiagnosis: analysisUpdate.diagnosis?.length > 0,
                 updateHasTreatment: analysisUpdate.treatment?.length > 0,
-                analysisHasDiagnosis: analysis.diagnosis?.length > 0,
-                analysisHasTreatment: analysis.treatment?.length > 0
+                analysisHasDiagnosis: analysisSnapshot.diagnosis?.length > 0,
+                analysisHasTreatment: analysisSnapshot.treatment?.length > 0
             }
         });
         
@@ -212,26 +265,6 @@
             view = Views.analysis;
         } else {
             console.log('⏸️ Not switching view - no meaningful analysis results yet');
-        }
-    }
-
-    function speechStart() {
-        newSpeech = true;
-        console.log('🗣️ Speech started in session page');
-        
-        if (silenceTimer) {
-            clearTimeout(silenceTimer);
-        }
-        if (analysisTimer) {
-            clearTimeout(analysisTimer);
-        }
-    }
-
-    // Initialize session on page load instead of waiting for speech
-    async function ensureSessionReady() {
-        if (useRealtime && !sessionId) {
-            console.log('🚀 Ensuring session is ready...');
-            await initializeSession();
         }
     }
 
@@ -280,7 +313,7 @@
         const formData = new FormData();
         formData.append('file', mp3Blob, 'audio.mp3')
         formData.append('instructions', JSON.stringify({
-            lang: 'cs'
+            lang: getLanguageForAPI('session')
         }));
 
         try {
@@ -357,16 +390,20 @@
         activeModels = models.filter(m => m.active).map(m => m.name);
         lastAnalyzedTextLength = text.length;
 
+        // Get previous analysis snapshot for context
+        const previousAnalysisSnapshot = type === ANALYZE_STEPS.diagnosis ? $state.snapshot(analysis) : undefined;
+
         const response = await fetch('/v1/med/session', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                language: 'czech',
+                language: getLanguageForAPI('analysis'),
                 type,
                 models: activeModels,
-                text : (type === ANALYZE_STEPS.transcript) ? text : JSON.stringify(analysis)
+                text : (type === ANALYZE_STEPS.transcript) ? text : JSON.stringify(analysis),
+                previousAnalysis: previousAnalysisSnapshot // Pass previous context for gradual refinement
             })
         });
         const result = await response.json();
@@ -380,10 +417,47 @@
             return;
         }
         
+        // Use the analysis merger for gradual refinement instead of direct replacement
+        if (type === ANALYZE_STEPS.diagnosis) {
+            // Merge each type of items using the smart merger
+            const diagnosisResult = analysisMerger.mergeItemArray(result.diagnosis || [], 'diagnosis');
+            const treatmentResult = analysisMerger.mergeItemArray(result.treatment || [], 'treatment');
+            const medicationResult = analysisMerger.mergeItemArray(result.medication || [], 'medication');
+            const followUpResult = analysisMerger.mergeItemArray(result.followUp || [], 'followUp');
+            const questionsResult = analysisMerger.mergeItemArray(result.clarifyingQuestions || [], 'clarifyingQuestions');
+            const recommendationsResult = analysisMerger.mergeItemArray(result.doctorRecommendations || [], 'doctorRecommendations');
+            
+            // Update the analysis with merged data
+            analysis = {
+                ...analysis,
+                ...result,
+                diagnosis: analysisMerger.getItemsData('diagnosis'),
+                treatment: analysisMerger.getItemsData('treatment'),
+                medication: analysisMerger.getItemsData('medication'),
+                followUp: analysisMerger.getItemsData('followUp'),
+                clarifyingQuestions: analysisMerger.getItemsData('clarifyingQuestions'),
+                doctorRecommendations: analysisMerger.getItemsData('doctorRecommendations')
+            };
+            
+            // Update merge statistics for UI feedback
+            mergeStats = analysisMerger.getStats();
+            
+            console.log('🔄 Analysis merged with gradual refinement:', {
+                diagnosis: diagnosisResult.summary,
+                treatment: treatmentResult.summary,
+                medication: medicationResult.summary,
+                questions: questionsResult.summary,
+                recommendations: recommendationsResult.summary,
+                totalStats: mergeStats
+            });
+        } else {
+            // For transcript analysis, use direct assignment
         analysis = Object.assign(analysis || {}, result);
+        }
+        
         view = Views.analysis;
 
-        console.log('Analysis complete', analysis);
+        console.log('Analysis complete', $state.snapshot(analysis));
         
         // if the analysis is complete, start the next step, if we are not already processing a new batch, wait for it to finish
         if (type == ANALYZE_STEPS.transcript && processingStatus === 'idle' && !waitingRequest) {
@@ -393,7 +467,22 @@
 
     }
 
+    function resetAnalysis() {
+        console.log('🔄 Resetting analysis state...');
+        analysisMerger.clear();
+        analysis = { conversation: [] };
+        texts = [];
+        realtimeTranscripts = [];
+        mergeStats = { diagnosis: { total: 0, new: 0, updated: 0 } };
+        view = Views.start;
+        console.log('✅ Analysis state reset complete');
+    }
+
+
+
     function testAnalyze() {
+        resetAnalysis(); // Clear state before test
+        
         texts = [
             'Dobrý den, pane doktore.', 
             'Mám bolesti v krku a horečku.', 
@@ -439,16 +528,17 @@
         finalizationData = currentState;
 
         finalizeReportState = 'processing';
+        const analysisSnapshot = $state.snapshot(analysis);
         const toFinalize = {
             date: (new Date()).toISOString(),
-            complaint: analysis.complaint,
-            symptoms: analysis.symptoms,
-            diagnosis: selectFinals(analysis.diagnosis),
-            treatment: selectFinals(analysis.treatment),
-            results: selectFinals(analysis.results, 0),
-            followUp: selectFinals(analysis.followUp),
-            medication: selectFinals(analysis.medication),
-            patient: $profile,
+            complaint: analysisSnapshot.complaint,
+            symptoms: analysisSnapshot.symptoms,
+            diagnosis: selectFinals(analysisSnapshot.diagnosis),
+            treatment: selectFinals(analysisSnapshot.treatment),
+            results: selectFinals(analysisSnapshot.results, 0),
+            followUp: selectFinals(analysisSnapshot.followUp),
+            medication: selectFinals(analysisSnapshot.medication),
+            patient: $state.snapshot($profile),
             doctor: {}
         };
 
@@ -459,7 +549,7 @@
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                language: 'czech',
+                language: getLanguageForAPI('analysis'),
                 text: JSON.stringify(toFinalize)
             })
         });
@@ -467,7 +557,7 @@
         finalReport = report;
         report.doctor = 'doctor signature'
 
-        console.log(report);
+        console.log($state.snapshot(report));
         view = Views.report;
         finalizeReportState = 'idle';
     }
@@ -503,17 +593,11 @@
         view = Views.analysis;
     }
 
-    onMount(() => {
+    onMount(async () => {
         console.log('🏁 Session page mounted', { useRealtime, sessionId });
         
-        // Initialize session immediately if real-time is enabled
-        if (useRealtime) {
-            console.log('🚀 Auto-initializing session on mount...');
-            ensureSessionReady();
-        }
-        
         // Add test function to verify backend is working
-        window.testSessionAPI = async () => {
+        (window as any).testSessionAPI = async () => {
             console.log('🧪 Testing session API...');
             try {
                 const response = await fetch('/v1/session/start', {
@@ -522,7 +606,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        language: 'cs',
+                        language: getLanguageForAPI('session'),
                         models: ['GP']
                     })
                 });
@@ -538,12 +622,191 @@
         
         console.log('🧪 Added window.testSessionAPI() - call this in console to test backend');
         
+        // Add test transcript functions in development mode
+        try {
+            const { 
+                loadTestTranscript, 
+                streamTestTranscript, 
+                getAvailableTestTranscripts, 
+                getTestTranscriptInfo 
+            } = await import('$lib/session/test-transcript-loader');
+            
+            // Make test functions available in console
+            (window as any).testTranscripts = {
+                // List available test transcripts
+                list: getAvailableTestTranscripts,
+                
+                // Get info about a transcript
+                info: getTestTranscriptInfo,
+                
+                // Load transcript data immediately
+                load: loadTestTranscript,
+                
+                // Stream transcript with real-time simulation
+                stream: async (transcriptName: string, options?: any) => {
+                    console.log('🎬 Starting test transcript stream...');
+                    
+                    // Reset current state with analysis merger
+                    resetAnalysis();
+                    
+                    return streamTestTranscript(transcriptName as any, {
+                        onTranscript: handleRealtimeTranscript,
+                        onComplete: async () => {
+                            console.log('✅ Test transcript streaming completed!');
+                            console.log('🔬 Triggering AI analysis...');
+                            
+                            // Wait a moment for UI to update
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            
+                            // Trigger AI analysis using the legacy system
+                            try {
+                                await analyzeTranscription(ANALYZE_STEPS.transcript, true);
+                                console.log('🎯 AI analysis completed!');
+                            } catch (error) {
+                                console.error('❌ AI analysis failed:', error);
+                            }
+                        },
+                        delay: 1500, // Default 1.5 second delay
+                        ...options
+                    });
+                },
+                
+                // Quick test with chest pain scenario
+                chestpain: () => (window as any).testTranscripts.stream('chestpain'),
+                
+                // Stream with realistic timing
+                realtimeStream: (transcriptName: string) => 
+                    (window as any).testTranscripts.stream(transcriptName, { realTime: true }),
+                
+                // Load instantly without streaming
+                instant: async (transcriptName: string) => {
+                    console.log('⚡ Loading test transcript instantly...');
+                    
+                    const transcripts = await loadTestTranscript(transcriptName as any);
+                    
+                    // Reset state with analysis merger
+                    resetAnalysis();
+                    
+                    // Add all transcripts immediately
+                    for (const transcript of transcripts) {
+                        handleRealtimeTranscript(transcript);
+                    }
+                    
+                    console.log('✅ Test transcript loaded instantly!');
+                    console.log('🔬 Triggering AI analysis...');
+                    
+                    // Wait a moment for UI to update
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Trigger AI analysis using the legacy system
+                    try {
+                        await analyzeTranscription(ANALYZE_STEPS.transcript, true);
+                        console.log('🎯 AI analysis completed!');
+                    } catch (error) {
+                        console.error('❌ AI analysis failed:', error);
+                    }
+                }
+            };
+            
+            console.log('🧪 Test transcript functions added to window.testTranscripts:');
+            console.log('  📋 window.testTranscripts.list() - List available transcripts');
+            console.log('  ℹ️  window.testTranscripts.info("chestpain") - Get transcript info');
+            console.log('  🎬 window.testTranscripts.stream("chestpain") - Stream with delays');
+            console.log('  ⚡ window.testTranscripts.instant("chestpain") - Load instantly');
+            console.log('  🕐 window.testTranscripts.realtimeStream("chestpain") - Realistic timing');
+            console.log('  💨 window.testTranscripts.chestpain() - Quick chest pain test');
+            console.log('');
+            console.log('🔄 Analysis Functions:');
+            console.log('  🧪 window.triggerAnalysis() - Manual analysis trigger with merge stats');
+            console.log('  🔄 window.resetAnalysis() - Reset analysis merger state');
+            console.log('');
+            console.log('🌐 Language Configuration:');
+            console.log(`  Current UI Language: ${UI_LANGUAGE === 'en' ? 'English' : 'Czech'}`);
+            console.log(`  Analysis Language: ${getLanguageForAPI('analysis')}`);
+            console.log('  To change language, modify UI_LANGUAGE in session page');
+            console.log('  🔍 window.checkLanguage() - Check current language settings');
+            console.log('  🧪 window.testAnalysisLanguage("english") - Test analysis language');
+            console.log('  🧪 window.testAnalysisLanguage("czech") - Test analysis in Czech');
+            console.log('');
+            console.log('📊 Analysis Merger: Gradual refinement active - items will accumulate and refine instead of jumping!');
+            
+            // Add manual analysis trigger for testing
+            (window as any).triggerAnalysis = async () => {
+                console.log('🔬 Manual analysis trigger...');
+                try {
+                    await analyzeTranscription(ANALYZE_STEPS.transcript, true);
+                    console.log('✅ Manual analysis completed!');
+                } catch (error) {
+                    console.error('❌ Manual analysis failed:', error);
+                }
+            };
+
+            // Add language check function
+            (window as any).checkLanguage = () => {
+                console.log('🌐 Language Configuration Check:');
+                console.log(`  UI_LANGUAGE: ${UI_LANGUAGE}`);
+                console.log(`  Session API Language: ${getLanguageForAPI('session')}`);
+                console.log(`  Analysis API Language: ${getLanguageForAPI('analysis')}`);
+                console.log('');
+                console.log('💡 To change language, update UI_LANGUAGE in the session page:');
+                console.log(`  const UI_LANGUAGE = 'en'; // Change to 'cs' for Czech`);
+                return {
+                    ui: UI_LANGUAGE,
+                    session: getLanguageForAPI('session'),
+                    analysis: getLanguageForAPI('analysis')
+                };
+            };
+
+            // Add test analysis function with specific language
+            (window as any).testAnalysisLanguage = async (language = 'english') => {
+                console.log(`🧪 Testing analysis with language: ${language}`);
+                
+                const testText = `
+                Doctor: Hello, what brings you here today?
+                Patient: I have been experiencing chest pain for the past two days.
+                Doctor: Can you describe the pain? Is it sharp or dull?
+                Patient: It's a dull ache that gets worse when I eat spicy food.
+                Doctor: This sounds like it could be acid reflux. I recommend avoiding spicy foods and taking antacids.
+                `;
+
+                try {
+                    const response = await fetch('/v1/med/session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            language: language,
+                            type: ANALYZE_STEPS.diagnosis,
+                            models: ['GP'],
+                            text: testText
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    console.log('🎯 Analysis Result:', result);
+                    console.log('🔍 Treatment suggestions language check:');
+                    if (result.treatment && result.treatment.length > 0) {
+                        result.treatment.forEach((treatment, index) => {
+                            console.log(`  ${index + 1}. "${treatment.description}"`);
+                        });
+                    }
+                    return result;
+                } catch (error) {
+                    console.error('❌ Analysis test failed:', error);
+                    return error;
+                }
+            };
+        } catch (error) {
+            console.log('⚠️ Test transcript functions not available (production mode)');
+        }
+        
         // Log initial state
         console.log('📊 Initial session state:', {
             view,
             useRealtime,
             sessionId,
-            models: models.filter(m => m.active).map(m => m.name),
+            models: $state.snapshot(models).filter(m => m.active).map(m => m.name),
             audioState
         });
     })
@@ -555,15 +818,30 @@
 {#if view !== Views.report}
     <div class="audio-recorder" class:-running={view != Views.start} class:-active={audioState === AudioState.listening || audioState === AudioState.speaking}>
         <AudioButton 
-            bind:state={audioState} 
-            {hasResults} 
             bind:speechChunks={speechChunks} 
-            sessionId={sessionId || undefined}
-            {useRealtime}
-            on:speech-end={() => processData()} 
-            on:speech-start={speechStart}
+            bind:state={audioState}
+            bind:sessionId={sessionId}
+            useRealtime={useRealtime}
+            language={getLanguageForAPI('session')}
+            models={models.filter(m => m.active).map(m => m.name)}
+            onspeechstart={() => {
+                newSpeech = true;
+            }}
+            onspeechend={({ speechChunks }) => {
+                if (!useRealtime) {
+                    console.log('Speech ended with chunks:', speechChunks.length);
+                    processData();
+                }
+            }}
+            onfeatures={(features) => {
+                // Handle audio features if needed
+            }}
             ontranscript={handleRealtimeTranscript}
             onanalysis={handleRealtimeAnalysis}
+            onsessioncreated={(createdSessionId) => {
+                console.log('📡 Session created callback received:', createdSessionId);
+                sessionId = createdSessionId;
+            }}
         />
     </div>
 {/if}

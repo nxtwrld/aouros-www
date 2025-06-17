@@ -20,7 +20,8 @@ const analysisBuffer = new Map<string, {
 export async function analyzeTranscriptionRealtime(
     fullText: string,
     language: string = 'en', 
-    models: string[] = ['GP']
+    models: string[] = ['GP'],
+    feedbackContext?: string
 ): Promise<RealtimeAnalysisResult | null> {
     try {
         const sessionKey = `${language}_${models.join('_')}`;
@@ -48,6 +49,7 @@ export async function analyzeTranscriptionRealtime(
             fullTextLength: fullText.length,
             lastAnalyzedLength: buffer.lastAnalyzedLength,
             pendingAnalysis: buffer.pendingAnalysis,
+            hasFeedbackContext: !!feedbackContext,
             thresholds: {
                 minMeaningfulContent,
                 maxWaitTime: maxWaitTime / 1000 + 's'
@@ -72,25 +74,29 @@ export async function analyzeTranscriptionRealtime(
 
         console.log('✅ Processing accumulated content batch:', {
             reason: hasEnoughContent ? 'meaningful_content' : 'max_wait_reached',
-            contentChunk: fullText.substring(buffer.lastAnalyzedLength, buffer.lastAnalyzedLength + 150) + '...'
+            contentChunk: fullText.substring(buffer.lastAnalyzedLength, buffer.lastAnalyzedLength + 150) + '...',
+            feedbackContext: feedbackContext ? 'included' : 'none'
         });
 
         // Mark as pending
         buffer.pendingAnalysis = true;
         analysisBuffer.set(sessionKey, buffer);
 
-        // Prepare analysis request similar to current implementation
+        // Prepare analysis request with feedback context
         const analysisRequest = {
             language: language === 'en' ? 'english' : 'czech', // Map to expected format
             type: ANALYZE_STEPS.transcript,
             models: models,
-            text: fullText
+            text: fullText,
+            feedbackContext: feedbackContext // Add feedback context to the request
         };
 
         console.log('🔍 Analysis request for batched content:', {
             textLength: analysisRequest.text.length,
             language: analysisRequest.language,
-            models: analysisRequest.models
+            inputLanguage: language,
+            models: analysisRequest.models,
+            hasFeedbackContext: !!analysisRequest.feedbackContext
         });
 
         // Use existing analyze function
@@ -170,6 +176,14 @@ export async function analyzeProgressively(
             models: models,
             text: fullText
         };
+
+        console.log('🔍 Progressive analysis request:', {
+            step: step,
+            textLength: analysisRequest.text.length,
+            language: analysisRequest.language,
+            inputLanguage: language,
+            models: analysisRequest.models
+        });
 
         const result = await analyze(analysisRequest);
 
