@@ -73,13 +73,13 @@
         return days;
     }
 
-    function togglePin(item) {
+    function togglePin(item: any) {
         console.log('Pinned', item);
         item.pinned = !item.pinned;
         analysis = {...analysis}
     }
 
-    function removeItem(item, object) {
+    function removeItem(item: any, object: any[]) {
         object.splice(object.indexOf(item), 1);
         analysis = {...analysis}
     }

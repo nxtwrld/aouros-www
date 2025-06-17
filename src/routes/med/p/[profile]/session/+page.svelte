@@ -1,7 +1,7 @@
 <script lang="ts">
     //import { type Profile } from '$lib/types.d';
     import { AudioState, convertFloat32ToMp3} from '$lib/audio/microphone';
-    import { onMount} from 'svelte';
+    import { onMount, onDestroy} from 'svelte';
     import Diagnosis from '$components/profile/Session/Diagnosis.svelte';
     import Models from '$components/profile/Session/Models.svelte';
     import Transcript from '$components/profile/Session/Transcript.svelte';
@@ -13,6 +13,7 @@
     import { float32Flatten } from '$lib/array';
     import { ANALYZE_STEPS } from '$lib/types.d';
     import { AnalysisMerger } from '$lib/session/analysis-merger';
+    import { sessionStorage, loadSessionData, removeSessionData, hasStoredSessionData, type StoredSessionData } from '$lib/session/local-storage';
   
     
     const MIN_AUDIO_SIZE: number = 10000 * 8;
@@ -81,6 +82,11 @@
     // Initialize the analysis merger for gradual refinement
     const analysisMerger = new AnalysisMerger();
     let mergeStats = $state({ diagnosis: { total: 0, new: 0, updated: 0 } });
+
+    // Local storage integration
+    let autoSaveCleanup: (() => void) | null = null;
+    let hasRestoredData = $state(false);
+    let dataRestoredFromSessionId = $state<string | null>(null);
 
     // Hybrid analysis trigger logic for frontend
     let lastAnalysisTime = 0;
@@ -475,7 +481,212 @@
         realtimeTranscripts = [];
         mergeStats = { diagnosis: { total: 0, new: 0, updated: 0 } };
         view = Views.start;
+        hasRestoredData = false;
+        dataRestoredFromSessionId = null;
         console.log('✅ Analysis state reset complete');
+    }
+
+    /**
+     * Try to restore session data from local storage
+     */
+    function tryRestoreSessionData(sessionIdToRestore?: string): boolean {
+        // Only try to restore data if we're running in the browser
+        if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+            console.log('⚠️ Not running in browser, skipping session data restoration');
+            return false;
+        }
+
+        console.log('🔍 Checking for stored session data...', { sessionIdToRestore, currentSessionId: sessionId });
+        
+        let targetSessionId = sessionIdToRestore || sessionId;
+        
+        // If no specific session ID provided, try to find the most recent session
+        if (!targetSessionId) {
+            const storedSessions = sessionStorage.getStoredSessions();
+            console.log('📋 Available stored sessions:', storedSessions);
+            
+            if (storedSessions.length === 0) {
+                console.log('📭 No stored sessions found');
+                return false;
+            }
+            
+            // Find the most recent session with valid data
+            let mostRecentSession = null;
+            let mostRecentTime = 0;
+            
+            for (const sessionIdCandidate of storedSessions) {
+                const sessionData = loadSessionData(sessionIdCandidate);
+                if (sessionData && sessionData.lastUpdated > mostRecentTime) {
+                    mostRecentSession = sessionData;
+                    mostRecentTime = sessionData.lastUpdated;
+                    targetSessionId = sessionIdCandidate;
+                }
+            }
+            
+            if (!mostRecentSession) {
+                console.log('📭 No valid sessions found to restore');
+                return false;
+            }
+            
+            console.log('🎯 Found most recent session to restore:', {
+                sessionId: targetSessionId,
+                lastUpdated: new Date(mostRecentTime).toLocaleString(),
+                view: mostRecentSession.view,
+                analysisKeys: Object.keys(mostRecentSession.analysisData)
+            });
+        }
+
+        // Ensure we have a valid session ID at this point
+        if (!targetSessionId) {
+            console.log('❌ No valid session ID found for restoration');
+            return false;
+        }
+
+        // Check if we have stored data for the target session
+        if (!hasStoredSessionData(targetSessionId)) {
+            console.log('📭 No stored data found for session:', targetSessionId);
+            return false;
+        }
+
+        // Load the stored data
+        const storedData = loadSessionData(targetSessionId);
+        if (!storedData) {
+            console.log('❌ Failed to load stored session data');
+            return false;
+        }
+
+        console.log('📂 Restoring session data from local storage:', {
+            sessionId: targetSessionId,
+            view: storedData.view,
+            analysisKeys: Object.keys(storedData.analysisData),
+            transcriptCount: storedData.transcripts.length,
+            realtimeTranscriptCount: storedData.realtimeTranscripts.length,
+            textsCount: storedData.texts.length
+        });
+
+        // Restore the data
+        try {
+            // Set the session ID first
+            sessionId = targetSessionId;
+            
+            // Restore analysis data
+            analysis = storedData.analysisData;
+            texts = storedData.texts;
+            realtimeTranscripts = storedData.realtimeTranscripts;
+            
+            // Restore view state - force to analysis view if we have meaningful data
+            const hasAnalysisData = Object.keys(storedData.analysisData).length > 0 || 
+                                   storedData.texts.length > 0 || 
+                                   storedData.realtimeTranscripts.length > 0;
+            
+            if (hasAnalysisData) {
+                if (storedData.view === 'report') {
+                    view = Views.report;
+                } else {
+                    // Default to analysis view if we have any meaningful data
+                    view = Views.analysis;
+                }
+            }
+
+            // Restore models if available
+            if (storedData.models && storedData.models.length > 0) {
+                models = storedData.models;
+            }
+
+            // Mark that we've restored data
+            hasRestoredData = true;
+            dataRestoredFromSessionId = targetSessionId;
+
+            console.log('✅ Session data restored successfully', {
+                sessionId: targetSessionId,
+                restoredView: Object.keys(Views)[view] || 'unknown',
+                analysisKeys: Object.keys(analysis),
+                conversationLength: analysis.conversation?.length || 0,
+                textsLength: texts.length,
+                realtimeTranscriptsLength: realtimeTranscripts.length
+            });
+
+            return true;
+        } catch (error) {
+            console.error('❌ Failed to restore session data:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Set up auto-saving for the current session
+     */
+    function setupSessionAutoSave(currentSessionId: string) {
+        console.log('💾 Setting up auto-save for session:', currentSessionId);
+
+        // Clean up any existing auto-save
+        if (autoSaveCleanup) {
+            autoSaveCleanup();
+        }
+
+        // Set up new auto-save
+        autoSaveCleanup = sessionStorage.setupAutoSave(currentSessionId, () => {
+            const viewString = Object.keys(Views)[view] || 'start';
+            return {
+                analysisData: analysis,
+                transcripts: [], // We don't need to store server transcripts in local storage
+                realtimeTranscripts: realtimeTranscripts,
+                texts: texts,
+                view: viewString,
+                models: models,
+                language: getLanguageForAPI('session')
+            };
+        });
+
+        console.log('✅ Auto-save setup complete for session:', currentSessionId);
+    }
+
+    /**
+     * End the current session and clean up local storage
+     */
+    function endSession() {
+        console.log('🏁 Ending session...');
+
+        // Clean up auto-save
+        if (autoSaveCleanup) {
+            autoSaveCleanup();
+            autoSaveCleanup = null;
+        }
+
+        // Remove stored data for current session
+        if (sessionId) {
+            removeSessionData(sessionId);
+            console.log('🗑️ Removed session data for:', sessionId);
+        }
+
+        // Reset analysis state
+        resetAnalysis();
+
+        // Clear session ID
+        sessionId = null;
+
+        console.log('✅ Session ended and cleaned up');
+    }
+
+    /**
+     * Force save current session data (useful before navigation or critical operations)
+     */
+    function forceSaveSession() {
+        if (!sessionId) return;
+
+        console.log('💾 Force saving session data...');
+        sessionStorage.forceSaveCurrentSession(() => {
+            const viewString = Object.keys(Views)[view] || 'start';
+            return {
+                analysisData: analysis,
+                transcripts: [],
+                realtimeTranscripts: realtimeTranscripts,
+                texts: texts,
+                view: viewString,
+                models: models,
+                language: getLanguageForAPI('session')
+            };
+        });
     }
 
 
@@ -519,6 +730,10 @@
         if (finalizeReportState === 'processing') {
             return;
         }
+        
+        // Force save before finalizing
+        forceSaveSession();
+        
         const currentState = JSON.stringify(analysis);
         if (finalizationData == currentState) {
             console.log('current state...no need to finalize');
@@ -594,7 +809,25 @@
     }
 
     onMount(async () => {
-        console.log('🏁 Session page mounted', { useRealtime, sessionId });
+        console.log('🏁 Session page mounted', { useRealtime, sessionId, currentView: view });
+        
+        // Try to restore session data from local storage first
+        const restored = tryRestoreSessionData();
+        if (restored) {
+            console.log('🔄 Session data restored from local storage', {
+                sessionId,
+                currentView: view,
+                analysisKeys: Object.keys(analysis),
+                hasConversation: !!analysis.conversation
+            });
+            
+            // Set up auto-save for the restored session
+            if (sessionId) {
+                setupSessionAutoSave(sessionId);
+            }
+        } else {
+            console.log('📭 No session data to restore - starting fresh');
+        }
         
         // Add test function to verify backend is working
         (window as any).testSessionAPI = async () => {
@@ -741,6 +974,82 @@
                 }
             };
 
+            // Add session management functions for testing/debugging
+            (window as any).sessionUtils = {
+                // Force save current session
+                forceSave: forceSaveSession,
+                
+                // End current session and cleanup
+                endSession: endSession,
+                
+                // Check if session has stored data
+                hasStoredData: (id?: string) => hasStoredSessionData(id || sessionId || ''),
+                
+                // Try to restore session data
+                tryRestore: (id?: string) => tryRestoreSessionData(id),
+                
+                // Get current session info
+                getCurrentSession: () => ({
+                    sessionId,
+                    hasRestoredData,
+                    dataRestoredFromSessionId,
+                    autoSaveActive: autoSaveCleanup !== null,
+                    view: Object.keys(Views)[view] || 'unknown',
+                    analysisKeys: Object.keys(analysis),
+                    transcriptCount: texts.length,
+                    realtimeTranscriptCount: realtimeTranscripts.length
+                }),
+                
+                // Debug localStorage state
+                debugStorage: () => {
+                    const sessions = sessionStorage.getStoredSessions();
+                    console.log('🔍 Debug Storage State:');
+                    console.log('- Available sessions:', sessions);
+                    console.log('- Current sessionId:', sessionId);
+                    console.log('- Current view:', Object.keys(Views)[view] || 'unknown');
+                    console.log('- Has restored data:', hasRestoredData);
+                    console.log('- Analysis keys:', Object.keys(analysis));
+                    console.log('- Texts length:', texts.length);
+                    console.log('- Realtime transcripts:', realtimeTranscripts.length);
+                    
+                    sessions.forEach(id => {
+                        const data = loadSessionData(id);
+                        if (data) {
+                            console.log(`📋 Session ${id.substring(0, 8)}:`, {
+                                view: data.view,
+                                lastUpdated: new Date(data.lastUpdated).toLocaleString(),
+                                analysisKeys: Object.keys(data.analysisData),
+                                textsCount: data.texts.length,
+                                transcriptsCount: data.realtimeTranscripts.length
+                            });
+                        }
+                    });
+                },
+                
+                // Clear all stored sessions (use with caution)
+                clearAll: () => {
+                    const confirmed = confirm('Are you sure you want to clear ALL stored session data?');
+                    if (confirmed) {
+                        sessionStorage.clearAllSessions();
+                        console.log('🧹 All session data cleared');
+                    }
+                }
+            };
+
+            console.log('💾 Session management functions added:');
+            console.log('  📊 window.sessionUtils.getCurrentSession() - Get current session info');
+            console.log('  💾 window.sessionUtils.forceSave() - Force save current session');
+            console.log('  🏁 window.sessionUtils.endSession() - End and cleanup session');
+            console.log('  🔍 window.sessionUtils.hasStoredData(sessionId?) - Check for stored data');
+            console.log('  📂 window.sessionUtils.tryRestore(sessionId?) - Try restore data');
+            console.log('  🔍 window.sessionUtils.debugStorage() - Debug localStorage state');
+            console.log('  🧹 window.sessionUtils.clearAll() - Clear all stored data (with confirmation)');
+            console.log('');
+            console.log('🔧 Debugging tip: If session restoration is not working:');
+            console.log('  1. Run window.sessionUtils.debugStorage() to see stored sessions');
+            console.log('  2. Run window.sessionUtils.tryRestore() to manually restore');
+            console.log('  3. Check the console for restoration logs starting with 🔍 or 📂');
+
             // Add language check function
             (window as any).checkLanguage = () => {
                 console.log('🌐 Language Configuration Check:');
@@ -809,11 +1118,46 @@
             models: $state.snapshot(models).filter(m => m.active).map(m => m.name),
             audioState
         });
-    })
+    });
+
+    onDestroy(() => {
+        console.log('💀 Session page destroying...');
+        
+        // Force save before component destruction
+        forceSaveSession();
+        
+        // Clean up auto-save if it's running
+        if (autoSaveCleanup) {
+            autoSaveCleanup();
+            autoSaveCleanup = null;
+        }
+        
+        console.log('✅ Session page cleanup complete');
+    });
 
 
 </script>
 
+
+<!-- Session Restoration Notification -->
+{#if hasRestoredData && dataRestoredFromSessionId}
+    <div class="session-restoration-notice">
+        <div class="notice-content">
+            <svg class="notice-icon">
+                <use href="/icons.svg#restore"></use>
+            </svg>
+            <div class="notice-text">
+                <strong>Session Restored</strong>
+                <span>Your previous session data has been restored from local storage (Session: {dataRestoredFromSessionId.substring(0, 8)}...)</span>
+            </div>
+            <button class="notice-dismiss" onclick={() => { hasRestoredData = false; dataRestoredFromSessionId = null; }} aria-label="Dismiss notification">
+                <svg>
+                    <use href="/icons.svg#x"></use>
+                </svg>
+            </button>
+        </div>
+    </div>
+{/if}
 
 {#if view !== Views.report}
     <div class="audio-recorder" class:-running={view != Views.start} class:-active={audioState === AudioState.listening || audioState === AudioState.speaking}>
@@ -841,6 +1185,9 @@
             onsessioncreated={(createdSessionId) => {
                 console.log('📡 Session created callback received:', createdSessionId);
                 sessionId = createdSessionId;
+                
+                // Set up auto-saving for the new session
+                setupSessionAutoSave(createdSessionId);
             }}
         />
     </div>
@@ -878,6 +1225,14 @@
                         {:else}
                             <button class="button -primary" onclick={finalizeReport}>Finalize Report</button>
                         {/if}
+                        
+                        <!-- Session Management Controls -->
+                        <button class="button -danger" onclick={() => {
+                            const confirmed = confirm('Are you sure you want to end this session? All data will be cleared.');
+                            if (confirmed) {
+                                endSession();
+                            }
+                        }}>End Session</button>
 
                 </div>
                 <div class="dashboard">
@@ -998,6 +1353,85 @@
         container-type: inline-size;
         container-name: session;
     }
+
+    /* Session Restoration Notification Styles */
+    .session-restoration-notice {
+        position: fixed;
+        top: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        border-radius: var(--radius-8);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        padding: 1rem 1.5rem;
+        max-width: 500px;
+        width: 90vw;
+        animation: slideInFromTop 0.5s ease-out;
+    }
+
+    .notice-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .notice-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        fill: currentColor;
+        flex-shrink: 0;
+    }
+
+    .notice-text {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .notice-text strong {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .notice-text span {
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+
+    .notice-dismiss {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        border-radius: var(--radius-4);
+        padding: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .notice-dismiss:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .notice-dismiss svg {
+        width: 1rem;
+        height: 1rem;
+        fill: currentColor;
+    }
+
+    @keyframes slideInFromTop {
+        from {
+            transform: translateX(-50%) translateY(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+                 }
+     }
 
     .dashboard {
         margin-top: 1rem;
