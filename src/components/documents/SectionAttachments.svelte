@@ -3,6 +3,7 @@
     import { decrypt as decryptAes, importKey } from '$lib/encryption/aes';
     import { decrypt } from '$lib/documents/index';
     import { base64ToArrayBuffer } from '$lib/arrays';
+    import { logger } from '$lib/logging/logger';
 
     type Attachment = {
         thumbnail: string;
@@ -19,26 +20,25 @@
 
   let { data, key = undefined }: Props = $props();
 
-    console.log(data);
+    logger.api.debug('Attachments data:', data);
 
     function showAttachment() {
-        console.log(data);
+        logger.api.debug('Showing attachment data:', data);
     }
 
     const loadedAttachments = new Map<string, ArrayBuffer>();
 
     async function loadAttachement(attachment: Attachment): Promise<ArrayBuffer> {
-        console.log('loadAttachment', attachment);
+        logger.api.debug('Loading attachment:', attachment);
         if (!('path' in attachment) || !key) return;
         const fileResponse = await fetch('/v1/med/profiles/' + attachment.path);
-        console.log(fileResponse);
+        logger.api.debug('File response:', fileResponse);
         // base64 to arraybuffer to text file
         const file = await decrypt([await fileResponse.text()], key);
         // base64 to blob
-        console.log('decrypted', file);
+        logger.api.debug('Decrypted file:', file);
         const json = JSON.parse(file);
         return base64ToArrayBuffer(json.file)
-
     }
 
     async function downloadAttachment(attachment: Attachment): Promise<void> {

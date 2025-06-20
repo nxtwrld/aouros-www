@@ -1,3 +1,5 @@
+import { log } from '$lib/logging/logger';
+
 export interface StoredSessionData {
     sessionId: string;
     analysisData: any;
@@ -53,7 +55,7 @@ export class SessionLocalStorage {
      */
     saveSession(sessionId: string, data: Partial<StoredSessionData>): void {
         if (!this.isBrowser) {
-            console.warn('⚠️ Cannot save session data - not running in browser');
+            log.storage.warn('Cannot save session data - not running in browser');
             return;
         }
 
@@ -77,7 +79,7 @@ export class SessionLocalStorage {
             // Update session index
             this.updateSessionIndex(sessionId);
             
-            console.log('💾 Session data saved locally:', {
+            log.storage.info('Session data saved locally', {
                 sessionId,
                 dataSize: JSON.stringify(sessionData).length,
                 analysisKeys: Object.keys(sessionData.analysisData),
@@ -85,7 +87,7 @@ export class SessionLocalStorage {
                 realtimeTranscriptCount: sessionData.realtimeTranscripts.length
             });
         } catch (error) {
-            console.error('❌ Failed to save session data locally:', error);
+            log.storage.error('Failed to save session data locally:', error);
         }
     }
 
@@ -94,7 +96,7 @@ export class SessionLocalStorage {
      */
     loadSession(sessionId: string): StoredSessionData | null {
         if (!this.isBrowser) {
-            console.warn('⚠️ Cannot load session data - not running in browser');
+            log.storage.warn('Cannot load session data - not running in browser');
             return null;
         }
 
@@ -103,7 +105,7 @@ export class SessionLocalStorage {
             const storedData = localStorage.getItem(storageKey);
             
             if (!storedData) {
-                console.log('📭 No stored session data found for:', sessionId);
+                log.storage.debug('No stored session data found for:', sessionId);
                 return null;
             }
 
@@ -112,7 +114,7 @@ export class SessionLocalStorage {
             // Check if data is too old
             const age = Date.now() - sessionData.lastUpdated;
             if (age > this.options.maxAge!) {
-                console.log('🗑️ Session data expired, removing:', {
+                log.storage.info('Session data expired, removing:', {
                     sessionId,
                     age: Math.round(age / 1000 / 60),
                     maxAgeMinutes: Math.round(this.options.maxAge! / 1000 / 60)
@@ -121,7 +123,7 @@ export class SessionLocalStorage {
                 return null;
             }
 
-            console.log('📂 Session data loaded from local storage:', {
+            log.storage.info('Session data loaded from local storage', {
                 sessionId,
                 age: Math.round(age / 1000),
                 analysisKeys: Object.keys(sessionData.analysisData),
@@ -131,7 +133,7 @@ export class SessionLocalStorage {
 
             return sessionData;
         } catch (error) {
-            console.error('❌ Failed to load session data from local storage:', error);
+            log.storage.error('Failed to load session data from local storage:', error);
             return null;
         }
     }
@@ -141,7 +143,7 @@ export class SessionLocalStorage {
      */
     removeSession(sessionId: string): void {
         if (!this.isBrowser) {
-            console.warn('⚠️ Cannot remove session data - not running in browser');
+            log.storage.warn('Cannot remove session data - not running in browser');
             return;
         }
 
@@ -150,9 +152,9 @@ export class SessionLocalStorage {
             localStorage.removeItem(storageKey);
             this.removeFromSessionIndex(sessionId);
             
-            console.log('🗑️ Session data removed from local storage:', sessionId);
+            log.storage.info('Session data removed from local storage:', sessionId);
         } catch (error) {
-            console.error('❌ Failed to remove session data from local storage:', error);
+            log.storage.error('Failed to remove session data from local storage:', error);
         }
     }
 
@@ -174,7 +176,7 @@ export class SessionLocalStorage {
                     const currentData = dataGetter();
                     this.saveSession(sessionId, currentData);
                 } catch (error) {
-                    console.error('❌ Auto-save failed:', error);
+                    log.storage.error('Auto-save failed:', error);
                 } finally {
                     this.isAutoSaving = false;
                 }
@@ -203,7 +205,7 @@ export class SessionLocalStorage {
             const index = JSON.parse(indexData);
             return index.sessions || [];
         } catch (error) {
-            console.error('❌ Failed to get stored sessions:', error);
+            log.storage.error('Failed to get stored sessions:', error);
             return [];
         }
     }
@@ -213,7 +215,7 @@ export class SessionLocalStorage {
      */
     clearAllSessions(): void {
         if (!this.isBrowser) {
-            console.warn('⚠️ Cannot clear session data - not running in browser');
+            log.storage.warn('Cannot clear session data - not running in browser');
             return;
         }
 
@@ -224,9 +226,9 @@ export class SessionLocalStorage {
             });
             localStorage.removeItem(STORAGE_INDEX_KEY);
             
-            console.log('🧹 All session data cleared from local storage');
+            log.storage.info('All session data cleared from local storage');
         } catch (error) {
-            console.error('❌ Failed to clear all session data:', error);
+            log.storage.error('Failed to clear all session data:', error);
         }
     }
 
@@ -239,7 +241,7 @@ export class SessionLocalStorage {
         }
 
         try {
-            console.log('🧹 Performing maintenance cleanup of old session data...');
+            log.storage.info('Performing maintenance cleanup of old session data...');
             
             const sessions = this.getStoredSessions();
             let removedCount = 0;
@@ -255,9 +257,9 @@ export class SessionLocalStorage {
             // Clean up any orphaned keys
             this.cleanupOrphanedKeys();
             
-            console.log(`🧹 Maintenance cleanup complete. Removed ${removedCount} expired sessions.`);
+            log.storage.info(`Maintenance cleanup complete. Removed ${removedCount} expired sessions.`);
         } catch (error) {
-            console.error('❌ Maintenance cleanup failed:', error);
+            log.storage.error('Maintenance cleanup failed:', error);
         }
     }
 
@@ -272,9 +274,9 @@ export class SessionLocalStorage {
         try {
             const currentData = dataGetter();
             this.saveSession(this.currentSessionId, currentData);
-            console.log('💾 Force saved current session data');
+            log.storage.debug('Force saved current session data');
         } catch (error) {
-            console.error('❌ Force save failed:', error);
+            log.storage.error('Force save failed:', error);
         }
     }
 
@@ -309,7 +311,7 @@ export class SessionLocalStorage {
                 localStorage.setItem(STORAGE_INDEX_KEY, JSON.stringify(index));
             }
         } catch (error) {
-            console.error('❌ Failed to update session index:', error);
+            log.storage.error('Failed to update session index:', error);
         }
     }
 
@@ -328,7 +330,7 @@ export class SessionLocalStorage {
             
             localStorage.setItem(STORAGE_INDEX_KEY, JSON.stringify(index));
         } catch (error) {
-            console.error('❌ Failed to remove from session index:', error);
+            log.storage.error('Failed to remove from session index:', error);
         }
     }
 
@@ -358,10 +360,10 @@ export class SessionLocalStorage {
             });
             
             if (orphanedKeys.length > 0) {
-                console.log(`🧹 Removed ${orphanedKeys.length} orphaned storage keys`);
+                log.storage.info(`Removed ${orphanedKeys.length} orphaned storage keys`);
             }
         } catch (error) {
-            console.error('❌ Failed to cleanup orphaned keys:', error);
+            log.storage.error('Failed to cleanup orphaned keys:', error);
         }
     }
 
@@ -376,13 +378,13 @@ export class SessionLocalStorage {
         window.addEventListener('beforeunload', () => {
             // Note: We don't remove data here, just ensure it's saved
             // Data removal should happen when user explicitly ends session
-            console.log('📄 Page unloading, session data will persist');
+            log.storage.debug('Page unloading, session data will persist');
         });
 
         // Handle page visibility changes (useful for mobile)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && this.currentSessionId) {
-                console.log('👁️ Page hidden, ensuring session data is saved');
+                log.storage.debug('Page hidden, ensuring session data is saved');
             }
         });
     }

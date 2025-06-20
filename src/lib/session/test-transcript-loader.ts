@@ -1,4 +1,5 @@
 import type { PartialTranscript } from './manager';
+import { logger } from '$lib/logging/logger';
 
 // Test transcript data interface (matches testData/transcripts format)
 export interface TestTranscriptEntry {
@@ -42,7 +43,7 @@ function parseTimestamp(timestamp: string): number {
 export async function loadTestTranscript(transcriptName: keyof typeof TEST_TRANSCRIPTS): Promise<PartialTranscript[]> {
     try {
         const url = TEST_TRANSCRIPTS[transcriptName];
-        console.log('📄 Loading test transcript:', url);
+        logger.test.debug('Loading test transcript:', url);
         
         const response = await fetch(url);
         if (!response.ok) {
@@ -50,16 +51,16 @@ export async function loadTestTranscript(transcriptName: keyof typeof TEST_TRANS
         }
         
         const data: TestTranscriptEntry[] = await response.json();
-        console.log('📄 Loaded transcript entries:', data.length);
+        logger.test.debug('Loaded transcript entries:', data.length);
         
         // Convert to PartialTranscript format
         const transcripts = data.map((entry, index) => convertToPartialTranscript(entry, index));
         
-        console.log('✅ Converted to PartialTranscript format:', transcripts.length);
+        logger.test.info('Converted to PartialTranscript format:', transcripts.length);
         return transcripts;
         
     } catch (error) {
-        console.error('❌ Failed to load test transcript:', error);
+        logger.test.error('Failed to load test transcript:', error);
         throw error;
     }
 }
@@ -79,7 +80,7 @@ export async function streamTestTranscript(
     const { onTranscript, onComplete, delay = 2000, realTime = false } = options;
     
     try {
-        console.log('🎬 Starting test transcript stream:', transcriptName);
+        logger.test.info('Starting test transcript stream:', transcriptName);
         const transcripts = await loadTestTranscript(transcriptName);
         
         if (realTime) {
@@ -101,13 +102,13 @@ export async function streamTestTranscript(
                     await new Promise(resolve => setTimeout(resolve, 1000)); // Initial delay
                 }
                 
-                console.log(`📝 [${rawEntry.timestamp}] ${rawEntry.speaker}: ${rawEntry.text}`);
+                logger.test.debug(`[${rawEntry.timestamp}] ${rawEntry.speaker}: ${rawEntry.text}`);
                 onTranscript?.(transcript);
             }
         } else {
             // Use fixed delays
             for (const transcript of transcripts) {
-                console.log(`📝 Streaming: ${transcript.speaker}: ${transcript.text}`);
+                logger.test.debug(`Streaming: ${transcript.speaker}: ${transcript.text}`);
                 onTranscript?.(transcript);
                 
                 if (delay > 0) {
@@ -116,11 +117,11 @@ export async function streamTestTranscript(
             }
         }
         
-        console.log('✅ Test transcript stream completed');
+        logger.test.info('Test transcript stream completed');
         onComplete?.();
         
     } catch (error) {
-        console.error('❌ Failed to stream test transcript:', error);
+        logger.test.error('Failed to stream test transcript:', error);
         throw error;
     }
 }
@@ -159,7 +160,7 @@ export async function getTestTranscriptInfo(transcriptName: keyof typeof TEST_TR
             duration: durationFormatted
         };
     } catch (error) {
-        console.error('❌ Failed to get transcript info:', error);
+        logger.test.error('Failed to get transcript info:', error);
         throw error;
     }
 } 

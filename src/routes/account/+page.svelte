@@ -9,6 +9,7 @@
     import { goto } from '$app/navigation';
 	import { prepareKey, encrypt as encryptAES, exportKey } from '$lib/encryption/aes.js';
 	import { encrypt as encryptRSA, pemToKey } from '$lib/encryption/rsa.js';
+	import { log } from '$lib/logging/logger';
 
 	let STEP = $state(0);
 
@@ -157,16 +158,16 @@
 
 		loading = true
 		return async ({ update, result }) => {
-			console.log('result', result);
+			log.ui.debug('result', result);
 			if (result.type === 'success') {
 				loading = false;
-				console.log('should go to /med');
+				log.ui.info('should go to /med');
 				goto('/med');
 				return;
 			}
 			if (result.type === 'failure') {
 				error = result.data.error;
-				console.log('error', error);
+				log.ui.error('error', error);
 				setStep(0);
 				loading = false
 			}

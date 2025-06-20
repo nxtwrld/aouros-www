@@ -4,6 +4,7 @@
     import { getSortForEnum, sortbyProperty } from '$lib/array';
     import { ANALYZE_STEPS } from '$lib/types.d';
     import PropertyTile from '../PropertyTile.svelte';
+    import { log } from '$lib/logging/logger';
 
     interface Props {
         analysis: any;
@@ -74,7 +75,7 @@
     }
 
     function togglePin(item: any) {
-        console.log('Pinned', item);
+        log.analysis.debug('Pinned', item);
         item.pinned = !item.pinned;
         analysis = {...analysis}
     }
@@ -85,7 +86,7 @@
     }
 
     function approveItem(item: any) {
-        console.log('Approved item:', item);
+        log.analysis.info('Approved item:', item);
         item.doctorFeedback = 'approved';
         analysis = {...analysis};
         
@@ -94,7 +95,7 @@
     }
 
     function rejectItem(item: any) {
-        console.log('Rejected item:', item);
+        log.analysis.info('Rejected item:', item);
         item.doctorFeedback = 'rejected';
         analysis = {...analysis};
         
@@ -103,7 +104,7 @@
     }
 
     function clearFeedback(item: any) {
-        console.log('Cleared feedback for item:', item);
+        log.analysis.info('Cleared feedback for item:', item);
         delete item.doctorFeedback;
         analysis = {...analysis};
         
@@ -128,12 +129,12 @@
             });
             
             if (response.ok) {
-                console.log('✅ Feedback sent to AI successfully');
+                log.analysis.debug('Feedback sent to AI successfully');
             } else {
-                console.error('❌ Failed to send feedback to AI');
+                log.analysis.error('Failed to send feedback to AI');
             }
         } catch (error) {
-            console.error('❌ Error sending feedback to AI:', error);
+            log.analysis.error('Error sending feedback to AI:', error);
         }
     }
 

@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import EventEmitter from 'eventemitter3';
+import { logger } from '$lib/logging/logger';
 
 // Enhanced session data interface with ChatGPT thread support
 export interface SessionData {
@@ -55,13 +56,7 @@ export interface SSEUpdate {
     timestamp: number;
 }
 
-// WebSocket message types (keeping for compatibility)
-export interface WebSocketMessage {
-    type: 'audio_chunk' | 'partial_transcript' | 'analysis_update' | 'session_status' | 'error';
-    sessionId: string;
-    data: any;
-    timestamp: number;
-}
+
 
 // In-memory session store (in production, use Redis or database)
 const sessions = new Map<string, SessionData>();
@@ -95,7 +90,7 @@ export async function createSession(sessionId: string, sessionData: Partial<Sess
     // Create event emitter for this session
     sessionEmitters.set(sessionId, new EventEmitter());
     
-    console.log(`✅ Session ${sessionId} created for user ${sessionData.userId}`, {
+    logger.session.info(`Session ${sessionId} created for user ${sessionData.userId}`, {
         hasOpenAIThread: !!sessionData.openaiThreadId,
         models: sessionData.models,
         language: sessionData.language
@@ -154,7 +149,7 @@ export function addTranscript(sessionId: string, transcript: PartialTranscript):
             emitter.emit('sse_update', sseUpdate);
         }
         
-        console.log(`📝 Transcript added to session ${sessionId}:`, {
+        logger.session.debug(`Transcript added to session ${sessionId}`, {
             text: transcript.text.substring(0, 50) + '...',
             confidence: transcript.confidence,
             is_final: transcript.is_final
@@ -163,22 +158,22 @@ export function addTranscript(sessionId: string, transcript: PartialTranscript):
 }
 
 export function updateAnalysis(sessionId: string, analysis: any): void {
-    console.log('🔬 updateAnalysis called', { sessionId, analysis });
+    logger.analysis.debug('Analysis update called', { sessionId, analysis });
     
     const session = sessions.get(sessionId);
     if (!session) {
-        console.error('❌ No session found in updateAnalysis:', sessionId);
+        logger.analysis.error('No session found in updateAnalysis', { sessionId });
         return;
     }
     
-    console.log('🔬 Current analysis state before update:', {
+    logger.analysis.debug('Current analysis state before update', {
         currentDiagnosis: session.analysisState.currentDiagnosis.length,
         currentTreatment: session.analysisState.currentTreatment.length,
         currentMedication: session.analysisState.currentMedication.length,
         currentFollowUp: session.analysisState.currentFollowUp.length
     });
     
-    console.log('🔬 New analysis data structure:', {
+    logger.analysis.debug('New analysis data structure', {
         hasDiagnosis: !!analysis.diagnosis,
         diagnosisLength: analysis.diagnosis?.length || 0,
         diagnosisType: typeof analysis.diagnosis,
@@ -189,28 +184,28 @@ export function updateAnalysis(sessionId: string, analysis: any): void {
 
     // Merge with existing analysis state
     if (analysis.diagnosis) {
-        console.log('🔬 Merging diagnosis data:', analysis.diagnosis);
+        logger.analysis.debug('Merging diagnosis data', { diagnosis: analysis.diagnosis });
         session.analysisState.currentDiagnosis = mergeAnalysisArray(
             session.analysisState.currentDiagnosis, 
             analysis.diagnosis
         );
     }
     if (analysis.treatment) {
-        console.log('🔬 Merging treatment data:', analysis.treatment);
+        logger.analysis.debug('Merging treatment data', { treatment: analysis.treatment });
         session.analysisState.currentTreatment = mergeAnalysisArray(
             session.analysisState.currentTreatment, 
             analysis.treatment
         );
     }
     if (analysis.medication) {
-        console.log('🔬 Merging medication data:', analysis.medication);
+        logger.analysis.debug('Merging medication data', { medication: analysis.medication });
         session.analysisState.currentMedication = mergeAnalysisArray(
             session.analysisState.currentMedication, 
             analysis.medication
         );
     }
     if (analysis.followUp) {
-        console.log('🔬 Merging followUp data:', analysis.followUp);
+        logger.analysis.debug('Merging followUp data', { followUp: analysis.followUp });
         session.analysisState.currentFollowUp = mergeAnalysisArray(
             session.analysisState.currentFollowUp, 
             analysis.followUp
@@ -222,7 +217,7 @@ export function updateAnalysis(sessionId: string, analysis: any): void {
     // Emit analysis event for SSE
     const emitter = sessionEmitters.get(sessionId);
     if (emitter) {
-        console.log('🔬 Emitting analysis update via SSE...');
+        logger.analysis.debug('Emitting analysis update via SSE');
         emitter.emit('analysis_updated', { sessionId, analysis });
         
         // Emit SSE update
@@ -238,18 +233,19 @@ export function updateAnalysis(sessionId: string, analysis: any): void {
             timestamp: Date.now()
         };
         
-        console.log('🔬 SSE update data being sent:', sseUpdate);
+        logger.analysis.debug('SSE update data being sent', { sseUpdate });
         session.realtimeUpdates.push(sseUpdate);
         emitter.emit('sse_update', sseUpdate);
-        console.log('✅ SSE update emitted successfully');
+        logger.analysis.info('SSE update emitted successfully');
     } else {
-        console.error('❌ No emitter found for session:', sessionId);
+        logger.analysis.error('No emitter found for session', { sessionId });
     }
     
-    console.log(`🔬 Analysis updated for session ${sessionId}:`, {
+    logger.analysis.info(`Analysis updated for session ${sessionId}`, {
         diagnosisCount: session.analysisState.currentDiagnosis.length,
         treatmentCount: session.analysisState.currentTreatment.length,
-        medicationCount: session.analysisState.currentMedication.length
+        medicationCount: session.analysisState.currentMedication.length,
+        followUpCount: session.analysisState.currentFollowUp.length
     });
 }
 
@@ -307,7 +303,7 @@ export function deleteSession(sessionId: string): void {
         emitter.removeAllListeners();
         sessionEmitters.delete(sessionId);
     }
-    console.log(`🗑️ Session ${sessionId} deleted`);
+    logger.session.info(`Session ${sessionId} deleted`);
 }
 
 // Get new SSE updates since a given timestamp

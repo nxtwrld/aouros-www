@@ -6,6 +6,7 @@
 	import steps from './steps';
     import { onMount } from 'svelte';
 	import type { VCard } from '$lib/contact/types.d';
+	import { logger } from '$lib/logging/logger';
 	let STEP = $state(0);
 
 	interface EditData {
@@ -83,7 +84,7 @@
 
 
 	const handleSubmit: SubmitFunction = ({formElement, formData, action, cancel}) => {
-		console.log('editData', editData);
+		logger.api.debug('Edit data', editData);
 		//console.log('handleSubmit', {formElement, formData, action, cancel})
 		formData.append('fullName', editData.bio.fullName);
 		formData.append('avatarUrl', editData.bio.avatarUrl);
@@ -121,7 +122,7 @@
 
 	function setStep(step: number) {
 		readyNext = false;
-		console.log('readyNext: ', readyNext);
+		logger.api.debug('Ready next state:', readyNext);
 		location.hash = step.toString();
 	}
 	

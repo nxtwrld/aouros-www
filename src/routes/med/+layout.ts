@@ -3,6 +3,7 @@ import type { LayoutLoad } from './$types';
 import { setUser } from '$lib/user';
 import { locale, waitLocale } from 'svelte-i18n';
 import { loadProfiles } from '$lib/profiles';
+import { log } from '$lib/logging/logger';
 
 export const load: LayoutLoad = async ({ fetch, parent, url }) => {
     const { session, user } = await parent();
@@ -14,7 +15,7 @@ export const load: LayoutLoad = async ({ fetch, parent, url }) => {
     
     // fetch basic user data - now safe because we have a session
     const userData = await fetch('/v1/med/user').then(r => r.json()).catch(e => {
-        console.error('Error loading user', e);
+        log.api.error('Error loading user', e);
         redirect(303, '/account')
     });
     await loadProfiles(fetch);

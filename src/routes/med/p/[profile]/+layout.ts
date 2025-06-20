@@ -7,7 +7,6 @@ import { importDocuments } from '$lib/documents';
 export const load: LayoutLoad = async ({ parent, params, fetch }) => {
   await parent();
 
-  console.log('loading.profile...')
   // profiles are already preloaded - just select it
   const p = profiles.get(params.profile) as Profile;
   

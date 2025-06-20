@@ -6,6 +6,7 @@
     import { goto } from '$app/navigation';
     import { t } from '$lib/i18n';
     import { createEventDispatcher } from 'svelte';
+    import { logger } from '$lib/logging/logger';
     
 
     
@@ -17,8 +18,8 @@
 
     let { app, items = [] }: Props = $props();
     
-    console.log('App', app);
-    console.log('Items', items);
+    logger.api.debug('App', app);
+    logger.api.debug('Items', items);
     
     const dispatch = createEventDispatcher();
     let reviewData: boolean = $state(false);

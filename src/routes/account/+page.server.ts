@@ -1,6 +1,7 @@
 import { fail, redirect, error } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { verifyHash } from '$lib/encryption/hash';
+import { log } from '$lib/logging/logger';
 //import { loadUser } from '$lib/user/server';
 
 export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession, user }, fetch }) => {
@@ -13,14 +14,14 @@ export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession,
 
   //const profile = await loadUser(supabase);
   const profile = await fetch('/v1/med/user').catch(e => {
-    console.error('Error loading user data', e);
+    log.api.error('Error loading user data', e);
     redirect(303, '/auth');
   }).then(r => r.json())
 
   //console.log('profile', profile)
 
   if (profile && profile.fullName && profile.private_keys && profile.publicKey) {
-    console.log('profile loaded - redirecting to med');
+    log.api.info('profile loaded - redirecting to med');
     redirect(303, '/med');
   }
 
@@ -67,7 +68,7 @@ export const actions: Actions = {
     .eq('auth_id', user.id)
 
     if (profileError) {
-      console.log('profile error', profileError);
+      log.api.error('profile error', profileError);
       return fail(500, {
         error: profileError,
         auth_id: user.id,
@@ -80,7 +81,7 @@ export const actions: Actions = {
       })
     }
 
-    console.log('update private key');
+    log.api.debug('update private key');
 
 
     // store privateKey in separate protected table
@@ -94,7 +95,7 @@ export const actions: Actions = {
 
 
     if (keyError) {
-      console.log('key error', keyError);
+      log.api.error('key error', keyError);
       // clear profile data
       await clear(['profiles'], supabase, user);
       return fail(500, {
@@ -132,7 +133,7 @@ export const actions: Actions = {
 
       const { type, metadata, content, keys } = doc;
 
-      console.log('document', type);
+      log.api.debug('document', type);
       const { data: documentInsert, error: documentInsertError } = await supabase.from('documents')
           .insert([{ 
               user_id: user.id, 
@@ -144,7 +145,7 @@ export const actions: Actions = {
           }]).select('id');
 
       if (documentInsertError) {
-          console.error('Error inserting document', documentInsertError);
+          log.api.error('Error inserting document', documentInsertError);
           await clear(['profiles', 'private_keys', 'profiles_links', 'document', 'keys'], supabase, user);
           return error(500, { message: 'Error inserting document' });
       }
@@ -157,7 +158,7 @@ export const actions: Actions = {
           key.owner_id = user.id;
           key.document_id = document_id;
           key.author_id = user.id;
-          console.log('key', key);
+          log.api.debug('key', key);
       });
 
       
@@ -166,7 +167,7 @@ export const actions: Actions = {
 
 
       if (keysInsertError) {
-          console.error('Error inserting keys', keysInsertError);
+          log.api.error('Error inserting keys', keysInsertError);
           await clear(['profiles', 'private_keys', 'profiles_links', 'documents', 'keys'], supabase, user);
           return error(500, { message: 'Error inserting keys' });
       }

@@ -1,9 +1,8 @@
 <script lang="ts">
     import { run } from 'svelte/legacy';
-
-
     import type { VCard } from '$lib/contact/types.d';
-	
+    import { logger } from '$lib/logging/logger';
+
     export const ready: boolean = true;
 
 
@@ -124,7 +123,6 @@
         vcard[id] = [...vcard[id]];
     }
     run(() => {
-
         Object.entries(vcard).forEach(([key, value]) => {
             const path = key.split('__');
             if (path.length === 1) {
@@ -135,9 +133,8 @@
                 data.vcard[path[0]] = {};
             }
             data.vcard[path[0]][path[1]] = value;
-            
         })        
-        //console.log(data.vcard);
+        //logger.api.debug('VCard data:', data.vcard);
     });
 </script>
 

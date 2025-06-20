@@ -1,4 +1,3 @@
-
 import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
 
 import { error } from '@sveltejs/kit';
@@ -9,6 +8,7 @@ import { type Content, type TokenUsage } from '$lib/ai/types.d';
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
 import { env } from '$env/dynamic/private';
+import { logger } from '$lib/logging/logger';
 
 
 const DEBUG = env.DEBUG_CONVERASATION_REPORT === 'true';
@@ -86,7 +86,7 @@ export async function finalize(input : Input): Promise<Report> {
 
     localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLanguage);
 
-    console.log('Schema updated...', typeof input.text)
+    logger.analysis.debug('Schema updated...', { inputType: typeof input.text });
   
     if (DEBUG) {
         await sleep(200);
@@ -99,7 +99,7 @@ export async function finalize(input : Input): Promise<Report> {
         type: 'text',
         text: input.text
     }] , Types.report, tokenUsage) as Report;
-    console.log('input assesed...');
+    logger.analysis.debug('Input assessed...');
 
 /*
     data.fhir = await evaluate([{
@@ -109,7 +109,7 @@ export async function finalize(input : Input): Promise<Report> {
 */
     data.tokenUsage = tokenUsage;
 
-    console.log('All done...', data.tokenUsage.total)
+    logger.analysis.info('Report finalized', { totalTokens: data.tokenUsage.total });
     // return item
     return data;
 }
