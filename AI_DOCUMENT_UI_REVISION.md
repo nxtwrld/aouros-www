@@ -1,9 +1,9 @@
 # AI Document UI Revision Strategy
 
-This document provides a comprehensive analysis of the current document UI structure and proposes revisions to support the new document types and enhanced signal processing described in [AI_DOCUMENT_IMPORT.md](./AI_DOCUMENT_IMPORT.md) and [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md).
+This document provides a comprehensive analysis of the current document UI structure and proposes revisions to support the new document types and enhanced signal processing described in [AI_IMPORT_README.md](./AI_IMPORT_README.md) and [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md).
 
 > **Related Documentation**: 
-> - [AI_DOCUMENT_IMPORT.md](./AI_DOCUMENT_IMPORT.md) - Document type extensions and processing workflow
+> - [AI_IMPORT_README.md](./AI_IMPORT_README.md) - Document type extensions and processing workflow
 > - [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md) - Enhanced signal processing and visualization
 
 ## Current UI Architecture Analysis
@@ -1144,7 +1144,7 @@ This comprehensive UI revision positions Aouros as a state-of-the-art medical do
 ## Cross-References & Integration Points
 
 ### Related Documentation
-- **[AI_DOCUMENT_IMPORT.md](./AI_DOCUMENT_IMPORT.md)**: Document processing workflow and type extensions
+- **[AI_IMPORT_README.md](./AI_IMPORT_README.md)**: Document processing workflow and type extensions
 - **[AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md)**: Enhanced signal processing and validation
 
 ### Key Integration Areas

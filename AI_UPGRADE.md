@@ -1,6 +1,6 @@
 # AI Upgrade - Backwards Compatibility Assessment
 
-This document analyzes the backwards compatibility implications of implementing the AI Document Import and Signals Import strategies outlined in `AI_DOCUMENT_IMPORT.md` and `AI_SIGNALS_IMPORT.md`.
+This document analyzes the backwards compatibility implications of implementing the AI Document Import and Signals Import strategies outlined in `AI_IMPORT_README.md` and `AI_SIGNALS_IMPORT.md`.
 
 ## Executive Summary
 
