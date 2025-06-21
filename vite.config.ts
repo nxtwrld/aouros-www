@@ -47,6 +47,7 @@ export default defineConfig({
 		sveltekit()
 	],
 	server: {
+		port: 5174,
 		watch: {
 			usePolling: true,
 			interval: 1000,
