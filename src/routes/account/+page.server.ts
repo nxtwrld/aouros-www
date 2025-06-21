@@ -41,6 +41,8 @@ export const actions: Actions = {
     const privateKey = formData.get('privateKey') as string
     const publicKey = formData.get('publicKey') as string
     const key_hash = formData.get('key_hash') as string
+    const recoveryKey = formData.get('recoveryKey') as string
+    const recoveryHash = formData.get('recoveryHash') as string
     const documents = JSON.parse(formData.get('documents') as string);
 
     const { session } = await safeGetSession()
@@ -87,9 +89,14 @@ export const actions: Actions = {
     // store privateKey in separate protected table
     const { error: keyError } = await supabase.from('private_keys').upsert({
       id: user.id,
-      privateKey,
+      private_key: privateKey,
       key_hash,
       key_pass: passphrase,
+      recovery_key: recoveryKey,
+      recovery_key_hash: recoveryHash,
+      key_version: 0,
+      recovery_created_at: recoveryKey ? new Date().toISOString() : null,
+      recovery_verified_at: recoveryKey ? new Date().toISOString() : null,
       updated_at: new Date(),
     })
 
@@ -106,7 +113,9 @@ export const actions: Actions = {
         passphrase,
         privateKey: privateKey,
         publicKey: publicKey,
-        key_hash: key_hash
+        key_hash: key_hash,
+        recoveryKey,
+        recoveryHash
       })
     }
     // create profiles_links

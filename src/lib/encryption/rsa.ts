@@ -110,12 +110,12 @@ export async function pemToKey(pem: string, isPrivate: boolean = false): Promise
 }
 
 
-export async function prepareKeys(passphrase: string): Promise<{ publicKeyPEM: string, encryptedPrivateKey: string }> {
+export async function prepareKeys(passphrase: string): Promise<{ publicKeyPEM: string, encryptedPrivateKey: string, privateKey: string }> {
     const keyPair = await generateKeyPair();
     const publicKeyPEM = await keyToPEM(keyPair.publicKey, false);
     const privateKeyPEM = await keyToPEM(keyPair.privateKey, true);
     const encryptedPrivateKey = await encryptString(privateKeyPEM, passphrase);
-    return { publicKeyPEM, encryptedPrivateKey };
+    return { publicKeyPEM, encryptedPrivateKey, privateKey: privateKeyPEM };
 }
 
 

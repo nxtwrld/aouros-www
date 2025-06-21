@@ -31,6 +31,8 @@ export type User = {
     publicKey: string;
     key_hash: string;
     key_pass: string;
+    recoveryKey?: string;
+    recoveryHash?: string;
     unlocked: boolean | undefined;
     isMedical: boolean;
 }
@@ -81,8 +83,10 @@ export async function setUser(profile: UserFirstTime | User, userSession?: any) 
         
         const userProfile = profile as any; // Cast to handle type issues during migration
 
-        userProfile.privateKey = userProfile.private_keys?.privateKey;
+        userProfile.privateKey = userProfile.private_keys?.private_key || userProfile.private_keys?.privateKey;
         userProfile.key_hash = userProfile.private_keys?.key_hash;
+        userProfile.recoveryKey = userProfile.private_keys?.recovery_key;
+        userProfile.recoveryHash = userProfile.private_keys?.recovery_key_hash;
         const key_pass = userProfile.private_keys?.key_pass;
 
         delete userProfile.private_keys;
@@ -229,6 +233,20 @@ export async function decrypt(data: string): Promise<string> {
     console.log('Key', key);
     return decryptWithAESGCM(await importAESGCMKey(key), dataEnc);
     */
+}
+
+export function hasRecoveryKey(): boolean {
+    const $user = get(user);
+    return !!(($user as User)?.recoveryKey && ($user as User)?.recoveryHash);
+}
+
+export function getRecoveryData(): { recoveryKey?: string; recoveryHash?: string } {
+    const $user = get(user);
+    const fullUser = $user as User;
+    return {
+        recoveryKey: fullUser?.recoveryKey,
+        recoveryHash: fullUser?.recoveryHash
+    };
 }
 
 export default {
