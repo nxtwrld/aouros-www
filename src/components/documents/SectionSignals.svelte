@@ -14,20 +14,33 @@
   let { document, data }: Props = $props();
 
     //console.log('Results',data);
-    let children: LabResult[] = $state([]);
+    let children: Signal[] = $state([]);
+    let isClosing = false; // Prevent recursion
 
     function closeAll() {
+        if (isClosing) return; // Prevent infinite recursion
+        isClosing = true;
+        
         children.forEach((c: any) => {
             if (c && c.closeDetails) c.closeDetails()
         });
+        
+        // Reset the flag after a small delay
+        setTimeout(() => {
+            isClosing = false;
+        }, 0);
     }
 
-
-    focused.subscribe((f: any) => {
-        if(f.object) {
-            closeAll();
-            //filter  = 'default';
-        }
+    // Use $effect for store subscription in Svelte 5
+    $effect(() => {
+        const unsubscribe = focused.subscribe((f: any) => {
+            if(f.object) {
+                closeAll();
+                //filter  = 'default';
+            }
+        });
+        
+        return unsubscribe;
     });
 </script>
 
@@ -40,7 +53,7 @@
         <table  class="table-list">
         {#each data as item, index}
 
-            <Signal bind:this={children[index]} on:showDetails={closeAll}
+            <Signal bind:this={children[index]}
                 {item} {document} />
         {/each}
         
