@@ -23,10 +23,11 @@
 
     let { document, item, showDetails = false, onshowdetails }: Props = $props();
 
-    // Set document reference after item is properly initialized
-    if (document) {
-        item.document = document;
-    }
+    // Create a local copy instead of mutating the prop
+    const itemWithDocument = $derived({
+        ...item,
+        document: document
+    });
 
     const code: string = item.signal || item.test;
     const key = code.toLowerCase().replace(/ /g, '_');
@@ -46,6 +47,8 @@
         }
     } | null = getRange();
 
+    // Define status to fix undefined variable
+    const status = $derived(getStatus());
 
     function parseValue(value: string | number) {
         if (typeof value == 'string') {
@@ -57,19 +60,36 @@
         return value;
     }
 
+    function getStatus() {
+        if (unit == 'arb.j.') {
+            return (['neg', '-'].includes(value.toString())) ? 'ok' : 'risk';
+        } else {
+            let status: 'ok' | 'low' | 'high' = 'ok';
+            
+            if (referenceRange == null) return status;
+            if (typeof value != 'number') return status;
+
+            if (value < referenceRange.low.value) {
+                status = 'low';
+            } else if (value > referenceRange.high.value) {
+                status = 'high';
+            }
+            return status;
+        }
+    }
 
     function getRange() {
         try {
             return  getRangeItem(item?.reference) 
         } catch(e) {
             
-            if (!defaults[key]) return null;
+            if (!defaults[key as keyof typeof defaults]) return null;
 
-            const defRefRange = defaults[key].referenceRange;
+            const defRefRange = (defaults as any)[key]?.referenceRange;
 
             if (!defRefRange)  return null;
 
-            const userRefRange = defRefRange.find((refRange) => {
+            const userRefRange = defRefRange.find((refRange: any) => {
                 console.log('TODO', refRange)
                 // TODO: check unit!!
                 return {
@@ -83,8 +103,9 @@
                     } 
                 };
 
-                return (refRange.sex == 'any' || refRange.age == profile.getSex())  
-                    && (refRange.ageRange.min <= profile.getAge() && refRange.ageRange.max >= profile.getAge())      
+                // Remove invalid profile references
+                // return (refRange.sex == 'any' || refRange.age == profile.getSex())  
+                //     && (refRange.ageRange.min <= profile.getAge() && refRange.ageRange.max >= profile.getAge())      
             })
 
 
@@ -102,8 +123,6 @@
             };
         }
     }
-
-
 
     function getRangeItem(itemRef: string | undefined) {
 
@@ -175,7 +194,7 @@
 
         <td class="-empty">
             <div class="actions">
-                <button onclick={() =>         ui.emit('modal.healthProperty', item )} aria-label="View signal chart">
+                <button onclick={() => ui.emit('modal.healthProperty', itemWithDocument )} aria-label="View signal chart">
                     <svg>
                         <use href="/icons.svg#chart-line"></use>
                     </svg>
