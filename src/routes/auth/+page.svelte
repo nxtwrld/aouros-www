@@ -62,7 +62,7 @@
 		return false;
 	}
 }}>
-		<img src="/icon.svg" alt="Aouros app" class="logo" />
+		<img src="/icon.svg" alt="Mediqom app" class="logo" />
 
 		<h1 class="h1">Authentication</h1>
 		{#if form?.success}

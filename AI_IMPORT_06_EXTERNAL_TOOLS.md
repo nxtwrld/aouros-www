@@ -288,7 +288,7 @@ export class MedicalMCPServer extends MCPServer {
 
   constructor() {
     super({
-      name: "aouros-medical-tools",
+      name: "mediqom-medical-tools",
       version: "1.0.0",
       description: "Medical validation and database integration tools"
     });

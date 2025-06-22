@@ -188,7 +188,7 @@ class CentralizedLogger {
         if (typeof localStorage === 'undefined') return;
         
         try {
-            const stored = localStorage.getItem('aouros_logger_config');
+            const stored = localStorage.getItem('mediqom_logger_config');
             if (stored) {
                 const parsed = JSON.parse(stored);
                 this.config = { ...this.config, ...parsed };
@@ -202,7 +202,7 @@ class CentralizedLogger {
         if (typeof localStorage === 'undefined') return;
         
         try {
-            localStorage.setItem('aouros_logger_config', JSON.stringify(this.config));
+            localStorage.setItem('mediqom_logger_config', JSON.stringify(this.config));
         } catch (error) {
             console.warn('Failed to save logger config to localStorage:', error);
         }

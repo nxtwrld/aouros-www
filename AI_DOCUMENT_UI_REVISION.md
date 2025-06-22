@@ -1139,7 +1139,7 @@ The existing document UI follows a well-designed modular architecture with clear
 - Integration testing with real medical data
 - Accessibility testing for compliance with healthcare standards
 
-This comprehensive UI revision positions Aouros as a state-of-the-art medical documentation platform with professional-grade visualization capabilities while maintaining the modularity and security of the existing architecture.
+This comprehensive UI revision positions Mediqom as a state-of-the-art medical documentation platform with professional-grade visualization capabilities while maintaining the modularity and security of the existing architecture.
 
 ## Cross-References & Integration Points
 

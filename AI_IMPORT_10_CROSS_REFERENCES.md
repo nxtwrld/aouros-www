@@ -2,7 +2,7 @@
 
 > **Navigation**: [← DICOM Apps](./AI_IMPORT_09_DICOM_APPS.md) | [README](./AI_IMPORT_README.md)
 
-This document outlines key integration points and cross-references between the AI document import modernization and other AI-powered features in Aouros.
+This document outlines key integration points and cross-references between the AI document import modernization and other AI-powered features in Mediqom.
 
 ## Related Documentation
 

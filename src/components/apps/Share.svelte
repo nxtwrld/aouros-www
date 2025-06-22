@@ -30,7 +30,7 @@
 
     let password: string = $state('');
     let message: string = $state('');
-    let url: string = $state('https://aouros.com/ext/adasdasdaqdqwdasdqwwde2342tf342fwqefqwefsac');
+    let url: string = $state('https://mediqom.com/ext/adasdasdaqdqwdasdqwwde2342tf342fwqefqwefsac');
 
     let selectedRoute: number = $state(0);
 
