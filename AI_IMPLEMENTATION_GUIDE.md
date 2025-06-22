@@ -10,7 +10,7 @@ This implementation combines three major AI strategy upgrades:
 2. **Enhanced Signal Processing** - Dynamic signal discovery and validation  
 3. **Specialized Document UI** - Medical specialty-specific components
 
-Cross-referenced with `AI_DOCUMENT_IMPORT.md`, `AI_SIGNALS_IMPORT.md`, `AI_DOCUMENT_UI_REVISION.md`, and `AI_UPGRADE.md`.
+Cross-referenced with `AI_IMPORT_README.md`, `AI_SIGNALS_IMPORT.md`, `AI_DOCUMENT_UI_REVISION.md`, and `AI_UPGRADE.md`.
 
 ## Implementation Roadmap
 

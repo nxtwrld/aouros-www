@@ -2,7 +2,7 @@
 
 This document provides a comprehensive analysis of the current signals system and proposes enhancements aligned with the LangGraph agentic approach for medical data processing.
 
-> **Related Documentation**: This document focuses on signal processing improvements. For overall document import workflow modernization, see [AI_DOCUMENT_IMPORT.md](./AI_DOCUMENT_IMPORT.md). For implementation within the LangGraph workflow, see the [LangGraph Signal Processing Workflow](#langgraph-signal-processing-workflow) section.
+> **Related Documentation**: This document focuses on signal processing improvements. For overall document import workflow modernization, see the [AI_IMPORT documentation suite](./AI_IMPORT_README.md). For implementation within the LangGraph workflow, see the [LangGraph Signal Processing Workflow](#langgraph-signal-processing-workflow) section.
 
 ## Current State Analysis
 
@@ -34,7 +34,7 @@ The system maintains a comprehensive signal catalog in `/src/data/lab.properties
 
 ### Current Signal Processing Pipeline
 
-> **Workflow Integration**: This pipeline integrates with the document processing workflow described in [AI_DOCUMENT_IMPORT.md - Step 8: Signals Normalization](./AI_DOCUMENT_IMPORT.md#step-8-signals-normalization).
+> **Workflow Integration**: This pipeline integrates with the document processing workflow described in [AI_IMPORT_01_CURRENT_ANALYSIS.md - Step 8: Signals Normalization](./AI_IMPORT_01_CURRENT_ANALYSIS.md#step-8-signals-normalization).
 
 ```mermaid
 graph TD
@@ -206,7 +206,7 @@ export class DynamicSignalRegistry {
 
 ### LangGraph Signal Processing Workflow
 
-> **Integration Point**: This enhanced workflow replaces the basic signal normalization step in the main document processing workflow. See [AI_DOCUMENT_IMPORT.md - Proposed LangGraph Workflow](./AI_DOCUMENT_IMPORT.md#proposed-langgraph-workflow-definition) for the complete document processing context.
+> **Integration Point**: This enhanced workflow replaces the basic signal normalization step in the main document processing workflow. See [AI_IMPORT_03_ARCHITECTURE.md - Proposed LangGraph Workflow](./AI_IMPORT_03_ARCHITECTURE.md#proposed-langgraph-workflow-definition) for the complete document processing context.
 
 ```mermaid
 graph TD
@@ -506,7 +506,7 @@ export class TimeSeriesAnalyzer {
 
 ## Implementation Strategy
 
-> **Coordination with Document Import**: These phases should be coordinated with the document import modernization timeline described in [AI_DOCUMENT_IMPORT.md - Implementation Roadmap](./AI_DOCUMENT_IMPORT.md#implementation-roadmap).
+> **Coordination with Document Import**: These phases should be coordinated with the document import modernization timeline described in [AI_IMPORT_03_ARCHITECTURE.md - Implementation Roadmap](./AI_IMPORT_03_ARCHITECTURE.md#implementation-roadmap).
 
 ### Phase 1: Foundation (Weeks 1-2)
 - [ ] Implement EnhancedSignal data model
@@ -587,7 +587,7 @@ This positions Aouros as a leader in intelligent medical data processing, capabl
 ## Cross-References & Integration Points
 
 ### Related Documentation
-- **[AI_DOCUMENT_IMPORT.md](./AI_DOCUMENT_IMPORT.md)**: Complete document import workflow modernization strategy
+- **[AI_IMPORT_03_ARCHITECTURE.md](./AI_IMPORT_03_ARCHITECTURE.md)**: Complete document import workflow modernization strategy
   - LangGraph workflow orchestration framework
   - Multi-provider AI abstraction layer
   - Document type extensions and schema management
@@ -598,7 +598,7 @@ This positions Aouros as a leader in intelligent medical data processing, capabl
 - **Main Document Workflow**: Overall document processing and routing
 - **Signal Processing Workflow**: Specialized signal extraction and validation
 - **Integration Point**: Signals Normalization step in main workflow
-- **Reference**: [AI_DOCUMENT_IMPORT.md - Step 8: Signals Normalization](./AI_DOCUMENT_IMPORT.md#step-8-signals-normalization)
+- **Reference**: [AI_IMPORT_03_ARCHITECTURE.md - Step 8: Signals Normalization](./AI_IMPORT_03_ARCHITECTURE.md#step-8-signals-normalization)
 
 #### 2. **Document Type Signal Extraction**
 Enhanced signal support for all document types:
@@ -606,25 +606,25 @@ Enhanced signal support for all document types:
 - **Cardiology**: Specialized cardiac measurements and derived calculations
 - **Emergency**: Triage vital signs with urgency assessment
 - **Radiology**: Quantitative imaging measurements
-- **Reference**: [AI_DOCUMENT_IMPORT.md - Document Type Extensions](./AI_DOCUMENT_IMPORT.md#proposed-document-type-extensions)
+- **Reference**: [AI_IMPORT_03_ARCHITECTURE.md - Document Type Extensions](./AI_IMPORT_03_ARCHITECTURE.md#proposed-document-type-extensions)
 
 #### 3. **Provider Abstraction Alignment**
 - **Shared Infrastructure**: Common AI provider registry and selection
 - **Signal-Specific Optimization**: Best providers for lab vs vital sign extraction
 - **Fallback Mechanisms**: Coordinated provider failover strategies
-- **Reference**: [AI_DOCUMENT_IMPORT.md - Multi-Provider AI Abstraction](./AI_DOCUMENT_IMPORT.md#multi-provider-ai-abstraction-layer)
+- **Reference**: [AI_IMPORT_03_ARCHITECTURE.md - Multi-Provider AI Abstraction](./AI_IMPORT_03_ARCHITECTURE.md#multi-provider-ai-abstraction-layer)
 
 #### 4. **External Validation Coordination**
 - **MCP Integration**: Shared medical database connections
 - **Signal Validation**: Lab reference ranges and drug interactions
 - **Document Validation**: ICD-10, SNOMED, and FHIR compliance
-- **Reference**: [AI_DOCUMENT_IMPORT.md - External Tool Integration](./AI_DOCUMENT_IMPORT.md#external-tool-integration-strategy)
+- **Reference**: [AI_IMPORT_03_ARCHITECTURE.md - External Tool Integration](./AI_IMPORT_03_ARCHITECTURE.md#external-tool-integration-strategy)
 
 #### 5. **SSE Streaming Integration**
 - **Real-time Updates**: Signal extraction progress streaming
 - **Partial Results**: Stream signals as they're discovered and validated
 - **User Experience**: Coordinated progress updates across document and signal processing
-- **Reference**: [AI_DOCUMENT_IMPORT.md - SSE Integration](./AI_DOCUMENT_IMPORT.md#server-sent-events-sse-integration-strategy)
+- **Reference**: [AI_IMPORT_03_ARCHITECTURE.md - SSE Integration](./AI_IMPORT_03_ARCHITECTURE.md#server-sent-events-sse-integration-strategy)
 
 ### Implementation Dependencies
 

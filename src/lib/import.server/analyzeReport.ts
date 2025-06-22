@@ -183,7 +183,6 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
       total: 0
     };
 
-
     const content: Content[] = getContentDefinition(input);
     const currentLanguage = input.language || 'English';
 
@@ -202,7 +201,7 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
     let data = await evaluate(content, Types.featureDetection, tokenUsage) as ReportAnalysis;
     console.log('input assesed...');
     
-    data.text = input.text
+    data.text = input.text || ''
 
     if (!data.isMedical) {
       error(400, { message: 'Not a medical input' });
@@ -277,11 +276,11 @@ export async function analyze(input : Input): Promise<ReportAnalysis> {
 
     // extend tags with body parts
     if (data.report.bodyParts) {
-        data.tags = [...new Set(data.tags.concat(data.report.bodyParts.map((item) => item.identification)))];
+        data.tags = [...new Set(data.tags.concat(data.report.bodyParts.map((item: any) => item.identification)))];
     }
 
     if (data.report.signals) {
-        data.report.signals = data.report.signals.map((item) => {
+        data.report.signals = data.report.signals.map((item: any) => {
             if (item.signal) {
                 item.signal = item.signal.toLowerCase();
             }
@@ -318,8 +317,10 @@ export async function evaluate(content: Content[], type: Types, tokenUsage: Toke
 
 const TEST_DATA: ReportAnalysis[] = [{
     "isMedical": true,
-    "type": "report",
-    "language": "cs",
+    "type": Types.report,
+    "fhirType": "DiagnosticReport",
+    "fhir": {},
+    "cagegory": "report",
     "tags": [
         "esophagus",
         "throat",
