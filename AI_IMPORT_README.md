@@ -19,6 +19,9 @@ This documentation suite outlines the comprehensive modernization strategy for A
 8. **[AI_IMPORT_08_DOCUMENT_TYPES.md](./AI_IMPORT_08_DOCUMENT_TYPES.md)** - Extended document type support
 9. **[AI_IMPORT_09_DICOM_APPS.md](./AI_IMPORT_09_DICOM_APPS.md)** - 3rd party app integration
 10. **[AI_IMPORT_10_CROSS_REFERENCES.md](./AI_IMPORT_10_CROSS_REFERENCES.md)** - Integration points & related docs
+11. **[AI_IMPORT_ERROR_HANDLING.md](./AI_IMPORT_ERROR_HANDLING.md)** - Comprehensive error recovery & resilience
+12. **[AI_IMPORT_USER_CONFIGURATION.md](./AI_IMPORT_USER_CONFIGURATION.md)** - Central user configuration system
+13. **[AI_IMPORT_DEFAULT_CONFIGURATION.md](./AI_IMPORT_DEFAULT_CONFIGURATION.md)** - System defaults & workflow control
 
 ## 🎯 Quick Start
 

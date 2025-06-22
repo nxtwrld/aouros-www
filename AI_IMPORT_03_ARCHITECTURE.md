@@ -301,19 +301,386 @@ interface DocumentProcessingState {
 }
 ```
 
+## Central Configuration Architecture
+
+### AI Configuration Management System
+
+The modernized architecture implements a centralized configuration system that manages all AI providers, models, and workflow settings across the entire application.
+
+```typescript
+// src/lib/workflows/config/ai-config.ts
+interface AIConfiguration {
+  version: string;
+  providers: ProviderConfiguration[];
+  workflows: WorkflowConfiguration[];
+  globalSettings: GlobalSettings;
+  environments: Record<string, EnvironmentConfig>;
+}
+
+interface ProviderConfiguration {
+  id: string;
+  name: string;
+  type: 'openai' | 'anthropic' | 'google' | 'groq';
+  enabled: boolean;
+  credentials: {
+    apiKeyEnvVar: string;
+    endpoint?: string;
+  };
+  models: ModelConfiguration[];
+  rateLimits: RateLimitConfig;
+  fallbackPriority: number;
+}
+
+interface ModelConfiguration {
+  id: string;
+  name: string;
+  capabilities: ModelCapabilities;
+  pricing: {
+    inputTokens: number;
+    outputTokens: number;
+    currency: 'USD';
+  };
+  contextWindow: number;
+  maxOutputTokens: number;
+  supportedFeatures: string[];
+}
+
+interface WorkflowConfiguration {
+  workflow: 'document-import' | 'session-analysis' | 'transcription';
+  tasks: TaskConfiguration[];
+  defaultLanguage: string;
+  qualityThresholds: QualityThresholds;
+}
+
+interface TaskConfiguration {
+  task: string;
+  primaryProvider: string;
+  primaryModel: string;
+  fallbackChain: Array<{provider: string; model: string}>;
+  costBudget?: number;
+  qualityRequirement: 'standard' | 'high' | 'critical';
+  timeoutMs: number;
+}
+```
+
+### Configuration File Structure
+
+```yaml
+# src/lib/workflows/config/ai-config.yaml
+version: "1.0.0"
+
+# Global Settings
+globalSettings:
+  defaultLanguage: "English"
+  maxConcurrentRequests: 10
+  defaultTimeout: 30000
+  enableCaching: true
+  cacheMaxAge: 3600
+  enableTelemetry: true
+
+# Environment-specific configurations
+environments:
+  development:
+    enableDebugMode: true
+    costBudgetPerRequest: 1.00
+    logLevel: "debug"
+  
+  production:
+    enableDebugMode: false
+    costBudgetPerRequest: 0.50
+    logLevel: "info"
+    enableMonitoring: true
+
+# Provider Configurations
+providers:
+  - id: "openai"
+    name: "OpenAI"
+    type: "openai"
+    enabled: true
+    credentials:
+      apiKeyEnvVar: "OPENAI_API_KEY"
+    rateLimits:
+      requestsPerMinute: 500
+      tokensPerMinute: 150000
+    fallbackPriority: 2
+    models:
+      - id: "gpt-4"
+        name: "GPT-4"
+        capabilities:
+          vision: true
+          structuredOutput: true
+          streaming: true
+        pricing:
+          inputTokens: 0.03
+          outputTokens: 0.06
+        contextWindow: 128000
+        maxOutputTokens: 4096
+
+  - id: "anthropic"
+    name: "Anthropic"
+    type: "anthropic"
+    enabled: true
+    credentials:
+      apiKeyEnvVar: "ANTHROPIC_API_KEY"
+    fallbackPriority: 1
+    models:
+      - id: "claude-3-5-sonnet"
+        name: "Claude 3.5 Sonnet"
+        capabilities:
+          vision: true
+          structuredOutput: true
+          medicalReasoning: true
+        pricing:
+          inputTokens: 0.003
+          outputTokens: 0.015
+        contextWindow: 200000
+
+  - id: "google"
+    name: "Google"
+    type: "google"
+    enabled: true
+    credentials:
+      apiKeyEnvVar: "GOOGLE_AI_API_KEY"
+    fallbackPriority: 3
+    models:
+      - id: "gemini-pro"
+        name: "Gemini Pro"
+        capabilities:
+          vision: true
+          structuredOutput: true
+          fastProcessing: true
+        pricing:
+          inputTokens: 0.0075
+          outputTokens: 0.03
+        contextWindow: 1000000
+
+# Workflow Configurations
+workflows:
+  - workflow: "document-import"
+    defaultLanguage: "English"
+    qualityThresholds:
+      minimumConfidence: 0.8
+      requireHumanReview: 0.6
+    tasks:
+      - task: "medical_classification"
+        primaryProvider: "anthropic"
+        primaryModel: "claude-3-5-sonnet"
+        fallbackChain:
+          - provider: "openai"
+            model: "gpt-4"
+          - provider: "google"
+            model: "gemini-pro"
+        qualityRequirement: "high"
+        timeoutMs: 30000
+
+      - task: "ocr_extraction"
+        primaryProvider: "google"
+        primaryModel: "gemini-pro-vision"
+        fallbackChain:
+          - provider: "openai"
+            model: "gpt-4-vision"
+        qualityRequirement: "standard"
+        costBudget: 0.10
+
+      - task: "prescription_parsing"
+        primaryProvider: "anthropic"
+        primaryModel: "claude-3-5-sonnet"
+        fallbackChain:
+          - provider: "openai"
+            model: "gpt-4"
+        qualityRequirement: "critical"
+
+  - workflow: "session-analysis"
+    tasks:
+      - task: "conversation_analysis"
+        primaryProvider: "openai"
+        primaryModel: "gpt-4"
+        fallbackChain:
+          - provider: "anthropic"
+            model: "claude-3-5-sonnet"
+
+  - workflow: "transcription"
+    tasks:
+      - task: "audio_transcription"
+        primaryProvider: "openai"
+        primaryModel: "whisper-1"
+        fallbackChain:
+          - provider: "assemblyai"
+            model: "best"
+```
+
+### Configuration Management System
+
+```typescript
+// src/lib/workflows/config/config-manager.ts
+import { load } from 'js-yaml';
+import { readFileSync } from 'fs';
+
+export class AIConfigurationManager {
+  private static instance: AIConfigurationManager;
+  private config: AIConfiguration;
+  private environment: string;
+
+  constructor() {
+    this.environment = process.env.NODE_ENV || 'development';
+    this.loadConfiguration();
+  }
+
+  static getInstance(): AIConfigurationManager {
+    if (!AIConfigurationManager.instance) {
+      AIConfigurationManager.instance = new AIConfigurationManager();
+    }
+    return AIConfigurationManager.instance;
+  }
+
+  private loadConfiguration(): void {
+    try {
+      const configFile = readFileSync('src/lib/workflows/config/ai-config.yaml', 'utf8');
+      this.config = load(configFile) as AIConfiguration;
+      
+      // Apply environment-specific overrides
+      this.applyEnvironmentConfig();
+      
+      // Validate configuration
+      this.validateConfiguration();
+      
+      console.log(`AI Configuration loaded for environment: ${this.environment}`);
+    } catch (error) {
+      console.error('Failed to load AI configuration:', error);
+      throw new Error('Invalid AI configuration');
+    }
+  }
+
+  private applyEnvironmentConfig(): void {
+    const envConfig = this.config.environments[this.environment];
+    if (envConfig) {
+      // Apply environment-specific settings
+      Object.assign(this.config.globalSettings, envConfig);
+    }
+  }
+
+  private validateConfiguration(): void {
+    // Validate that all required environment variables are set
+    for (const provider of this.config.providers) {
+      if (provider.enabled) {
+        const apiKey = process.env[provider.credentials.apiKeyEnvVar];
+        if (!apiKey) {
+          throw new Error(`Missing API key for provider ${provider.name}: ${provider.credentials.apiKeyEnvVar}`);
+        }
+      }
+    }
+  }
+
+  // Public API methods
+  getProviderConfig(providerId: string): ProviderConfiguration | undefined {
+    return this.config.providers.find(p => p.id === providerId);
+  }
+
+  getWorkflowConfig(workflowName: string): WorkflowConfiguration | undefined {
+    return this.config.workflows.find(w => w.workflow === workflowName);
+  }
+
+  getTaskConfig(workflowName: string, taskName: string): TaskConfiguration | undefined {
+    const workflow = this.getWorkflowConfig(workflowName);
+    return workflow?.tasks.find(t => t.task === taskName);
+  }
+
+  getEnabledProviders(): ProviderConfiguration[] {
+    return this.config.providers.filter(p => p.enabled);
+  }
+
+  getGlobalSettings(): GlobalSettings {
+    return this.config.globalSettings;
+  }
+
+  // Dynamic configuration updates
+  updateTaskConfig(workflowName: string, taskName: string, updates: Partial<TaskConfiguration>): void {
+    const workflow = this.getWorkflowConfig(workflowName);
+    if (workflow) {
+      const task = workflow.tasks.find(t => t.task === taskName);
+      if (task) {
+        Object.assign(task, updates);
+        console.log(`Updated task config: ${workflowName}.${taskName}`);
+      }
+    }
+  }
+
+  // Hot reload configuration
+  reloadConfiguration(): void {
+    this.loadConfiguration();
+    // Notify all workflow components of configuration change
+    this.notifyConfigurationChange();
+  }
+
+  private notifyConfigurationChange(): void {
+    // Implementation would notify all active workflows
+    // This could use an event emitter pattern
+  }
+}
+
+// Export singleton instance
+export const aiConfig = AIConfigurationManager.getInstance();
+```
+
 ## Provider Selection Strategy
 
-### Intelligent Provider Routing
+### Intelligent Provider Routing (Configuration-Driven)
 
 ```typescript
 interface ProviderSelector {
   selectOptimalProvider(requirements: {
-    task: 'vision' | 'text' | 'structured';
-    complexity: 'low' | 'medium' | 'high';
-    accuracy: 'standard' | 'high' | 'critical';
-    cost: 'optimized' | 'balanced' | 'premium';
-    speed: 'fast' | 'balanced' | 'thorough';
-  }): AIProvider;
+    workflow: string;
+    task: string;
+    complexity?: 'low' | 'medium' | 'high';
+    accuracy?: 'standard' | 'high' | 'critical';
+    costBudget?: number;
+    timeoutMs?: number;
+  }): {provider: AIProvider; model: string};
+}
+
+// Implementation using central configuration
+export class ConfigurationDrivenProviderSelector implements ProviderSelector {
+  constructor(private config: AIConfigurationManager) {}
+
+  selectOptimalProvider(requirements: any) {
+    const taskConfig = this.config.getTaskConfig(requirements.workflow, requirements.task);
+    
+    if (!taskConfig) {
+      throw new Error(`No configuration found for ${requirements.workflow}.${requirements.task}`);
+    }
+
+    // Try primary provider first
+    const primaryProvider = this.getProviderInstance(taskConfig.primaryProvider);
+    if (primaryProvider && this.isProviderAvailable(primaryProvider)) {
+      return {
+        provider: primaryProvider,
+        model: taskConfig.primaryModel
+      };
+    }
+
+    // Fallback to configured chain
+    for (const fallback of taskConfig.fallbackChain) {
+      const fallbackProvider = this.getProviderInstance(fallback.provider);
+      if (fallbackProvider && this.isProviderAvailable(fallbackProvider)) {
+        return {
+          provider: fallbackProvider,
+          model: fallback.model
+        };
+      }
+    }
+
+    throw new Error(`No available providers for task: ${requirements.task}`);
+  }
+
+  private getProviderInstance(providerId: string): AIProvider | null {
+    // Get provider from registry using configuration
+    return providerRegistry.getProvider(providerId);
+  }
+
+  private isProviderAvailable(provider: AIProvider): boolean {
+    // Check provider health, rate limits, etc.
+    return provider.isHealthy();
+  }
 }
 ```
 
@@ -449,6 +816,60 @@ const providerFallbackChains = {
 - **Integration**: [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md)
 - **Intelligent signal discovery** and validation
 - **Enhanced normalization** and relationship detection
+
+## Configuration Integration Across All AI Features
+
+### Unified Configuration Benefits
+
+The central configuration system provides consistency across all AI-powered features in Aouros:
+
+1. **Document Import** - Uses configured providers for OCR, classification, and extraction
+2. **Session Analysis** - Leverages same provider pool for conversation analysis  
+3. **Transcription** - Configured fallback chains for audio processing
+4. **Signal Processing** - Shared validation and normalization settings
+
+### Cross-Feature Configuration Example
+
+```yaml
+# Configuration shared across document import, session analysis, and transcription
+workflows:
+  - workflow: "document-import"
+    tasks:
+      - task: "medical_classification"
+        primaryProvider: "anthropic"
+        primaryModel: "claude-3-5-sonnet"
+        # Shared with session analysis for consistency
+
+  - workflow: "session-analysis"  
+    tasks:
+      - task: "conversation_analysis"
+        primaryProvider: "anthropic"  # Same provider for medical reasoning
+        primaryModel: "claude-3-5-sonnet"
+        
+      - task: "diagnosis_extraction"
+        primaryProvider: "anthropic"
+        primaryModel: "claude-3-5-sonnet"
+        # Inherits medical classification configuration
+
+  - workflow: "transcription"
+    tasks:
+      - task: "audio_transcription"
+        primaryProvider: "openai"
+        primaryModel: "whisper-1"
+        fallbackChain:
+          - provider: "assemblyai"
+            model: "best"
+          - provider: "google"
+            model: "speech-to-text"
+```
+
+### Configuration Management Features
+
+- **Hot Reload**: Update provider configurations without restarting
+- **A/B Testing**: Switch providers dynamically for performance comparison
+- **Cost Control**: Per-task budget limits and monitoring
+- **Quality Gates**: Configurable confidence thresholds
+- **Environment-Specific**: Different settings for dev/staging/production
 
 ## Optimized LangGraph Workflow Design
 
