@@ -33,7 +33,7 @@
         "description": "Mammaio is a breast scanner detection model that uses AI to detect breast cancer in early stages. It always checks your sonography against the most recent versions of the model.",
         "icon": "/apps/Mammaio/appicon.png",
         "category": "AI",
-        "url": "https://mammaio.aouros.com/",
+        "url": "https://mammaio.mediqom.com/",
         "tags": [
             "AI",
             "Medical",

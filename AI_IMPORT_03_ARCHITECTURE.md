@@ -722,7 +722,7 @@ interface SchemaRegistry {
 // src/lib/workflows/monitoring/langsmith.config.ts
 export const langsmithConfig = {
   apiKey: env.LANGSMITH_API_KEY,
-  projectName: env.LANGSMITH_PROJECT || "aouros-document-import",
+  projectName: env.LANGSMITH_PROJECT || "mediqom-ai-operations",
   endpoint: env.LANGSMITH_ENDPOINT || "https://api.smith.langchain.com",
   
   // Evaluation datasets
@@ -821,7 +821,7 @@ const providerFallbackChains = {
 
 ### Unified Configuration Benefits
 
-The central configuration system provides consistency across all AI-powered features in Aouros:
+The central configuration system provides consistency across all AI-powered features in Mediqom:
 
 1. **Document Import** - Uses configured providers for OCR, classification, and extraction
 2. **Session Analysis** - Leverages same provider pool for conversation analysis  

@@ -594,7 +594,7 @@ import { env } from '$env/dynamic/private';
 
 export const langsmithConfig = {
   apiKey: env.LANGSMITH_API_KEY,
-  projectName: env.LANGSMITH_PROJECT || "aouros-document-import",
+  projectName: env.LANGSMITH_PROJECT || "mediqom-ai-operations",
   endpoint: env.LANGSMITH_ENDPOINT || "https://api.smith.langchain.com",
   
   // Evaluation datasets
@@ -2598,7 +2598,7 @@ interface RadiologySchema {
 4. **Storage Efficiency**: Optimize schema design for common patterns
 5. **Performance Impact**: Parallel processing for complex documents
 
-This comprehensive document type extension positions Aouros as a complete medical documentation platform capable of handling the full spectrum of healthcare documentation needs.
+This comprehensive document type extension positions Mediqom as a complete medical documentation platform capable of handling the full spectrum of healthcare documentation needs.
 
 ## Enhanced DICOM Processing with 3rd Party Apps
 

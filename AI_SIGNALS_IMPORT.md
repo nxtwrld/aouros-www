@@ -582,7 +582,7 @@ The enhanced signal system transforms medical data extraction from a static, rul
 - Provides advanced time series analytics
 - Integrates seamlessly with the LangGraph architecture
 
-This positions Aouros as a leader in intelligent medical data processing, capable of handling the complexity and variability of real-world medical documents while maintaining the highest standards of accuracy and reliability.
+This positions Mediqom as a leader in intelligent medical data processing, capable of handling the complexity and variability of real-world medical documents while maintaining the highest standards of accuracy and reliability.
 
 ## Cross-References & Integration Points
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Aouros implements a **zero-knowledge encryption architecture** designed to ensure that the backend server cannot decrypt sensitive medical documents and health data. The system uses a multi-layered encryption approach combining AES symmetric encryption for documents and RSA asymmetric encryption for secure key distribution.
+Mediqom implements a **zero-knowledge encryption architecture** designed to ensure that the backend server cannot decrypt sensitive medical documents and health data. The system uses a multi-layered encryption approach combining AES symmetric encryption for documents and RSA asymmetric encryption for secure key distribution.
 
 ## Current Implementation
 

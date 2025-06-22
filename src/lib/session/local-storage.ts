@@ -25,8 +25,8 @@ const DEFAULT_OPTIONS: SessionStorageOptions = {
     cleanupOnLoad: true
 };
 
-const STORAGE_PREFIX = 'aouros_session_';
-const STORAGE_INDEX_KEY = 'aouros_session_index';
+const STORAGE_PREFIX = 'mediqom_session_';
+const STORAGE_INDEX_KEY = 'mediqom_session_index';
 
 export class SessionLocalStorage {
     private options: SessionStorageOptions;
