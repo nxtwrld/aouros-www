@@ -2,6 +2,7 @@
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { setClient, getClient } from '$lib/supabase';
+	import '../css/app.css';
 	import '../css/index.css';
 
 	let { data, children } = $props();

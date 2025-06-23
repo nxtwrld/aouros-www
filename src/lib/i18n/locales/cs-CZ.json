@@ -153,6 +153,18 @@
     }
   },
   "click-here": "",
+  "nav": {
+    "home": "Domů",
+    "families": "Pro rodiny",
+    "doctors": "Pro lékaře",
+    "appconnect": "AppConnect",
+    "security": "Zabezpečení",
+    "pricing": "Ceník",
+    "about": "O nás",
+    "beta": "Začít",
+    "login": "Přihlášení",
+    "getStarted": "Začít zdarma"
+  },
   "languages": {
     "ar": "arabština",
     "cs": "čeština",

@@ -84,7 +84,7 @@
             </svg>
             <div>
                 <h4 class="h4">{ $t('app-connect.total-privacy-warning') }</h4>
-                <p class="p">{ $t('app-connect.you-are-about-to-leave-aouros-total-privacy-realm') }</p>
+                <p class="p">{ $t('app-connect.you-are-about-to-leave-mediqom-total-privacy-realm') }</p>
                 <p class="p">{ $t('app-connect.you-are-about-to-share-data-withe-a-third-party-service') }</p>
             </div>
         </div>

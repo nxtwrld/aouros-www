@@ -1,6 +1,6 @@
 # AI Document Import Modernization Documentation
 
-This documentation suite outlines the comprehensive modernization strategy for Aouros' document import system, transitioning from monolithic processing to a distributed, graph-based workflow orchestration using LangGraph.
+This documentation suite outlines the comprehensive modernization strategy for Mediqom's document import system, transitioning from monolithic processing to a distributed, graph-based workflow orchestration using LangGraph.
 
 ## 📋 Navigation
 

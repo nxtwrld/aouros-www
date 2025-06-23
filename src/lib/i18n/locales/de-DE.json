@@ -153,6 +153,18 @@
     }
   },
   "click-here": "",
+  "nav": {
+    "home": "Startseite",
+    "families": "Für Familien",
+    "doctors": "Für Ärzte",
+    "appconnect": "AppConnect",
+    "security": "Sicherheit",
+    "pricing": "Preise",
+    "about": "Über uns",
+    "beta": "Loslegen",
+    "login": "Anmelden",
+    "getStarted": "Kostenlos starten"
+  },
   "languages": {
     "ar": "Arabisch",
     "cs": "tschechisch",
