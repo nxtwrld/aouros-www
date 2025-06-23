@@ -118,11 +118,8 @@ What makes Mediqom unique in the crowded healthcare AI space:
 **"350+ Medical Specialists at Your Fingertips"**
 
 **The Ecosystem:**
-- **Current Partners**:
-  - **MedAInsight**: Comprehensive medical AI assistant
-  - **NYU Mammaio**: AI-powered mammography analysis
-  - **uLékaře.cz**: 350+ telemedicine specialists
 - **How It Works**: "Secure, credit-based access to specialized medical AI"
+- **Marketplace**: "Sell access to you applications"
 - **For Patients**: "Get expert analysis when you need it"
 - **For Doctors**: "Enhance your practice with cutting-edge AI tools"
 
@@ -162,10 +159,6 @@ What makes Mediqom unique in the crowded healthcare AI space:
 - **Sandbox Environment**: "Test your integrations safely"
 - **Security Framework**: "Built-in encryption and privacy compliance"
 
-**Success Stories:**
-- **NYU Partnership**: "Academic research reaching clinical practice"
-- **uLékaře.cz Integration**: "Telemedicine platform expanding reach"
-- **MedAInsight**: "AI assistant helping thousands of patients"
 
 ### **Pricing** (`/pricing`)
 **"Simple, Transparent Pricing That Grows With You"**
