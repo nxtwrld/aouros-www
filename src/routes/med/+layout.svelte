@@ -2,6 +2,7 @@
 
     import { emitShortcut } from '$lib/shortcuts';
     import Unlock from '$components/layout/Unlock.svelte';
+    import '../../css/index.css';
     //import UI from '$components/layout/UI.svelte';
     import { onMount } from 'svelte';
     interface Props {
@@ -20,6 +21,12 @@
 
 
 <svelte:window onkeydown={emitShortcut}></svelte:window>
+
+<svelte:head>
+	<title>Mediqom</title>
+    <meta name="description" content="Mediqom app" />
+    <meta name="robots" content="noindex">
+</svelte:head>
 
 <Unlock>
     {#if lazyUnlock !== null}

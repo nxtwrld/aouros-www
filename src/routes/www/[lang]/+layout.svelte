@@ -1,27 +1,53 @@
+<script lang="ts">
+	import { _ } from 'svelte-i18n';
+	import { page } from '$app/stores';
+	import type { LayoutData } from './$types';
+	import Navigation from '$components/www/Navigation.svelte';
+
+	export let data: LayoutData;
+</script>
+
+<div class="www-layout">
+	<Navigation lang={data.lang} session={data.session} user={data.user} />
+	
+	<div class="language-switcher">
+		<a 
+			href="/www/en{$page.url.pathname.replace(/^\/www\/[^\/]+/, '')}" 
+			class:active={data.lang === 'en'}
+			data-sveltekit-preload-data="off"
+		>
+			English
+		</a>
+		<a 
+			href="/www/cs{$page.url.pathname.replace(/^\/www\/[^\/]+/, '')}" 
+			class:active={data.lang === 'cs'}
+			data-sveltekit-preload-data="off"
+		>
+			Čeština
+		</a>
+		<a 
+			href="/www/de{$page.url.pathname.replace(/^\/www\/[^\/]+/, '')}" 
+			class:active={data.lang === 'de'}
+			data-sveltekit-preload-data="off"
+		>
+			Deutsch
+		</a>
+	</div>
+
+	<main>
+		<slot />
+	</main>
+</div>
+
+<style>
+
 @import url('https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@600&display=swap');
 
 * {
     box-sizing: border-box;
 }
 
-html, body {
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-    -webkit-overflow-scrolling: touch; /* Enables momentum scrolling on iOS devices */
-	overflow: auto;
-    margin: 0;
-    padding: 0;
-    width: 100vw;
-    font-family: 'Roboto', sans-serif;
-    font-size: 15px;
-    margin: 0;
-    padding: 0;
-    padding-top: 2rem;
-    color: #333;
-    background-image: linear-gradient(130deg, #ececec 0%, #ececec 50%, #ffffff 100%);
-}
-
-:root {
+.www-layout {
 
     --color-primary: #16d3dd;
     --color-primary-dark: #02b8c1;
@@ -73,9 +99,11 @@ html, body {
     --footer-bottom: 1rem;
 
     --page-background: #e7eef4;
-}
-body {
-    background-color: var(--page-background);
+
+	background-color: var(--page-background);
+	width: 100vw;
+	height: 100vh;
+	overflow: auto;
 }
 
 .page {
@@ -156,3 +184,41 @@ a:hover {
     font-size: 1.25rem;
     padding: .5rem 1rem;
 }
+
+	.www-layout {
+		min-height: 100vh;
+	}
+
+	.language-switcher {
+		display: flex;
+		gap: 0.5rem;
+		justify-content: center;
+		padding: 0.75rem 2rem;
+		background: var(--color-bg-secondary, #f8f9fa);
+		border-bottom: 1px solid var(--color-border, #e0e0e0);
+		font-size: 0.875rem;
+	}
+
+	.language-switcher a {
+		padding: 0.25rem 0.75rem;
+		text-decoration: none;
+		color: var(--color-text-muted, #666);
+		border-radius: 0.25rem;
+		transition: all 0.2s;
+	}
+
+	.language-switcher a:hover {
+		background-color: var(--color-bg-tertiary, #e9ecef);
+		color: var(--color-text, #333);
+	}
+
+	.language-switcher a.active {
+		background-color: var(--color-primary, #007bff);
+		color: white;
+		font-weight: 500;
+	}
+
+	main {
+		padding: 0;
+	}
+</style>

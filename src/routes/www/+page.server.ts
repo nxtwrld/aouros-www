@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ request, locals: { supabase } }) => {
+export const load: PageServerLoad = async ({ request }) => {
 	// Detect user's preferred language from Accept-Language header
 	let detectedLang = 'en'; // default
 	
@@ -15,6 +15,6 @@ export const load: PageServerLoad = async ({ request, locals: { supabase } }) =>
 		}
 	}
 	
-	// Redirect to the www folder with detected language
+	// Redirect to the detected language
 	throw redirect(307, `/www/${detectedLang}/home`);
 };

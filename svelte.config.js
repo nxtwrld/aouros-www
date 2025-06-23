@@ -1,12 +1,26 @@
 import adapter from '@sveltejs/adapter-auto';
 import vercel from '@sveltejs/adapter-vercel';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { mdsvex } from 'mdsvex';
+import { createMermaidHighlighter } from './src/lib/mdsvex-config.js';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
 	// for more information about preprocessors
-	preprocess: vitePreprocess({ script: true }),
+	preprocess: [
+		vitePreprocess({ script: true }),
+		mdsvex({
+			extensions: ['.md', '.svx'],
+			remarkPlugins: [],
+			rehypePlugins: [],
+			highlight: {
+				highlighter: createMermaidHighlighter()
+			}
+		})
+	],
+	
+	extensions: ['.svelte', '.md', '.svx'],
 
 	kit: {
 		// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.

@@ -153,6 +153,18 @@
     }
   },
   "click-here": "click here",
+  "nav": {
+    "home": "Home",
+    "families": "For Families",
+    "doctors": "For Doctors",
+    "appconnect": "AppConnect",
+    "security": "Security",
+    "pricing": "Pricing",
+    "about": "About",
+    "beta": "Get Started",
+    "login": "Login",
+    "getStarted": "Get Started Free"
+  },
   "languages": {
     "ar": "Arabic",
     "cs": "Czech",
