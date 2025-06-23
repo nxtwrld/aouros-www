@@ -211,8 +211,6 @@ Over 5,000 doctors across EU and US are already transforming their practice with
 
 ### Ready to Start?
 
-[Book a Personalized Demo](/www/en/demo)
-
 [Start 30-Day Free Trial](/www/en/beta)
 
 ---
