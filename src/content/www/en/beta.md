@@ -50,68 +50,7 @@ graph LR
 
 ## Beta Application
 
-### Tell Us About Yourself
-
-**I am a:** (Select one)
-- [ ] Family/Individual
-- [ ] Healthcare Provider  
-- [ ] Developer/AI Company
-- [ ] Healthcare Organization
-
-### Your Medical Records Challenge
-
-**What problem are you trying to solve?**
-*Example: "I have medical records from 3 countries in different languages and can never find what I need during doctor visits"*
-
-[Text area for response]
-
-### Current Solution
-
-**What are you using now and why isn't it working?**
-*Example: "Paper files and random PDFs on my computer. It's chaos and I've lost important documents"*
-
-[Text area for response]
-
-### Data Volume
-
-**How many records/patients would you start with?**
-- [ ] 1-10 documents/patients
-- [ ] 11-50 documents/patients
-- [ ] 51-200 documents/patients
-- [ ] 200+ documents/patients
-
-### Timeline
-
-**When would you like to begin testing?**
-- [ ] Immediately
-- [ ] Within 1 week
-- [ ] Within 1 month
-- [ ] Just exploring
-
-### Contact Information
-
-- **Name**: [Required]
-- **Email**: [Required]
-- **Phone**: [Optional]
-- **Organization**: [Optional]
-- **Country**: [Dropdown: Czech Republic, Germany, United States]
-- **Preferred Language**: [Dropdown: English, Čeština, Deutsch]
-
-### Additional Information
-
-**Anything else we should know?**
-*Special requirements, specific features you need, etc.*
-
-[Text area for response]
-
-### Beta Agreement
-
-- [ ] I understand this is beta software and may have bugs
-- [ ] I agree to provide feedback at least once per month
-- [ ] I agree to keep beta features confidential
-- [ ] I agree to the [Terms of Service](/www/en/terms) and [Privacy Policy](/www/en/privacy)
-
-[Submit Application Button]
+Complete the form below to apply for beta access. We'll review your application and get back to you within 48 hours.
 
 ## What Happens Next?
 
@@ -168,7 +107,6 @@ Never. All beta data transfers seamlessly to your permanent account.
 
 Join innovative families and forward-thinking healthcare providers in our exclusive beta program.
 
-[Submit Application Above ↑]
 
 ---
 
