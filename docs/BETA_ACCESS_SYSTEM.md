@@ -105,17 +105,28 @@ The form is automatically rendered on the `/www/[lang]/beta` page when the slug 
 - Email uniqueness enforced at database level
 - RLS policies prevent public access to application data
 - All inputs validated server-side
-- Rate limiting should be added to prevent spam
+- Rate limiting built into auth system
+- Auth hook prevents unauthorized signups
+- Environment-controlled beta access mode
 
 ## Testing
 
-To test the system:
-
+### Beta Application Flow:
 1. Visit `/www/en/beta`
 2. Fill out the form with test data
 3. Submit and verify success message
 4. Check Supabase Dashboard for new application
-5. Update status and verify changes
+
+### Beta Approval Flow:
+1. In Supabase Dashboard, change status to "approved"
+2. Verify auth user and profile are created
+3. Check that Supabase sends confirmation email
+
+### Auth Protection:
+1. Set `BETA_ONLY_MODE=true`
+2. Try signing up with unapproved email → Should be rejected
+3. Try signing up with approved email → Should work
+4. Set `BETA_ONLY_MODE=false` → Anyone can sign up
 
 ## Maintenance
 
