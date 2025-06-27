@@ -38,6 +38,30 @@ const config = {
 			'$data': 'src/data',
 			'$media': 'src/media',
 		},
+		prerender: {
+			entries: [
+				'/',
+				'/www',
+				'/www/en',
+				'/www/cs', 
+				'/www/de',
+				'/www/en/home',
+				'/www/cs/home',
+				'/www/de/home',
+				'/www/en/families',
+				'/www/en/doctors',
+				'/www/en/appconnect',
+				'/www/en/security',
+				'/www/en/pricing',
+				'/www/en/beta',
+				'/www/en/faq',
+				'/www/en/contact',
+				'/www/en/faq-doctors',
+				'/www/en/terms',
+				'/www/en/privacy',
+				'/www/en/test-mermaid'
+			]
+		}
 	}
 };
 

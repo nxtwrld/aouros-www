@@ -197,10 +197,11 @@ graph LR
 ## Get Started Today
 
 ### For Healthcare Providers
-[Request Demo](/www/en/demo) | [Start Free Trial](/www/en/beta)
+[Start Free Trial](/www/en/beta)
 
 ### For AI Developers  
-[Apply to Marketplace](/www/en/developers) | [View API Docs](/www/en/api)
+Coming soon
+<!-- [Apply to Marketplace](/www/en/developers) | [View API Docs](/www/en/api)--<>
 
 ---
 

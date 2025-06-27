@@ -78,6 +78,28 @@
 			{#if form?.message !== undefined}
 			<div class="{form?.success ? '' : 'fail'}">
 				<p class="form-instructions -error">{form?.message}</p>
+				{#if form?.message?.includes('Beta access required')}
+					<div class="beta-notice">
+						<h3>Need Beta Access?</h3>
+						<p>Mediqom is currently in beta. To get access:</p>
+						<ol>
+							<li>Apply for beta access on our <a href="/www/en/beta">beta page</a></li>
+							<li>Wait for approval (usually within 48 hours)</li>
+							<li>Check your email for the magic link</li>
+						</ol>
+					</div>
+				{:else if form?.message?.includes('application is under review')}
+					<div class="beta-notice">
+						<h3>Application Under Review</h3>
+						<p>Your beta application is being reviewed. We'll email you within 48 hours once approved.</p>
+						<p>Check your spam folder if you don't see our email.</p>
+					</div>
+				{:else if form?.message?.includes('application was not approved')}
+					<div class="beta-notice">
+						<h3>Application Status</h3>
+						<p>Your beta application was not approved. If you believe this is an error, please contact us at <a href="mailto:beta@mediqom.com">beta@mediqom.com</a>.</p>
+					</div>
+				{/if}
 			</div>
 			{/if}
 
@@ -121,7 +143,44 @@
 		
 	}
 
+	.beta-notice {
+		background-color: #f8f9fa;
+		border: 1px solid #dee2e6;
+		border-radius: 8px;
+		padding: 1.5rem;
+		margin-top: 1rem;
+	}
 
+	.beta-notice h3 {
+		margin-top: 0;
+		margin-bottom: 1rem;
+		color: #495057;
+		font-size: 1.125rem;
+	}
+
+	.beta-notice p {
+		margin-bottom: 0.5rem;
+		color: #6c757d;
+	}
+
+	.beta-notice ol {
+		margin: 0.5rem 0;
+		padding-left: 1.5rem;
+		color: #6c757d;
+	}
+
+	.beta-notice li {
+		margin-bottom: 0.25rem;
+	}
+
+	.beta-notice a {
+		color: #007bff;
+		text-decoration: none;
+	}
+
+	.beta-notice a:hover {
+		text-decoration: underline;
+	}
 
 
 </style>

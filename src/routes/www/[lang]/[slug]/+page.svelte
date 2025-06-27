@@ -3,6 +3,7 @@
 	import MermaidDiagram from '$lib/components/MermaidDiagram.svelte';
 	import { onMount } from 'svelte';
 	import mermaid from 'mermaid';
+	import BetaForm from '$components/www/BetaForm.svelte';
 
 	export let data: PageData;
 	
@@ -148,6 +149,10 @@
 	<div bind:this={contentElement} class="markdown-content">
 		{@html data.content.html}
 	</div>
+	
+	{#if data.slug === 'beta'}
+		<BetaForm lang={data.lang} />
+	{/if}
 </article>
 
 <style>

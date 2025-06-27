@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_SERVICE_KEY} from '$env/static/private';
+import { SUPABASE_SERVICE_ROLE_KEY} from '$env/static/private';
 import { PUBLIC_SUPABASE_URL } from "$env/static/public";
 import { getClient } from "$lib/supabase";
 
@@ -12,7 +12,7 @@ export async function loadSubscription(userId: string): Promise<{
         throw new Error('userId is required for loadSubscription');
     }
 
-    const supabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const supabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { data: subscription, error } = await supabase
         .from('subscriptions')
@@ -38,7 +38,7 @@ export async function updateSubscription(config: {
         throw new Error('userId is required for updateSubscription');
     }
 
-    const supabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const supabase = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { error: subscriptionError } = await supabase.from('subscriptions').upsert({
         id: userId,
