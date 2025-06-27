@@ -1,7 +1,7 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
-export default  {
-    vertexShader: `
+export default {
+  vertexShader: `
         uniform float time;
         uniform float pulseRate;
         varying vec2 vUv;
@@ -18,7 +18,7 @@ export default  {
             gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
         }
     `,
-    fragmentShader: `
+  fragmentShader: `
         varying vec2 vUv;
         uniform float time;
         uniform float pulseRate;
@@ -30,10 +30,10 @@ export default  {
             gl_FragColor = vec4(originalColor, alpha);
         }
     `,
-    uniforms: {
-        time: { value: 0 },
-        originalColor: { value: new THREE.Color() },
-        opacity: { value: 0.7 },
-        pulseRate: { value: 1.0 } // Default pulse rate
-}
+  uniforms: {
+    time: { value: 0 },
+    originalColor: { value: new THREE.Color() },
+    opacity: { value: 0.7 },
+    pulseRate: { value: 1.0 }, // Default pulse rate
+  },
 };

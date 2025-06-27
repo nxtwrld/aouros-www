@@ -30,6 +30,7 @@ derivedConfig: {
 ```
 
 **Integration Points Updated**:
+
 - ✅ Enhanced workflow state definition
 - ✅ Input validator with language detection
 - ✅ Schema localization using user language
@@ -42,14 +43,15 @@ derivedConfig: {
 
 **Integration Points**:
 
-| Component | Configuration Used | Example |
-|-----------|-------------------|---------|
+| Component                 | Configuration Used                 | Example                                 |
+| ------------------------- | ---------------------------------- | --------------------------------------- |
 | **Medication Validation** | `primaryMedicationDB`, `fallbacks` | Czech user → SÚKL primary, EMA fallback |
-| **Medical Coding** | `primaryICD`, `primarySNOMED` | US user → ICD-10-CM, SNOMED_US |
-| **Lab References** | `referenceRanges` | Czech user → CZECH_LAB_STANDARDS |
-| **External APIs** | Regional API preferences | CZ → SÚKL API, US → FDA API |
+| **Medical Coding**        | `primaryICD`, `primarySNOMED`      | US user → ICD-10-CM, SNOMED_US          |
+| **Lab References**        | `referenceRanges`                  | Czech user → CZECH_LAB_STANDARDS        |
+| **External APIs**         | Regional API preferences           | CZ → SÚKL API, US → FDA API             |
 
 **Files Updated**:
+
 - ✅ `AI_IMPORT_06_EXTERNAL_TOOLS.md` - Regional database matrix
 - ✅ `AI_IMPORT_USER_CONFIGURATION.md` - Database preference configuration
 - ✅ MCP server integration with user region
@@ -65,14 +67,18 @@ derivedConfig: {
 const provider = providerRegistry.selectOptimalProvider({
   task: "classification",
   requirements: { supportsVision: true },
-  preferences: { 
-    costOptimized: userConfig.aiPreferences.optimizationStrategy === 'cost',
-    accuracy: userConfig.aiPreferences.optimizationStrategy === 'accuracy' ? 'high' : 'standard'
-  }
+  preferences: {
+    costOptimized: userConfig.aiPreferences.optimizationStrategy === "cost",
+    accuracy:
+      userConfig.aiPreferences.optimizationStrategy === "accuracy"
+        ? "high"
+        : "standard",
+  },
 });
 ```
 
 **Files Updated**:
+
 - ✅ `AI_IMPORT_04_IMPLEMENTATION.md` - Provider selection logic
 - ✅ `AI_IMPORT_USER_CONFIGURATION.md` - Provider preference configuration
 
@@ -99,6 +105,7 @@ confidenceThresholds: {
 ```
 
 **Files Updated**:
+
 - ✅ `AI_IMPORT_USER_CONFIGURATION.md` - Quality configuration definitions
 - ✅ Quality gate implementation in workflow
 
@@ -108,14 +115,15 @@ confidenceThresholds: {
 
 **Regional Compliance Matrix**:
 
-| Region | Compliance Requirements | Impact |
-|--------|------------------------|--------|
+| Region             | Compliance Requirements                      | Impact                                         |
+| ------------------ | -------------------------------------------- | ---------------------------------------------- |
 | **Czech Republic** | `['GDPR', 'EU_MDR', 'CZECH_HEALTHCARE_LAW']` | SÚKL validation required, EU privacy standards |
-| **United States** | `['HIPAA', 'FDA_CFR']` | FDA database priority, HIPAA audit trails |
-| **European Union** | `['GDPR', 'EU_MDR']` | EMA database access, GDPR data handling |
-| **Germany** | `['GDPR', 'EU_MDR', 'GERMAN_MEDICAL_LAW']` | PharmNet.Bund integration |
+| **United States**  | `['HIPAA', 'FDA_CFR']`                       | FDA database priority, HIPAA audit trails      |
+| **European Union** | `['GDPR', 'EU_MDR']`                         | EMA database access, GDPR data handling        |
+| **Germany**        | `['GDPR', 'EU_MDR', 'GERMAN_MEDICAL_LAW']`   | PharmNet.Bund integration                      |
 
 **Files Updated**:
+
 - ✅ `AI_IMPORT_06_EXTERNAL_TOOLS.md` - Regional compliance in database selection
 - ✅ `AI_IMPORT_USER_CONFIGURATION.md` - Compliance configuration
 
@@ -128,16 +136,17 @@ confidenceThresholds: {
 ```typescript
 // Patient demographics drive validation accuracy
 interface PatientContext {
-  age?: number;           // For age-specific lab reference ranges
-  sex?: 'M' | 'F' | 'O'; // For gender-specific medical standards
+  age?: number; // For age-specific lab reference ranges
+  sex?: "M" | "F" | "O"; // For gender-specific medical standards
   countryOfCare: RegionCode; // For regional medical standards
-  allergies?: string[];   // For drug interaction checking
+  allergies?: string[]; // For drug interaction checking
   chronicConditions?: string[]; // For contraindication validation
   currentMedications?: string[]; // For drug-drug interaction checking
 }
 ```
 
 **Files Updated**:
+
 - ✅ `AI_IMPORT_06_EXTERNAL_TOOLS.md` - Lab validation with patient demographics
 - ✅ `AI_IMPORT_USER_CONFIGURATION.md` - Patient context configuration
 - ✅ MCP server tools using patient context
@@ -148,14 +157,15 @@ interface PatientContext {
 
 **Integration Points**:
 
-| Tool Category | Configuration | User Control |
-|---------------|---------------|--------------|
-| **Medical Apps** | `enabledApps`, `autoTrigger` | User chooses which 3rd party apps to use |
-| **Database Access** | `credentials`, `timeouts` | User manages API access and performance |
-| **Rate Limiting** | `rateLimiting` | User controls API usage costs |
-| **Caching** | `caching.enabled`, `caching.ttl` | User balances speed vs. freshness |
+| Tool Category       | Configuration                    | User Control                             |
+| ------------------- | -------------------------------- | ---------------------------------------- |
+| **Medical Apps**    | `enabledApps`, `autoTrigger`     | User chooses which 3rd party apps to use |
+| **Database Access** | `credentials`, `timeouts`        | User manages API access and performance  |
+| **Rate Limiting**   | `rateLimiting`                   | User controls API usage costs            |
+| **Caching**         | `caching.enabled`, `caching.ttl` | User balances speed vs. freshness        |
 
 **Files Updated**:
+
 - ✅ `AI_IMPORT_09_DICOM_APPS.md` - 3rd party app integration
 - ✅ `AI_IMPORT_USER_CONFIGURATION.md` - External tools configuration
 
@@ -169,7 +179,7 @@ interface PatientContext {
 // Security configuration affects all data handling
 interface SecurityConfiguration {
   encryption: {
-    level: 'standard' | 'high' | 'maximum';
+    level: "standard" | "high" | "maximum";
     keyRotation: boolean;
   };
   retention: {
@@ -186,6 +196,7 @@ interface SecurityConfiguration {
 ```
 
 **Files Updated**:
+
 - ✅ `AI_IMPORT_USER_CONFIGURATION.md` - Security configuration
 - ✅ Encryption preferences in workflow state
 
@@ -240,12 +251,12 @@ graph TD
     F --> G[Results in User Language]
     G --> H[Compliance Check]
     H --> I[Final Output Respecting All User Preferences]
-    
+
     A --> J[Regional Databases]
     A --> K[AI Provider Selection]
     A --> L[Quality Thresholds]
     A --> M[Compliance Requirements]
-    
+
     J --> F
     K --> E
     L --> G
@@ -255,17 +266,20 @@ graph TD
 ## Benefits Achieved
 
 ### 🎯 User Experience
+
 - **Consistent Language**: All outputs in user's preferred language regardless of document source
 - **Regional Relevance**: Medical validation uses appropriate regional databases
 - **Personal Preferences**: Cost vs. accuracy, quality thresholds respect user choices
 
 ### 🔧 Technical Benefits
+
 - **Centralized Configuration**: Single source of truth for all user preferences
 - **No Hardcoded Values**: All regional and language settings are user-configurable
 - **Extensible Design**: Easy to add new configuration options
 - **Clear Separation**: Document metadata vs. user preferences clearly distinguished
 
 ### 🏥 Medical Accuracy
+
 - **Regional Standards**: Correct medical databases for user's healthcare system
 - **Patient Context**: Demographics improve validation accuracy
 - **Compliance Alignment**: Automatic adherence to regional healthcare regulations

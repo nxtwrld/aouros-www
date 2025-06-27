@@ -1,108 +1,113 @@
-import { error, json } from '@sveltejs/kit';
-import { generateSessionId, createSession } from '$lib/session/manager';
-import OpenAI from 'openai';
-import { env } from '$env/dynamic/private';
+import { error, json } from "@sveltejs/kit";
+import { generateSessionId, createSession } from "$lib/session/manager";
+import OpenAI from "openai";
+import { env } from "$env/dynamic/private";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-    apiKey: env.OPENAI_API_KEY
+  apiKey: env.OPENAI_API_KEY,
 });
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request, locals: { supabase, safeGetSession, user } }) {
-    const { session } = await safeGetSession();
+export async function POST({
+  request,
+  locals: { supabase, safeGetSession, user },
+}) {
+  const { session } = await safeGetSession();
 
-    if (!session || !user) {
-        error(401, { message: 'Unauthorized' });
-    }
+  if (!session || !user) {
+    error(401, { message: "Unauthorized" });
+  }
 
-    const data = await request.json();
-    const { language = 'en', models = ['GP'] } = data;
+  const data = await request.json();
+  const { language = "en", models = ["GP"] } = data;
 
-    console.log('🚀 Creating new session...', {
-        userId: user.id,
-        language,
-        models
-    });
+  console.log("🚀 Creating new session...", {
+    userId: user.id,
+    language,
+    models,
+  });
+
+  try {
+    // Generate unique session ID
+    const sessionId = generateSessionId();
+
+    // Create OpenAI conversation thread for persistent context
+    let openaiThreadId: string | undefined;
 
     try {
-        // Generate unique session ID
-        const sessionId = generateSessionId();
-        
-        // Create OpenAI conversation thread for persistent context
-        let openaiThreadId: string | undefined;
-        
-        try {
-            console.log('🤖 Creating OpenAI conversation thread...');
-            const thread = await openai.beta.threads.create({
-                metadata: {
-                    sessionId,
-                    userId: user.id,
-                    purpose: 'medical_analysis',
-                    language,
-                    models: models.join(','),
-                    created_at: new Date().toISOString()
-                }
-            });
-            
-            openaiThreadId = thread.id;
-            console.log('✅ OpenAI thread created:', openaiThreadId);
-            
-            // Add initial system message to set context
-            await openai.beta.threads.messages.create(thread.id, {
-                role: "user",
-                content: `
+      console.log("🤖 Creating OpenAI conversation thread...");
+      const thread = await openai.beta.threads.create({
+        metadata: {
+          sessionId,
+          userId: user.id,
+          purpose: "medical_analysis",
+          language,
+          models: models.join(","),
+          created_at: new Date().toISOString(),
+        },
+      });
+
+      openaiThreadId = thread.id;
+      console.log("✅ OpenAI thread created:", openaiThreadId);
+
+      // Add initial system message to set context
+      await openai.beta.threads.messages.create(thread.id, {
+        role: "user",
+        content: `
 Starting a new medical consultation session.
 Language: ${language}
-Active analysis models: ${models.join(', ')}
+Active analysis models: ${models.join(", ")}
 Session context: This will be a doctor-patient conversation with real-time audio transcription.
 Please analyze each new statement incrementally and provide updated medical insights.
-`.trim()
-            });
-            
-        } catch (openaiError) {
-            console.error('⚠️ Failed to create OpenAI thread, continuing without it:', openaiError);
-            // Continue without OpenAI thread - fallback to traditional analysis
-        }
-        
-        // Initialize session with ChatGPT thread context
-        await createSession(sessionId, {
-            userId: user.id,
-            language,
-            models,
-            startTime: new Date().toISOString(),
-            status: 'active',
-            openaiThreadId
-        });
-
-        const response = {
-            sessionId,
-            status: 'success',
-            sseUrl: `/v1/session/${sessionId}/stream`,
-            audioUrl: `/v1/session/${sessionId}/audio`,
-            features: {
-                realTimeStreaming: true,
-                incrementalAnalysis: !!openaiThreadId,
-                chatGPTIntegration: !!openaiThreadId,
-                voiceActivityDetection: true
-            },
-            config: {
-                language,
-                models,
-                hasOpenAIThread: !!openaiThreadId
-            }
-        };
-
-        console.log('✅ Session created successfully:', {
-            sessionId,
-            hasOpenAIThread: !!openaiThreadId,
-            sseUrl: response.sseUrl,
-            audioUrl: response.audioUrl
-        });
-
-        return json(response);
-    } catch (err) {
-        console.error('❌ Failed to create session:', err);
-        error(500, { message: 'Failed to create session' });
+`.trim(),
+      });
+    } catch (openaiError) {
+      console.error(
+        "⚠️ Failed to create OpenAI thread, continuing without it:",
+        openaiError,
+      );
+      // Continue without OpenAI thread - fallback to traditional analysis
     }
-} 
+
+    // Initialize session with ChatGPT thread context
+    await createSession(sessionId, {
+      userId: user.id,
+      language,
+      models,
+      startTime: new Date().toISOString(),
+      status: "active",
+      openaiThreadId,
+    });
+
+    const response = {
+      sessionId,
+      status: "success",
+      sseUrl: `/v1/session/${sessionId}/stream`,
+      audioUrl: `/v1/session/${sessionId}/audio`,
+      features: {
+        realTimeStreaming: true,
+        incrementalAnalysis: !!openaiThreadId,
+        chatGPTIntegration: !!openaiThreadId,
+        voiceActivityDetection: true,
+      },
+      config: {
+        language,
+        models,
+        hasOpenAIThread: !!openaiThreadId,
+      },
+    };
+
+    console.log("✅ Session created successfully:", {
+      sessionId,
+      hasOpenAIThread: !!openaiThreadId,
+      sseUrl: response.sseUrl,
+      audioUrl: response.audioUrl,
+    });
+
+    return json(response);
+  } catch (err) {
+    console.error("❌ Failed to create session:", err);
+    error(500, { message: "Failed to create session" });
+  }
+}

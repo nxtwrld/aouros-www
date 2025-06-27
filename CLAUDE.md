@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Core Development
+
 - `npm run dev` - Start development server
 - `npm run build` - Build production version
 - `npm run preview` - Preview production build
@@ -16,10 +17,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run check:watch` - Run type checking in watch mode
 
 ### Code Quality
+
 - `npm run lint` - Run Prettier and ESLint checks
 - `npm run format` - Format code with Prettier
 
 ### Testing
+
 - `npm test` - Run all tests (integration + unit)
 - `npm run test:integration` - Run Playwright integration tests
 - `npm run test:unit` - Run Vitest unit tests
@@ -27,6 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture Overview
 
 ### Main Application Structure
+
 - **Authentication**: Supabase-based auth with session management via `src/lib/auth.ts` and `src/hooks.server.ts`
 - **Real-time Sessions**: In-memory session store with EventEmitter updates via `src/lib/session/manager.ts`
 - **AI Analysis**: Multi-provider AI integration (GPT, Gemini) for medical conversation analysis
@@ -35,6 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Encryption**: Multi-layer security with AES/RSA encryption for sensitive health data
 
 ### Key Directories
+
 - `src/lib/` - Core business logic and utilities
 - `src/components/` - Reusable Svelte components organized by feature
 - `src/routes/` - SvelteKit routing with API endpoints in `v1/` subdirectory
@@ -42,17 +47,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `src/css/` - Global stylesheets organized by component type
 
 ### Important Configuration Files
+
 - `svelte.config.js` - Vercel adapter with custom aliases (`$components`, `$data`, `$media`)
 - `playwright.config.ts` - Integration testing configuration
 - Path aliases: Use `$lib`, `$components`, `$data` for imports
 
 ### Medical Domain Specifics
+
 - **Session Management**: Medical consultations are tracked as real-time sessions with transcript analysis
 - **FHIR Compliance**: All medical data follows healthcare interoperability standards
 - **Multi-language Support**: Internationalization for Czech, German, and English
 - **Privacy-First**: Encrypted health data storage with public key cryptography
 
 ### API Structure
+
 - API routes follow `/v1/` prefix pattern
 - Real-time features use Server-Sent Events (SSE)
 - Authentication handled via Supabase hooks

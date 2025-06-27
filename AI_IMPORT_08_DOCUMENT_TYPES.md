@@ -7,6 +7,7 @@ This document outlines the proposed extensions to the document type system to su
 ## Current Document Type Support
 
 The system currently supports these primary medical document types:
+
 - **Report** - General medical examination reports
 - **Laboratory** - Lab test results with signal extraction
 - **Dental** - Dental examination with tooth-specific analysis
@@ -25,6 +26,7 @@ Based on comprehensive analysis of medical documentation needs, the following do
 **Purpose**: Hospital discharge documentation with treatment summaries
 
 **Key Data Points**:
+
 - Admission and discharge dates
 - Primary and secondary diagnoses (ICD-10 codes)
 - Procedures performed during hospitalization
@@ -33,6 +35,7 @@ Based on comprehensive analysis of medical documentation needs, the following do
 - Discharge disposition (home, rehabilitation, etc.)
 
 **Schema Requirements**:
+
 ```typescript
 interface DischargeSchema {
   admissionDate: string;
@@ -53,6 +56,7 @@ interface DischargeSchema {
 **Purpose**: Operative notes and surgical procedure documentation
 
 **Key Data Points**:
+
 - Pre-operative and post-operative diagnoses
 - Procedure details with CPT codes
 - Surgical team members
@@ -62,6 +66,7 @@ interface DischargeSchema {
 - Implants or devices used
 
 **Schema Requirements**:
+
 ```typescript
 interface SurgicalSchema {
   preOperativeDiagnosis: Diagnosis[];
@@ -90,6 +95,7 @@ interface SurgicalSchema {
 **Purpose**: Tissue analysis, biopsy results, and cytology reports
 
 **Key Data Points**:
+
 - Specimen type and collection method
 - Gross description
 - Microscopic description
@@ -99,6 +105,7 @@ interface SurgicalSchema {
 - Synoptic reports for cancer
 
 **Schema Requirements**:
+
 ```typescript
 interface PathologySchema {
   specimen: {
@@ -126,6 +133,7 @@ interface PathologySchema {
 **Purpose**: Cardiac examination reports including ECG, echo, stress tests
 
 **Key Data Points**:
+
 - ECG findings and rhythm analysis
 - Echocardiogram measurements
 - Stress test results
@@ -135,9 +143,10 @@ interface PathologySchema {
 - Wall motion analysis
 
 **Schema Requirements**:
+
 ```typescript
 interface CardiologySchema {
-  studyType: 'ECG' | 'Echo' | 'Stress' | 'Catheterization';
+  studyType: "ECG" | "Echo" | "Stress" | "Catheterization";
   ecgFindings: {
     rhythm: string;
     rate: number;
@@ -160,6 +169,7 @@ interface CardiologySchema {
 **Purpose**: Emergency department visit documentation
 
 **Key Data Points**:
+
 - Chief complaint and triage level
 - Emergency department course
 - Vital signs and initial assessment
@@ -169,6 +179,7 @@ interface CardiologySchema {
 - Emergency contacts
 
 **Schema Requirements**:
+
 ```typescript
 interface EmergencySchema {
   chiefComplaint: string;
@@ -189,6 +200,7 @@ interface EmergencySchema {
 **Purpose**: Specialist consultation and referral documentation
 
 **Key Data Points**:
+
 - Referring physician information
 - Reason for consultation
 - Specialist assessment
@@ -197,6 +209,7 @@ interface EmergencySchema {
 - Communication back to referring physician
 
 **Schema Requirements**:
+
 ```typescript
 interface ConsultationSchema {
   referringPhysician: Performer;
@@ -215,6 +228,7 @@ interface ConsultationSchema {
 **Purpose**: Ongoing care documentation and treatment updates
 
 **Key Data Points**:
+
 - Subjective patient complaints
 - Objective findings
 - Assessment and plan (SOAP format)
@@ -223,6 +237,7 @@ interface ConsultationSchema {
 - Next visit planning
 
 **Schema Requirements**:
+
 ```typescript
 interface ProgressSchema {
   visitDate: string;
@@ -248,6 +263,7 @@ interface ProgressSchema {
 **Purpose**: Medical imaging interpretation and findings
 
 **Key Data Points**:
+
 - Study type and technique
 - Clinical indication
 - Findings by anatomical region
@@ -256,6 +272,7 @@ interface ProgressSchema {
 - Radiologist interpretation
 
 **Schema Requirements**:
+
 ```typescript
 interface RadiologySchema {
   studyType: string;
@@ -276,23 +293,27 @@ interface RadiologySchema {
 ## Implementation Strategy for New Document Types
 
 ### Phase 1: Schema Development (Week 1-2)
+
 - Design and implement enhanced schemas for each document type
 - Create validation rules and type definitions
 - Develop testing datasets for each document type
 
 ### Phase 2: AI Training Data (Week 3-4)
+
 - Collect representative documents for each type
 - Create ground truth annotations
 - Train document type classifiers
 - Validate extraction accuracy
 
 ### Phase 3: Workflow Integration (Week 5-6)
+
 - Integrate new document types into LangGraph workflow
 - Add conditional routing for new types
 - Implement specialized processing nodes
 - Test end-to-end workflows
 
 ### Phase 4: External Validation (Week 7-8)
+
 - Integrate with medical coding databases
 - Add document-specific validation rules
 - Implement quality scoring
@@ -301,16 +322,19 @@ interface RadiologySchema {
 ## Benefits of Extended Document Support
 
 ### Comprehensive Medical Records
+
 - **Complete Coverage**: Support for all major medical document types
 - **Standardized Extraction**: Consistent data structure across document types
 - **Interoperability**: FHIR-compliant output for healthcare integration
 
 ### Enhanced Clinical Workflows
+
 - **Specialty Support**: Tailored processing for different medical specialties
 - **Care Continuity**: Better tracking of patient care across episodes
 - **Quality Metrics**: Document-specific quality and completeness scores
 
 ### Improved User Experience
+
 - **Document Recognition**: Automatic classification of document types
 - **Specialized Processing**: Optimized extraction for each document type
 - **Contextual Validation**: Document-specific validation rules
@@ -318,16 +342,19 @@ interface RadiologySchema {
 ## Migration Considerations
 
 ### Backward Compatibility
+
 - Existing document types remain fully supported
 - Gradual rollout of new document type support
 - Optional feature flags for new document types
 
 ### Performance Impact
+
 - Minimal impact on existing processing speed
 - Document type classification adds <0.5 seconds
 - Parallel processing maintains overall performance
 
 ### Training Requirements
+
 - Medical professional validation of new schemas
 - User training on new document type features
 - Updated documentation and examples

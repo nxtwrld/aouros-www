@@ -1,40 +1,42 @@
-
-import { error, json } from '@sveltejs/kit';
-import assess from '$lib/import.server/assessInputs';
-import { loadSubscription, updateSubscription } from '$lib/user/subscriptions.server.js';
-
-
+import { error, json } from "@sveltejs/kit";
+import assess from "$lib/import.server/assessInputs";
+import {
+  loadSubscription,
+  updateSubscription,
+} from "$lib/user/subscriptions.server.js";
 
 /** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request, locals: { supabase, safeGetSession, user }}) {
-	//const str = url.searchParams.get('drug');
+export async function POST({
+  request,
+  locals: { supabase, safeGetSession, user },
+}) {
+  //const str = url.searchParams.get('drug');
 
-    const { session } = await safeGetSession()
+  const { session } = await safeGetSession();
 
-    if (!session || !user) {
-        error(401, { message: 'Unauthorized' });
-    }
-    const subscription = await loadSubscription(user.id);
-    //console.log('user', subscription);
-    if (!subscription) {
-        error(404, { message: 'Subscription not found' });
-    }
+  if (!session || !user) {
+    error(401, { message: "Unauthorized" });
+  }
+  const subscription = await loadSubscription(user.id);
+  //console.log('user', subscription);
+  if (!subscription) {
+    error(404, { message: "Subscription not found" });
+  }
 
-    if (subscription.scans == 0) {
-        error(403, { message: 'Subscription limit reached' });
-    }
+  if (subscription.scans == 0) {
+    error(403, { message: "Subscription limit reached" });
+  }
 
-    const data = await request.json();
-    
-    if (data.images === undefined && data.text === undefined) {
-        error(400, { message: 'No image or text provided' });
-    }
+  const data = await request.json();
 
-    const result = await assess(data);
-    
-    subscription.scans -= 1;
-    const u = await updateSubscription(subscription, user.id);
+  if (data.images === undefined && data.text === undefined) {
+    error(400, { message: "No image or text provided" });
+  }
 
-    return json(result);
+  const result = await assess(data);
+
+  subscription.scans -= 1;
+  const u = await updateSubscription(subscription, user.id);
+
+  return json(result);
 }
-

@@ -1,62 +1,61 @@
 {
-    "birthDate": {
-        "signal": "birthDate",
-        "type": "date"
-    },
-    "age": {
-        "signal": "age",
-        "type": "number"
-    },
-    "biologicalSex": {
-        "signal": "biologicalSex",
-        "type": "enum",
-        "localize": true,
-        "options": ["male", "female", "intersex"]
-    },
-    "bloodType": {
-        "signal": "bloodType",
-        "type": "enum",
-        "options": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
-    },
-    "weight": {
-        "signal": "weight",
-        "type": "number",
-        "unit": "kg"
-    },
-    "height": {
-        "signal": "height",
-        "type": "number",
-        "unit": "cm"
-    },
-    "systolic": {
-        "signal": "systolic",
-        "type": "number",
-        "unit": "mmHg"
-    },
-    "diastolic": {
-        "signal": "diastolic",
-        "type": "number",
-        "unit": "mmHg"
-    },
-    "heartRate": {
-        "signal": "heartRate",
-        "type": "number",
-        "unit": "bpm"
-    },
-    "temperature": {
-        "signal": "temperature",
-        "type": "number",
-        "unit": "°C"
-    },
-    "oxygenSaturation": {
-        "signal": "oxygenSaturation",
-        "type": "number",
-        "unit": "%"
-    },
-    "bloodSugar": {
-        "signal": "bloodSugar",
-        "type": "number",
-        "unit": "mg/dL"
-    }
-
+  "birthDate": {
+    "signal": "birthDate",
+    "type": "date"
+  },
+  "age": {
+    "signal": "age",
+    "type": "number"
+  },
+  "biologicalSex": {
+    "signal": "biologicalSex",
+    "type": "enum",
+    "localize": true,
+    "options": ["male", "female", "intersex"]
+  },
+  "bloodType": {
+    "signal": "bloodType",
+    "type": "enum",
+    "options": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+  },
+  "weight": {
+    "signal": "weight",
+    "type": "number",
+    "unit": "kg"
+  },
+  "height": {
+    "signal": "height",
+    "type": "number",
+    "unit": "cm"
+  },
+  "systolic": {
+    "signal": "systolic",
+    "type": "number",
+    "unit": "mmHg"
+  },
+  "diastolic": {
+    "signal": "diastolic",
+    "type": "number",
+    "unit": "mmHg"
+  },
+  "heartRate": {
+    "signal": "heartRate",
+    "type": "number",
+    "unit": "bpm"
+  },
+  "temperature": {
+    "signal": "temperature",
+    "type": "number",
+    "unit": "°C"
+  },
+  "oxygenSaturation": {
+    "signal": "oxygenSaturation",
+    "type": "number",
+    "unit": "%"
+  },
+  "bloodSugar": {
+    "signal": "bloodSugar",
+    "type": "number",
+    "unit": "mg/dL"
+  }
 }

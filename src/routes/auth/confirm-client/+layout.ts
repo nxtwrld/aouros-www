@@ -1,1 +1,1 @@
-export { load } from '../../+layout' 
+export { load } from "../../+layout";

@@ -1,74 +1,86 @@
-import { fail, redirect, error } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
-import { verifyHash } from '$lib/encryption/hash';
-import { log } from '$lib/logging/logger';
+import { fail, redirect, error } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
+import { verifyHash } from "$lib/encryption/hash";
+import { log } from "$lib/logging/logger";
 //import { loadUser } from '$lib/user/server';
 
-export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession, user }, fetch }) => {
-  const { session } = await safeGetSession()
+export const load: PageServerLoad = async ({
+  locals: { supabase, safeGetSession, user },
+  fetch,
+}) => {
+  const { session } = await safeGetSession();
 
   if (!session || !user) {
-    redirect(303, '/auth')
+    redirect(303, "/auth");
   }
 
-
   //const profile = await loadUser(supabase);
-  const profile = await fetch('/v1/med/user').catch(e => {
-    log.api.error('Error loading user data', e);
-    redirect(303, '/auth');
-  }).then(r => r.json())
+  const profile = await fetch("/v1/med/user")
+    .catch((e) => {
+      log.api.error("Error loading user data", e);
+      redirect(303, "/auth");
+    })
+    .then((r) => r.json());
 
   //console.log('profile', profile)
 
-  if (profile && profile.fullName && profile.private_keys && profile.publicKey) {
-    log.api.info('profile loaded - redirecting to med');
-    redirect(303, '/med');
+  if (
+    profile &&
+    profile.fullName &&
+    profile.private_keys &&
+    profile.publicKey
+  ) {
+    log.api.info("profile loaded - redirecting to med");
+    redirect(303, "/med");
   }
 
   return { session, profile, userEmail: user.email };
-
-
-}
+};
 
 export const actions: Actions = {
   update: async ({ request, locals: { supabase, safeGetSession, user } }) => {
-    const formData = await request.formData()
-    const fullName = formData.get('fullName') as string
-    const avatarUrl = formData.get('avatarUrl') as string
-    const language = formData.get('language') as string
-    const passphrase = (formData.get('passphrase') == 'undefined') ? null : formData.get('passphrase') as string
-    const subscription = formData.get('subscription') as string
-    const privateKey = formData.get('privateKey') as string
-    const publicKey = formData.get('publicKey') as string
-    const key_hash = formData.get('key_hash') as string
-    const documents = JSON.parse(formData.get('documents') as string);
+    const formData = await request.formData();
+    const fullName = formData.get("fullName") as string;
+    const avatarUrl = formData.get("avatarUrl") as string;
+    const language = formData.get("language") as string;
+    const passphrase =
+      formData.get("passphrase") == "undefined"
+        ? null
+        : (formData.get("passphrase") as string);
+    const subscription = formData.get("subscription") as string;
+    const privateKey = formData.get("privateKey") as string;
+    const publicKey = formData.get("publicKey") as string;
+    const key_hash = formData.get("key_hash") as string;
+    const documents = JSON.parse(formData.get("documents") as string);
 
-    const { session } = await safeGetSession()
+    const { session } = await safeGetSession();
 
     if (!session || !user) {
-      return fail(403, { error: 'Unauthorized'})
+      return fail(403, { error: "Unauthorized" });
     }
 
     if (passphrase && !(await verifyHash(passphrase, key_hash))) {
-      return fail(400, { error: 'Invalid passphrase' })
+      return fail(400, { error: "Invalid passphrase" });
     }
 
     // store profile data
     //console.log('update profile', fullName, avatarUrl, subscription, publicKey, session?.user.id);
 
-    const { error: profileError } = await supabase.from('profiles').update({
-      fullName,
-      avatarUrl,
-      subscription,
-      language,
-      publicKey,
-      updated_at: new Date(),
-    })
-    .eq('owner_id', user.id)
-    .eq('auth_id', user.id)
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        fullName,
+        avatarUrl,
+        subscription,
+        language,
+        publicKey,
+        updated_at: new Date(),
+      })
+      .eq("owner_id", user.id)
+      .eq("auth_id", user.id);
 
     if (profileError) {
-      log.api.error('profile error', profileError);
+      log.api.error("profile error", profileError);
       return fail(500, {
         error: profileError,
         auth_id: user.id,
@@ -78,26 +90,24 @@ export const actions: Actions = {
         privateKey,
         publicKey,
         key_hash: key_hash,
-      })
+      });
     }
 
-    log.api.debug('update private key');
-
+    log.api.debug("update private key");
 
     // store privateKey in separate protected table
-    const { error: keyError } = await supabase.from('private_keys').upsert({
+    const { error: keyError } = await supabase.from("private_keys").upsert({
       id: user.id,
       privateKey,
       key_hash,
       key_pass: passphrase,
       updated_at: new Date(),
-    })
-
+    });
 
     if (keyError) {
-      log.api.error('key error', keyError);
+      log.api.error("key error", keyError);
       // clear profile data
-      await clear(['profiles'], supabase, user);
+      await clear(["profiles"], supabase, user);
       return fail(500, {
         error: keyError,
         fullName,
@@ -106,8 +116,8 @@ export const actions: Actions = {
         passphrase,
         privateKey: privateKey,
         publicKey: publicKey,
-        key_hash: key_hash
-      })
+        key_hash: key_hash,
+      });
     }
     // create profiles_links
     /*
@@ -126,98 +136,102 @@ export const actions: Actions = {
     }
         */
 
-
-
     // create default profile documents
-    await Promise.all(documents.map(async (doc: any) => {
+    await Promise.all(
+      documents.map(async (doc: any) => {
+        const { type, metadata, content, keys } = doc;
 
-      const { type, metadata, content, keys } = doc;
+        log.api.debug("document", type);
+        const { data: documentInsert, error: documentInsertError } =
+          await supabase
+            .from("documents")
+            .insert([
+              {
+                user_id: user.id,
+                type,
+                metadata,
+                content,
+                author_id: user.id,
+                attachments: [],
+              },
+            ])
+            .select("id");
 
-      log.api.debug('document', type);
-      const { data: documentInsert, error: documentInsertError } = await supabase.from('documents')
-          .insert([{ 
-              user_id: user.id, 
-              type, 
-              metadata, 
-              content,
-              author_id: user.id,
-              attachments: []
-          }]).select('id');
+        if (documentInsertError) {
+          log.api.error("Error inserting document", documentInsertError);
+          await clear(
+            ["profiles", "private_keys", "profiles_links", "document", "keys"],
+            supabase,
+            user,
+          );
+          return error(500, { message: "Error inserting document" });
+        }
 
-      if (documentInsertError) {
-          log.api.error('Error inserting document', documentInsertError);
-          await clear(['profiles', 'private_keys', 'profiles_links', 'document', 'keys'], supabase, user);
-          return error(500, { message: 'Error inserting document' });
-      }
+        const document_id = documentInsert[0].id;
 
-      const document_id = documentInsert[0].id;
-      
-
-      keys.forEach((key: any) => {
+        keys.forEach((key: any) => {
           key.user_id = user.id;
           key.owner_id = user.id;
           key.document_id = document_id;
           key.author_id = user.id;
-          log.api.debug('key', key);
-      });
+          log.api.debug("key", key);
+        });
 
-      
-      const { data: keysInsert, error: keysInsertError } = await supabase.from('keys')
+        const { data: keysInsert, error: keysInsertError } = await supabase
+          .from("keys")
           .insert(keys);
 
-
-      if (keysInsertError) {
-          log.api.error('Error inserting keys', keysInsertError);
-          await clear(['profiles', 'private_keys', 'profiles_links', 'documents', 'keys'], supabase, user);
-          return error(500, { message: 'Error inserting keys' });
-      }
-    }));
-
-
+        if (keysInsertError) {
+          log.api.error("Error inserting keys", keysInsertError);
+          await clear(
+            ["profiles", "private_keys", "profiles_links", "documents", "keys"],
+            supabase,
+            user,
+          );
+          return error(500, { message: "Error inserting keys" });
+        }
+      }),
+    );
 
     return {};
-   
   },
   signout: async ({ locals: { supabase, safeGetSession } }) => {
-    const { session } = await safeGetSession()
+    const { session } = await safeGetSession();
     if (session) {
-      await supabase.auth.signOut()
-      redirect(303, '/')
+      await supabase.auth.signOut();
+      redirect(303, "/");
     }
   },
-}
-
-
+};
 
 function clear(clearing: string[], supabase: any, user: any) {
-  return Promise.all(clearing.map(async (table) => {
+  return Promise.all(
+    clearing.map(async (table) => {
       switch (table) {
-        case 'profiles':
-          await supabase.from('profiles').upsert(
-            { 
-              id: user.id,
-              auth_id: user.id,
-              fullName: null,
-              avatarUrl: null,
-              subscription: null,
-              publicKey: null
-            }
-          )
+        case "profiles":
+          await supabase.from("profiles").upsert({
+            id: user.id,
+            auth_id: user.id,
+            fullName: null,
+            avatarUrl: null,
+            subscription: null,
+            publicKey: null,
+          });
           break;
-        case 'private_keys':
-          await supabase.from('private_keys').delete().eq('id', user.id) 
+        case "private_keys":
+          await supabase.from("private_keys").delete().eq("id", user.id);
           break;
-        case 'profiles_links':
+        case "profiles_links":
           //await supabase.from('profiles_links').delete().eq('parent_id', user.id)
           break;
-        case 'documents':
-          await supabase.from('documents').delete().eq('user_id', user.id)
+        case "documents":
+          await supabase.from("documents").delete().eq("user_id", user.id);
           break;
-        case 'keys':
-          await supabase.from('keys').delete().eq('user_id', user.id)
+        case "keys":
+          await supabase.from("keys").delete().eq("user_id", user.id);
           break;
-
       }
-      return
-  }));
+      return;
+    }),
+  );
 }

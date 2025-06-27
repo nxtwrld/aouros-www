@@ -128,8 +128,7 @@
       "unlink": "Unlink"
     },
     "report": {
-      "anatomy": {
-      }
+      "anatomy": {}
     },
     "search": {
       "commands": {

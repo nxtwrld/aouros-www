@@ -1,15 +1,15 @@
-import { writable, get, derived } from 'svelte/store';
-import type { Writable } from 'svelte/store';
-import type { AppRecord } from './types.d';
+import { writable, get, derived } from "svelte/store";
+import type { Writable } from "svelte/store";
+import type { AppRecord } from "./types.d";
 //import { get as vaultGet, set as vaultSet } from '$lib/vault/index';
-import ui from '$lib/ui';
-import sampleData from './samplefile.apps.json';
+import ui from "$lib/ui";
+import sampleData from "./samplefile.apps.json";
 console.log(sampleData);
-const STORE_NAME = 'apps';
+const STORE_NAME = "apps";
 
-console.log('🌍','Apps store created');
+console.log("🌍", "Apps store created");
 
-const store: Writable<AppRecord[]> = writable(sampleData.slice(0,2));
+const store: Writable<AppRecord[]> = writable(sampleData.slice(0, 2));
 /*
 ui.on('vault-ready', async () => {
     loadStore();
@@ -19,15 +19,13 @@ ui.on('vault-ready', async () => {
 
 const sharedItemsStore = writable<[]>([]);
 
-
 export const sharedItems = {
-    subscribe: sharedItemsStore.subscribe,
-    set: sharedItemsStore.set,
-    get: function() {
-        return get(sharedItemsStore)
-    },
-
-}
+  subscribe: sharedItemsStore.subscribe,
+  set: sharedItemsStore.set,
+  get: function () {
+    return get(sharedItemsStore);
+  },
+};
 /*
 async function loadStore() {
     try {
@@ -43,22 +41,20 @@ async function loadStore() {
 }
 */
 async function save() {
-    const current = get(store);
-    console.log('🌍','Saving apps to vault');
-//    return await vaultSet(STORE_NAME, 'apps', {}, current);
+  const current = get(store);
+  console.log("🌍", "Saving apps to vault");
+  //    return await vaultSet(STORE_NAME, 'apps', {}, current);
 }
 
-
-
 export default {
-    subscribe: store.subscribe,
-    set: function(data: AppRecord[]) {
-        store.set(data);
-        save();
-    },
-    get: function(uid: string) {
-        return get(store).find(e => e.uid === uid);
-    }/*,
+  subscribe: store.subscribe,
+  set: function (data: AppRecord[]) {
+    store.set(data);
+    save();
+  },
+  get: function (uid: string) {
+    return get(store).find((e) => e.uid === uid);
+  } /*,
     remove: function(uid: string) {
         const current = get(store);
         const index = current.findIndex(e => e.uid === uid);
@@ -84,5 +80,5 @@ export default {
         store.set(current);
         save();
         return data;
-    }*/
-}
+    }*/,
+};

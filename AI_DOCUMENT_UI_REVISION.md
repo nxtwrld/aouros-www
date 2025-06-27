@@ -2,7 +2,8 @@
 
 This document provides a comprehensive analysis of the current document UI structure and proposes revisions to support the new document types and enhanced signal processing described in [AI_IMPORT_README.md](./AI_IMPORT_README.md) and [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md).
 
-> **Related Documentation**: 
+> **Related Documentation**:
+>
 > - [AI_IMPORT_README.md](./AI_IMPORT_README.md) - Document type extensions and processing workflow
 > - [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md) - Enhanced signal processing and visualization
 
@@ -41,21 +42,25 @@ The existing document UI follows a well-designed modular architecture with clear
 ### Current Strengths
 
 #### 1. **Modular Architecture**
+
 - Clean separation of concerns with section-based components
 - Consistent props interface across components
 - Easy to extend with new section types
 
 #### 2. **Medical Data Integration**
+
 - FHIR-compliant document structure
 - Sophisticated signal processing with reference ranges
 - Multi-language support for medical terminology
 
 #### 3. **Security Features**
+
 - Multi-layer encryption for attachments
 - Document keys for access control
 - Secure file handling and decryption
 
 #### 4. **Signal Visualization**
+
 - D3.js-powered trend charts
 - Urgency-based color coding (1-5 scale)
 - Reference range visualization
@@ -64,24 +69,28 @@ The existing document UI follows a well-designed modular architecture with clear
 ### Current Limitations
 
 #### 1. **Missing DICOM/Medical Imaging Support**
+
 - No specialized DICOM viewer component
 - No image annotation or measurement tools
 - Basic attachment display only shows thumbnails
 - No multi-frame or 3D medical image support
 
 #### 2. **Limited Document Type Specialization**
+
 - Generic section rendering for all document types
 - No specialized components for pathology, surgical, or cardiology reports
 - Missing waveform displays for ECG/EEG data
 - No genomics or molecular data visualization
 
 #### 3. **Signal Processing Limitations**
+
 - Only basic line charts for trends
 - No real-time signal streaming components
 - Limited to single-value lab results
 - No signal correlation or relationship visualization
 
 #### 4. **Attachment System Constraints**
+
 - Simple download-only interface
 - No in-browser viewing for medical files
 - Limited file type support beyond basic images
@@ -212,27 +221,27 @@ The existing document UI follows a well-designed modular architecture with clear
     // Initialize Cornerstone3D
     await csInit();
     await csTools3dInit();
-    
+
     // Configure DICOM Image Loader
     cornerstoneDICOMImageLoader.external.cornerstone = cornerstoneCore;
     cornerstoneDICOMImageLoader.external.dicomParser = dicomParser;
-    
+
     // Initialize rendering engine
     renderingEngine = new cornerstoneCore.RenderingEngine(renderingEngineId);
-    
+
     // Create viewport
     const viewportInput = {
       viewportId,
       element: viewportElement,
       type: cornerstoneCore.Enums.ViewportType.STACK,
     };
-    
+
     renderingEngine.enableElement(viewportInput);
     viewport = renderingEngine.getViewport(viewportId);
-    
+
     // Load and display images
     await loadAndDisplayImages();
-    
+
     // Setup tools
     setupImageTools();
   });
@@ -242,7 +251,7 @@ The existing document UI follows a well-designed modular architecture with clear
       imageIds: imageIds,
       currentImageIdIndex: 0,
     };
-    
+
     await viewport.setStack(stack);
     viewport.render();
   }
@@ -250,12 +259,12 @@ The existing document UI follows a well-designed modular architecture with clear
   function setupImageTools() {
     // Add measurement tools
     const { LengthTool, PanTool, ZoomTool, WindowLevelTool } = cornerstoneTools;
-    
+
     cornerstoneTools.addTool(LengthTool);
     cornerstoneTools.addTool(PanTool);
     cornerstoneTools.addTool(ZoomTool);
     cornerstoneTools.addTool(WindowLevelTool);
-    
+
     // Set tool modes
     cornerstoneTools.setToolActive('Length', { mouseButtonMask: 1 });
     cornerstoneTools.setToolActive('Pan', { mouseButtonMask: 4 });
@@ -268,11 +277,11 @@ The existing document UI follows a well-designed modular architecture with clear
   <div class="dicom-toolbar">
     <ImageToolbar {viewport} {metadata} />
   </div>
-  
+
   <div class="dicom-viewport" bind:this={viewportElement}>
     <!-- Cornerstone3D renders here -->
   </div>
-  
+
   <div class="dicom-navigator">
     <StudyNavigator {studyInstanceUID} {seriesInstanceUID} />
   </div>
@@ -285,13 +294,13 @@ The existing document UI follows a well-designed modular architecture with clear
     height: 100%;
     background: #000;
   }
-  
+
   .dicom-viewport {
     flex: 1;
     min-height: 400px;
     position: relative;
   }
-  
+
   .dicom-toolbar,
   .dicom-navigator {
     background: #1a1a1a;
@@ -307,21 +316,21 @@ The existing document UI follows a well-designed modular architecture with clear
 // src/components/documents/dicom/ImageToolbar.svelte
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  
+
   interface Props {
     viewport: any;
     metadata?: DICOMMetadata;
   }
-  
+
   let { viewport, metadata }: Props = $props();
-  
+
   const dispatch = createEventDispatcher();
-  
+
   function resetView() {
     viewport.resetCamera();
     viewport.render();
   }
-  
+
   function toggleInvert() {
     const properties = viewport.getProperties();
     viewport.setProperties({
@@ -330,7 +339,7 @@ The existing document UI follows a well-designed modular architecture with clear
     });
     viewport.render();
   }
-  
+
   function adjustWindowLevel(window: number, level: number) {
     viewport.setProperties({
       voiRange: { lower: level - window/2, upper: level + window/2 }
@@ -344,12 +353,12 @@ The existing document UI follows a well-designed modular architecture with clear
     <button onclick={resetView} title="Reset View">
       <svg><use href="/icons.svg#reset"></use></svg>
     </button>
-    
+
     <button onclick={toggleInvert} title="Invert Colors">
       <svg><use href="/icons.svg#invert"></use></svg>
     </button>
   </div>
-  
+
   <div class="tool-group">
     <label>Window/Level:</label>
     <button onclick={() => adjustWindowLevel(400, 40)} title="Soft Tissue">
@@ -362,7 +371,7 @@ The existing document UI follows a well-designed modular architecture with clear
       Lung
     </button>
   </div>
-  
+
   {#if metadata}
   <div class="metadata-info">
     <span>Patient: {metadata.patientName}</span>
@@ -382,13 +391,13 @@ The existing document UI follows a well-designed modular architecture with clear
     color: white;
     font-size: 0.9rem;
   }
-  
+
   .tool-group {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   .tool-group button {
     padding: 0.25rem 0.5rem;
     background: #444;
@@ -397,11 +406,11 @@ The existing document UI follows a well-designed modular architecture with clear
     border-radius: 4px;
     cursor: pointer;
   }
-  
+
   .tool-group button:hover {
     background: #555;
   }
-  
+
   .metadata-info {
     margin-left: auto;
     display: flex;
@@ -420,9 +429,9 @@ The existing document UI follows a well-designed modular architecture with clear
   import DICOMViewer from './dicom/DICOMViewer.svelte';
   import PDFViewer from './attachments/PDFViewer.svelte';
   import VideoPlayer from './attachments/VideoPlayer.svelte';
-  
+
   // ... existing props and logic
-  
+
   function getAttachmentComponent(attachment: Attachment) {
     if (attachment.type === 'application/dicom') {
       return DICOMViewer;
@@ -433,7 +442,7 @@ The existing document UI follows a well-designed modular architecture with clear
     }
     return null;
   }
-  
+
   function canPreviewInBrowser(attachment: Attachment): boolean {
     return ['application/dicom', 'application/pdf', 'image/', 'video/'].some(
       type => attachment.type.startsWith(type)
@@ -447,7 +456,7 @@ The existing document UI follows a well-designed modular architecture with clear
       {#if canPreviewInBrowser(attachment)}
         <div class="attachment-preview">
           {#if attachment.type === 'application/dicom'}
-            <DICOMViewer 
+            <DICOMViewer
               studyInstanceUID={attachment.studyInstanceUID}
               seriesInstanceUID={attachment.seriesInstanceUID}
               imageIds={attachment.imageIds}
@@ -490,24 +499,24 @@ The existing document UI follows a well-designed modular architecture with clear
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { EnhancedSignal, SignalValidation } from '$lib/types';
-  
+
   interface Props {
     signals: EnhancedSignal[];
     processingStatus: 'pending' | 'processing' | 'completed' | 'error';
     validationResults?: Map<string, SignalValidation>;
   }
-  
+
   let { signals, processingStatus, validationResults }: Props = $props();
-  
+
   onMount(() => {
     // Connect to SSE for real-time updates
     const eventSource = new EventSource('/v1/signals/stream');
-    
+
     eventSource.addEventListener('signal_validated', (event) => {
       const data = JSON.parse(event.data);
       updateSignalValidation(data.signal, data.validation);
     });
-    
+
     eventSource.addEventListener('signal_relationship', (event) => {
       const data = JSON.parse(event.data);
       updateSignalRelationships(data.relationships);
@@ -522,7 +531,7 @@ The existing document UI follows a well-designed modular architecture with clear
       {processingStatus}
     </div>
   </div>
-  
+
   <div class="signal-grid">
     {#each signals as signal}
       <div class="signal-card">
@@ -532,12 +541,12 @@ The existing document UI follows a well-designed modular architecture with clear
             {Math.round(signal.validation?.confidence * 100)}% confidence
           </div>
         </div>
-        
+
         <div class="signal-value">
           <span class="value">{signal.value}</span>
           <span class="unit">{signal.unit}</span>
         </div>
-        
+
         <div class="validation-status">
           {#if signal.validation}
             <div class="validation-{signal.validation.status}">
@@ -552,7 +561,7 @@ The existing document UI follows a well-designed modular architecture with clear
             {/if}
           {/if}
         </div>
-        
+
         {#if signal.relationships?.length > 0}
           <div class="relationships">
             <h5>Related Signals</h5>
@@ -578,48 +587,48 @@ The existing document UI follows a well-designed modular architecture with clear
 <script lang="ts">
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
-  
+
   interface Props {
     waveformData: WaveformSignal[];
     samplingRate: number;
     duration: number;
     annotations?: ECGAnnotation[];
   }
-  
+
   let { waveformData, samplingRate, duration, annotations }: Props = $props();
-  
+
   let svgElement: SVGElement;
   let containerWidth = 800;
   let containerHeight = 400;
-  
+
   onMount(() => {
     renderWaveform();
   });
-  
+
   function renderWaveform() {
     const svg = d3.select(svgElement);
     svg.selectAll("*").remove();
-    
+
     const margin = { top: 20, right: 30, bottom: 40, left: 50 };
     const width = containerWidth - margin.left - margin.right;
     const height = containerHeight - margin.top - margin.bottom;
-    
+
     const xScale = d3.scaleLinear()
       .domain([0, duration])
       .range([0, width]);
-    
+
     const yScale = d3.scaleLinear()
       .domain(d3.extent(waveformData, d => d.amplitude))
       .range([height, 0]);
-    
+
     const line = d3.line<WaveformSignal>()
       .x(d => xScale(d.time))
       .y(d => yScale(d.amplitude))
       .curve(d3.curveLinear);
-    
+
     const g = svg.append("g")
       .attr("transform", `translate(${margin.left},${margin.top})`);
-    
+
     // Add grid
     g.append("g")
       .attr("class", "grid")
@@ -627,7 +636,7 @@ The existing document UI follows a well-designed modular architecture with clear
         .tickSize(-width)
         .tickFormat("")
       );
-    
+
     g.append("g")
       .attr("class", "grid")
       .attr("transform", `translate(0,${height})`)
@@ -635,13 +644,13 @@ The existing document UI follows a well-designed modular architecture with clear
         .tickSize(-height)
         .tickFormat("")
       );
-    
+
     // Add waveform
     g.append("path")
       .datum(waveformData)
       .attr("class", "waveform")
       .attr("d", line);
-    
+
     // Add annotations (e.g., QRS complexes, P waves)
     if (annotations) {
       annotations.forEach(annotation => {
@@ -650,7 +659,7 @@ The existing document UI follows a well-designed modular architecture with clear
           .attr("cy", yScale(annotation.amplitude))
           .attr("r", 3)
           .attr("class", `annotation annotation-${annotation.type}`);
-        
+
         g.append("text")
           .attr("x", xScale(annotation.time))
           .attr("y", yScale(annotation.amplitude) - 10)
@@ -659,12 +668,12 @@ The existing document UI follows a well-designed modular architecture with clear
           .text(annotation.label);
       });
     }
-    
+
     // Add axes
     g.append("g")
       .attr("transform", `translate(0,${height})`)
       .call(d3.axisBottom(xScale));
-    
+
     g.append("g")
       .call(d3.axisLeft(yScale));
   }
@@ -675,13 +684,13 @@ The existing document UI follows a well-designed modular architecture with clear
     <button onclick={() => zoomIn()}>Zoom In</button>
     <button onclick={() => zoomOut()}>Zoom Out</button>
     <button onclick={() => resetZoom()}>Reset</button>
-    
+
     <div class="measurements">
       <span>Heart Rate: {calculateHeartRate()} BPM</span>
       <span>QRS Duration: {calculateQRSDuration()} ms</span>
     </div>
   </div>
-  
+
   <div class="waveform-container" bind:clientWidth={containerWidth}>
     <svg bind:this={svgElement} width={containerWidth} height={containerHeight}></svg>
   </div>
@@ -694,22 +703,22 @@ The existing document UI follows a well-designed modular architecture with clear
     padding: 1rem;
     border-radius: 8px;
   }
-  
+
   .waveform-container :global(.waveform) {
     fill: none;
     stroke: #0f0;
     stroke-width: 1.5px;
   }
-  
+
   .waveform-container :global(.grid line) {
     stroke: #333;
     stroke-width: 0.5px;
   }
-  
+
   .waveform-container :global(.annotation) {
     fill: #ff0;
   }
-  
+
   .waveform-container :global(.annotation-label) {
     fill: #ff0;
     font-size: 10px;
@@ -724,36 +733,36 @@ The existing document UI follows a well-designed modular architecture with clear
 <script lang="ts">
   import * as d3 from 'd3';
   import type { SignalRelationship } from '$lib/types';
-  
+
   interface Props {
     signals: string[];
     correlationMatrix: number[][];
     relationships: SignalRelationship[];
   }
-  
+
   let { signals, correlationMatrix, relationships }: Props = $props();
-  
+
   let svgElement: SVGElement;
-  
+
   onMount(() => {
     renderCorrelationMatrix();
   });
-  
+
   function renderCorrelationMatrix() {
     const svg = d3.select(svgElement);
     const size = 300;
     const cellSize = size / signals.length;
-    
+
     const colorScale = d3.scaleSequential(d3.interpolateRdYlBu)
       .domain([-1, 1]);
-    
+
     const g = svg.append("g");
-    
+
     // Create correlation heatmap
     for (let i = 0; i < signals.length; i++) {
       for (let j = 0; j < signals.length; j++) {
         const correlation = correlationMatrix[i][j];
-        
+
         g.append("rect")
           .attr("x", j * cellSize)
           .attr("y", i * cellSize)
@@ -762,7 +771,7 @@ The existing document UI follows a well-designed modular architecture with clear
           .attr("fill", colorScale(correlation))
           .attr("stroke", "#fff")
           .attr("stroke-width", 1);
-        
+
         g.append("text")
           .attr("x", j * cellSize + cellSize / 2)
           .attr("y", i * cellSize + cellSize / 2)
@@ -773,7 +782,7 @@ The existing document UI follows a well-designed modular architecture with clear
           .text(correlation.toFixed(2));
       }
     }
-    
+
     // Add signal labels
     g.selectAll(".row-label")
       .data(signals)
@@ -786,7 +795,7 @@ The existing document UI follows a well-designed modular architecture with clear
       .attr("dominant-baseline", "middle")
       .style("font-size", "12px")
       .text(d => d);
-    
+
     g.selectAll(".col-label")
       .data(signals)
       .enter()
@@ -807,7 +816,7 @@ The existing document UI follows a well-designed modular architecture with clear
   <div class="correlation-matrix">
     <svg bind:this={svgElement} width="350" height="350"></svg>
   </div>
-  
+
   <div class="relationship-list">
     <h5>Detected Relationships</h5>
     {#each relationships as rel}
@@ -832,11 +841,11 @@ The existing document UI follows a well-designed modular architecture with clear
 // src/components/documents/surgical/SurgicalView.svelte
 <script lang="ts">
   import type { SurgicalSchema } from '$lib/types';
-  
+
   interface Props {
     data: SurgicalSchema;
   }
-  
+
   let { data }: Props = $props();
 </script>
 
@@ -849,7 +858,7 @@ The existing document UI follows a well-designed modular architecture with clear
       <span>Technique: {data.procedure.technique}</span>
     </div>
   </div>
-  
+
   <div class="diagnoses">
     <div class="diagnosis-section">
       <h4>Pre-operative Diagnosis</h4>
@@ -857,7 +866,7 @@ The existing document UI follows a well-designed modular architecture with clear
         <div class="diagnosis">{diagnosis.description} ({diagnosis.code})</div>
       {/each}
     </div>
-    
+
     <div class="diagnosis-section">
       <h4>Post-operative Diagnosis</h4>
       {#each data.postOperativeDiagnosis as diagnosis}
@@ -865,7 +874,7 @@ The existing document UI follows a well-designed modular architecture with clear
       {/each}
     </div>
   </div>
-  
+
   <div class="surgical-team">
     <h4>Surgical Team</h4>
     <div class="team-grid">
@@ -878,7 +887,7 @@ The existing document UI follows a well-designed modular architecture with clear
       {/each}
     </div>
   </div>
-  
+
   <div class="anesthesia-info">
     <h4>Anesthesia</h4>
     <div class="anesthesia-details">
@@ -887,12 +896,12 @@ The existing document UI follows a well-designed modular architecture with clear
       <span>Provider: {data.anesthesia.provider.name}</span>
     </div>
   </div>
-  
+
   <div class="operative-findings">
     <h4>Operative Findings</h4>
     <div class="findings-text">{data.findings}</div>
   </div>
-  
+
   {#if data.complications?.length > 0}
     <div class="complications">
       <h4>Complications</h4>
@@ -901,12 +910,12 @@ The existing document UI follows a well-designed modular architecture with clear
       {/each}
     </div>
   {/if}
-  
+
   <div class="blood-loss">
     <h4>Estimated Blood Loss</h4>
     <span class="blood-loss-value">{data.estimatedBloodLoss} mL</span>
   </div>
-  
+
   {#if data.implants?.length > 0}
     <div class="implants">
       <h4>Implants & Devices</h4>
@@ -929,11 +938,11 @@ The existing document UI follows a well-designed modular architecture with clear
 // src/components/documents/pathology/PathologyView.svelte
 <script lang="ts">
   import type { PathologySchema } from '$lib/types';
-  
+
   interface Props {
     data: PathologySchema;
   }
-  
+
   let { data }: Props = $props();
 </script>
 
@@ -955,17 +964,17 @@ The existing document UI follows a well-designed modular architecture with clear
       </div>
     </div>
   </div>
-  
+
   <div class="gross-description">
     <h4>Gross Description</h4>
     <div class="description-text">{data.grossDescription}</div>
   </div>
-  
+
   <div class="microscopic-description">
     <h4>Microscopic Description</h4>
     <div class="description-text">{data.microscopicDescription}</div>
   </div>
-  
+
   {#if data.specialStains?.length > 0}
     <div class="special-stains">
       <h4>Special Stains & Immunohistochemistry</h4>
@@ -980,7 +989,7 @@ The existing document UI follows a well-designed modular architecture with clear
       </div>
     </div>
   {/if}
-  
+
   <div class="diagnosis">
     <h4>Diagnosis</h4>
     <div class="primary-diagnosis">
@@ -996,7 +1005,7 @@ The existing document UI follows a well-designed modular architecture with clear
         </ul>
       </div>
     {/if}
-    
+
     {#if data.diagnosis.staging}
       <div class="staging">
         <h5>Cancer Staging</h5>
@@ -1010,7 +1019,7 @@ The existing document UI follows a well-designed modular architecture with clear
       </div>
     {/if}
   </div>
-  
+
   {#if data.molecularFindings?.length > 0}
     <div class="molecular-findings">
       <h4>Molecular/Genetic Findings</h4>
@@ -1023,7 +1032,7 @@ The existing document UI follows a well-designed modular architecture with clear
       {/each}
     </div>
   {/if}
-  
+
   {#if data.synopticReport}
     <div class="synoptic-report">
       <h4>Synoptic Report</h4>
@@ -1043,7 +1052,9 @@ The existing document UI follows a well-designed modular architecture with clear
 ## Implementation Strategy
 
 ### Phase 1: Foundation Enhancement (Weeks 1-3)
+
 - [ ] **Component Architecture Revision**
+
   - Implement dynamic section loading in DocumentView
   - Create base classes for document type components
   - Enhance DocumentToolbar with export/share functionality
@@ -1055,7 +1066,9 @@ The existing document UI follows a well-designed modular architecture with clear
   - Add DICOM metadata display
 
 ### Phase 2: Signal Processing UI (Weeks 4-6)
+
 - [ ] **Enhanced Signal Components**
+
   - Implement real-time SignalProcessor component
   - Create WaveformViewer for ECG/EEG data
   - Add SignalCorrelation visualization
@@ -1068,12 +1081,15 @@ The existing document UI follows a well-designed modular architecture with clear
   - Add human review interface
 
 ### Phase 3: Document Type Specialization (Weeks 7-10)
+
 - [ ] **Surgical Report Components**
+
   - Implement SurgicalView with procedure timeline
   - Add surgical team visualization
   - Create implants and devices tracking
 
 - [ ] **Pathology Report Components**
+
   - Implement PathologyView with specimen tracking
   - Add special stains visualization
   - Create cancer staging display
@@ -1085,7 +1101,9 @@ The existing document UI follows a well-designed modular architecture with clear
   - Create coronary anatomy visualization
 
 ### Phase 4: Advanced Features (Weeks 11-12)
+
 - [ ] **3D Medical Imaging**
+
   - Implement volume rendering capabilities
   - Add multiplanar reconstruction (MPR)
   - Create surface rendering for 3D models
@@ -1098,26 +1116,31 @@ The existing document UI follows a well-designed modular architecture with clear
 ## Benefits of Enhanced UI Architecture
 
 ### 1. **Comprehensive Medical Data Support**
+
 - Full support for all proposed document types
 - Specialized visualization for each medical specialty
 - Advanced signal processing and analysis
 
 ### 2. **Professional Medical Imaging**
+
 - Industry-standard DICOM viewing with Cornerstone3D
 - Advanced image manipulation and measurement tools
 - Multi-viewport and hanging protocol support
 
 ### 3. **Enhanced User Experience**
+
 - Real-time processing feedback
 - Interactive data exploration
 - Mobile-responsive design for all components
 
 ### 4. **Clinical Decision Support**
+
 - Signal correlation and relationship visualization
 - External validation and confidence scoring
 - Trend analysis and predictive analytics
 
 ### 5. **Extensible Architecture**
+
 - Plugin-based system for new document types
 - Modular component design for easy maintenance
 - Consistent theming and accessibility support
@@ -1125,16 +1148,19 @@ The existing document UI follows a well-designed modular architecture with clear
 ## Migration Strategy
 
 ### 1. **Backward Compatibility**
+
 - Existing components remain functional during transition
 - Gradual migration path for each document type
 - Fallback to basic display for unsupported features
 
 ### 2. **Progressive Enhancement**
+
 - Basic functionality works without advanced features
 - Enhanced features load progressively
 - Graceful degradation for older browsers
 
 ### 3. **Testing Strategy**
+
 - Component-level testing for all new UI elements
 - Integration testing with real medical data
 - Accessibility testing for compliance with healthcare standards
@@ -1144,27 +1170,32 @@ This comprehensive UI revision positions Mediqom as a state-of-the-art medical d
 ## Cross-References & Integration Points
 
 ### Related Documentation
+
 - **[AI_IMPORT_README.md](./AI_IMPORT_README.md)**: Document processing workflow and type extensions
 - **[AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md)**: Enhanced signal processing and validation
 
 ### Key Integration Areas
 
 #### 1. **Workflow Visualization**
+
 - Real-time processing progress display
 - Integration with LangGraph workflow steps
 - SSE streaming for live updates
 
 #### 2. **Signal Processing UI**
+
 - Enhanced signal visualization components
 - Real-time validation status display
 - Dynamic signal discovery interface
 
 #### 3. **Document Type Rendering**
+
 - Specialized components for each new document type
 - Consistent theming and navigation
 - Shared utility functions and data processing
 
 #### 4. **External Validation Display**
+
 - MCP validation results visualization
 - Confidence scoring and warning systems
 - External database integration status

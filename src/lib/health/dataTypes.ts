@@ -1,9 +1,4 @@
-import definitions from './definitions.json';
-import properties from './properties.json';  
+import definitions from "./definitions.json";
+import properties from "./properties.json";
 
-
-
-export {
-    definitions,
-    properties
-}
+export { definitions, properties };

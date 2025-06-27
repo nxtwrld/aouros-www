@@ -11,16 +11,18 @@ This document analyzes the current AI document import flow and outlines a compre
 The current AI document import system consists of two main components:
 
 #### 1. Document Assessment (`assessInputs.ts`)
+
 - **Purpose**: Initial document processing and text extraction
 - **Input**: Array of base64-encoded images
 - **Process**: OCR and document structure analysis using GPT models
-- **Output**: 
+- **Output**:
   - Extracted text from pages with markdown formatting
   - Document metadata (title, date, language, medical classification)
   - Image detection and extraction (DICOM, photos, schemas)
 - **Schema**: `import.assessments.ts` - Complex multi-step extraction schema
 
 #### 2. Medical Analysis (`analyzeReport.ts`)
+
 - **Purpose**: Deep medical data extraction and structuring
 - **Input**: Text and images from assessment phase
 - **Process**: Multi-stage AI analysis pipeline with conditional branching
@@ -65,18 +67,21 @@ graph TD
 The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeline that can be directly mapped to LangGraph nodes:
 
 #### **Step 1: Input Validation & Preparation**
+
 - **Input**: `{ images?: string[], text?: string, language?: string }`
 - **Process**: Creates structured Content array, initializes token tracking
 - **Output**: Prepared content array and TokenUsage object
 - **Node Type**: Input Processor
 
 #### **Step 2: Content Definition & Schema Localization**
+
 - **Input**: Raw input parameters
 - **Process**: Language setup (defaults to 'English'), schema localization with `[LANGUAGE]` placeholder replacement
 - **Output**: Localized schemas and content definition
 - **Node Type**: Configuration Processor
 
 #### **Step 3: Feature Detection & Medical Classification**
+
 - **Input**: Prepared content
 - **Process**: `evaluate(content, Types.featureDetection, tokenUsage)`
 - **Schema**: `feature-detection.ts` - Classification and feature detection
@@ -85,6 +90,7 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 - **Node Type**: Classifier with validation gate
 
 #### **Step 4: Conditional Prescription Extraction**
+
 - **Condition**: `data.hasPrescription === true`
 - **Input**: Text content only
 - **Process**: `evaluate([{type: 'text', text: data.text}], Types.prescription, tokenUsage)`
@@ -93,6 +99,7 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 - **Node Type**: Conditional Extractor
 
 #### **Step 5: Conditional Immunization Extraction**
+
 - **Condition**: `data.hasImmunization === true`
 - **Input**: Text content only
 - **Process**: `evaluate([{type: 'text', text: data.text}], Types.immunization, tokenUsage)`
@@ -101,6 +108,7 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 - **Node Type**: Conditional Extractor
 
 #### **Step 6A: Report Processing (Switch Branch)**
+
 - **Condition**: `data.type === Types.report`
 - **Input**: Text content only
 - **Process**: `evaluate([{type: 'text', text: data.text}], Types.report, tokenUsage)`
@@ -110,6 +118,7 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 - **Node Type**: Document Type Processor
 
 #### **Step 6B: Laboratory Processing (Switch Branch)**
+
 - **Condition**: `data.type === Types.laboratory`
 - **Input**: Text content only
 - **Process**: `evaluate([{type: 'text', text: data.text}], Types.laboratory, tokenUsage)`
@@ -119,6 +128,7 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 - **Node Type**: Document Type Processor
 
 #### **Step 6C: Dental Processing (Switch Branch)**
+
 - **Condition**: `data.type === Types.dental`
 - **Input**: Text content only
 - **Process**: `evaluate([{type: 'text', text: data.text}], Types.dental, tokenUsage)`
@@ -127,6 +137,7 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 - **Node Type**: Document Type Processor
 
 #### **Step 6D: Enhanced DICOM/Imaging Processing (Switch Branch)**
+
 - **Condition**: `data.type === Types.imaging || data.type === Types.dicom`
 - **Input**: Original content (images + text)
 - **Process**: Enhanced multi-stage DICOM processing pipeline
@@ -134,9 +145,10 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 - **Post-Process**: Sets `data.report.category = 'imaging'`
 - **Output**: Comprehensive imaging report with DICOM metadata, anatomy mapping, and AI analysis
 - **Node Type**: Enhanced Document Type Processor
-- **Enhancement**: *See [Enhanced DICOM Processing Workflow](#enhanced-dicom-processing-workflow) below for detailed agentic approach*
+- **Enhancement**: _See [Enhanced DICOM Processing Workflow](#enhanced-dicom-processing-workflow) below for detailed agentic approach_
 
 #### **Step 7: Tag Enhancement**
+
 - **Input**: All processed data
 - **Process**: Merges body parts identifications into tags array
 - **Logic**: `data.tags = [...new Set(data.tags.concat(data.report.bodyParts.map(item => item.identification)))]`
@@ -144,34 +156,38 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 - **Node Type**: Data Enricher
 
 #### **Step 8: Signals Normalization**
+
 - **Input**: Report data with signals
 - **Process**: Signal name lowercasing, numeric value parsing, cleanup
-- **Logic**: 
+- **Logic**:
   ```typescript
-  data.report.signals = data.report.signals.map(item => {
+  data.report.signals = data.report.signals.map((item) => {
     if (item.signal) item.signal = item.signal.toLowerCase();
-    if (item.valueType == 'number') item.value = parseFloat(item.value);
+    if (item.valueType == "number") item.value = parseFloat(item.value);
     delete item.valueType;
     return item;
   });
   ```
 - **Output**: Normalized signals data
 - **Node Type**: Data Normalizer
-- **Enhancement Note**: *See [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md#enhanced-signal-architecture-for-langgraph) for proposed intelligent signal processing improvements including dynamic discovery, validation, and relationship detection.*
+- **Enhancement Note**: _See [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md#enhanced-signal-architecture-for-langgraph) for proposed intelligent signal processing improvements including dynamic discovery, validation, and relationship detection._
 
 #### **Step 9: Token Usage Aggregation**
+
 - **Input**: TokenUsage tracking from all AI calls
 - **Process**: Consolidates token consumption across all evaluations
 - **Output**: Complete cost tracking: `data.tokenUsage = tokenUsage`
 - **Node Type**: Metrics Aggregator
 
 #### **Step 10: Final Assembly**
+
 - **Input**: All processed components
 - **Process**: Assembles complete ReportAnalysis object
 - **Output**: Structured medical data ready for storage/API response
 - **Node Type**: Output Assembler
 
 #### **Step 11: Debug Mode Handling**
+
 - **Condition**: `env.DEBUG_ANALYZER == 'true'`
 - **Process**: Returns random TEST_DATA item with artificial delay
 - **Purpose**: Development testing without AI API consumption
@@ -180,26 +196,31 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 ### Current Limitations
 
 #### 1. **Monolithic AI Provider Dependency**
+
 - Hard-coded OpenAI GPT integration via LangChain
 - Single provider for all processing steps
 - No fallback or model optimization per task
 
 #### 2. **Sequential Processing**
+
 - Linear workflow with blocking steps
 - No parallel processing of independent tasks
 - No error recovery or retry mechanisms
 
 #### 3. **Limited Observability**
+
 - Basic token usage tracking
 - No detailed step-by-step monitoring
 - No performance metrics or bottleneck identification
 
 #### 4. **Schema Inconsistencies**
+
 - Missing required fields in several schemas
 - Inconsistent validation patterns
 - Hard-coded language placeholders
 
 #### 5. **Error Handling**
+
 - Simple error propagation
 - No partial success handling
 - No graceful degradation
@@ -211,16 +232,19 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 #### **1. Performance Bottlenecks (High Impact)**
 
 **Sequential Processing Issue:**
+
 - **Current**: AI calls execute sequentially: Feature Detection → Prescription → Immunization → Report Analysis → Lab Analysis
 - **Impact**: 10-25 seconds per document instead of potential 5-8 seconds
 - **Location**: `analyzeReport.ts:202-270`
 
 **Redundant AI Calls:**
+
 - **Current**: Reports with lab data make separate calls to both `report` and `laboratory` schemas with identical text
 - **Impact**: Doubles token usage and processing time for 40% of medical documents
 - **Location**: `analyzeReport.ts:235-247`
 
 **Token Usage Inefficiencies:**
+
 - **Current**: Images sent to every AI call even for text-only analysis
 - **Impact**: 3-5x higher token costs than necessary
 - **Location**: `getContentDefinition():143-160`
@@ -228,23 +252,30 @@ The `analyzeReport.ts` file implements a sophisticated 11-step processing pipeli
 #### **2. Critical Race Condition (Critical Impact)**
 
 **Shared Mutable State:**
+
 ```typescript
 // Line 106: Global variable modified per request
 let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
-// Line 190: Modified globally per request 
-localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLanguage);
+// Line 190: Modified globally per request
+localizedSchemas = updateLanguage(
+  JSON.parse(JSON.stringify(schemas)),
+  currentLanguage,
+);
 ```
+
 - **Impact**: Schema corruption in concurrent requests, unpredictable behavior
 - **Risk**: Data integrity issues in production
 
 #### **3. Error Handling Weaknesses (Medium Impact)**
 
 **Single Points of Failure:**
+
 - **Current**: Hard error if `!data.isMedical` stops entire workflow
 - **Impact**: No graceful degradation for borderline medical documents
 - **Location**: `analyzeReport.ts:208`
 
 **No Provider Fallbacks:**
+
 - **Current**: Single OpenAI dependency with no retry logic
 - **Impact**: Complete service unavailability during provider issues
 - **Location**: `gpt.ts:fetchGpt()`
@@ -252,11 +283,13 @@ localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLa
 #### **4. Scalability Limitations (High Impact)**
 
 **Hardcoded Multi-Image Limitation:**
+
 - **Current**: Only processes first image despite accepting multiple
 - **Impact**: Data loss for multi-page documents
 - **Location**: `getContentDefinition():155`
 
 **No Caching Mechanisms:**
+
 - **Current**: Schema compilation and language localization per request
 - **Impact**: Unnecessary CPU usage and slower response times
 
@@ -270,7 +303,8 @@ localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLa
 2. **Multi-Provider Processing**: Different document types can use different optimal providers simultaneously
 3. **Batch Image Processing**: Multiple images can be processed in parallel
 
-**Expected Impact**: 
+**Expected Impact**:
+
 - 60-70% reduction in processing time
 - 40% reduction in token costs through optimization
 - Improved user experience with faster feedback
@@ -284,6 +318,7 @@ localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLa
 3. **Partial Success Handling**: Return usable data even with incomplete processing
 
 **Expected Impact**:
+
 - 95%+ uptime even during provider issues
 - Better user experience with partial results
 - Compliance with healthcare reliability standards
@@ -297,6 +332,7 @@ localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLa
 3. **Provider Response Caching**: Cache results for similar content patterns
 
 **Expected Impact**:
+
 - 30-50% cost reduction through caching
 - Faster response times for repeated content
 - Better resource utilization
@@ -310,6 +346,7 @@ localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)), currentLa
 3. **State Persistence**: Resume processing after interruptions
 
 **Expected Impact**:
+
 - Support for complex document processing scenarios
 - Better handling of edge cases
 - Audit trail for compliance requirements
@@ -327,13 +364,13 @@ Based on the analysis, **LangGraph** is the optimal choice for modernization due
 
 ### Alternative Frameworks Considered
 
-| Framework | Pros | Cons | Fit Score |
-|-----------|------|------|-----------|
-| **LangGraph** | Graph-based, stateful, production-ready | Learning curve, complexity | 9/10 |
-| **CrewAI** | Simple, intuitive abstractions | Opinionated, limited customization | 6/10 |
-| **AutoGen** | Multi-agent conversations | In transition (v0.2→v0.4) | 5/10 |
-| **LlamaIndex Workflow** | Event-driven, good concepts | Boilerplate heavy, early stage | 4/10 |
-| **OpenAI Swarm** | Lightweight, flexible | Educational only, not production | 3/10 |
+| Framework               | Pros                                    | Cons                               | Fit Score |
+| ----------------------- | --------------------------------------- | ---------------------------------- | --------- |
+| **LangGraph**           | Graph-based, stateful, production-ready | Learning curve, complexity         | 9/10      |
+| **CrewAI**              | Simple, intuitive abstractions          | Opinionated, limited customization | 6/10      |
+| **AutoGen**             | Multi-agent conversations               | In transition (v0.2→v0.4)          | 5/10      |
+| **LlamaIndex Workflow** | Event-driven, good concepts             | Boilerplate heavy, early stage     | 4/10      |
+| **OpenAI Swarm**        | Lightweight, flexible                   | Educational only, not production   | 3/10      |
 
 ## Proposed LangGraph File Structure
 
@@ -431,7 +468,7 @@ src/lib/configurations/*.ts → src/lib/workflows/schemas/document-types/*.schem
 interface AIProvider {
   readonly name: string;
   readonly capabilities: ProviderCapabilities;
-  
+
   processVision(images: string[], schema: Schema): Promise<ExtractedData>;
   processText(text: string, schema: Schema): Promise<StructuredData>;
   estimateCost(operation: Operation): Promise<CostEstimate>;
@@ -468,11 +505,11 @@ const workflow = new StateGraph<DocumentProcessingState>({
     images: { value: [] },
     text: { value: null },
     language: { value: "English" },
-    
+
     // Processing state
     content: { value: [] },
     localizedSchemas: { value: {} },
-    
+
     // Classification results
     isMedical: { value: false },
     documentType: { value: null },
@@ -480,25 +517,25 @@ const workflow = new StateGraph<DocumentProcessingState>({
     hasLabOrVitals: { value: false },
     hasPrescription: { value: false },
     hasImmunization: { value: false },
-    
+
     // Extracted data
     prescriptions: { value: null },
     immunizations: { value: null },
     report: { value: null },
-    
+
     // Output data
     structuredData: { value: null },
     tokenUsage: { value: { total: 0 } },
-    
+
     // Error handling
     errors: { value: [] },
-    
+
     // Provider tracking
     providerChoices: { value: [] },
-    
+
     // Debug mode
-    debugMode: { value: false }
-  }
+    debugMode: { value: false },
+  },
 });
 
 // Define all processing nodes
@@ -522,57 +559,37 @@ workflow
 workflow
   .addEdge(START, "input_validator")
   .addEdge("input_validator", "schema_localizer")
-  .addConditionalEdges(
-    "schema_localizer",
-    edges.debugRouter,
-    {
-      "debug": "debug_bypass",
-      "normal": "medical_classifier"
-    }
-  )
-  .addConditionalEdges(
-    "medical_classifier", 
-    edges.medicalRouter,
-    {
-      "not_medical": END, // Terminates with error
-      "medical": "prescription_extractor"
-    }
-  )
-  .addConditionalEdges(
-    "prescription_extractor",
-    edges.prescriptionRouter,
-    {
-      "has_prescription": "immunization_extractor",
-      "no_prescription": "immunization_extractor"
-    }
-  )
-  .addConditionalEdges(
-    "immunization_extractor",
-    edges.immunizationRouter,
-    {
-      "has_immunization": "document_type_router",
-      "no_immunization": "document_type_router"
-    }
-  )
+  .addConditionalEdges("schema_localizer", edges.debugRouter, {
+    debug: "debug_bypass",
+    normal: "medical_classifier",
+  })
+  .addConditionalEdges("medical_classifier", edges.medicalRouter, {
+    not_medical: END, // Terminates with error
+    medical: "prescription_extractor",
+  })
+  .addConditionalEdges("prescription_extractor", edges.prescriptionRouter, {
+    has_prescription: "immunization_extractor",
+    no_prescription: "immunization_extractor",
+  })
+  .addConditionalEdges("immunization_extractor", edges.immunizationRouter, {
+    has_immunization: "document_type_router",
+    no_immunization: "document_type_router",
+  })
   .addConditionalEdges(
     "document_type_router", // Virtual node for routing
     edges.documentTypeRouter,
     {
-      "report": "report_processor",
-      "laboratory": "laboratory_processor",
-      "dental": "dental_processor",
-      "imaging": "imaging_processor",
-      "dicom": "imaging_processor"
-    }
+      report: "report_processor",
+      laboratory: "laboratory_processor",
+      dental: "dental_processor",
+      imaging: "imaging_processor",
+      dicom: "imaging_processor",
+    },
   )
-  .addConditionalEdges(
-    "report_processor",
-    edges.labVitalsRouter,
-    {
-      "has_lab_vitals": "laboratory_processor", // Secondary extraction
-      "no_lab_vitals": "tag_enhancer"
-    }
-  )
+  .addConditionalEdges("report_processor", edges.labVitalsRouter, {
+    has_lab_vitals: "laboratory_processor", // Secondary extraction
+    no_lab_vitals: "tag_enhancer",
+  })
   .addEdge("laboratory_processor", "tag_enhancer")
   .addEdge("dental_processor", "tag_enhancer")
   .addEdge("imaging_processor", "tag_enhancer")
@@ -590,27 +607,27 @@ export const documentImportWorkflow = workflow.compile();
 ```typescript
 // src/lib/workflows/monitoring/langsmith.config.ts
 import { LangSmith } from "langsmith";
-import { env } from '$env/dynamic/private';
+import { env } from "$env/dynamic/private";
 
 export const langsmithConfig = {
   apiKey: env.LANGSMITH_API_KEY,
   projectName: env.LANGSMITH_PROJECT || "mediqom-ai-operations",
   endpoint: env.LANGSMITH_ENDPOINT || "https://api.smith.langchain.com",
-  
+
   // Evaluation datasets
   datasets: {
     medicalReports: "medical-reports-eval",
-    laboratoryResults: "lab-results-eval", 
+    laboratoryResults: "lab-results-eval",
     prescriptions: "prescriptions-eval",
-    imagingReports: "imaging-reports-eval"
+    imagingReports: "imaging-reports-eval",
   },
-  
+
   // Custom tags for filtering
   tags: {
     environment: env.NODE_ENV || "development",
     version: process.env.npm_package_version || "unknown",
-    workflow: "document-import"
-  }
+    workflow: "document-import",
+  },
 };
 
 // Initialize LangSmith client
@@ -630,33 +647,40 @@ export const traceWorkflow = traceable(
   {
     name: "document_import_workflow",
     project_name: langsmithConfig.projectName,
-    tags: [...Object.values(langsmithConfig.tags), "workflow"]
-  }
+    tags: [...Object.values(langsmithConfig.tags), "workflow"],
+  },
 );
 
 // Node-level tracing decorator
-export const traceNode = (nodeName: string) => traceable(
-  async function nodeExecution(state: any) {
-    // Node execution logic
-  },
-  {
-    name: `node_${nodeName}`,
-    project_name: langsmithConfig.projectName,
-    tags: [...Object.values(langsmithConfig.tags), "node", nodeName]
-  }
-);
+export const traceNode = (nodeName: string) =>
+  traceable(
+    async function nodeExecution(state: any) {
+      // Node execution logic
+    },
+    {
+      name: `node_${nodeName}`,
+      project_name: langsmithConfig.projectName,
+      tags: [...Object.values(langsmithConfig.tags), "node", nodeName],
+    },
+  );
 
 // Provider call tracing
-export const traceProviderCall = (providerName: string, schemaName: string) => traceable(
-  async function providerCall(content: any, schema: any) {
-    // Provider API call logic
-  },
-  {
-    name: `provider_${providerName}_${schemaName}`,
-    project_name: langsmithConfig.projectName,
-    tags: [...Object.values(langsmithConfig.tags), "provider", providerName, schemaName]
-  }
-);
+export const traceProviderCall = (providerName: string, schemaName: string) =>
+  traceable(
+    async function providerCall(content: any, schema: any) {
+      // Provider API call logic
+    },
+    {
+      name: `provider_${providerName}_${schemaName}`,
+      project_name: langsmithConfig.projectName,
+      tags: [
+        ...Object.values(langsmithConfig.tags),
+        "provider",
+        providerName,
+        schemaName,
+      ],
+    },
+  );
 
 // Performance metrics collection
 export interface WorkflowMetrics {
@@ -691,7 +715,7 @@ export class MetricsCollector {
     nodeMetrics: {},
     providerMetrics: {},
     errorCount: 0,
-    successRate: 0
+    successRate: 0,
   };
 
   startWorkflow(): void {
@@ -719,7 +743,8 @@ export class MetricsCollector {
   private calculateSuccessRate(): void {
     const totalNodes = Object.keys(this.metrics.nodeMetrics).length;
     const successfulNodes = totalNodes - this.metrics.errorCount;
-    this.metrics.successRate = totalNodes > 0 ? successfulNodes / totalNodes : 0;
+    this.metrics.successRate =
+      totalNodes > 0 ? successfulNodes / totalNodes : 0;
   }
 
   private async sendToLangSmith(): Promise<void> {
@@ -728,7 +753,7 @@ export class MetricsCollector {
       run_type: "llm",
       inputs: {},
       outputs: this.metrics,
-      tags: [...Object.values(langsmithConfig.tags), "metrics"]
+      tags: [...Object.values(langsmithConfig.tags), "metrics"],
     });
   }
 }
@@ -747,72 +772,75 @@ export const evaluationCriteria = {
     scorer: async (run: any, example: any) => {
       const predicted = run.outputs.structuredData;
       const expected = example.outputs.structuredData;
-      
+
       // Compare key medical fields
       const accuracyScore = calculateMedicalAccuracy(predicted, expected);
-      
+
       return {
         key: "accuracy",
         score: accuracyScore,
-        comment: `Medical data accuracy: ${(accuracyScore * 100).toFixed(1)}%`
+        comment: `Medical data accuracy: ${(accuracyScore * 100).toFixed(1)}%`,
       };
-    }
+    },
   },
-  
+
   completeness: {
     name: "Data Completeness",
     description: "Completeness of extracted data fields",
     scorer: async (run: any, example: any) => {
       const extracted = run.outputs.structuredData;
       const requiredFields = getRequiredFieldsForDocumentType(extracted.type);
-      
+
       const completeness = calculateCompleteness(extracted, requiredFields);
-      
+
       return {
         key: "completeness",
         score: completeness,
-        comment: `Data completeness: ${(completeness * 100).toFixed(1)}%`
+        comment: `Data completeness: ${(completeness * 100).toFixed(1)}%`,
       };
-    }
+    },
   },
-  
+
   fhirCompliance: {
     name: "FHIR Compliance",
     description: "Compliance with FHIR standards",
     scorer: async (run: any, example: any) => {
       const structuredData = run.outputs.structuredData;
       const compliance = await validateFHIRCompliance(structuredData);
-      
+
       return {
         key: "fhir_compliance",
         score: compliance.score,
-        comment: `FHIR compliance: ${compliance.details}`
+        comment: `FHIR compliance: ${compliance.details}`,
       };
-    }
+    },
   },
-  
+
   processingTime: {
     name: "Processing Efficiency",
     description: "Workflow processing time efficiency",
     scorer: async (run: any, example: any) => {
       const duration = run.outputs.metrics?.totalDuration || 0;
       const targetDuration = 30000; // 30 seconds target
-      
-      const efficiency = Math.max(0, 1 - (duration - targetDuration) / targetDuration);
-      
+
+      const efficiency = Math.max(
+        0,
+        1 - (duration - targetDuration) / targetDuration,
+      );
+
       return {
         key: "processing_time",
         score: efficiency,
-        comment: `Processing time: ${duration}ms (target: ${targetDuration}ms)`
+        comment: `Processing time: ${duration}ms (target: ${targetDuration}ms)`,
       };
-    }
-  }
+    },
+  },
 };
 
 // Automated evaluation runner
 export async function runEvaluations() {
   const datasets = Object.values(langsmithConfig.datasets);
-  
+
   for (const datasetName of datasets) {
     await evaluate(
       async (input: any) => {
@@ -824,9 +852,9 @@ export async function runEvaluations() {
         evaluators: Object.values(evaluationCriteria),
         metadata: {
           version: langsmithConfig.tags.version,
-          environment: langsmithConfig.tags.environment
-        }
-      }
+          environment: langsmithConfig.tags.environment,
+        },
+      },
     );
   }
 }
@@ -838,12 +866,17 @@ function calculateMedicalAccuracy(predicted: any, expected: any): number {
   return 0.95; // Placeholder
 }
 
-function calculateCompleteness(extracted: any, requiredFields: string[]): number {
+function calculateCompleteness(
+  extracted: any,
+  requiredFields: string[],
+): number {
   // Implementation for data completeness calculation
-  return 0.90; // Placeholder
+  return 0.9; // Placeholder
 }
 
-async function validateFHIRCompliance(data: any): Promise<{score: number, details: string}> {
+async function validateFHIRCompliance(
+  data: any,
+): Promise<{ score: number; details: string }> {
   // Implementation for FHIR compliance validation
   return { score: 0.88, details: "Minor formatting issues" }; // Placeholder
 }
@@ -865,61 +898,64 @@ import { DocumentProcessingState } from "../state";
 import { providerRegistry } from "../../providers/registry";
 import { schemaRegistry } from "../../schemas/registry";
 
-export const medicalClassifier = traceNode("medical_classifier")(
-  async (state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> => {
-    const { content, language, debugMode } = state;
-    
-    if (debugMode) {
-      // Skip AI processing in debug mode
-      return {
-        isMedical: true,
-        documentType: "report",
-        tags: ["test"],
-        hasLabOrVitals: false,
-        hasPrescription: false,
-        hasImmunization: false
-      };
+export const medicalClassifier = traceNode("medical_classifier")(async (
+  state: DocumentProcessingState,
+): Promise<Partial<DocumentProcessingState>> => {
+  const { content, language, debugMode } = state;
+
+  if (debugMode) {
+    // Skip AI processing in debug mode
+    return {
+      isMedical: true,
+      documentType: "report",
+      tags: ["test"],
+      hasLabOrVitals: false,
+      hasPrescription: false,
+      hasImmunization: false,
+    };
+  }
+
+  // Get optimal provider for classification
+  const provider = providerRegistry.selectOptimalProvider({
+    task: "classification",
+    requirements: { supportsVision: true, fastResponse: true },
+    preferences: { costOptimized: true },
+  });
+
+  // Get localized schema
+  const schema = schemaRegistry.getSchema("feature-detection", language);
+
+  try {
+    // Perform classification
+    const result = await provider.processVision(content, schema);
+
+    // Validate medical document requirement
+    if (!result.isMedical) {
+      throw new Error("Not a medical document");
     }
 
-    // Get optimal provider for classification
-    const provider = providerRegistry.selectOptimalProvider({
-      task: "classification",
-      requirements: { supportsVision: true, fastResponse: true },
-      preferences: { costOptimized: true }
-    });
-
-    // Get localized schema
-    const schema = schemaRegistry.getSchema("feature-detection", language);
-
-    try {
-      // Perform classification
-      const result = await provider.processVision(content, schema);
-      
-      // Validate medical document requirement
-      if (!result.isMedical) {
-        throw new Error("Not a medical document");
-      }
-
-      return {
-        isMedical: result.isMedical,
-        documentType: result.type,
-        tags: result.tags,
-        hasLabOrVitals: result.hasLabOrVitals,
-        hasPrescription: result.hasPrescription,
-        hasImmunization: result.hasImmunization,
-        language: result.language
-      };
-    } catch (error) {
-      return {
-        errors: [...(state.errors || []), {
+    return {
+      isMedical: result.isMedical,
+      documentType: result.type,
+      tags: result.tags,
+      hasLabOrVitals: result.hasLabOrVitals,
+      hasPrescription: result.hasPrescription,
+      hasImmunization: result.hasImmunization,
+      language: result.language,
+    };
+  } catch (error) {
+    return {
+      errors: [
+        ...(state.errors || []),
+        {
           node: "medical_classifier",
           message: error.message,
-          timestamp: new Date().toISOString()
-        }]
-      };
-    }
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    };
   }
-);
+});
 ```
 
 ### Sample Edge Implementation
@@ -930,12 +966,12 @@ import { DocumentProcessingState } from "../state";
 
 export function documentTypeRouter(state: DocumentProcessingState): string {
   const { documentType, errors } = state;
-  
+
   // Check for errors first
   if (errors && errors.length > 0) {
     return "__end__";
   }
-  
+
   // Route based on document type
   switch (documentType) {
     case "report":
@@ -969,7 +1005,7 @@ export interface EnhancedSchema {
   readonly validationRules: ValidationRule[];
   readonly multiLanguageSupport: boolean;
   readonly langchainDefinition: FunctionDefinition;
-  
+
   generatePrompt(language: string, context: ProcessingContext): string;
   validateOutput(output: any): ValidationResult;
   localize(language: string): FunctionDefinition;
@@ -979,73 +1015,78 @@ export interface EnhancedSchema {
 export class SchemaRegistry {
   private schemas = new Map<string, EnhancedSchema>();
   private cache = new Map<string, FunctionDefinition>();
-  
+
   register(schema: EnhancedSchema): void {
     this.schemas.set(`${schema.id}:${schema.version}`, schema);
     this.schemas.set(schema.id, schema); // Latest version shortcut
   }
-  
-  getSchema(id: string, language: string = "English", version?: string): FunctionDefinition {
+
+  getSchema(
+    id: string,
+    language: string = "English",
+    version?: string,
+  ): FunctionDefinition {
     const key = version ? `${id}:${version}` : id;
     const cacheKey = `${key}:${language}`;
-    
+
     // Check cache first
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
-    
+
     const schema = this.schemas.get(key);
     if (!schema) {
       throw new Error(`Schema not found: ${key}`);
     }
-    
+
     // Localize and cache
     const localizedSchema = schema.localize(language);
     this.cache.set(cacheKey, localizedSchema);
-    
+
     return localizedSchema;
   }
-  
+
   validateAllSchemas(): ValidationReport {
     const report: ValidationReport = {
       valid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
-    
+
     for (const [id, schema] of this.schemas) {
       try {
         // Validate schema structure
         this.validateSchemaStructure(schema);
-        
+
         // Validate against test data
         this.validateAgainstTestData(schema);
-        
       } catch (error) {
         report.valid = false;
         report.errors.push({
           schemaId: id,
-          message: error.message
+          message: error.message,
         });
       }
     }
-    
+
     return report;
   }
-  
+
   private validateSchemaStructure(schema: EnhancedSchema): void {
     // Validate that all required fields are present in the schema
     const definition = schema.langchainDefinition;
     const required = definition.parameters?.required || [];
     const properties = definition.parameters?.properties || {};
-    
+
     for (const field of required) {
       if (!properties[field]) {
-        throw new Error(`Required field '${field}' missing from properties in schema ${schema.id}`);
+        throw new Error(
+          `Required field '${field}' missing from properties in schema ${schema.id}`,
+        );
       }
     }
   }
-  
+
   private validateAgainstTestData(schema: EnhancedSchema): void {
     // Test schema against sample data to ensure it works
     // This would include running the schema against known good/bad inputs
@@ -1062,85 +1103,102 @@ export const schemaRegistry = new SchemaRegistry();
 export class ProviderRegistry {
   private providers = new Map<string, AIProvider>();
   private healthStatus = new Map<string, ProviderHealth>();
-  
+
   register(provider: AIProvider): void {
     this.providers.set(provider.name, provider);
     this.healthStatus.set(provider.name, {
       available: true,
       lastCheck: new Date(),
       responseTime: 0,
-      errorRate: 0
+      errorRate: 0,
     });
   }
-  
+
   selectOptimalProvider(requirements: ProviderRequirements): AIProvider {
     const candidates = Array.from(this.providers.values())
-      .filter(p => this.meetsRequirements(p, requirements))
-      .filter(p => this.isHealthy(p.name))
-      .sort((a, b) => this.scoreProvider(a, requirements) - this.scoreProvider(b, requirements));
-    
+      .filter((p) => this.meetsRequirements(p, requirements))
+      .filter((p) => this.isHealthy(p.name))
+      .sort(
+        (a, b) =>
+          this.scoreProvider(a, requirements) -
+          this.scoreProvider(b, requirements),
+      );
+
     if (candidates.length === 0) {
       throw new Error("No suitable providers available");
     }
-    
+
     return candidates[0];
   }
-  
-  private meetsRequirements(provider: AIProvider, requirements: ProviderRequirements): boolean {
+
+  private meetsRequirements(
+    provider: AIProvider,
+    requirements: ProviderRequirements,
+  ): boolean {
     const caps = provider.capabilities;
-    
+
     if (requirements.supportsVision && !caps.supportsVision) return false;
-    if (requirements.supportsStructuredOutput && !caps.supportsStructuredOutput) return false;
-    if (requirements.minContextWindow && caps.contextWindow < requirements.minContextWindow) return false;
-    
+    if (requirements.supportsStructuredOutput && !caps.supportsStructuredOutput)
+      return false;
+    if (
+      requirements.minContextWindow &&
+      caps.contextWindow < requirements.minContextWindow
+    )
+      return false;
+
     return true;
   }
-  
+
   private isHealthy(providerName: string): boolean {
     const health = this.healthStatus.get(providerName);
     if (!health) return false;
-    
+
     // Consider provider unhealthy if error rate > 10% or last check > 5 minutes ago
     const staleness = Date.now() - health.lastCheck.getTime();
     return health.available && health.errorRate < 0.1 && staleness < 300000;
   }
-  
-  private scoreProvider(provider: AIProvider, requirements: ProviderRequirements): number {
+
+  private scoreProvider(
+    provider: AIProvider,
+    requirements: ProviderRequirements,
+  ): number {
     const caps = provider.capabilities;
     const health = this.healthStatus.get(provider.name)!;
-    
+
     // Scoring factors
     const costScore = requirements.costOptimized ? caps.costPerToken : 0;
     const speedScore = requirements.fastResponse ? health.responseTime : 0;
-    const reliabilityScore = (1 - caps.reliability) + health.errorRate;
-    
+    const reliabilityScore = 1 - caps.reliability + health.errorRate;
+
     // Weighted composite score (lower is better)
     return costScore * 0.3 + speedScore * 0.3 + reliabilityScore * 0.4;
   }
-  
+
   async updateHealth(): Promise<void> {
-    const healthChecks = Array.from(this.providers.values()).map(async (provider) => {
-      try {
-        const start = Date.now();
-        await provider.healthCheck();
-        const responseTime = Date.now() - start;
-        
-        this.healthStatus.set(provider.name, {
-          available: true,
-          lastCheck: new Date(),
-          responseTime,
-          errorRate: 0 // This would be tracked over time
-        });
-      } catch (error) {
-        this.healthStatus.set(provider.name, {
-          available: false,
-          lastCheck: new Date(),
-          responseTime: 0,
-          errorRate: 1
-        });
-      }
-    });
-    
+    const healthChecks = Array.from(this.providers.values()).map(
+      async (provider) => {
+        try {
+          const start = Date.now();
+          await provider.healthCheck();
+          const responseTime = Date.now() - start;
+
+          this.healthStatus.set(provider.name, {
+            available: true,
+            lastCheck: new Date(),
+            responseTime,
+            errorRate: 0, // This would be tracked over time
+          });
+        } catch (error) {
+          this.healthStatus.set(provider.name, {
+            available: false,
+            lastCheck: new Date(),
+            responseTime: 0,
+            errorRate: 1,
+          });
+        }
+      },
+    );
+
     await Promise.allSettled(healthChecks);
   }
 }
@@ -1157,113 +1215,113 @@ graph TD
     Start([Document Input]) --> InputValidation[Input Validation & Preparation]
     InputValidation --> ImageOptimization[Image Optimization & Compression]
     ImageOptimization --> DebugCheck{Debug Mode?}
-    
+
     DebugCheck -->|Yes| DebugBypass[Debug Data Return]
     DebugCheck -->|No| SchemaCache[Schema Cache Lookup]
-    
+
     SchemaCache --> ParallelGate[Parallel Processing Gate]
-    
+
     %% Parallel Processing Branch
     ParallelGate --> OCRExtraction[OCR Text Extraction]
     ParallelGate --> ImageAnalysis[Image Content Analysis]
     ParallelGate --> MetadataExtraction[Document Metadata Extraction]
-    
+
     OCRExtraction --> TextMerge[Text Consolidation]
     ImageAnalysis --> TextMerge
     MetadataExtraction --> TextMerge
-    
+
     TextMerge --> ProviderSelection[Optimal Provider Selection]
     ProviderSelection --> MedicalClassification[Medical Classification]
-    
+
     MedicalClassification --> MedicalCheck{Is Medical?}
     MedicalCheck -->|No| GracefulDegradation[Graceful Degradation Handler]
     MedicalCheck -->|Yes| ConfidenceCheck{High Confidence?}
-    
+
     ConfidenceCheck -->|No| HumanReview[Human Review Queue]
     ConfidenceCheck -->|Yes| ParallelAnalysis[Parallel Analysis Hub]
-    
+
     %% Parallel Analysis Branches
     ParallelAnalysis --> PrescriptionBranch{Has Prescription?}
     ParallelAnalysis --> ImmunizationBranch{Has Immunization?}
     ParallelAnalysis --> DocumentTypeRouter[Document Type Router]
-    
+
     PrescriptionBranch -->|Yes| PrescriptionExtractor[Prescription Extraction]
     PrescriptionBranch -->|No| PrescriptionSkip[Skip Prescription]
-    
+
     ImmunizationBranch -->|Yes| ImmunizationExtractor[Immunization Extraction]
     ImmunizationBranch -->|No| ImmunizationSkip[Skip Immunization]
-    
+
     DocumentTypeRouter --> ReportProcessor[Report Processing]
     DocumentTypeRouter --> LabProcessor[Laboratory Processing]
     DocumentTypeRouter --> DentalProcessor[Dental Processing]
     DocumentTypeRouter --> ImagingProcessor[Imaging Processing]
-    
+
     %% Specialized Processing with Fallbacks
     ReportProcessor --> ReportFallback{Processing Success?}
     LabProcessor --> LabFallback{Processing Success?}
     DentalProcessor --> DentalFallback{Processing Success?}
     ImagingProcessor --> ImagingFallback{Processing Success?}
-    
+
     ReportFallback -->|No| ReportRetry[Retry with Fallback Provider]
     LabFallback -->|No| LabRetry[Retry with Fallback Provider]
     DentalFallback -->|No| DentalRetry[Retry with Fallback Provider]
     ImagingFallback -->|No| ImagingRetry[Retry with Fallback Provider]
-    
+
     ReportFallback -->|Yes| Aggregation[Result Aggregation]
     LabFallback -->|Yes| Aggregation
     DentalFallback -->|Yes| Aggregation
     ImagingFallback -->|Yes| Aggregation
-    
+
     ReportRetry --> Aggregation
     LabRetry --> Aggregation
     DentalRetry --> Aggregation
     ImagingRetry --> Aggregation
-    
+
     PrescriptionExtractor --> Aggregation
     ImmunizationExtractor --> Aggregation
     PrescriptionSkip --> Aggregation
     ImmunizationSkip --> Aggregation
-    
+
     %% Post-Processing Pipeline
     Aggregation --> DataValidation[FHIR Validation]
     DataValidation --> ValidationCheck{Validation Pass?}
-    
+
     ValidationCheck -->|No| ValidationRetry[Retry with Corrections]
     ValidationCheck -->|Yes| DataEnrichment[Data Enrichment]
-    
+
     ValidationRetry --> DataEnrichment
-    
+
     DataEnrichment --> TagEnhancement[Tag Enhancement]
     TagEnhancement --> SignalsNormalization[Signals Normalization]
     SignalsNormalization --> QualityScoring[Quality Confidence Scoring]
-    
+
     QualityScoring --> QualityCheck{Quality Threshold Met?}
     QualityCheck -->|No| QualityReview[Quality Review Queue]
     QualityCheck -->|Yes| FinalAssembly[Final Result Assembly]
-    
+
     %% Monitoring and Caching
     FinalAssembly --> MetricsCollection[Metrics Collection]
     MetricsCollection --> ResultCaching[Result Caching]
     ResultCaching --> LangSmithLogging[LangSmith Trace Logging]
-    
+
     LangSmithLogging --> Success([Successful Completion])
-    
+
     %% Error Handling Flows
     GracefulDegradation --> PartialSuccess[Partial Success Response]
     HumanReview --> ManualIntervention[Manual Processing]
     QualityReview --> QualityImprovement[Quality Improvement]
-    
+
     PartialSuccess --> MetricsCollection
     ManualIntervention --> FinalAssembly
     QualityImprovement --> FinalAssembly
     DebugBypass --> Success
-    
+
     %% Styling
     classDef parallelNode fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     classDef errorNode fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef successNode fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
     classDef decisionNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    
+
     class ParallelGate,ParallelAnalysis,OCRExtraction,ImageAnalysis,MetadataExtraction parallelNode
     class GracefulDegradation,HumanReview,QualityReview,ValidationRetry,ReportRetry,LabRetry,DentalRetry,ImagingRetry errorNode
     class Success,FinalAssembly,MetricsCollection successNode
@@ -1273,39 +1331,44 @@ graph TD
 ### Key Improvements in the New Architecture
 
 #### **1. Parallel Processing Implementation**
+
 - **Concurrent OCR and Image Analysis**: Multiple images processed simultaneously
 - **Independent Feature Extraction**: Prescription and immunization analysis run in parallel
 - **Provider Load Balancing**: Different optimal providers used concurrently
 
 #### **2. Intelligent Error Handling**
+
 - **Graceful Degradation**: Continues processing with partial data
 - **Provider Fallbacks**: Automatic retry with alternative providers
 - **Quality Gates**: Multiple checkpoints with human-in-the-loop options
 
 #### **3. Advanced Optimization Features**
+
 - **Schema Caching**: Pre-compiled schemas reduce processing overhead
 - **Content Deduplication**: Hash-based caching prevents reprocessing
 - **Confidence-Based Routing**: High-confidence results bypass additional validation
 
 #### **4. Compliance and Monitoring**
+
 - **FHIR Validation**: Built-in compliance checking
 - **Quality Scoring**: Confidence metrics for each extraction
 - **Audit Trail**: Complete workflow tracing via LangSmith
 
 #### **5. Scalability Enhancements**
+
 - **Multi-Image Support**: Proper handling of paginated documents
 - **Batch Processing**: Efficient handling of multiple documents
 - **Resource Optimization**: Dynamic provider selection based on load
 
 ### Performance Impact Projections
 
-| Metric | Current Performance | Improved Performance | Improvement |
-|--------|-------------------|---------------------|-------------|
-| **Processing Time** | 10-25 seconds | 3-8 seconds | 60-70% faster |
-| **Token Costs** | $0.15-0.40/document | $0.08-0.18/document | 40-55% reduction |
-| **Uptime** | 95% (single provider) | 99.5% (multi-provider) | 4.5% improvement |
-| **Accuracy** | 85-92% | 92-97% | 7-12% improvement |
-| **Concurrent Requests** | 5-10 | 50-100 | 5-10x increase |
+| Metric                  | Current Performance   | Improved Performance   | Improvement       |
+| ----------------------- | --------------------- | ---------------------- | ----------------- |
+| **Processing Time**     | 10-25 seconds         | 3-8 seconds            | 60-70% faster     |
+| **Token Costs**         | $0.15-0.40/document   | $0.08-0.18/document    | 40-55% reduction  |
+| **Uptime**              | 95% (single provider) | 99.5% (multi-provider) | 4.5% improvement  |
+| **Accuracy**            | 85-92%                | 92-97%                 | 7-12% improvement |
+| **Concurrent Requests** | 5-10                  | 50-100                 | 5-10x increase    |
 
 ### Migration Strategy Benefits
 
@@ -1324,6 +1387,7 @@ Based on analysis of your existing SSE implementation in `/src/lib/session/sse-c
 #### **Current SSE Infrastructure Analysis**
 
 Your existing implementation already provides:
+
 - **Real-time transcript streaming** for audio sessions
 - **Analysis updates** for conversation analysis
 - **Session status tracking** with automatic reconnection
@@ -1333,6 +1397,7 @@ Your existing implementation already provides:
 #### **Perfect Fit for Document Processing**
 
 Document import workflows share similar characteristics with your audio transcription:
+
 - **Long-running processes** (3-25 seconds per document)
 - **Multi-stage processing** with intermediate results
 - **User engagement requirement** to prevent abandonment
@@ -1358,7 +1423,8 @@ Document import workflows share similar characteristics with your audio transcri
 }
 ```
 
-**Expected Impact**: 
+**Expected Impact**:
+
 - 80% reduction in user abandonment during processing
 - Better perceived performance even with same processing time
 - Improved user trust through transparency
@@ -1382,6 +1448,7 @@ Document import workflows share similar characteristics with your audio transcri
 ```
 
 **Expected Impact**:
+
 - Users can review and correct data while processing continues
 - Better user experience with immediate value
 - Faster overall workflow completion
@@ -1406,6 +1473,7 @@ Document import workflows share similar characteristics with your audio transcri
 ```
 
 **Expected Impact**:
+
 - Users understand what's happening during failures
 - Opportunity for human intervention when needed
 - Better debugging and support capabilities
@@ -1416,77 +1484,82 @@ Document import workflows share similar characteristics with your audio transcri
 
 ```typescript
 // src/lib/workflows/document-import/sse-integration.ts
-import { getSessionEmitter } from '$lib/session/manager';
+import { getSessionEmitter } from "$lib/session/manager";
 
 export class SSEWorkflowNotifier {
   constructor(private sessionId: string) {}
-  
+
   notifyProgress(step: string, progress: number, message: string) {
     const emitter = getSessionEmitter(this.sessionId);
-    emitter?.emit('sse_update', {
-      type: 'document_processing_progress',
+    emitter?.emit("sse_update", {
+      type: "document_processing_progress",
       data: { step, progress, message, timestamp: Date.now() },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
-  
+
   notifyPartialResult(resultType: string, data: any) {
     const emitter = getSessionEmitter(this.sessionId);
-    emitter?.emit('sse_update', {
-      type: 'partial_extraction',
+    emitter?.emit("sse_update", {
+      type: "partial_extraction",
       data: { resultType, data, timestamp: Date.now() },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
-  
+
   notifyError(step: string, error: string, action: string) {
     const emitter = getSessionEmitter(this.sessionId);
-    emitter?.emit('sse_update', {
-      type: 'processing_error',
+    emitter?.emit("sse_update", {
+      type: "processing_error",
       data: { step, error, action, timestamp: Date.now() },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 }
 
 // Integration with LangGraph nodes
-export const createSSEEnabledNode = (nodeName: string, nodeFunction: Function) => {
+export const createSSEEnabledNode = (
+  nodeName: string,
+  nodeFunction: Function,
+) => {
   return traceNode(nodeName)(
-    async (state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> => {
+    async (
+      state: DocumentProcessingState,
+    ): Promise<Partial<DocumentProcessingState>> => {
       const notifier = new SSEWorkflowNotifier(state.sessionId);
-      
+
       try {
         notifier.notifyProgress(nodeName, 0, `Starting ${nodeName}...`);
-        
+
         const result = await nodeFunction(state, notifier);
-        
+
         notifier.notifyProgress(nodeName, 1, `Completed ${nodeName}`);
         return result;
-        
       } catch (error) {
-        notifier.notifyError(nodeName, error.message, 'retrying');
+        notifier.notifyError(nodeName, error.message, "retrying");
         throw error;
       }
-    }
+    },
   );
 };
 ```
 
 #### **Workflow Progress Mapping**
 
-| Node | Progress % | SSE Event | User Value |
-|------|------------|-----------|------------|
-| **Input Validation** | 5% | `validation_complete` | "Document uploaded successfully" |
-| **Medical Classification** | 15% | `classification_complete` | "Document identified as: Lab Report" |
-| **Feature Detection** | 25% | `features_detected` | "Found: Prescription, Lab Results" |
-| **Prescription Extraction** | 40% | `prescription_extracted` | "Medications identified: 3 items" |
-| **Lab Analysis** | 60% | `lab_results_extracted` | "Lab values processed: 15 tests" |
-| **FHIR Validation** | 80% | `validation_complete` | "Medical standards compliance verified" |
-| **Final Assembly** | 100% | `processing_complete` | "Document processing complete" |
+| Node                        | Progress % | SSE Event                 | User Value                              |
+| --------------------------- | ---------- | ------------------------- | --------------------------------------- |
+| **Input Validation**        | 5%         | `validation_complete`     | "Document uploaded successfully"        |
+| **Medical Classification**  | 15%        | `classification_complete` | "Document identified as: Lab Report"    |
+| **Feature Detection**       | 25%        | `features_detected`       | "Found: Prescription, Lab Results"      |
+| **Prescription Extraction** | 40%        | `prescription_extracted`  | "Medications identified: 3 items"       |
+| **Lab Analysis**            | 60%        | `lab_results_extracted`   | "Lab values processed: 15 tests"        |
+| **FHIR Validation**         | 80%        | `validation_complete`     | "Medical standards compliance verified" |
+| **Final Assembly**          | 100%       | `processing_complete`     | "Document processing complete"          |
 
 ### Implementation Strategy
 
 #### **Phase 1: Basic Progress Streaming (Week 1)**
+
 ```typescript
 // Add sessionId to workflow state
 interface DocumentProcessingState {
@@ -1495,69 +1568,78 @@ interface DocumentProcessingState {
 }
 
 // Update each node to emit progress
-const medicalClassifier = createSSEEnabledNode("medical_classifier", 
+const medicalClassifier = createSSEEnabledNode(
+  "medical_classifier",
   async (state, notifier) => {
-    notifier.notifyProgress("medical_classifier", 0.5, "Analyzing medical content...");
-    
+    notifier.notifyProgress(
+      "medical_classifier",
+      0.5,
+      "Analyzing medical content...",
+    );
+
     const result = await provider.processVision(state.content, schema);
-    
+
     notifier.notifyPartialResult("classification", {
       documentType: result.type,
       confidence: result.confidence,
-      tags: result.tags
+      tags: result.tags,
     });
-    
+
     return result;
-  }
+  },
 );
 ```
 
 #### **Phase 2: Partial Results Streaming (Week 2)**
+
 ```typescript
 // Stream results as they become available
-const reportProcessor = createSSEEnabledNode("report_processor",
+const reportProcessor = createSSEEnabledNode(
+  "report_processor",
   async (state, notifier) => {
     const result = await provider.processText(state.text, reportSchema);
-    
+
     // Stream patient info immediately
     if (result.patient) {
       notifier.notifyPartialResult("patient", result.patient);
     }
-    
+
     // Stream performer info
     if (result.performer) {
       notifier.notifyPartialResult("performer", result.performer);
     }
-    
+
     return result;
-  }
+  },
 );
 ```
 
 #### **Phase 3: Interactive Error Handling (Week 3)**
+
 ```typescript
 // Enable human-in-the-loop via SSE
-const humanReviewNode = createSSEEnabledNode("human_review",
+const humanReviewNode = createSSEEnabledNode(
+  "human_review",
   async (state, notifier) => {
-    notifier.emit('sse_update', {
-      type: 'human_review_required',
+    notifier.emit("sse_update", {
+      type: "human_review_required",
       data: {
-        reason: 'Low confidence extraction',
+        reason: "Low confidence extraction",
         confidence: 0.65,
         extractedData: state.partialResults,
-        reviewFields: ['diagnosis', 'medication_dosage'],
-        sessionId: state.sessionId
-      }
+        reviewFields: ["diagnosis", "medication_dosage"],
+        sessionId: state.sessionId,
+      },
     });
-    
+
     // Pause workflow until human input received
     return new Promise((resolve) => {
       const emitter = getSessionEmitter(state.sessionId);
-      emitter.once('human_review_complete', (reviewData) => {
+      emitter.once("human_review_complete", (reviewData) => {
         resolve({ ...state, humanReviewData: reviewData });
       });
     });
-  }
+  },
 );
 ```
 
@@ -1565,12 +1647,12 @@ const humanReviewNode = createSSEEnabledNode("human_review",
 
 #### **User Experience Improvements**
 
-| Metric | Current | With SSE | Improvement |
-|--------|---------|----------|-------------|
-| **Perceived Wait Time** | 10-25 seconds | 2-3 seconds | 70-85% faster |
-| **User Abandonment** | 25-30% | 5-8% | 75% reduction |
-| **Error Understanding** | 10% | 85% | 750% improvement |
-| **Trust Score** | 6.2/10 | 8.7/10 | 40% improvement |
+| Metric                  | Current       | With SSE    | Improvement      |
+| ----------------------- | ------------- | ----------- | ---------------- |
+| **Perceived Wait Time** | 10-25 seconds | 2-3 seconds | 70-85% faster    |
+| **User Abandonment**    | 25-30%        | 5-8%        | 75% reduction    |
+| **Error Understanding** | 10%           | 85%         | 750% improvement |
+| **Trust Score**         | 6.2/10        | 8.7/10      | 40% improvement  |
 
 #### **Technical Benefits**
 
@@ -1587,26 +1669,28 @@ const humanReviewNode = createSSEEnabledNode("human_review",
 export async function POST({ request, params, locals }) {
   const sessionId = generateSessionId();
   const formData = await request.formData();
-  
+
   // Initialize session for SSE
   initializeSession(sessionId, locals.user.id);
-  
+
   // Start workflow asynchronously
-  documentImportWorkflow.invoke({
-    sessionId,
-    images: extractImages(formData),
-    text: formData.get('text'),
-    language: formData.get('language') || 'English'
-  }).catch(error => {
-    // Handle workflow errors via SSE
-    notifyError(sessionId, 'workflow_failed', error.message);
-  });
-  
+  documentImportWorkflow
+    .invoke({
+      sessionId,
+      images: extractImages(formData),
+      text: formData.get("text"),
+      language: formData.get("language") || "English",
+    })
+    .catch((error) => {
+      // Handle workflow errors via SSE
+      notifyError(sessionId, "workflow_failed", error.message);
+    });
+
   // Return session ID immediately for SSE connection
-  return json({ 
+  return json({
     sessionId,
     streamUrl: `/v1/session/${sessionId}/stream`,
-    status: 'processing_started'
+    status: "processing_started",
   });
 }
 ```
@@ -1632,6 +1716,7 @@ To achieve true medical accuracy and compliance, the modernized workflow must in
 #### **Why External Tools are Critical**
 
 Current limitations in AI-only processing:
+
 - **Medication errors**: AI models may hallucinate drug names or dosages
 - **Regional variations**: Drug databases differ significantly between countries
 - **Code validation**: ICD-10 and SNOMED codes need real-time verification
@@ -1643,6 +1728,7 @@ Current limitations in AI-only processing:
 MCP is an open standard that enables secure, two-way connections between AI models and external data sources:
 
 **Key Benefits for Medical Processing:**
+
 - **Standardized protocol** for accessing multiple medical databases
 - **Built-in security** with access controls and data protection
 - **Real-time validation** without custom API integrations
@@ -1653,11 +1739,13 @@ MCP is an open standard that enables secure, two-way connections between AI mode
 #### **1. Medication Databases & Validation**
 
 **Primary Tools:**
+
 - **Medi-Span by Wolters Kluwer** - Comprehensive drug database with API access
 - **DrugBank Clinical API** - Multi-regional drug product databases
 - **Czech SUKL** - State Institute for Drug Control (regional compliance)
 
 **Capabilities:**
+
 - Cross-references to ICD-9-CM, ICD-10-CM, ICD-10-PCS, and SNOMED CT
 - Bi-directional mappings between allergen concepts and SNOMED CT substances
 - Regional drug product searches across multiple jurisdictions
@@ -1666,11 +1754,13 @@ MCP is an open standard that enables secure, two-way connections between AI mode
 #### **2. Medical Coding & Terminology**
 
 **Primary Tools:**
+
 - **SNOMED CT International** - Comprehensive clinical healthcare terminology
 - **WHO ICD-10 API** - International Classification of Diseases
 - **UMLS Metathesaurus** - Unified Medical Language System
 
 **Capabilities:**
+
 - SNOMED CT to ICD-10-CM mapping with WHO validation
 - Multi-language medical terminology support
 - Cross-terminology mapping and validation
@@ -1679,11 +1769,13 @@ MCP is an open standard that enables secure, two-way connections between AI mode
 #### **3. Clinical Decision Support**
 
 **Primary Tools:**
+
 - **Clinical Knowledge Systems** - Evidence-based medical guidelines
 - **Drug Interaction APIs** - Pharmaceutical safety databases
 - **Lab Reference APIs** - Normal value ranges by demographics
 
 **Capabilities:**
+
 - Clinical guideline verification
 - Drug-drug and drug-condition interaction checking
 - Lab value validation against demographic-specific ranges
@@ -1698,35 +1790,35 @@ graph TD
     Start([Document Input]) --> InputValidation[Input Validation & Preparation]
     InputValidation --> ImageOptimization[Image Optimization]
     ImageOptimization --> ParallelProcessing[Parallel Processing Gate]
-    
+
     ParallelProcessing --> MedicalClassification[Medical Classification]
     MedicalClassification --> ToolValidationHub[Tool Validation Hub]
-    
+
     %% Tool Validation Branches
     ToolValidationHub --> MedicationTools{Medication Found?}
     ToolValidationHub --> DiagnosisTools{Diagnosis Found?}
     ToolValidationHub --> LabTools{Lab Values Found?}
-    
+
     MedicationTools -->|Yes| DrugValidation[Drug Database Validation]
     MedicationTools -->|No| DocumentTypeRouter[Document Type Router]
-    
+
     DiagnosisTools -->|Yes| ICDValidation[ICD-10/SNOMED Validation]
     DiagnosisTools -->|No| DocumentTypeRouter
-    
+
     LabTools -->|Yes| LabValidation[Lab Reference Validation]
     LabTools -->|No| DocumentTypeRouter
-    
+
     %% External Tool Calls
     DrugValidation --> MediSpanAPI[Medi-Span API]
     DrugValidation --> SUKLDatabase[Czech SUKL Database]
     DrugValidation --> DrugBankAPI[DrugBank API]
-    
+
     ICDValidation --> SNOMEDService[SNOMED CT Service]
     ICDValidation --> ICDService[WHO ICD-10 API]
-    
+
     LabValidation --> LabReferenceAPI[Lab Reference API]
     LabValidation --> DemographicAPI[Demographic Standards]
-    
+
     %% Results Aggregation
     MediSpanAPI --> ValidationResults[Validation Results Merger]
     SUKLDatabase --> ValidationResults
@@ -1735,20 +1827,20 @@ graph TD
     ICDService --> ValidationResults
     LabReferenceAPI --> ValidationResults
     DemographicAPI --> ValidationResults
-    
+
     ValidationResults --> EnhancedExtraction[Enhanced Data Extraction]
     DocumentTypeRouter --> EnhancedExtraction
-    
+
     EnhancedExtraction --> QualityScoring[Quality & Confidence Scoring]
     QualityScoring --> FinalAssembly[Final Result Assembly]
-    
+
     FinalAssembly --> Success([Validated Medical Data])
-    
+
     %% Styling
     classDef toolNode fill:#fff3e0,stroke:#f57c00,stroke-width:2px
     classDef validationNode fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     classDef successNode fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
-    
+
     class MediSpanAPI,SUKLDatabase,DrugBankAPI,SNOMEDService,ICDService,LabReferenceAPI,DemographicAPI toolNode
     class DrugValidation,ICDValidation,LabValidation,ValidationResults validationNode
     class Success,FinalAssembly successNode
@@ -1758,146 +1850,159 @@ graph TD
 
 ```typescript
 // src/lib/workflows/tools/mcp-servers/medical-validation-server.ts
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 export class MedicalValidationMCPServer {
   private server: Server;
-  
+
   constructor() {
     this.server = new Server(
       {
         name: "medical-validation-server",
-        version: "1.0.0"
+        version: "1.0.0",
       },
       {
         capabilities: {
           tools: {},
-          resources: {}
-        }
-      }
+          resources: {},
+        },
+      },
     );
-    
+
     this.setupTools();
   }
-  
+
   private setupTools() {
     // Drug validation tool
-    this.server.setRequestHandler('tools/call', async (request) => {
+    this.server.setRequestHandler("tools/call", async (request) => {
       const { name, arguments: args } = request.params;
-      
+
       switch (name) {
-        case 'validate_medication':
+        case "validate_medication":
           return await this.validateMedication(args);
-        case 'validate_icd_code':
+        case "validate_icd_code":
           return await this.validateICDCode(args);
-        case 'validate_lab_values':
+        case "validate_lab_values":
           return await this.validateLabValues(args);
-        case 'check_drug_interactions':
+        case "check_drug_interactions":
           return await this.checkDrugInteractions(args);
         default:
           throw new Error(`Unknown tool: ${name}`);
       }
     });
-    
+
     // List available tools
-    this.server.setRequestHandler('tools/list', async () => {
+    this.server.setRequestHandler("tools/list", async () => {
       return {
         tools: [
           {
-            name: 'validate_medication',
-            description: 'Validate medication names, dosages, and regional availability',
+            name: "validate_medication",
+            description:
+              "Validate medication names, dosages, and regional availability",
             inputSchema: {
-              type: 'object',
+              type: "object",
               properties: {
-                medicationName: { type: 'string' },
-                dosage: { type: 'string' },
-                region: { type: 'string' },
-                language: { type: 'string' }
+                medicationName: { type: "string" },
+                dosage: { type: "string" },
+                region: { type: "string" },
+                language: { type: "string" },
               },
-              required: ['medicationName']
-            }
+              required: ["medicationName"],
+            },
           },
           {
-            name: 'validate_icd_code',
-            description: 'Validate ICD-10 codes and map to SNOMED CT',
+            name: "validate_icd_code",
+            description: "Validate ICD-10 codes and map to SNOMED CT",
             inputSchema: {
-              type: 'object',
+              type: "object",
               properties: {
-                icdCode: { type: 'string' },
-                description: { type: 'string' },
-                language: { type: 'string' }
+                icdCode: { type: "string" },
+                description: { type: "string" },
+                language: { type: "string" },
               },
-              required: ['icdCode']
-            }
+              required: ["icdCode"],
+            },
           },
           {
-            name: 'validate_lab_values',
-            description: 'Validate laboratory values against reference ranges',
+            name: "validate_lab_values",
+            description: "Validate laboratory values against reference ranges",
             inputSchema: {
-              type: 'object',
+              type: "object",
               properties: {
-                testName: { type: 'string' },
-                value: { type: 'number' },
-                unit: { type: 'string' },
-                patientAge: { type: 'number' },
-                patientSex: { type: 'string' }
+                testName: { type: "string" },
+                value: { type: "number" },
+                unit: { type: "string" },
+                patientAge: { type: "number" },
+                patientSex: { type: "string" },
               },
-              required: ['testName', 'value']
-            }
-          }
-        ]
+              required: ["testName", "value"],
+            },
+          },
+        ],
       };
     });
   }
-  
+
   private async validateMedication(args: any) {
-    const { medicationName, dosage, region = 'EU', language = 'en' } = args;
-    
+    const { medicationName, dosage, region = "EU", language = "en" } = args;
+
     // Integrate with multiple drug databases
     const validationResults = await Promise.allSettled([
       this.checkMediSpan(medicationName, dosage),
       this.checkSUKL(medicationName, region),
-      this.checkDrugBank(medicationName, region)
+      this.checkDrugBank(medicationName, region),
     ]);
-    
+
     return {
       medication: medicationName,
-      isValid: validationResults.some(r => r.status === 'fulfilled' && r.value.valid),
+      isValid: validationResults.some(
+        (r) => r.status === "fulfilled" && r.value.valid,
+      ),
       sources: validationResults.map((r, i) => ({
-        source: ['MediSpan', 'SUKL', 'DrugBank'][i],
+        source: ["MediSpan", "SUKL", "DrugBank"][i],
         status: r.status,
-        data: r.status === 'fulfilled' ? r.value : null
+        data: r.status === "fulfilled" ? r.value : null,
       })),
-      recommendations: this.generateMedicationRecommendations(validationResults)
+      recommendations:
+        this.generateMedicationRecommendations(validationResults),
     };
   }
-  
+
   private async validateICDCode(args: any) {
-    const { icdCode, description, language = 'en' } = args;
-    
+    const { icdCode, description, language = "en" } = args;
+
     // Validate against WHO ICD-10 and map to SNOMED CT
     const [icdValidation, snomedMapping] = await Promise.allSettled([
       this.validateWHOICD(icdCode, language),
-      this.mapToSNOMED(icdCode, description)
+      this.mapToSNOMED(icdCode, description),
     ]);
-    
+
     return {
       icdCode,
-      isValid: icdValidation.status === 'fulfilled' && icdValidation.value.valid,
-      snomedMapping: snomedMapping.status === 'fulfilled' ? snomedMapping.value : null,
-      recommendations: this.generateCodingRecommendations(icdValidation, snomedMapping)
+      isValid:
+        icdValidation.status === "fulfilled" && icdValidation.value.valid,
+      snomedMapping:
+        snomedMapping.status === "fulfilled" ? snomedMapping.value : null,
+      recommendations: this.generateCodingRecommendations(
+        icdValidation,
+        snomedMapping,
+      ),
     };
   }
-  
+
   private async validateLabValues(args: any) {
     const { testName, value, unit, patientAge, patientSex } = args;
-    
+
     // Check against demographic-specific reference ranges
     const referenceCheck = await this.checkLabReferences(
-      testName, value, unit, patientAge, patientSex
+      testName,
+      value,
+      unit,
+      patientAge,
+      patientSex,
     );
-    
+
     return {
       test: testName,
       value,
@@ -1905,27 +2010,27 @@ export class MedicalValidationMCPServer {
       isNormal: referenceCheck.isWithinRange,
       referenceRange: referenceCheck.range,
       interpretation: referenceCheck.interpretation,
-      flags: referenceCheck.flags
+      flags: referenceCheck.flags,
     };
   }
-  
+
   // Integration methods for external APIs
   private async checkMediSpan(medication: string, dosage: string) {
     // Integrate with Medi-Span API
     // Implementation depends on API access
-    return { valid: true, source: 'MediSpan', confidence: 0.95 };
+    return { valid: true, source: "MediSpan", confidence: 0.95 };
   }
-  
+
   private async checkSUKL(medication: string, region: string) {
     // Integrate with Czech SUKL database
-    return { valid: true, source: 'SUKL', confidence: 0.90 };
+    return { valid: true, source: "SUKL", confidence: 0.9 };
   }
-  
+
   private async checkDrugBank(medication: string, region: string) {
     // Integrate with DrugBank API
-    return { valid: true, source: 'DrugBank', confidence: 0.92 };
+    return { valid: true, source: "DrugBank", confidence: 0.92 };
   }
-  
+
   async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
@@ -1937,157 +2042,180 @@ export class MedicalValidationMCPServer {
 
 ```typescript
 // src/lib/workflows/document-import/nodes/enhanced-validation.ts
-import { createSSEEnabledNode } from '../sse-integration';
-import { MCPToolClient } from '../tools/mcp-client';
+import { createSSEEnabledNode } from "../sse-integration";
+import { MCPToolClient } from "../tools/mcp-client";
 
 export const medicationValidationNode = createSSEEnabledNode(
   "medication_validation",
   async (state, notifier) => {
     const { prescriptions, language, region } = state;
-    
+
     if (!prescriptions || prescriptions.length === 0) {
       return { validatedPrescriptions: [] };
     }
-    
-    notifier.notifyProgress("medication_validation", 0.1, "Validating medications...");
-    
-    const mcpClient = new MCPToolClient('medical-validation-server');
+
+    notifier.notifyProgress(
+      "medication_validation",
+      0.1,
+      "Validating medications...",
+    );
+
+    const mcpClient = new MCPToolClient("medical-validation-server");
     const validatedPrescriptions = [];
-    
+
     for (let i = 0; i < prescriptions.length; i++) {
       const prescription = prescriptions[i];
-      
+
       notifier.notifyProgress(
-        "medication_validation", 
-        0.1 + (0.8 * i / prescriptions.length),
-        `Validating ${prescription.medicationName}...`
+        "medication_validation",
+        0.1 + (0.8 * i) / prescriptions.length,
+        `Validating ${prescription.medicationName}...`,
       );
-      
+
       try {
         // Validate medication via MCP
-        const validation = await mcpClient.callTool('validate_medication', {
+        const validation = await mcpClient.callTool("validate_medication", {
           medicationName: prescription.medicationName,
           dosage: prescription.dosage,
-          region: region || 'EU',
-          language: language || 'en'
+          region: region || "EU",
+          language: language || "en",
         });
-        
+
         // Check drug interactions with other medications
-        const interactions = await mcpClient.callTool('check_drug_interactions', {
-          medications: validatedPrescriptions.map(p => p.medicationName).concat([prescription.medicationName])
-        });
-        
+        const interactions = await mcpClient.callTool(
+          "check_drug_interactions",
+          {
+            medications: validatedPrescriptions
+              .map((p) => p.medicationName)
+              .concat([prescription.medicationName]),
+          },
+        );
+
         validatedPrescriptions.push({
           ...prescription,
           validation,
           interactions: interactions.interactions || [],
-          confidence: validation.isValid ? 0.95 : 0.60,
-          warnings: this.generateMedicationWarnings(validation, interactions)
+          confidence: validation.isValid ? 0.95 : 0.6,
+          warnings: this.generateMedicationWarnings(validation, interactions),
         });
-        
+
         // Notify partial result via SSE
         notifier.notifyPartialResult("medication_validated", {
           medication: prescription.medicationName,
           isValid: validation.isValid,
-          confidence: validation.isValid ? 0.95 : 0.60,
-          sources: validation.sources
+          confidence: validation.isValid ? 0.95 : 0.6,
+          sources: validation.sources,
         });
-        
       } catch (error) {
-        notifier.notifyError("medication_validation", error.message, "continuing");
-        
+        notifier.notifyError(
+          "medication_validation",
+          error.message,
+          "continuing",
+        );
+
         validatedPrescriptions.push({
           ...prescription,
           validation: { isValid: false, error: error.message },
-          confidence: 0.30,
-          warnings: [`Validation failed: ${error.message}`]
+          confidence: 0.3,
+          warnings: [`Validation failed: ${error.message}`],
         });
       }
     }
-    
-    notifier.notifyProgress("medication_validation", 1.0, "Medication validation complete");
-    
+
+    notifier.notifyProgress(
+      "medication_validation",
+      1.0,
+      "Medication validation complete",
+    );
+
     return { validatedPrescriptions };
-  }
+  },
 );
 
 export const diagnosisValidationNode = createSSEEnabledNode(
   "diagnosis_validation",
   async (state, notifier) => {
     const { diagnosis, language } = state;
-    
+
     if (!diagnosis) {
       return { validatedDiagnosis: null };
     }
-    
-    notifier.notifyProgress("diagnosis_validation", 0.2, "Validating diagnosis codes...");
-    
-    const mcpClient = new MCPToolClient('medical-validation-server');
-    
+
+    notifier.notifyProgress(
+      "diagnosis_validation",
+      0.2,
+      "Validating diagnosis codes...",
+    );
+
+    const mcpClient = new MCPToolClient("medical-validation-server");
+
     try {
-      const validation = await mcpClient.callTool('validate_icd_code', {
+      const validation = await mcpClient.callTool("validate_icd_code", {
         icdCode: diagnosis.code,
         description: diagnosis.description,
-        language: language || 'en'
+        language: language || "en",
       });
-      
+
       const validatedDiagnosis = {
         ...diagnosis,
         validation,
         snomedMapping: validation.snomedMapping,
         confidence: validation.isValid ? 0.95 : 0.65,
-        recommendations: validation.recommendations
+        recommendations: validation.recommendations,
       };
-      
+
       notifier.notifyPartialResult("diagnosis_validated", {
         code: diagnosis.code,
         isValid: validation.isValid,
         snomedCode: validation.snomedMapping?.code,
-        confidence: validatedDiagnosis.confidence
+        confidence: validatedDiagnosis.confidence,
       });
-      
+
       return { validatedDiagnosis };
-      
     } catch (error) {
       notifier.notifyError("diagnosis_validation", error.message, "continuing");
-      
+
       return {
         validatedDiagnosis: {
           ...diagnosis,
           validation: { isValid: false, error: error.message },
-          confidence: 0.40
-        }
+          confidence: 0.4,
+        },
       };
     }
-  }
+  },
 );
 
 export const labValidationNode = createSSEEnabledNode(
-  "lab_validation", 
+  "lab_validation",
   async (state, notifier) => {
     const { signals, patient } = state;
-    
+
     if (!signals || signals.length === 0) {
       return { validatedSignals: [] };
     }
-    
-    notifier.notifyProgress("lab_validation", 0.1, "Validating laboratory values...");
-    
-    const mcpClient = new MCPToolClient('medical-validation-server');
+
+    notifier.notifyProgress(
+      "lab_validation",
+      0.1,
+      "Validating laboratory values...",
+    );
+
+    const mcpClient = new MCPToolClient("medical-validation-server");
     const validatedSignals = [];
-    
+
     for (let i = 0; i < signals.length; i++) {
       const signal = signals[i];
-      
+
       try {
-        const validation = await mcpClient.callTool('validate_lab_values', {
+        const validation = await mcpClient.callTool("validate_lab_values", {
           testName: signal.signal,
           value: signal.value,
           unit: signal.unit,
           patientAge: patient?.age,
-          patientSex: patient?.biologicalSex
+          patientSex: patient?.biologicalSex,
         });
-        
+
         validatedSignals.push({
           ...signal,
           validation,
@@ -2095,54 +2223,56 @@ export const labValidationNode = createSSEEnabledNode(
           referenceRange: validation.referenceRange,
           interpretation: validation.interpretation,
           flags: validation.flags || [],
-          confidence: 0.95
+          confidence: 0.95,
         });
-        
+
         notifier.notifyPartialResult("lab_validated", {
           test: signal.signal,
           value: signal.value,
           isNormal: validation.isNormal,
-          flags: validation.flags
+          flags: validation.flags,
         });
-        
       } catch (error) {
         validatedSignals.push({
           ...signal,
           validation: { error: error.message },
-          confidence: 0.70
+          confidence: 0.7,
         });
       }
     }
-    
+
     return { validatedSignals };
-  }
+  },
 );
 ```
 
 ### Regional Database Support Matrix
 
-| Region | Medication DB | ICD-10 Source | SNOMED Support | Language |
-|--------|---------------|---------------|----------------|----------|
-| **Czech Republic** | SUKL + Medi-Span | WHO ICD-10-CM Czech | SNOMED CT Czech | Czech/English |
-| **European Union** | EMA + DrugBank | WHO ICD-10 EU | SNOMED CT International | Multi-language |
-| **United States** | FDA + Medi-Span | ICD-10-CM | SNOMED CT US | English |
-| **Global** | DrugBank | WHO ICD-10 | SNOMED CT International | Multi-language |
+| Region             | Medication DB    | ICD-10 Source       | SNOMED Support          | Language       |
+| ------------------ | ---------------- | ------------------- | ----------------------- | -------------- |
+| **Czech Republic** | SUKL + Medi-Span | WHO ICD-10-CM Czech | SNOMED CT Czech         | Czech/English  |
+| **European Union** | EMA + DrugBank   | WHO ICD-10 EU       | SNOMED CT International | Multi-language |
+| **United States**  | FDA + Medi-Span  | ICD-10-CM           | SNOMED CT US            | English        |
+| **Global**         | DrugBank         | WHO ICD-10          | SNOMED CT International | Multi-language |
 
 ### Implementation Benefits
 
 #### **Accuracy Improvements**
+
 - **95%+ medication accuracy** through multi-source validation
 - **Real-time code verification** against authoritative sources
 - **Regional compliance** with local medical standards
 - **Drug interaction detection** preventing dangerous combinations
 
 #### **Compliance Enhancements**
+
 - **FHIR-compliant data** with validated terminology
 - **Regional regulatory alignment** (EU, Czech Republic, etc.)
 - **Audit trail** of all external validations
 - **Professional liability protection** through verified medical data
 
 #### **User Experience Benefits**
+
 - **Confidence scoring** with validation sources
 - **Real-time feedback** on data accuracy
 - **Actionable warnings** for potential issues
@@ -2151,16 +2281,19 @@ export const labValidationNode = createSSEEnabledNode(
 ### Migration Timeline
 
 #### **Phase 1 (Weeks 1-2): Core MCP Infrastructure**
+
 - Set up MCP server for medical validation
 - Integrate basic medication and ICD-10 validation
 - Implement Czech SUKL database connectivity
 
 #### **Phase 2 (Weeks 3-4): Advanced Validation**
+
 - Add SNOMED CT mapping capabilities
 - Implement drug interaction checking
 - Add demographic-specific lab reference ranges
 
 #### **Phase 3 (Weeks 5-6): Regional Expansion**
+
 - Support multiple European medication databases
 - Add multi-language terminology support
 - Implement advanced clinical decision support
@@ -2177,14 +2310,14 @@ interface EnhancedSchema {
   readonly fallbackProviders: string[];
   readonly validationRules: ValidationRule[];
   readonly multiLanguageSupport: boolean;
-  
+
   generatePrompt(language: string, context: ProcessingContext): string;
   validateOutput(output: any): ValidationResult;
 }
 
 class SchemaRegistry {
   private schemas = new Map<string, EnhancedSchema>();
-  
+
   register(schema: EnhancedSchema): void { ... }
   getSchema(documentType: DocumentType, version?: string): EnhancedSchema { ... }
   validateAllSchemas(): ValidationReport { ... }
@@ -2194,12 +2327,12 @@ class SchemaRegistry {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Weeks 1-3)
+
 - [ ] **Provider Abstraction Layer**
   - Implement base AIProvider interface
   - Create OpenAI provider adapter (maintain compatibility)
   - Add Anthropic Claude provider
   - Add Google Gemini provider
-  
 - [ ] **Schema Modernization**
   - Fix missing required fields in existing schemas
   - Implement EnhancedSchema interface
@@ -2207,7 +2340,9 @@ class SchemaRegistry {
   - Add multi-language support infrastructure
 
 ### Phase 2: LangGraph Integration (Weeks 4-6)
+
 - [ ] **Workflow Migration**
+
   - Convert current linear flow to LangGraph workflow
   - Implement document assessment node
   - Implement classification routing logic
@@ -2220,7 +2355,9 @@ class SchemaRegistry {
   - Create checkpointing for human-in-the-loop scenarios
 
 ### Phase 3: Optimization (Weeks 7-9)
+
 - [ ] **Provider Selection**
+
   - Implement dynamic provider selection
   - Add cost optimization algorithms
   - Create provider performance monitoring
@@ -2233,7 +2370,9 @@ class SchemaRegistry {
   - Optimize token usage across providers
 
 ### Phase 4: Advanced Features (Weeks 10-12)
+
 - [ ] **External Service Integration**
+
   - Add medical coding validation APIs (ICD-10, SNOMED)
   - Integrate drug database lookups
   - Add lab reference range validation
@@ -2249,23 +2388,25 @@ class SchemaRegistry {
 
 ### Provider-Task Optimization Matrix
 
-| Task Type | Primary Provider | Fallback | Reasoning |
-|-----------|------------------|----------|-----------|
-| **OCR/Vision** | Gemini Pro Vision | GPT-4 Vision | Cost efficiency, good OCR |
-| **Medical Classification** | Claude 3.5 Sonnet | GPT-4 | Medical reasoning strength |
-| **Lab Data Extraction** | GPT-4 | Gemini Pro | Structured output reliability |
-| **Prescription Parsing** | Claude 3.5 Sonnet | GPT-4 | Detail-oriented analysis |
-| **FHIR Generation** | GPT-4 | Claude 3.5 | Standard compliance |
-| **Language Detection** | Gemini Flash | GPT-3.5 Turbo | Fast, cost-effective |
+| Task Type                  | Primary Provider  | Fallback      | Reasoning                     |
+| -------------------------- | ----------------- | ------------- | ----------------------------- |
+| **OCR/Vision**             | Gemini Pro Vision | GPT-4 Vision  | Cost efficiency, good OCR     |
+| **Medical Classification** | Claude 3.5 Sonnet | GPT-4         | Medical reasoning strength    |
+| **Lab Data Extraction**    | GPT-4             | Gemini Pro    | Structured output reliability |
+| **Prescription Parsing**   | Claude 3.5 Sonnet | GPT-4         | Detail-oriented analysis      |
+| **FHIR Generation**        | GPT-4             | Claude 3.5    | Standard compliance           |
+| **Language Detection**     | Gemini Flash      | GPT-3.5 Turbo | Fast, cost-effective          |
 
 ### Cost Optimization Strategies
 
 1. **Tiered Processing**
+
    - Use faster/cheaper models for initial classification
    - Reserve premium models for complex extractions
    - Implement confidence-based escalation
 
 2. **Context Window Optimization**
+
    - Chunk large documents appropriately
    - Use provider-specific context limits
    - Implement intelligent text summarization for oversized inputs
@@ -2278,11 +2419,13 @@ class SchemaRegistry {
 ## Risk Mitigation
 
 ### Technical Risks
+
 - **Provider Outages**: Multi-provider failover with automatic retry
 - **Schema Evolution**: Versioned schemas with backward compatibility
 - **Data Privacy**: End-to-end encryption, provider-agnostic data handling
 
-### Business Risks  
+### Business Risks
+
 - **Cost Escalation**: Real-time cost monitoring with budget alerts
 - **Accuracy Degradation**: Multi-provider consensus and validation
 - **Compliance Issues**: Automated FHIR validation and audit trails
@@ -2290,12 +2433,14 @@ class SchemaRegistry {
 ## Success Metrics
 
 ### Performance Metrics
+
 - **Processing Speed**: 50% reduction in average processing time
 - **Cost Efficiency**: 30% reduction in AI provider costs
 - **Accuracy**: 95% confidence score on structured extractions
 - **Reliability**: 99.5% uptime with provider failover
 
 ### Quality Metrics
+
 - **FHIR Compliance**: 100% valid FHIR output
 - **Multi-language Support**: Accurate processing in Czech, German, English
 - **Error Recovery**: 90% successful recovery from partial failures
@@ -2305,7 +2450,7 @@ class SchemaRegistry {
 The proposed modernization strategy transforms the current monolithic AI document import system into a robust, provider-agnostic workflow orchestration platform. By leveraging LangGraph's graph-based architecture and implementing comprehensive provider abstraction, the system will achieve:
 
 1. **Resilience**: Multi-provider failover and error recovery
-2. **Efficiency**: Optimized model selection and parallel processing  
+2. **Efficiency**: Optimized model selection and parallel processing
 3. **Scalability**: Workflow orchestration with state management
 4. **Quality**: Enhanced validation and consensus mechanisms
 5. **Maintainability**: Clean abstractions and modular architecture
@@ -2317,6 +2462,7 @@ This approach positions the system for future growth while maintaining backward 
 ### Current Document Type Support
 
 The system currently supports these primary medical document types:
+
 - **Report** - General medical examination reports
 - **Laboratory** - Lab test results with signal extraction
 - **Dental** - Dental examination with tooth-specific analysis
@@ -2331,8 +2477,10 @@ The system currently supports these primary medical document types:
 Based on comprehensive analysis of medical documentation needs, the following document types should be added to support a complete medical record system:
 
 #### 1. **Discharge Summary** (`discharge`)
+
 **Purpose**: Hospital discharge documentation with treatment summaries
 **Key Data Points**:
+
 - Admission and discharge dates
 - Primary and secondary diagnoses (ICD-10 codes)
 - Procedures performed during hospitalization
@@ -2341,6 +2489,7 @@ Based on comprehensive analysis of medical documentation needs, the following do
 - Discharge disposition (home, rehabilitation, etc.)
 
 **Schema Requirements**:
+
 ```typescript
 interface DischargeSchema {
   admissionDate: string;
@@ -2357,8 +2506,10 @@ interface DischargeSchema {
 ```
 
 #### 2. **Surgical Report** (`surgery`)
+
 **Purpose**: Operative notes and surgical procedure documentation
 **Key Data Points**:
+
 - Pre-operative and post-operative diagnoses
 - Procedure details with CPT codes
 - Surgical team members
@@ -2368,6 +2519,7 @@ interface DischargeSchema {
 - Implants or devices used
 
 **Schema Requirements**:
+
 ```typescript
 interface SurgicalSchema {
   preOperativeDiagnosis: Diagnosis[];
@@ -2392,8 +2544,10 @@ interface SurgicalSchema {
 ```
 
 #### 3. **Pathology Report** (`pathology`)
+
 **Purpose**: Tissue analysis, biopsy results, and cytology reports
 **Key Data Points**:
+
 - Specimen type and collection method
 - Gross description
 - Microscopic description
@@ -2403,6 +2557,7 @@ interface SurgicalSchema {
 - Synoptic reports for cancer
 
 **Schema Requirements**:
+
 ```typescript
 interface PathologySchema {
   specimen: {
@@ -2424,8 +2579,10 @@ interface PathologySchema {
 ```
 
 #### 4. **Cardiology Report** (`cardiology`)
+
 **Purpose**: Cardiac testing and procedure reports
 **Key Data Points**:
+
 - ECG/EKG interpretations
 - Echocardiogram measurements
 - Stress test results
@@ -2434,9 +2591,10 @@ interface PathologySchema {
 - Ejection fraction and cardiac function metrics
 
 **Schema Requirements**:
+
 ```typescript
 interface CardiologySchema {
-  testType: 'ECG' | 'Echo' | 'StressTest' | 'Catheterization';
+  testType: "ECG" | "Echo" | "StressTest" | "Catheterization";
   findings: {
     rhythm: string;
     rate: number;
@@ -2452,8 +2610,10 @@ interface CardiologySchema {
 ```
 
 #### 5. **Emergency Report** (`emergency`)
+
 **Purpose**: Emergency department visit documentation
 **Key Data Points**:
+
 - Triage information and vital signs
 - Chief complaint and history of present illness
 - Emergency severity index (ESI) level
@@ -2462,6 +2622,7 @@ interface CardiologySchema {
 - Disposition (admitted, discharged, transferred)
 
 **Schema Requirements**:
+
 ```typescript
 interface EmergencySchema {
   triageTime: string;
@@ -2472,7 +2633,7 @@ interface EmergencySchema {
   diagnosticTests: Test[];
   treatments: Treatment[];
   disposition: {
-    type: 'admitted' | 'discharged' | 'transferred' | 'expired';
+    type: "admitted" | "discharged" | "transferred" | "expired";
     destination?: string;
     instructions?: string;
   };
@@ -2480,8 +2641,10 @@ interface EmergencySchema {
 ```
 
 #### 6. **Consultation Report** (`consultation`)
+
 **Purpose**: Specialist consultation documentation
 **Key Data Points**:
+
 - Referring physician and reason for consultation
 - Consultant's assessment and findings
 - Diagnostic recommendations
@@ -2489,6 +2652,7 @@ interface EmergencySchema {
 - Follow-up plan
 
 **Schema Requirements**:
+
 ```typescript
 interface ConsultationSchema {
   referringPhysician: Performer;
@@ -2505,8 +2669,10 @@ interface ConsultationSchema {
 ```
 
 #### 7. **Progress Note** (`progress`)
+
 **Purpose**: Ongoing care documentation and follow-up visits
 **Key Data Points**:
+
 - SOAP format (Subjective, Objective, Assessment, Plan)
 - Interval changes since last visit
 - Current medications review
@@ -2514,9 +2680,10 @@ interface ConsultationSchema {
 - Care plan modifications
 
 **Schema Requirements**:
+
 ```typescript
 interface ProgressNoteSchema {
-  visitType: 'follow-up' | 'routine' | 'urgent';
+  visitType: "follow-up" | "routine" | "urgent";
   soap: {
     subjective: string;
     objective: string;
@@ -2531,8 +2698,10 @@ interface ProgressNoteSchema {
 ```
 
 #### 8. **Radiology Report** (`radiology`)
+
 **Purpose**: Detailed radiological interpretations (more specific than general imaging)
 **Key Data Points**:
+
 - Modality-specific technical parameters
 - Comparison with prior studies
 - Detailed findings by anatomical region
@@ -2541,9 +2710,10 @@ interface ProgressNoteSchema {
 - Critical findings and communication
 
 **Schema Requirements**:
+
 ```typescript
 interface RadiologySchema {
-  modality: 'CT' | 'MRI' | 'Ultrasound' | 'XRay' | 'PET' | 'Nuclear';
+  modality: "CT" | "MRI" | "Ultrasound" | "XRay" | "PET" | "Nuclear";
   technique: TechnicalParameters;
   comparison: PriorStudy[];
   findings: AnatomicalFindings[];
@@ -2563,21 +2733,25 @@ interface RadiologySchema {
 ### Implementation Strategy for New Document Types
 
 #### Phase 1: Schema Development (Week 1-2)
+
 - Create detailed extraction schemas for each new document type
 - Define required vs optional fields based on medical standards
 - Implement multi-language support for international compatibility
 
 #### Phase 2: AI Training Data (Week 3-4)
+
 - Collect sample documents for each type
 - Create training datasets with annotated examples
 - Test extraction accuracy with multiple providers
 
 #### Phase 3: Workflow Integration (Week 5-6)
+
 - Add new document types to the Types enum
 - Create specialized processing nodes in LangGraph
 - Implement type-specific validation rules
 
 #### Phase 4: External Validation (Week 7-8)
+
 - Integrate with relevant medical databases for each type
 - Add specialty-specific code validation (CPT, ICD-10-PCS)
 - Implement critical value alerts for emergency findings
@@ -2609,6 +2783,7 @@ The current 3rd party apps system in `/src/components/apps/` provides a sophisti
 #### **Current Apps System Overview**
 
 The existing system supports:
+
 - **Medical Imaging Apps** (e.g., Mammaio for mammography analysis)
 - **AI Medical Analysis** (e.g., MedAInsight for comprehensive analysis)
 - **Specialized Analysis** (allergy, vaccination, focused analysis)
@@ -2620,56 +2795,56 @@ The existing system supports:
 ```mermaid
 graph TD
     Start([Document Input]) --> DICOMDetection[DICOM Detection Node]
-    
+
     DICOMDetection --> DICOMValidation[DICOM Validation Node]
     DICOMValidation --> ParallelGate[Parallel DICOM Processing Hub]
-    
+
     %% Core Processing
     ParallelGate --> MetadataExtraction[Metadata Extraction]
     ParallelGate --> AnatomyDetection[Anatomy Detection]
     ParallelGate --> ModalityAnalysis[Modality-Specific Analysis]
-    
+
     %% App Integration Decision Point
     ModalityAnalysis --> AppIntegrationHub[3rd Party App Integration Hub]
-    
+
     %% App Selection Logic
     AppIntegrationHub --> AppCompatibilityCheck{App Compatibility Check}
     AppCompatibilityCheck --> UserSettings{User Settings}
-    
+
     %% Conditional App Triggering
     UserSettings -->|Auto-trigger enabled| AutoAppTrigger[Automatic App Triggering]
     UserSettings -->|Manual only| AppRegistration[Register Available Apps]
-    
+
     %% App Processing Branches
     AutoAppTrigger --> AppDataPreparation[App Data Preparation]
     AppDataPreparation --> ParallelAppProcessing[Parallel App Processing]
-    
+
     ParallelAppProcessing --> MammographyApp{Mammaio Compatible?}
     ParallelAppProcessing --> MedicalAIApp{MedAInsight Compatible?}
     ParallelAppProcessing --> ImagingApps{Other Imaging Apps?}
-    
+
     MammographyApp -->|Yes| MammographyAnalysis[Mammography Analysis]
     MedicalAIApp -->|Yes| AIAnalysis[Medical AI Analysis]
     ImagingApps -->|Yes| SpecializedAnalysis[Specialized Imaging Analysis]
-    
+
     %% Results Integration
     MammographyAnalysis --> AppResultsAggregator[App Results Aggregator]
     AIAnalysis --> AppResultsAggregator
     SpecializedAnalysis --> AppResultsAggregator
     AppRegistration --> AppResultsAggregator
-    
+
     %% Final Integration
     MetadataExtraction --> ResultsIntegration[Results Integration]
     AnatomyDetection --> ResultsIntegration
     AppResultsAggregator --> ResultsIntegration
-    
+
     ResultsIntegration --> EnhancedDICOMOutput[Enhanced DICOM Analysis with App Results]
-    
+
     %% Styling
     classDef appNode fill:#fff3e0,stroke:#f57c00,stroke-width:2px
     classDef decisionNode fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     classDef processNode fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    
+
     class AppIntegrationHub,AppDataPreparation,ParallelAppProcessing,AppResultsAggregator appNode
     class AppCompatibilityCheck,UserSettings,MammographyApp,MedicalAIApp,ImagingApps decisionNode
     class AutoAppTrigger,AppRegistration,MammographyAnalysis,AIAnalysis,SpecializedAnalysis processNode
@@ -2679,205 +2854,228 @@ graph TD
 
 ```typescript
 // src/lib/workflows/document-import/nodes/app-integration-hub.ts
-export const appIntegrationHubNode = traceNode("app_integration_hub")(
-  async (state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> => {
-    const { dicomFiles, anatomyMappings, userSettings, sessionId } = state;
-    const notifier = new SSEWorkflowNotifier(sessionId);
-    
-    notifier.notifyProgress("app_integration", 0.1, "Checking compatible apps...");
-    
-    // 1. Load available apps and check compatibility
-    const availableApps = await loadAvailableApps();
-    const compatibleApps = await findCompatibleApps(dicomFiles, availableApps);
-    
-    notifier.notifyPartialResult("compatible_apps_found", {
-      totalApps: availableApps.length,
-      compatibleApps: compatibleApps.map(app => ({
-        name: app.name,
-        type: app.connection.type,
-        requirements: app.requires
-      }))
-    });
-    
-    // 2. Check user settings for auto-triggering
-    const autoTriggerEnabled = userSettings?.apps?.autoTrigger || false;
-    const approvedApps = userSettings?.apps?.approved || [];
-    
-    let appResults = [];
-    let registeredApps = [];
-    
-    if (autoTriggerEnabled && compatibleApps.length > 0) {
-      // 3. Automatic app triggering for pre-approved apps
-      const autoApps = compatibleApps.filter(app => 
-        approvedApps.includes(app.id) && 
-        hasCompatibleData(app, dicomFiles)
-      );
-      
-      if (autoApps.length > 0) {
-        notifier.notifyProgress("app_integration", 0.3, 
-          `Auto-triggering ${autoApps.length} approved apps...`);
-        
-        appResults = await processAppsAutomatically(autoApps, dicomFiles, anatomyMappings);
-      }
-      
-      // 4. Register remaining apps for manual triggering
-      registeredApps = compatibleApps.filter(app => !approvedApps.includes(app.id));
-    } else {
-      // 5. Register all compatible apps for manual triggering
-      registeredApps = compatibleApps;
-    }
-    
-    notifier.notifyProgress("app_integration", 1.0, "App integration complete");
-    
-    return {
-      appResults,
-      registeredApps: registeredApps.map(app => ({
-        appId: app.id,
-        name: app.name,
-        description: app.description,
-        requirements: app.requires,
-        connectionType: app.connection.type,
-        credits: app.credits,
-        dataPreview: generateAppDataPreview(app, dicomFiles)
-      }))
-    };
-  }
-);
+export const appIntegrationHubNode = traceNode("app_integration_hub")(async (
+  state: DocumentProcessingState,
+): Promise<Partial<DocumentProcessingState>> => {
+  const { dicomFiles, anatomyMappings, userSettings, sessionId } = state;
+  const notifier = new SSEWorkflowNotifier(sessionId);
 
-async function findCompatibleApps(dicomFiles: DICOMFile[], availableApps: AppRecord[]): Promise<AppRecord[]> {
+  notifier.notifyProgress(
+    "app_integration",
+    0.1,
+    "Checking compatible apps...",
+  );
+
+  // 1. Load available apps and check compatibility
+  const availableApps = await loadAvailableApps();
+  const compatibleApps = await findCompatibleApps(dicomFiles, availableApps);
+
+  notifier.notifyPartialResult("compatible_apps_found", {
+    totalApps: availableApps.length,
+    compatibleApps: compatibleApps.map((app) => ({
+      name: app.name,
+      type: app.connection.type,
+      requirements: app.requires,
+    })),
+  });
+
+  // 2. Check user settings for auto-triggering
+  const autoTriggerEnabled = userSettings?.apps?.autoTrigger || false;
+  const approvedApps = userSettings?.apps?.approved || [];
+
+  let appResults = [];
+  let registeredApps = [];
+
+  if (autoTriggerEnabled && compatibleApps.length > 0) {
+    // 3. Automatic app triggering for pre-approved apps
+    const autoApps = compatibleApps.filter(
+      (app) =>
+        approvedApps.includes(app.id) && hasCompatibleData(app, dicomFiles),
+    );
+
+    if (autoApps.length > 0) {
+      notifier.notifyProgress(
+        "app_integration",
+        0.3,
+        `Auto-triggering ${autoApps.length} approved apps...`,
+      );
+
+      appResults = await processAppsAutomatically(
+        autoApps,
+        dicomFiles,
+        anatomyMappings,
+      );
+    }
+
+    // 4. Register remaining apps for manual triggering
+    registeredApps = compatibleApps.filter(
+      (app) => !approvedApps.includes(app.id),
+    );
+  } else {
+    // 5. Register all compatible apps for manual triggering
+    registeredApps = compatibleApps;
+  }
+
+  notifier.notifyProgress("app_integration", 1.0, "App integration complete");
+
+  return {
+    appResults,
+    registeredApps: registeredApps.map((app) => ({
+      appId: app.id,
+      name: app.name,
+      description: app.description,
+      requirements: app.requires,
+      connectionType: app.connection.type,
+      credits: app.credits,
+      dataPreview: generateAppDataPreview(app, dicomFiles),
+    })),
+  };
+});
+
+async function findCompatibleApps(
+  dicomFiles: DICOMFile[],
+  availableApps: AppRecord[],
+): Promise<AppRecord[]> {
   const compatibleApps = [];
-  
+
   for (const app of availableApps) {
     let isCompatible = false;
-    
+
     // Check app requirements against DICOM data
     if (app.requires) {
       for (const requirement of app.requires) {
         switch (requirement) {
-          case 'mammography':
-            isCompatible = dicomFiles.some(file => 
-              file.metadata.modality === 'MG' || 
-              file.metadata.bodyPartExamined?.toLowerCase().includes('breast')
+          case "mammography":
+            isCompatible = dicomFiles.some(
+              (file) =>
+                file.metadata.modality === "MG" ||
+                file.metadata.bodyPartExamined
+                  ?.toLowerCase()
+                  .includes("breast"),
             );
             break;
-            
-          case 'chest_xray':
-            isCompatible = dicomFiles.some(file => 
-              file.metadata.modality === 'CR' && 
-              file.metadata.bodyPartExamined?.toLowerCase().includes('chest')
+
+          case "chest_xray":
+            isCompatible = dicomFiles.some(
+              (file) =>
+                file.metadata.modality === "CR" &&
+                file.metadata.bodyPartExamined?.toLowerCase().includes("chest"),
             );
             break;
-            
-          case 'ct_scan':
-            isCompatible = dicomFiles.some(file => file.metadata.modality === 'CT');
+
+          case "ct_scan":
+            isCompatible = dicomFiles.some(
+              (file) => file.metadata.modality === "CT",
+            );
             break;
-            
-          case 'mri_scan':
-            isCompatible = dicomFiles.some(file => file.metadata.modality === 'MR');
+
+          case "mri_scan":
+            isCompatible = dicomFiles.some(
+              (file) => file.metadata.modality === "MR",
+            );
             break;
-            
-          case 'medical_imaging':
+
+          case "medical_imaging":
             isCompatible = dicomFiles.length > 0;
             break;
-            
-          case 'dicom':
+
+          case "dicom":
             isCompatible = dicomFiles.length > 0;
             break;
         }
-        
+
         if (isCompatible) break;
       }
     }
-    
+
     // Check connection type compatibility
     if (isCompatible && app.connection) {
-      const supportedTypes = ['Report', 'Focus', 'Question'];
+      const supportedTypes = ["Report", "Focus", "Question"];
       isCompatible = supportedTypes.includes(app.connection.type);
     }
-    
+
     if (isCompatible) {
       compatibleApps.push(app);
     }
   }
-  
+
   return compatibleApps;
 }
 
 async function processAppsAutomatically(
-  apps: AppRecord[], 
-  dicomFiles: DICOMFile[], 
-  anatomyMappings: DICOMAnatomyMapping[]
+  apps: AppRecord[],
+  dicomFiles: DICOMFile[],
+  anatomyMappings: DICOMAnatomyMapping[],
 ): Promise<AppResult[]> {
   const results = [];
-  
+
   // Process apps in parallel for efficiency
   const appPromises = apps.map(async (app) => {
     try {
       // Prepare data for app
       const appData = await prepareAppData(app, dicomFiles, anatomyMappings);
-      
+
       // Clean sensitive data
       const cleanedData = cleanDataForApp(appData);
-      
+
       // Send data to app
       const response = await fetch(`${app.connect.uri}/api/connect`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${app.apiKey || ''}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${app.apiKey || ""}`,
         },
-        body: JSON.stringify({ items: cleanedData })
+        body: JSON.stringify({ items: cleanedData }),
       });
-      
+
       const appResult = await response.json();
-      
+
       return {
         appId: app.id,
         appName: app.name,
-        status: 'completed',
+        status: "completed",
         connectionId: appResult.id,
         results: appResult.analysis || null,
         processingTime: Date.now() - startTime,
-        credits: app.credits
+        credits: app.credits,
       };
-      
     } catch (error) {
       return {
         appId: app.id,
         appName: app.name,
-        status: 'failed',
+        status: "failed",
         error: error.message,
-        processingTime: Date.now() - startTime
+        processingTime: Date.now() - startTime,
       };
     }
   });
-  
+
   const appResults = await Promise.allSettled(appPromises);
-  
-  return appResults.map(result => 
-    result.status === 'fulfilled' ? result.value : result.reason
+
+  return appResults.map((result) =>
+    result.status === "fulfilled" ? result.value : result.reason,
   );
 }
 
 function cleanDataForApp(data: any): any {
   // Remove sensitive fields and prepare data for external app
   const cleaned = JSON.parse(JSON.stringify(data));
-  
+
   // Remove document references and sensitive metadata
   if (cleaned.signals) {
-    cleaned.signals = cleaned.signals.map(signal => {
+    cleaned.signals = cleaned.signals.map((signal) => {
       const { document, ...cleanSignal } = signal;
       return cleanSignal;
     });
   }
-  
+
   // Remove sensitive attachments
   if (cleaned.attachments) {
-    cleaned.attachments = cleaned.attachments.filter(att => 
-      !att.encrypted && att.type !== 'application/x-sensitive'
+    cleaned.attachments = cleaned.attachments.filter(
+      (att) => !att.encrypted && att.type !== "application/x-sensitive",
     );
   }
-  
+
   return cleaned;
 }
 
@@ -2885,9 +3083,9 @@ function generateAppDataPreview(app: AppRecord, dicomFiles: DICOMFile[]): any {
   // Generate preview of what data would be sent to the app
   return {
     dicomFiles: dicomFiles.length,
-    modalities: [...new Set(dicomFiles.map(f => f.metadata.modality))],
-    bodyParts: [...new Set(dicomFiles.map(f => f.metadata.bodyPartExamined))],
-    studyDates: [...new Set(dicomFiles.map(f => f.metadata.studyDate))]
+    modalities: [...new Set(dicomFiles.map((f) => f.metadata.modality))],
+    bodyParts: [...new Set(dicomFiles.map((f) => f.metadata.bodyPartExamined))],
+    studyDates: [...new Set(dicomFiles.map((f) => f.metadata.studyDate))],
   };
 }
 ```
@@ -2908,43 +3106,49 @@ export interface EnhancedDocumentWithApps extends Document {
 
 // App result aggregation
 export const appResultsAggregatorNode = traceNode("app_results_aggregator")(
-  async (state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> => {
+  async (
+    state: DocumentProcessingState,
+  ): Promise<Partial<DocumentProcessingState>> => {
     const { appResults, registeredApps, sessionId } = state;
     const notifier = new SSEWorkflowNotifier(sessionId);
-    
+
     // Aggregate and validate app results
-    const validResults = appResults.filter(result => result.status === 'completed');
-    const failedResults = appResults.filter(result => result.status === 'failed');
-    
+    const validResults = appResults.filter(
+      (result) => result.status === "completed",
+    );
+    const failedResults = appResults.filter(
+      (result) => result.status === "failed",
+    );
+
     // Merge app findings with document analysis
     const enhancedFindings = await mergeAppFindings(validResults, state.report);
-    
+
     // Update document metadata with app information
     const appMetadata = {
       lastAppSync: new Date().toISOString(),
       autoTriggerEnabled: state.userSettings?.apps?.autoTrigger || false,
       approvedApps: state.userSettings?.apps?.approved || [],
-      processedApps: validResults.map(r => r.appId),
-      availableApps: registeredApps.map(r => r.appId)
+      processedApps: validResults.map((r) => r.appId),
+      availableApps: registeredApps.map((r) => r.appId),
     };
-    
+
     notifier.notifyPartialResult("app_results_aggregated", {
       successfulApps: validResults.length,
       failedApps: failedResults.length,
       registeredApps: registeredApps.length,
-      enhancedFindings: enhancedFindings.length
+      enhancedFindings: enhancedFindings.length,
     });
-    
+
     return {
       enhancedReport: {
         ...state.report,
         findings: enhancedFindings,
-        appResults: validResults
+        appResults: validResults,
       },
       appMetadata,
-      registeredApps
+      registeredApps,
     };
-  }
+  },
 );
 ```
 
@@ -2953,9 +3157,9 @@ export const appResultsAggregatorNode = traceNode("app_results_aggregator")(
 ```typescript
 // User settings for app integration
 export interface AppUserSettings {
-  autoTrigger: boolean;                    // Enable automatic app triggering
-  approved: string[];                      // Pre-approved app IDs
-  creditThreshold: number;                 // Maximum credits per app
+  autoTrigger: boolean; // Enable automatic app triggering
+  approved: string[]; // Pre-approved app IDs
+  creditThreshold: number; // Maximum credits per app
   dataSharing: {
     allowDICOMSharing: boolean;
     allowSignalsSharing: boolean;
@@ -2970,9 +3174,10 @@ export interface AppUserSettings {
 
 // Integration with user preferences
 const userAppSettings = await getUserAppSettings(userId);
-const shouldAutoTrigger = userAppSettings.autoTrigger && 
-                         app.credits <= userAppSettings.creditThreshold &&
-                         userAppSettings.approved.includes(app.id);
+const shouldAutoTrigger =
+  userAppSettings.autoTrigger &&
+  app.credits <= userAppSettings.creditThreshold &&
+  userAppSettings.approved.includes(app.id);
 ```
 
 #### **Benefits of 3rd Party App Integration**
@@ -2997,6 +3202,7 @@ This integration transforms the document import workflow into a comprehensive an
 ## Cross-References & Integration Points
 
 ### Related Documentation
+
 - **[AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md)**: Detailed analysis of signal processing enhancements
   - Enhanced signal architecture for intelligent medical data extraction
   - Dynamic signal discovery and validation systems
@@ -3005,12 +3211,15 @@ This integration transforms the document import workflow into a comprehensive an
 ### Key Integration Areas
 
 #### 1. **Signal Processing Integration**
+
 - **Current**: Basic signal normalization in Step 8 of workflow
 - **Enhanced**: Intelligent signal processing with validation and relationships
 - **Reference**: [AI_SIGNALS_IMPORT.md - Enhanced Signal Architecture](./AI_SIGNALS_IMPORT.md#enhanced-signal-architecture-for-langgraph)
 
 #### 2. **Document Type Signal Support**
+
 Each new document type includes signal extraction capabilities:
+
 - **Laboratory Reports**: Comprehensive lab signal extraction
 - **Vital Signs**: Real-time physiological measurements
 - **Cardiology**: Specialized cardiac measurements (EF, intervals)
@@ -3018,18 +3227,22 @@ Each new document type includes signal extraction capabilities:
 - **Reference**: [AI_SIGNALS_IMPORT.md - Dynamic Signal Discovery](./AI_SIGNALS_IMPORT.md#dynamic-signal-discovery-system)
 
 #### 3. **LangGraph Workflow Coordination**
+
 - **Main Workflow**: Document classification and routing
 - **Signal Workflow**: Parallel signal processing and validation
 - **Integration**: Shared state management and SSE streaming
 - **Reference**: [AI_SIGNALS_IMPORT.md - LangGraph Signal Processing Workflow](./AI_SIGNALS_IMPORT.md#langgraph-signal-processing-workflow)
 
 #### 4. **External Validation Alignment**
+
 - **Document Import**: Medical database integration via MCP
 - **Signal Validation**: Lab reference ranges and drug interaction checking
 - **Shared Infrastructure**: Common MCP servers and validation endpoints
 
 ### Implementation Coordination
+
 Both modernization efforts should be implemented in parallel with coordinated phases:
+
 - **Phase 1-2**: Foundation and provider abstraction (both documents)
 - **Phase 3-4**: LangGraph integration and signal enhancements
 - **Phase 5-6**: Advanced features and external validation

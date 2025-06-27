@@ -1,7 +1,7 @@
 export enum LanguageType {
-    en = 'en',
-    cs = 'cs',
-    de = 'de'
+  en = "en",
+  cs = "cs",
+  de = "de",
 }
 
-export default LanguageType
+export default LanguageType;

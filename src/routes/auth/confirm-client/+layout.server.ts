@@ -1,1 +1,1 @@
-export { load } from '../../+layout.server' 
+export { load } from "../../+layout.server";

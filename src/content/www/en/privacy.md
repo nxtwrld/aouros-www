@@ -1,7 +1,15 @@
 ---
 title: Privacy Policy
 description: Privacy Policy for Mediqom medical record management platform, detailing data collection, processing, security measures, and user rights.
-keywords: [privacy policy, data protection, medical privacy, healthcare data security, GDPR compliance, HIPAA compliance]
+keywords:
+  [
+    privacy policy,
+    data protection,
+    medical privacy,
+    healthcare data security,
+    GDPR compliance,
+    HIPAA compliance,
+  ]
 ---
 
 # Privacy Policy
@@ -14,13 +22,16 @@ keywords: [privacy policy, data protection, medical privacy, healthcare data sec
 At Mediqom ("we", "us", or "our"), we are committed to protecting your privacy and securing your personal health information. This Privacy Policy explains how we collect, use, process, and protect your information when you use our medical record management platform.
 
 ### 1.1 Our Commitment
+
 - **Zero-Knowledge Architecture**: We cannot access your encrypted medical data
 - **Data Minimization**: We collect only what's necessary for our services
 - **Transparency**: Clear information about all data practices
 - **User Control**: You decide how your data is used and shared
 
 ### 1.2 Scope
+
 This Privacy Policy applies to:
+
 - The Mediqom platform and mobile applications
 - Our website and marketing materials
 - Customer support and communication
@@ -29,7 +40,9 @@ This Privacy Policy applies to:
 ## 2. Information We Collect
 
 ### 2.1 Account Information
+
 When you create an account, we collect:
+
 - **Name** and contact information
 - **Email address** for account management
 - **Professional credentials** (for healthcare providers)
@@ -37,7 +50,9 @@ When you create an account, we collect:
 - **Account preferences** and settings
 
 ### 2.2 Health Information
+
 Medical data you upload or create:
+
 - **Medical records** and documents
 - **Health measurements** and vital signs
 - **Medication lists** and allergies
@@ -46,7 +61,9 @@ Medical data you upload or create:
 - **Voice recordings** (if using voice analysis features)
 
 ### 2.3 Usage Information
+
 Technical data about platform use:
+
 - **Login times** and session duration
 - **Feature usage** patterns
 - **Error logs** and system diagnostics
@@ -54,7 +71,9 @@ Technical data about platform use:
 - **Performance metrics** for service improvement
 
 ### 2.4 Communication Data
+
 When you contact us:
+
 - **Support tickets** and correspondence
 - **Feedback** and survey responses
 - **Chat logs** with customer service
@@ -63,7 +82,9 @@ When you contact us:
 ## 3. How We Use Your Information
 
 ### 3.1 Service Provision
+
 We use your information to:
+
 - **Provide medical record management** services
 - **Process AI analysis** of your health data
 - **Enable secure sharing** with healthcare providers
@@ -71,7 +92,9 @@ We use your information to:
 - **Support account management** and billing
 
 ### 3.2 Platform Improvement
+
 Usage data helps us:
+
 - **Improve AI accuracy** and performance
 - **Develop new features** based on user needs
 - **Fix bugs** and technical issues
@@ -79,7 +102,9 @@ Usage data helps us:
 - **Enhance security** measures
 
 ### 3.3 Communication
+
 We may contact you for:
+
 - **Service updates** and notifications
 - **Security alerts** and important notices
 - **Customer support** responses
@@ -87,7 +112,9 @@ We may contact you for:
 - **Legal compliance** requirements
 
 ### 3.4 Legal Requirements
+
 We may process data to:
+
 - **Comply with regulations** (HIPAA, GDPR, etc.)
 - **Respond to legal requests** from authorities
 - **Protect our rights** and defend legal claims
@@ -97,7 +124,9 @@ We may process data to:
 ## 4. Zero-Knowledge Encryption
 
 ### 4.1 How It Works
+
 Our zero-knowledge architecture ensures:
+
 - **Local key generation**: Encryption keys created on your device
 - **Client-side encryption**: Data encrypted before upload
 - **Server-side storage**: Only encrypted data stored on our servers
@@ -105,6 +134,7 @@ Our zero-knowledge architecture ensures:
 - **User-controlled sharing**: You control all data access
 
 ### 4.2 What This Means
+
 - **Complete privacy**: Your medical data is private even from us
 - **No data mining**: We cannot analyze your personal health information
 - **Secure sharing**: Only you can grant access to specific data
@@ -112,6 +142,7 @@ Our zero-knowledge architecture ensures:
 - **Ultimate control**: You own and control all your data
 
 ### 4.3 Technical Implementation
+
 - **AES-256 encryption** for data at rest
 - **RSA-4096 encryption** for key exchange
 - **TLS 1.3** for data in transit
@@ -121,7 +152,9 @@ Our zero-knowledge architecture ensures:
 ## 5. Data Sharing and Disclosure
 
 ### 5.1 Healthcare Providers
+
 We share data with healthcare providers only when:
+
 - **You explicitly authorize** the sharing
 - **Time-limited access** is granted by you
 - **Specific data sets** are selected by you
@@ -129,7 +162,9 @@ We share data with healthcare providers only when:
 - **Access can be revoked** at any time
 
 ### 5.2 Service Providers
+
 We work with trusted third parties for:
+
 - **Cloud infrastructure** (AWS, with encryption)
 - **Payment processing** (Stripe, for billing)
 - **Email services** (for account communications)
@@ -137,6 +172,7 @@ We work with trusted third parties for:
 - **Customer support** tools
 
 All service providers:
+
 - **Sign data processing agreements**
 - **Cannot access encrypted medical data**
 - **Follow strict security requirements**
@@ -144,7 +180,9 @@ All service providers:
 - **Provide liability coverage**
 
 ### 5.3 Legal Disclosures
+
 We may disclose information when:
+
 - **Required by law** or court order
 - **Protecting user safety** in emergency situations
 - **Preventing fraud** or illegal activity
@@ -152,7 +190,9 @@ We may disclose information when:
 - **Complying with regulations** (with minimal disclosure)
 
 ### 5.4 Business Transfers
+
 In case of merger or acquisition:
+
 - **Users will be notified** 30 days in advance
 - **Same privacy protections** will apply
 - **Opt-out options** will be provided
@@ -162,13 +202,17 @@ In case of merger or acquisition:
 ## 6. International Data Transfers
 
 ### 6.1 Cross-Border Processing
+
 Your data may be processed in:
+
 - **European Union** (primary data centers)
 - **United States** (backup and processing)
 - **Other regions** (with adequate protection)
 
 ### 6.2 Safeguards
+
 We ensure protection through:
+
 - **Adequacy decisions** by relevant authorities
 - **Standard contractual clauses** with processors
 - **Binding corporate rules** within our organization
@@ -176,7 +220,9 @@ We ensure protection through:
 - **Additional security measures** for sensitive data
 
 ### 6.3 Your Rights
+
 Regardless of processing location:
+
 - **Same privacy rights** apply globally
 - **Local law compliance** in your jurisdiction
 - **Data subject rights** fully honored
@@ -187,16 +233,18 @@ Regardless of processing location:
 
 ### 7.1 Retention Periods
 
-| Data Type | Retention Period | Purpose |
-|-----------|------------------|---------|
-| Active health records | Until account deletion | Service provision |
-| Inactive records | 7 years after last access | Legal compliance |
-| Account information | 30 days after deletion | Account recovery |
-| Usage logs | 2 years | Security and improvement |
-| Support communications | 3 years | Service quality |
+| Data Type              | Retention Period          | Purpose                  |
+| ---------------------- | ------------------------- | ------------------------ |
+| Active health records  | Until account deletion    | Service provision        |
+| Inactive records       | 7 years after last access | Legal compliance         |
+| Account information    | 30 days after deletion    | Account recovery         |
+| Usage logs             | 2 years                   | Security and improvement |
+| Support communications | 3 years                   | Service quality          |
 
 ### 7.2 Deletion Process
+
 When you delete data:
+
 - **Immediate removal** from active systems
 - **Backup deletion** within 30 days
 - **Secure erasure** using industry standards
@@ -204,7 +252,9 @@ When you delete data:
 - **Certificate of deletion** available upon request
 
 ### 7.3 Legal Holds
+
 In rare cases, we may retain data longer:
+
 - **Ongoing legal proceedings**
 - **Regulatory investigations**
 - **Law enforcement requests**
@@ -214,6 +264,7 @@ In rare cases, we may retain data longer:
 ## 8. Security Measures
 
 ### 8.1 Technical Safeguards
+
 - **End-to-end encryption** for all medical data
 - **Multi-factor authentication** for account access
 - **Regular security audits** by external firms
@@ -221,6 +272,7 @@ In rare cases, we may retain data longer:
 - **Vulnerability scanning** continuous
 
 ### 8.2 Administrative Controls
+
 - **Access controls** with least privilege principle
 - **Employee background checks** and training
 - **Incident response** procedures
@@ -228,6 +280,7 @@ In rare cases, we may retain data longer:
 - **Vendor management** programs
 
 ### 8.3 Physical Security
+
 - **Certified data centers** (SOC 2, ISO 27001)
 - **24/7 monitoring** and surveillance
 - **Biometric access controls**
@@ -235,6 +288,7 @@ In rare cases, we may retain data longer:
 - **Redundant systems** for availability
 
 ### 8.4 Monitoring and Response
+
 - **Real-time threat detection**
 - **Automated incident response**
 - **Security team on-call** 24/7
@@ -244,7 +298,9 @@ In rare cases, we may retain data longer:
 ## 9. Your Rights and Choices
 
 ### 9.1 Access Rights
+
 You can:
+
 - **View all personal data** we hold about you
 - **Download data** in machine-readable formats
 - **Request data portability** to other services
@@ -252,7 +308,9 @@ You can:
 - **Receive copies** of data processing agreements
 
 ### 9.2 Correction and Updates
+
 You have the right to:
+
 - **Correct inaccurate** personal information
 - **Update outdated** health records
 - **Complete incomplete** data sets
@@ -260,7 +318,9 @@ You have the right to:
 - **Request human review** of AI analyses
 
 ### 9.3 Deletion Rights
+
 You can request deletion of:
+
 - **Specific health records** or data sets
 - **Entire account** and all associated data
 - **Historical versions** of updated records
@@ -268,7 +328,9 @@ You can request deletion of:
 - **Third-party shared data** where possible
 
 ### 9.4 Consent Management
+
 Control your consent for:
+
 - **Marketing communications**
 - **Data sharing** with partners
 - **Research participation** (anonymized data)
@@ -276,7 +338,9 @@ Control your consent for:
 - **Cookie and tracking** preferences
 
 ### 9.5 Data Processing Objections
+
 You can object to:
+
 - **Automated decision-making**
 - **Profiling for marketing** purposes
 - **Data processing** based on legitimate interests
@@ -286,7 +350,9 @@ You can object to:
 ## 10. Cookies and Tracking
 
 ### 10.1 Types of Cookies
+
 We use cookies for:
+
 - **Essential functions** (login, security)
 - **Performance monitoring** (page load times)
 - **User preferences** (language, settings)
@@ -294,7 +360,9 @@ We use cookies for:
 - **Marketing** (with consent only)
 
 ### 10.2 Cookie Management
+
 You can:
+
 - **Disable cookies** in browser settings
 - **Choose cookie types** through our preference center
 - **Delete existing cookies** at any time
@@ -302,7 +370,9 @@ You can:
 - **Use privacy browsers** that block tracking
 
 ### 10.3 Third-Party Tools
+
 We use:
+
 - **Google Analytics** (anonymized, with opt-out)
 - **Stripe** (for payment processing)
 - **Intercom** (for customer support)
@@ -312,6 +382,7 @@ We use:
 ## 11. Children's Privacy
 
 ### 11.1 Age Requirements
+
 - **18 years minimum** for independent accounts
 - **Parental consent** required for minors
 - **Family accounts** allow supervised access
@@ -319,7 +390,9 @@ We use:
 - **Healthcare provider** accounts for pediatric records
 
 ### 11.2 Parental Controls
+
 Parents can:
+
 - **Create family accounts** for children
 - **Control data sharing** permissions
 - **Monitor account activity**
@@ -327,7 +400,9 @@ Parents can:
 - **Transfer accounts** when children reach majority
 
 ### 11.3 Special Protections
+
 For minors, we provide:
+
 - **Enhanced privacy** protections
 - **Limited data collection**
 - **No marketing** communications
@@ -337,7 +412,9 @@ For minors, we provide:
 ## 12. Regional Privacy Laws
 
 ### 12.1 European Union (GDPR)
+
 EU residents have additional rights:
+
 - **Data Protection Officer** contact available
 - **Supervisory authority** complaints
 - **Right to portability** in structured formats
@@ -345,7 +422,9 @@ EU residents have additional rights:
 - **Privacy by design** implementation
 
 ### 12.2 United States (HIPAA)
+
 For US healthcare data:
+
 - **Business Associate Agreement** with providers
 - **Minimum necessary** principle application
 - **Patient access** rights under HIPAA
@@ -353,7 +432,9 @@ For US healthcare data:
 - **Accounting of disclosures**
 
 ### 12.3 Czech Republic
+
 Local compliance includes:
+
 - **Data Protection Authority** oversight
 - **Czech language** support
 - **Local data residency** options
@@ -361,7 +442,9 @@ Local compliance includes:
 - **Consumer protection** rights
 
 ### 12.4 Other Jurisdictions
+
 We comply with applicable laws in:
+
 - **Canada** (PIPEDA)
 - **Australia** (Privacy Act)
 - **California** (CCPA/CPRA)
@@ -371,7 +454,9 @@ We comply with applicable laws in:
 ## 13. Changes to This Privacy Policy
 
 ### 13.1 Notification Process
+
 We will notify you of changes through:
+
 - **Email notification** to registered users
 - **Platform notifications** when you log in
 - **Website banners** for 30 days
@@ -379,6 +464,7 @@ We will notify you of changes through:
 - **Summary of changes** provided
 
 ### 13.2 Types of Changes
+
 - **Minor updates** (clarifications, contact info)
 - **Material changes** (new uses of data)
 - **Legal updates** (regulatory requirements)
@@ -386,7 +472,9 @@ We will notify you of changes through:
 - **Policy restructuring** (better organization)
 
 ### 13.3 Your Options
+
 When we make material changes:
+
 - **30-day notice** period before implementation
 - **Opt-out options** for new uses of data
 - **Account deletion** if you disagree
@@ -396,7 +484,9 @@ When we make material changes:
 ## 14. Data Processing Legal Basis
 
 ### 14.1 Lawful Basis (GDPR)
+
 We process data based on:
+
 - **Consent**: For marketing and optional features
 - **Contract**: To provide our services
 - **Legal obligation**: For regulatory compliance
@@ -404,7 +494,9 @@ We process data based on:
 - **Legitimate interests**: For platform security and improvement
 
 ### 14.2 Special Category Data
+
 Health data processing relies on:
+
 - **Explicit consent** for most processing
 - **Healthcare purposes** where permitted by law
 - **Public health** interests in some cases
@@ -412,7 +504,9 @@ Health data processing relies on:
 - **Legal claims** defense when necessary
 
 ### 14.3 Automated Decision-Making
+
 Our AI systems:
+
 - **Provide suggestions** only, not final decisions
 - **Include human oversight** requirements
 - **Allow opt-out** from automated processing
@@ -422,25 +516,30 @@ Our AI systems:
 ## 15. Contact Information
 
 ### 15.1 Privacy Officer
+
 **Email**: privacy@mediqom.com  
 **Phone**: +420 XXX XXX XXX  
 **Address**: [Privacy Department Address]  
 **Response Time**: 30 days maximum (usually within 5 business days)
 
 ### 15.2 Data Protection Officer (EU)
+
 **Email**: dpo@mediqom.com  
 **Address**: [EU Representative Address]  
 **Languages**: English, Czech, German  
 **Availability**: Monday-Friday, 9:00-17:00 CET
 
 ### 15.3 Regional Contacts
+
 - **US Healthcare**: hipaa@mediqom.com
 - **General Support**: support@mediqom.com
 - **Legal Department**: legal@mediqom.com
 - **Security Issues**: security@mediqom.com
 
 ### 15.4 Supervisory Authorities
+
 You can also contact:
+
 - **EU**: Your local Data Protection Authority
 - **Czech Republic**: Office for Personal Data Protection
 - **US**: Department of Health and Human Services
@@ -450,4 +549,4 @@ You can also contact:
 
 **By using Mediqom, you acknowledge that you have read, understood, and agree to this Privacy Policy.**
 
-*This Privacy Policy was last updated on December 1, 2024. Previous versions are available upon request.*
+_This Privacy Policy was last updated on December 1, 2024. Previous versions are available upon request._

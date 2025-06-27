@@ -7,6 +7,7 @@ This document outlines key integration points and cross-references between the A
 ## Related Documentation
 
 ### Core AI Strategy Documents
+
 - **[AI_SESSION_ANALYSIS.md](./AI_SESSION_ANALYSIS.md)** - Session analysis modernization aligned with document import strategy
 - **[AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md)** - Enhanced signal processing integration
 - **[AI_IMPLEMENTATION_GUIDE.md](./AI_IMPLEMENTATION_GUIDE.md)** - General implementation patterns
@@ -18,11 +19,13 @@ This document outlines key integration points and cross-references between the A
 ### 1. **Signal Processing Integration**
 
 **Document Import Integration:**
+
 - Document import workflows extract signals during Step 8 (Signals Normalization)
 - Enhanced signal discovery and validation through LangGraph workflows
 - Real-time signal validation using external medical databases
 
 **Cross-References:**
+
 - [AI_IMPORT_01_CURRENT_ANALYSIS.md](./AI_IMPORT_01_CURRENT_ANALYSIS.md) - Step 8: Signals Normalization
 - [AI_SIGNALS_IMPORT.md](./AI_SIGNALS_IMPORT.md) - Enhanced signal processing architecture
 - [AI_IMPORT_06_EXTERNAL_TOOLS.md](./AI_IMPORT_06_EXTERNAL_TOOLS.md) - MCP integration for signal validation
@@ -30,12 +33,14 @@ This document outlines key integration points and cross-references between the A
 ### 2. **Document Type Signal Support**
 
 **Enhanced Signal Extraction:**
+
 - Laboratory documents: Advanced lab result parsing with reference ranges
 - Dental documents: Tooth-specific signal extraction (teeth 1-32)
 - Imaging documents: DICOM metadata and measurement extraction
 - Prescription documents: Medication dosage and frequency signals
 
 **Implementation:**
+
 - Shared signal schemas across document types
 - Unified signal normalization pipeline
 - Cross-document signal correlation
@@ -43,11 +48,13 @@ This document outlines key integration points and cross-references between the A
 ### 3. **LangGraph Workflow Coordination**
 
 **Shared Workflow Patterns:**
+
 - Common provider abstraction layer across all AI operations
 - Unified state management patterns for complex workflows
 - Shared monitoring and evaluation infrastructure
 
 **Integration Points:**
+
 - Document import workflows can trigger session analysis workflows
 - Session analysis can reference imported document data
 - Shared caching and optimization strategies
@@ -55,12 +62,14 @@ This document outlines key integration points and cross-references between the A
 ### 4. **External Validation Alignment**
 
 **Medical Database Integration:**
+
 - Medication validation (Medi-Span, SUKL, DrugBank)
 - Diagnosis code validation (ICD-10, SNOMED CT)
 - Lab reference range validation
 - Drug interaction checking
 
 **Consistency:**
+
 - Same MCP servers used across document import and session analysis
 - Unified validation criteria and confidence scoring
 - Shared error handling and fallback mechanisms
@@ -68,6 +77,7 @@ This document outlines key integration points and cross-references between the A
 ## Implementation Coordination
 
 ### Phase Alignment
+
 Both document import and session analysis modernization follow aligned phases:
 
 1. **Foundation (Weeks 1-3)**: Shared provider abstraction and basic LangGraph structure
@@ -78,16 +88,19 @@ Both document import and session analysis modernization follow aligned phases:
 ### Shared Components
 
 **Provider Registry:**
+
 - Location: `src/lib/workflows/providers/registry.ts`
 - Supports: OpenAI, Anthropic, Google Gemini, Groq
 - Features: Intelligent selection, fallback chains, cost optimization
 
 **Monitoring Infrastructure:**
+
 - Location: `src/lib/workflows/monitoring/`
 - Tools: LangSmith integration, metrics collection, evaluation framework
 - Shared across all AI workflows
 
 **Schema Management:**
+
 - Location: `src/lib/workflows/schemas/`
 - Features: Enhanced schema system with localization and validation
 - Reused across document types and analysis types
@@ -95,12 +108,14 @@ Both document import and session analysis modernization follow aligned phases:
 ### Development Coordination
 
 **Team Responsibilities:**
+
 - Core workflow team: Provider abstraction and LangGraph infrastructure
 - Document team: Document-specific nodes and schemas
 - Session team: Session-specific nodes and real-time features
 - Integration team: Cross-workflow coordination and shared components
 
 **Testing Strategy:**
+
 - Unit tests for individual nodes and providers
 - Integration tests for complete workflows
 - End-to-end tests for cross-feature scenarios
@@ -109,11 +124,13 @@ Both document import and session analysis modernization follow aligned phases:
 ### Migration Strategy
 
 **Parallel Development:**
+
 - Document import and session analysis can be developed simultaneously
 - Shared components developed first to enable parallel work
 - Feature flags for gradual rollout
 
 **Risk Mitigation:**
+
 - Backward compatibility maintained during transition
 - Gradual migration with rollback capabilities
 - Comprehensive monitoring during deployment

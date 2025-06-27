@@ -1,12 +1,12 @@
 {
-    "figures": [
-        { 
-            "key": "male", 
-            "value": "Male" 
-        },
-        { 
-            "key": "female", 
-            "value": "Female" 
-        }
-    ]
+  "figures": [
+    {
+      "key": "male",
+      "value": "Male"
+    },
+    {
+      "key": "female",
+      "value": "Female"
+    }
+  ]
 }

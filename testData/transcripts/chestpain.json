@@ -1,52 +1,52 @@
 [
   {
-      "timestamp": "00:00",
-      "speaker": "doctor",
-      "text": "Hello, I'm Dr. Smith. What brings you in today?"
+    "timestamp": "00:00",
+    "speaker": "doctor",
+    "text": "Hello, I'm Dr. Smith. What brings you in today?"
   },
   {
-      "timestamp": "00:15",
-      "speaker": "patient",
-      "text": "I've been having chest pain for the past few days."
+    "timestamp": "00:15",
+    "speaker": "patient",
+    "text": "I've been having chest pain for the past few days."
   },
   {
-      "timestamp": "00:45",
-      "speaker": "doctor",
-      "text": "I'm sorry to hear that. Can you tell me more about the pain? When did it start exactly?"
+    "timestamp": "00:45",
+    "speaker": "doctor",
+    "text": "I'm sorry to hear that. Can you tell me more about the pain? When did it start exactly?"
   },
   {
-      "timestamp": "01:30",
-      "speaker": "patient",
-      "text": "It started about three days ago. It's a sharp pain in the center of my chest, and it comes and goes."
+    "timestamp": "01:30",
+    "speaker": "patient",
+    "text": "It started about three days ago. It's a sharp pain in the center of my chest, and it comes and goes."
   },
   {
-      "timestamp": "02:15",
-      "speaker": "doctor",
-      "text": "Does the pain get worse with any particular activity or movement?"
+    "timestamp": "02:15",
+    "speaker": "doctor",
+    "text": "Does the pain get worse with any particular activity or movement?"
   },
   {
-      "timestamp": "02:45",
-      "speaker": "patient",
-      "text": "Yes, it seems to get worse when I take deep breaths or when I'm lying down."
+    "timestamp": "02:45",
+    "speaker": "patient",
+    "text": "Yes, it seems to get worse when I take deep breaths or when I'm lying down."
   },
   {
-      "timestamp": "03:30",
-      "speaker": "doctor",
-      "text": "Have you noticed any other symptoms along with the chest pain? Like shortness of breath, sweating, or nausea?"
+    "timestamp": "03:30",
+    "speaker": "doctor",
+    "text": "Have you noticed any other symptoms along with the chest pain? Like shortness of breath, sweating, or nausea?"
   },
   {
-      "timestamp": "04:00",
-      "speaker": "patient",
-      "text": "I have been feeling a bit short of breath, especially when the pain is worse. No sweating or nausea though."
+    "timestamp": "04:00",
+    "speaker": "patient",
+    "text": "I have been feeling a bit short of breath, especially when the pain is worse. No sweating or nausea though."
   },
   {
-      "timestamp": "04:45",
-      "speaker": "doctor",
-      "text": "Thank you for that information. Have you had any similar episodes in the past?"
+    "timestamp": "04:45",
+    "speaker": "doctor",
+    "text": "Thank you for that information. Have you had any similar episodes in the past?"
   },
   {
-      "timestamp": "05:00",
-      "speaker": "patient",
-      "text": "No, this is the first time I've experienced anything like this."
+    "timestamp": "05:00",
+    "speaker": "patient",
+    "text": "No, this is the first time I've experienced anything like this."
   }
 ]

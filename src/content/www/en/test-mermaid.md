@@ -22,7 +22,7 @@ sequenceDiagram
     participant User
     participant Browser
     participant Server
-    
+
     User->>Browser: Click link
     Browser->>Server: HTTP Request
     Server-->>Browser: HTML Response
@@ -33,5 +33,5 @@ sequenceDiagram
 
 ```javascript
 // This should remain as a code block
-console.log('Hello World');
+console.log("Hello World");
 ```

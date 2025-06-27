@@ -11,6 +11,7 @@ The beta access system allows potential users to apply for early access to Mediq
 **Table**: `beta_applications`
 
 Key fields:
+
 - `id` - UUID primary key
 - `status` - pending, approved, rejected, converted
 - `user_type` - family, provider, developer, organization
@@ -19,6 +20,7 @@ Key fields:
 - `profile_id` - links to user profile when account is created
 
 The table includes RLS policies:
+
 - Anyone can insert (public form submission)
 - Only authenticated users can view/update (admin access)
 
@@ -27,6 +29,7 @@ The table includes RLS policies:
 **Endpoint**: `/v1/beta/apply`
 
 - **POST**: Submit new beta application
+
   - Validates all required fields using Zod schema
   - Checks for existing applications with same email
   - Returns success/error response
@@ -40,6 +43,7 @@ The table includes RLS policies:
 **Component**: `/src/components/www/BetaForm.svelte`
 
 Features:
+
 - Complete form matching the beta page design
 - Client-side validation
 - Loading states during submission
@@ -54,21 +58,25 @@ The form is automatically rendered on the `/www/[lang]/beta` page when the slug 
 ## Admin Workflow
 
 1. **View Applications**
+
    - Log into Supabase Dashboard
    - Navigate to Table Editor > beta_applications
    - View all applications with filtering/sorting
 
 2. **Review Applications**
+
    - Check application details
    - Add admin notes if needed
    - Update status field
 
 3. **Approve/Reject**
+
    - Change status to "approved" or "rejected"
    - Add notes about the decision
    - Save changes
 
 4. **Automated User Creation** (When status → "approved")
+
    - Database trigger automatically:
      - Creates auth user with their email
      - Creates profile entry linked to auth user
@@ -85,11 +93,13 @@ The form is automatically rendered on the `/www/[lang]/beta` page when the slug 
 ## Future Enhancements
 
 1. **Custom Email Templates**
+
    - Customize Supabase auth email templates
    - Add beta-specific welcome content
    - Branded email design
 
 2. **Enhanced Automation**
+
    - Auto-approve based on criteria
    - Bulk approval interface
    - Waitlist management
@@ -112,17 +122,20 @@ The form is automatically rendered on the `/www/[lang]/beta` page when the slug 
 ## Testing
 
 ### Beta Application Flow:
+
 1. Visit `/www/en/beta`
 2. Fill out the form with test data
 3. Submit and verify success message
 4. Check Supabase Dashboard for new application
 
 ### Beta Approval Flow:
+
 1. In Supabase Dashboard, change status to "approved"
 2. Verify auth user and profile are created
 3. Check that Supabase sends confirmation email
 
 ### Auth Protection:
+
 1. Set `BETA_ONLY_MODE=true`
 2. Try signing up with unapproved email → Should be rejected
 3. Try signing up with approved email → Should work

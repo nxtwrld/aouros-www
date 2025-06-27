@@ -1,139 +1,127 @@
 .-success {
-    background-color: var(--color-positive);
-    color: var(--color-positive-text);
-    font-weight: 600;
+  background-color: var(--color-positive);
+  color: var(--color-positive-text);
+  font-weight: 600;
 }
 
-
 .-mild {
-    background-color: var(--color-white);
-    color: var(--text);
+  background-color: var(--color-white);
+  color: var(--text);
 }
 .-warning,
 .-moderate {
-    --background-color: var(--color-warning);
-    --color: var(--color-warning-text);
-    --font-weight: 600;
+  --background-color: var(--color-warning);
+  --color: var(--color-warning-text);
+  --font-weight: 600;
 }
 .-error,
 .-fail,
 .-severe {
-    --background-color: var(--color-negative);
-    --color: var(--color-negative-text);
-    --font-weight: 600;
+  --background-color: var(--color-negative);
+  --color: var(--color-negative-text);
+  --font-weight: 600;
 }
 
-
-
-
-
 .severity-low {
-    --color: var(--color-background);
-
+  --color: var(--color-background);
 }
 .severity-moderate,
 .severity-medium {
-    --color: var(--color-white);
+  --color: var(--color-white);
 }
 .severity-severe,
 .severity-high {
-    --color: var(--color-negative);
+  --color: var(--color-negative);
 }
-
-
 
 .urgency-1 {
-    --color-urgency: var(--color-positive);
+  --color-urgency: var(--color-positive);
 }
 .urgency-2 {
-    --color-urgency: var(--color-urgency-low);
+  --color-urgency: var(--color-urgency-low);
 }
 .urgency-3 {
-    --color-urgency: var(--color-urgency-medium);
+  --color-urgency: var(--color-urgency-medium);
 }
 .urgency-4 {
-    --color-urgency: var(--color-urgency-high);
+  --color-urgency: var(--color-urgency-high);
 }
 .urgency-5 {
-    --color-urgency: var(--color-urgency-high);
+  --color-urgency: var(--color-urgency-high);
 }
-
-
 
 .category-none {
-    --color-category: var(--color-terciary);
+  --color-category: var(--color-terciary);
 }
 .category-MEDICAL_APPOINTMENT {
-    --color-category: var(--color-primary);
+  --color-category: var(--color-primary);
 }
 .category-OTHER {
-    --color-category: var(--color-secondary);
+  --color-category: var(--color-secondary);
 }
 .category-TELEMEDICINE {
-    --color-category: #003b7e;
+  --color-category: #003b7e;
 }
 .category-GROUP_THERAPY {
-    --color-category: #7700ff;
+  --color-category: #7700ff;
 }
 .category-PHYSICAL_THERAPY {
-    --color-category: #ff8000;
+  --color-category: #ff8000;
 }
 .category-COUNSELING {
-    --color-category: #ae00ff;
+  --color-category: #ae00ff;
 }
 .category-CHECKUP {
-    --color-category: var(--color-primary);
+  --color-category: var(--color-primary);
 }
 .category-HOME_CARE {
-    --color-category: #ee20b7;
+  --color-category: #ee20b7;
 }
-
-
 
 .category-exam {
-    --color: #00a3ac;
-    --color-text: #FFF;
+  --color: #00a3ac;
+  --color-text: #fff;
 }
 .category-therapy {
-    --color: #65ad38;
-    --color-text: #FFF;
+  --color: #65ad38;
+  --color-text: #fff;
 }
 .category-laboratory {
-    --color: #a2165c;
-    --color-text: #FFF;
+  --color: #a2165c;
+  --color-text: #fff;
 }
 .category-vital-signs {
-    --color: #ff0084;
-    --color-text: #FFF;
+  --color: #ff0084;
+  --color-text: #fff;
 }
 .category-imaging {
-    --color: #444444;
-    --color-text: #FFF;
+  --color: #444444;
+  --color-text: #fff;
 }
 .category-report {
-    --color: #00a566;
+  --color: #00a566;
 }
 .category-survey {
-    --color: #c300ff;
-    --color-text: #FFF;
+  --color: #c300ff;
+  --color-text: #fff;
 }
 .category-procedure {
-    --color: var(--color-interactivity);
-    --color-text: var(--color-interactivity-text);
+  --color: var(--color-interactivity);
+  --color-text: var(--color-interactivity-text);
 }
 .category-general {
-    --color: var(--color-interactivity);
-    --color-text: var(--color-interactivity-text);
+  --color: var(--color-interactivity);
+  --color-text: var(--color-interactivity-text);
 }
 .category-medication {
-    --color: #f5a623;
-    --color-text: #000;
+  --color: #f5a623;
+  --color-text: #000;
 }
 .category-other {
-    --color: #AAA;
-    --color-text: #000;
+  --color: #aaa;
+  --color-text: #000;
 }
 .category-selected {
-    --color: #009322;
-    --color-text: #FFF;
+  --color: #009322;
+  --color-text: #fff;
 }
