@@ -1,6 +1,6 @@
 import { error, type Actions } from "@sveltejs/kit";
 import { put } from "@vercel/blob";
-import { BLOB_READ_WRITE_TOKEN } from "$env/static/private";
+import { BLOB_READ_WRITE_TOKEN } from "$env/dynamic/private";
 
 export const actions: Actions = {
   upload: async ({ request }) => {
