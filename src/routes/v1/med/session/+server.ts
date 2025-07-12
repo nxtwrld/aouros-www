@@ -1,11 +1,10 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { analyze } from "$lib/session/analyzeConversation";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({
+export const POST: RequestHandler = async ({
   request,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   //const str = url.searchParams.get('drug');
 
   const { session } = await safeGetSession();
@@ -22,4 +21,4 @@ export async function POST({
   const result = await analyze(data);
 
   return json(result);
-}
+};

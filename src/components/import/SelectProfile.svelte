@@ -14,15 +14,21 @@
 
 
 
-    let profilesFound = (contact) ? findInProfiles(contact) : []; 
-
     interface Props {
         contact: DetectedProfileData;
         linkFrom?: 'top' | 'bottom';
         selected?: Profile;
     }
 
-    let { contact, linkFrom = 'top', selected = $bindable(profilesFound.length > 0 ? profilesFound[0] :  normalizePatientData(contact)) }: Props = $props();
+    let { contact, linkFrom = 'top', selected = $bindable() }: Props = $props();
+    
+    // Type assertion to ensure selected is never undefined after initialization
+    let selectedProfile: Profile;
+    
+    let profilesFound = contact ? findInProfiles(contact) : []; 
+    
+    // Initialize selected if not provided
+    selected = selected || (profilesFound.length > 0 ? profilesFound[0] : normalizePatientData(contact));
 
     let showSelectProfileModal: boolean = $state(false);
 

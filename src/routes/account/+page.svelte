@@ -63,17 +63,18 @@
 		});
 	})
 
-	let profileForm: HTMLFormElement = $state()
+	        let profileForm: HTMLFormElement | undefined = $state()
 	let loading = $state(false);
 	let error: string | null = $state(null);
 
 	let editData: EditData = $state({
-		bio: {
-			email: userEmail || '',
-			fullName: form?.fullName ?? profile?.fullName ?? '',
-			avatarUrl: profile?.avatarUrl ?? '',
-			language: form?.language ?? profile?.language ?? 'en'
-		},
+		                bio: {
+                        email: userEmail || '',
+                        fullName: (form as any)?.fullName ?? profile?.fullName ?? '',
+                        avatarUrl: profile?.avatarUrl ?? '',
+                        birthDate: profile?.birthDate ?? '',
+                        language: (form as any)?.language ?? profile?.language ?? 'en'
+                },
 		subscription: profile?.subscription ?? 'individual',
 		vcard: JSON.parse(profile?.vcard ?? '{}'),
 		insurance: JSON.parse(profile?.insurance ?? '{}'),
@@ -165,8 +166,8 @@
 				goto('/med');
 				return;
 			}
-			if (result.type === 'failure') {
-				error = result.data.error;
+			                        if (result.type === 'failure') {
+                                error = result.data?.error;
 				log.ui.error('error', error);
 				setStep(0);
 				loading = false
@@ -203,7 +204,7 @@
 
 	<div class="form modal">
 		{#if error}
-			<div class="form-instructions -error">{error.message}</div>
+			                        <div class="form-instructions -error">{typeof error === 'string' ? error : (error as any)?.message}</div>
 		{/if}
 		<div class="form-contents">
 		<SvelteComponent bind:data={editData} {profileForm}  bind:ready={readyNext} />

@@ -1,15 +1,14 @@
-import { error } from "@sveltejs/kit";
+import { error, type RequestHandler } from "@sveltejs/kit";
 import {
   getSession,
   getSessionEmitter,
   type SSEUpdate,
 } from "$lib/session/manager";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({
+export const GET: RequestHandler = async ({
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -154,4 +153,4 @@ export async function GET({
     console.error("❌ SSE stream error:", err);
     error(500, { message: "Failed to create SSE stream" });
   }
-}
+};

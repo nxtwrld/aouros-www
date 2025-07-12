@@ -1,10 +1,10 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 
-export async function GET({
+export const GET: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
   if (!session || !user) {
     return error(401, "Unauthorized");
@@ -22,14 +22,14 @@ export async function GET({
   }
 
   return new Response(data);
-}
+};
 
 // upload new avatar
-export async function POST({
+export const POST: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -65,4 +65,4 @@ export async function POST({
   return json({
     filename,
   });
-}
+};

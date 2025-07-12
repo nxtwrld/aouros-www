@@ -96,7 +96,11 @@ export default class Vaccination implements IAnimation {
         object.geometry.dispose();
       }
       if (object.material) {
-        object.material.dispose();
+        if (Array.isArray(object.material)) {
+          object.material.forEach(material => material.dispose());
+        } else {
+          object.material.dispose();
+        }
       }
       this.group.remove(object); // Remove object from scene
       const index = this.objects.indexOf(object); // Find the object in the original array

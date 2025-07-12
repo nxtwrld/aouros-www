@@ -28,6 +28,9 @@ export interface SessionData {
   // Real-time Data
   transcripts?: PartialTranscript[];
   realtimeUpdates: SSEUpdate[];
+  
+  // Analysis results - add missing property
+  analysis?: any;
 }
 
 // Message structure for conversation history

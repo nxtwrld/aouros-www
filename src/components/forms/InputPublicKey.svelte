@@ -64,7 +64,7 @@
 <div class="input" class:-error={error}>
     <textarea
         bind:value={value}
-        invalid="This is not a valid RSA-OAEP Public key" 
+        data-invalid="This is not a valid RSA-OAEP Public key" 
         {id} {required} {name} {placeholder}></textarea>
 
     <div class="details">
@@ -73,7 +73,7 @@
         {:else if key !== undefined}
             <Prop value={key.type} >Key Type</Prop>
             <Prop value={key.algorithm.name} >Algorithm</Prop>
-            <Prop value={key.algorithm?.hash.name} >HASH</Prop>
+            <Prop value={(key.algorithm as any)?.hash?.name} >HASH</Prop>
             <Prop value={key.usages.join(', ')} >Usages</Prop>
         {/if}
     </div>

@@ -1,14 +1,13 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import {
   loadSubscription,
   updateSubscription,
 } from "$lib/user/subscriptions.server.js";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({
+export const GET: RequestHandler = async ({
   request,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   try {
     const { session } = await safeGetSession();
 
@@ -34,12 +33,12 @@ export async function GET({
     console.error("[API] /v1/med/profiles - Unexpected error:", authError);
     return error(500, { message: "Internal server error" });
   }
-}
+};
 
-export async function POST({
+export const POST: RequestHandler = async ({
   request,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   try {
     const { session } = await safeGetSession();
 
@@ -121,4 +120,4 @@ export async function POST({
     console.error("[API] /v1/med/profiles POST - Unexpected error:", authError);
     return error(500, { message: "Internal server error" });
   }
-}
+};

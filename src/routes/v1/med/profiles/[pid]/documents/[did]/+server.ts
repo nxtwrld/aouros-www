@@ -1,11 +1,10 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({
+export const GET: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -28,18 +27,18 @@ export async function GET({
   }
 
   return json(documentsLoad);
-}
+};
 
 /**
  * Update document with new data
  * @param param0
  * @returns
  */
-export async function PUT({
+export const PUT: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -91,7 +90,7 @@ export async function PUT({
   console.log("Document udpated", documentUpdate);
 
   return json(documentUpdate);
-}
+};
 
 /**
  * Delete document
@@ -99,11 +98,11 @@ export async function PUT({
  * @returns
  */
 
-export async function DELETE({
+export const DELETE: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -122,4 +121,4 @@ export async function DELETE({
   }
 
   return json(documentDelete);
-}
+};

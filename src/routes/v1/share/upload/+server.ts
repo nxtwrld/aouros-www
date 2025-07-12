@@ -1,7 +1,6 @@
-import { error } from "@sveltejs/kit";
+import { error, type RequestHandler } from "@sveltejs/kit";
 
-/** @type {import('./$types.d').RequestHandler} */
-export function POST({ url }) {
+export const POST: RequestHandler = async ({ url }) => {
   const min = Number(url.searchParams.get("min") ?? "0");
   const max = Number(url.searchParams.get("max") ?? "1");
 
@@ -14,4 +13,4 @@ export function POST({ url }) {
   const random = min + Math.random() * d;
 
   return new Response(String(random));
-}
+};

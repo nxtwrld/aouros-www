@@ -1,4 +1,4 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import {
   getSession,
   addTranscript,
@@ -16,12 +16,11 @@ const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
 });
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({
+export const POST: RequestHandler = async ({
   params,
   request,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -116,7 +115,7 @@ export async function POST({
     console.error("❌ Failed to process audio chunk:", err);
     error(500, { message: "Failed to process audio chunk" });
   }
-}
+};
 
 // Determine if we should trigger analysis using hybrid approach
 function shouldTriggerAnalysis(sessionData: any): boolean {

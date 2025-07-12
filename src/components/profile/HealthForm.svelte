@@ -23,7 +23,7 @@
 
 
 
-    console.log('property', config.property);
+    // console.log('property', config.property);
 
     const FORM = FORM_DEFINITION.reduce((acc, prop) => {
         acc[prop.key] = prop;
@@ -99,7 +99,7 @@
             // map time-series items
             if (prop.type === 'time-series' && prop.items) {
                 acc[prop.key] = prop.items.reduce((acc, item) => {
-                    acc[item.key] = value || item?.default || '';
+                    acc[item.key] = value || (item as any)?.default || '';
                     if (item.key === 'date') {
                         acc[item.key] = new Date().toISOString();
                     }
@@ -115,7 +115,7 @@
                 return acc;
             }
             // map property values
-            acc[prop.key] =  value || prop?.default || '';
+            acc[prop.key] =  value || (prop as any)?.default || '';
             return acc;
         }, {} as { [key: string]: any });
     }

@@ -61,7 +61,7 @@
 
     onMount(() => {
         Howler.volume(0.3);
-        Howler.mobileAutoEnable = true;
+        // Howler.mobileAutoEnable = true; // This property doesn't exist in current types
         for (let soundName in soundFiles) {
             sounds[soundName] = new Sound(soundFiles[soundName]);
         }

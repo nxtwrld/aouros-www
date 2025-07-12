@@ -1,11 +1,10 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { getSession } from "$lib/session/manager";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({
+export const GET: RequestHandler = async ({
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -42,4 +41,4 @@ export async function GET({
     console.error("Failed to get session status:", err);
     error(500, { message: "Failed to get session status" });
   }
-}
+};

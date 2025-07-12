@@ -1,11 +1,11 @@
-import { env } from "$env/dynamic/private";
+import * as env from "$env/static/public";
 
 export const FEATURE_FLAGS = {
-  ENHANCED_SIGNAL_PROCESSING: env.ENABLE_ENHANCED_SIGNALS === "true",
-  LANGGRAPH_WORKFLOW: env.ENABLE_LANGGRAPH === "true",
-  MULTI_PROVIDER_AI: env.ENABLE_MULTI_PROVIDER_AI === "true",
-  EXTERNAL_VALIDATION: env.ENABLE_EXTERNAL_VALIDATION === "true",
-  SPECIALIZED_UI: env.ENABLE_SPECIALIZED_UI === "true",
+  ENHANCED_SIGNAL_PROCESSING: (env as any).PUBLIC_ENABLE_ENHANCED_SIGNALS === "true",
+  LANGGRAPH_WORKFLOW: (env as any).PUBLIC_ENABLE_LANGGRAPH === "true",
+  MULTI_PROVIDER_AI: (env as any).PUBLIC_ENABLE_MULTI_PROVIDER_AI === "true",
+  EXTERNAL_VALIDATION: (env as any).PUBLIC_ENABLE_EXTERNAL_VALIDATION === "true",
+  SPECIALIZED_UI: (env as any).PUBLIC_ENABLE_SPECIALIZED_UI === "true",
 };
 
 // Helper function to check if a feature is enabled

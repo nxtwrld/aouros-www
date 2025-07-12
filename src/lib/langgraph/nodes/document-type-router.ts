@@ -1,57 +1,72 @@
-// Document Type Router Node - Intelligent routing based on document content analysis
-// Selects appropriate specialized schema for enhanced medical document processing
+// Document Type Router Node - AI Feature Detection Based Routing
+// Uses comprehensive AI feature detection to determine which sections to populate
 
 import type { DocumentProcessingState } from "../state";
-import { 
-  detectDocumentType, 
-  getSchemaForDocumentType,
-  enhancedSchemaRegistry,
-  type EnhancedSchemaCapabilities 
-} from "$lib/configurations/enhanced";
-import { FEATURE_FLAGS } from "$lib/utils/feature-flags";
+import { log } from "$lib/logging/logger";
+import { isStateTransitionDebuggingEnabled } from "$lib/config/logging-config";
 
 export interface DocumentTypeAnalysis {
-  detectedType: string | null;
+  detectedSections: string[];
   confidence: number;
-  alternativeTypes: Array<{ type: string; confidence: number }>;
+  documentType: string;
+  detectedType: string; // Add the missing detectedType property
+  medicalSpecialty: string[];
+  urgencyLevel: number;
+  language: string;
   contentFeatures: {
     medicalTermDensity: number;
     structuredData: boolean;
     reportLength: number;
     specialtyIndicators: string[];
   };
-  schemaRecommendation: EnhancedSchemaCapabilities | null;
+  sectionFlags: Record<string, boolean>;
+}
+
+export interface ProcessingGroup {
+  id: string;
+  name: string;
+  processors: string[];
+  dependencies: string[];
+  canRunInParallel: boolean;
+}
+
+export interface ProcessingPlan {
+  parallelGroups: ProcessingGroup[];
+  sequentialSteps: string[];
+  estimatedDuration: number;
+  totalProcessors: number;
 }
 
 export class DocumentTypeRouter {
   /**
-   * Analyzes document content to determine optimal processing schema
+   * Analyzes AI feature detection results to determine document sections
    */
-  static analyzeDocumentType(
+  static analyzeDocumentSections(
+    aiDetectionResults: Record<string, any>,
     content: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): DocumentTypeAnalysis {
     const analysis: DocumentTypeAnalysis = {
-      detectedType: null,
-      confidence: 0,
-      alternativeTypes: [],
+      detectedSections: [],
+      confidence: 0.9, // High confidence since AI did the detection
+      documentType: aiDetectionResults.documentType || "clinical_report",
+      detectedType: aiDetectionResults.detectedType || aiDetectionResults.documentType || "clinical_report",
+      medicalSpecialty: aiDetectionResults.medicalSpecialty || [
+        "general_medicine",
+      ],
+      urgencyLevel: aiDetectionResults.urgencyLevel || 1,
+      language: aiDetectionResults.language || "en",
       contentFeatures: this.extractContentFeatures(content),
-      schemaRecommendation: null,
+      sectionFlags: {},
     };
 
-    // Primary detection using pattern matching
-    const primaryDetection = detectDocumentType(content);
-    
-    if (primaryDetection) {
-      analysis.detectedType = primaryDetection;
-      analysis.schemaRecommendation = getSchemaForDocumentType(primaryDetection);
-    }
+    // Extract section flags from AI detection results
+    analysis.sectionFlags = this.extractSectionFlags(aiDetectionResults);
 
-    // Calculate confidence score based on multiple factors
-    analysis.confidence = this.calculateConfidence(content, analysis);
-
-    // Find alternative document types with lower confidence
-    analysis.alternativeTypes = this.findAlternativeTypes(content, primaryDetection);
+    // Build detected sections list from AI flags
+    analysis.detectedSections = this.buildDetectedSectionsList(
+      analysis.sectionFlags,
+    );
 
     // Enhance with metadata if available
     if (metadata) {
@@ -59,6 +74,72 @@ export class DocumentTypeRouter {
     }
 
     return analysis;
+  }
+
+  /**
+   * Extracts section flags from AI detection results
+   */
+  private static extractSectionFlags(
+    aiResults: Record<string, any>,
+  ): Record<string, boolean> {
+    const flags: Record<string, boolean> = {};
+
+    // Core medical sections
+    flags.hasSummary = aiResults.hasSummary || false;
+    flags.hasDiagnosis = aiResults.hasDiagnosis || false;
+    flags.hasBodyParts = aiResults.hasBodyParts || false;
+    flags.hasPerformer = aiResults.hasPerformer || false;
+    flags.hasRecommendations = aiResults.hasRecommendations || false;
+    flags.hasSignals = aiResults.hasSignals || false;
+    flags.hasPrescriptions = aiResults.hasPrescriptions || false;
+    flags.hasImmunizations = aiResults.hasImmunizations || false;
+
+    // Medical specialty sections
+    flags.hasImaging = aiResults.hasImaging || false;
+    flags.hasDental = aiResults.hasDental || false;
+    flags.hasAdmission = aiResults.hasAdmission || false;
+    flags.hasProcedures = aiResults.hasProcedures || false;
+    flags.hasAnesthesia = aiResults.hasAnesthesia || false;
+    flags.hasSpecimens = aiResults.hasSpecimens || false;
+    flags.hasMicroscopic = aiResults.hasMicroscopic || false;
+    flags.hasMolecular = aiResults.hasMolecular || false;
+    flags.hasECG = aiResults.hasECG || false;
+    flags.hasEcho = aiResults.hasEcho || false;
+    flags.hasTriage = aiResults.hasTriage || false;
+    flags.hasTreatments = aiResults.hasTreatments || false;
+    flags.hasAssessment = aiResults.hasAssessment || false;
+
+    // Enhanced specialty sections
+    flags.hasTumorCharacteristics = aiResults.hasTumorCharacteristics || false;
+    flags.hasTreatmentPlan = aiResults.hasTreatmentPlan || false;
+    flags.hasTreatmentResponse = aiResults.hasTreatmentResponse || false;
+    flags.hasImagingFindings = aiResults.hasImagingFindings || false;
+    flags.hasGrossFindings = aiResults.hasGrossFindings || false;
+    flags.hasSpecialStains = aiResults.hasSpecialStains || false;
+    flags.hasAllergies = aiResults.hasAllergies || false;
+    flags.hasMedications = aiResults.hasMedications || false;
+    flags.hasSocialHistory = aiResults.hasSocialHistory || false;
+
+    return flags;
+  }
+
+  /**
+   * Builds detected sections list from AI flags
+   */
+  private static buildDetectedSectionsList(
+    flags: Record<string, boolean>,
+  ): string[] {
+    const sections: string[] = [];
+
+    Object.entries(flags).forEach(([flag, isPresent]) => {
+      if (isPresent) {
+        // Convert hasXxx flag to section name
+        const sectionName = flag.replace(/^has/, "").toLowerCase();
+        sections.push(sectionName);
+      }
+    });
+
+    return sections;
   }
 
   /**
@@ -70,24 +151,25 @@ export class DocumentTypeRouter {
 
     // Medical terminology density
     const medicalTerms = this.getMedicalTerms();
-    const medicalWordCount = words.filter(word => 
-      medicalTerms.some(term => word.includes(term))
+    const medicalWordCount = words.filter((word) =>
+      medicalTerms.some((term) => word.includes(term)),
     ).length;
-    const medicalTermDensity = totalWords > 0 ? medicalWordCount / totalWords : 0;
+    const medicalTermDensity =
+      totalWords > 0 ? medicalWordCount / totalWords : 0;
 
     // Structured data indicators
     const structuredIndicators = [
-      /:\s*\d+/g,           // Numbers with colons (lab values)
-      /\d+\s*-\s*\d+/g,     // Ranges
-      /\d+\.\d+/g,          // Decimal values
-      /\d+%/g,              // Percentages
+      /:\s*\d+/g, // Numbers with colons (lab values)
+      /\d+\s*-\s*\d+/g, // Ranges
+      /\d+\.\d+/g, // Decimal values
+      /\d+%/g, // Percentages
       /\b\d+\s*(mg|ml|cm|mm|g|kg)\b/g, // Units
     ];
-    
+
     const structuredMatches = structuredIndicators.reduce((count, pattern) => {
       return count + (content.match(pattern) || []).length;
     }, 0);
-    
+
     const structuredData = structuredMatches > 5; // Threshold for structured content
 
     // Specialty indicators
@@ -106,12 +188,36 @@ export class DocumentTypeRouter {
    */
   private static getMedicalTerms(): string[] {
     return [
-      'diagnosis', 'treatment', 'medication', 'procedure', 'surgery',
-      'pathology', 'biopsy', 'microscopic', 'histology', 'specimen',
-      'cardiac', 'ecg', 'echo', 'catheter', 'rhythm',
-      'radiology', 'imaging', 'scan', 'contrast', 'findings',
-      'oncology', 'tumor', 'cancer', 'chemotherapy', 'radiation',
-      'patient', 'clinical', 'medical', 'therapeutic', 'diagnostic'
+      "diagnosis",
+      "treatment",
+      "medication",
+      "procedure",
+      "surgery",
+      "pathology",
+      "biopsy",
+      "microscopic",
+      "histology",
+      "specimen",
+      "cardiac",
+      "ecg",
+      "echo",
+      "catheter",
+      "rhythm",
+      "radiology",
+      "imaging",
+      "scan",
+      "contrast",
+      "findings",
+      "oncology",
+      "tumor",
+      "cancer",
+      "chemotherapy",
+      "radiation",
+      "patient",
+      "clinical",
+      "medical",
+      "therapeutic",
+      "diagnostic",
     ];
   }
 
@@ -123,18 +229,30 @@ export class DocumentTypeRouter {
     const lowerContent = content.toLowerCase();
 
     const specialtyPatterns = {
-      surgical: ['operative', 'incision', 'suture', 'anesthesia', 'postoperative'],
-      pathology: ['microscopic', 'specimen', 'histology', 'immunohistochemistry', 'cytology'],
-      cardiology: ['ecg', 'echo', 'cardiac', 'heart rate', 'blood pressure'],
-      radiology: ['ct scan', 'mri', 'x-ray', 'ultrasound', 'contrast'],
-      oncology: ['chemotherapy', 'radiation', 'tumor', 'metastasis', 'staging']
+      surgical: [
+        "operative",
+        "incision",
+        "suture",
+        "anesthesia",
+        "postoperative",
+      ],
+      pathology: [
+        "microscopic",
+        "specimen",
+        "histology",
+        "immunohistochemistry",
+        "cytology",
+      ],
+      cardiology: ["ecg", "echo", "cardiac", "heart rate", "blood pressure"],
+      radiology: ["ct scan", "mri", "x-ray", "ultrasound", "contrast"],
+      oncology: ["chemotherapy", "radiation", "tumor", "metastasis", "staging"],
     };
 
     for (const [specialty, patterns] of Object.entries(specialtyPatterns)) {
-      const matchCount = patterns.filter(pattern => 
-        lowerContent.includes(pattern)
+      const matchCount = patterns.filter((pattern) =>
+        lowerContent.includes(pattern),
       ).length;
-      
+
       if (matchCount > 0) {
         indicators.push(`${specialty}:${matchCount}`);
       }
@@ -144,299 +262,461 @@ export class DocumentTypeRouter {
   }
 
   /**
-   * Calculates confidence score for document type detection
+   * Creates a parallel processing plan based on detected sections
    */
-  private static calculateConfidence(
-    content: string, 
-    analysis: DocumentTypeAnalysis
-  ): number {
-    if (!analysis.detectedType) return 0;
-
-    let confidence = 0.5; // Base confidence
-
-    // Pattern match strength (primary factor)
-    const patternMatches = this.countPatternMatches(content, analysis.detectedType);
-    confidence += Math.min(patternMatches * 0.1, 0.3);
-
-    // Medical terminology density
-    if (analysis.contentFeatures.medicalTermDensity > 0.1) {
-      confidence += 0.1;
-    }
-
-    // Structured data presence
-    if (analysis.contentFeatures.structuredData) {
-      confidence += 0.1;
-    }
-
-    // Document length appropriateness
-    const expectedLength = this.getExpectedDocumentLength(analysis.detectedType);
-    const lengthScore = this.calculateLengthScore(
-      analysis.contentFeatures.reportLength, 
-      expectedLength
-    );
-    confidence += lengthScore * 0.1;
-
-    // Specialty indicator strength
-    const specialtyScore = this.calculateSpecialtyScore(
-      analysis.contentFeatures.specialtyIndicators,
-      analysis.detectedType
-    );
-    confidence += specialtyScore * 0.1;
-
-    return Math.min(confidence, 1.0);
-  }
-
-  /**
-   * Counts pattern matches for a specific document type
-   */
-  private static countPatternMatches(content: string, docType: string): number {
-    const patterns = {
-      surgical: [
-        /operative\s+report/gi,
-        /surgical\s+procedure/gi,
-        /operation\s+performed/gi,
-        /incision/gi,
-        /suture/gi
-      ],
-      pathology: [
-        /pathology\s+report/gi,
-        /microscopic\s+examination/gi,
-        /gross\s+description/gi,
-        /histology/gi,
-        /specimen/gi
-      ],
-      cardiology: [
-        /ecg|electrocardiogram/gi,
-        /echocardiogram/gi,
-        /cardiac\s+catheterization/gi,
-        /stress\s+test/gi,
-        /heart\s+rate/gi
-      ],
-      radiology: [
-        /ct\s+scan/gi,
-        /mri\s+scan/gi,
-        /x-ray/gi,
-        /ultrasound/gi,
-        /radiologic/gi
-      ],
-      oncology: [
-        /chemotherapy/gi,
-        /radiation\s+therapy/gi,
-        /tumor/gi,
-        /oncology/gi,
-        /cancer\s+treatment/gi
-      ]
+  static createProcessingPlan(detectedSections: string[]): ProcessingPlan {
+    const plan: ProcessingPlan = {
+      parallelGroups: [],
+      sequentialSteps: [],
+      estimatedDuration: 0,
+      totalProcessors: 0,
     };
 
-    const docPatterns = patterns[docType as keyof typeof patterns] || [];
-    return docPatterns.reduce((count, pattern) => {
-      return count + (content.match(pattern) || []).length;
-    }, 0);
-  }
+    // Always start with medical analysis (sequential)
+    plan.sequentialSteps.push("medical-analysis");
 
-  /**
-   * Gets expected document length for type
-   */
-  private static getExpectedDocumentLength(docType: string): { min: number; max: number } {
-    const lengths = {
-      surgical: { min: 1000, max: 5000 },
-      pathology: { min: 800, max: 4000 },
-      cardiology: { min: 500, max: 2500 },
-      radiology: { min: 300, max: 2000 },
-      oncology: { min: 1200, max: 6000 }
-    };
-
-    return lengths[docType as keyof typeof lengths] || { min: 500, max: 3000 };
-  }
-
-  /**
-   * Calculates length appropriateness score
-   */
-  private static calculateLengthScore(
-    actualLength: number, 
-    expected: { min: number; max: number }
-  ): number {
-    if (actualLength >= expected.min && actualLength <= expected.max) {
-      return 1.0; // Perfect length
+    // Group 1: Quantitative Analysis (can run in parallel)
+    const quantitativeProcessors: string[] = [];
+    if (
+      detectedSections.some((s) =>
+        ["signals", "laboratory", "ecg", "echo"].includes(s),
+      )
+    ) {
+      quantitativeProcessors.push("signal-processing");
     }
-    
-    if (actualLength < expected.min) {
-      return Math.max(0, actualLength / expected.min);
+    if (detectedSections.some((s) => ["ecg", "echo"].includes(s))) {
+      quantitativeProcessors.push("cardiac-analysis");
     }
-    
-    // Too long - diminishing returns
-    const excess = actualLength - expected.max;
-    return Math.max(0.5, 1.0 - (excess / expected.max) * 0.5);
-  }
 
-  /**
-   * Calculates specialty indicator score
-   */
-  private static calculateSpecialtyScore(indicators: string[], docType: string): number {
-    const relevantIndicator = indicators.find(indicator => 
-      indicator.startsWith(docType + ':')
-    );
-    
-    if (!relevantIndicator) return 0;
-    
-    const count = parseInt(relevantIndicator.split(':')[1]);
-    return Math.min(count / 3, 1.0); // Normalize to 0-1
-  }
+    if (quantitativeProcessors.length > 0) {
+      plan.parallelGroups.push({
+        id: "quantitative-analysis",
+        name: "Quantitative Analysis Group",
+        processors: quantitativeProcessors,
+        dependencies: ["medical-analysis"],
+        canRunInParallel: true,
+      });
+    }
 
-  /**
-   * Finds alternative document types with confidence scores
-   */
-  private static findAlternativeTypes(
-    content: string, 
-    primaryType: string | null
-  ): Array<{ type: string; confidence: number }> {
-    const alternatives: Array<{ type: string; confidence: number }> = [];
-    
-    for (const docType of Object.keys(enhancedSchemaRegistry)) {
-      if (docType === primaryType) continue;
-      
-      const patternMatches = this.countPatternMatches(content, docType);
-      if (patternMatches > 0) {
-        const confidence = Math.min(patternMatches * 0.1, 0.8);
-        alternatives.push({ type: docType, confidence });
+    // Group 2: Imaging Analysis (can run in parallel)
+    const imagingProcessors: string[] = [];
+    if (
+      detectedSections.some((s) => ["imaging", "imagingfindings"].includes(s))
+    ) {
+      imagingProcessors.push("imaging-processing");
+    }
+    if (detectedSections.includes("imaging")) {
+      imagingProcessors.push("dicom-processing");
+    }
+
+    if (imagingProcessors.length > 0) {
+      plan.parallelGroups.push({
+        id: "imaging-analysis",
+        name: "Imaging Analysis Group",
+        processors: imagingProcessors,
+        dependencies: ["medical-analysis"],
+        canRunInParallel: true,
+      });
+    }
+
+    // Group 3: Tissue Analysis (can run in parallel)
+    const tissueProcessors: string[] = [];
+    if (
+      detectedSections.some((s) =>
+        [
+          "specimens",
+          "microscopic",
+          "molecular",
+          "grossfindings",
+          "specialstains",
+        ].includes(s),
+      )
+    ) {
+      tissueProcessors.push("pathology-processing");
+    }
+    if (detectedSections.includes("molecular")) {
+      tissueProcessors.push("genetic-analysis");
+    }
+
+    if (tissueProcessors.length > 0) {
+      plan.parallelGroups.push({
+        id: "tissue-analysis",
+        name: "Tissue Analysis Group",
+        processors: tissueProcessors,
+        dependencies: ["medical-analysis"],
+        canRunInParallel: true,
+      });
+    }
+
+    // Group 4: Clinical Procedures (can run in parallel)
+    const clinicalProcessors: string[] = [];
+    if (
+      detectedSections.some((s) => ["procedures", "anesthesia"].includes(s))
+    ) {
+      clinicalProcessors.push("procedure-processing");
+    }
+    if (
+      detectedSections.some((s) => ["treatments", "treatmentplan"].includes(s))
+    ) {
+      clinicalProcessors.push("treatment-analysis");
+    }
+
+    if (clinicalProcessors.length > 0) {
+      plan.parallelGroups.push({
+        id: "clinical-procedures",
+        name: "Clinical Procedures Group",
+        processors: clinicalProcessors,
+        dependencies: ["medical-analysis"],
+        canRunInParallel: true,
+      });
+    }
+
+    // Oncology processing (depends on pathology if present)
+    if (
+      detectedSections.some((s) =>
+        ["tumorcharacteristics", "treatmentplan", "treatmentresponse"].includes(
+          s,
+        ),
+      )
+    ) {
+      const dependencies = ["medical-analysis"];
+      if (tissueProcessors.length > 0) {
+        dependencies.push("tissue-analysis");
       }
+      plan.sequentialSteps.push("oncology-processing");
     }
-    
-    return alternatives.sort((a, b) => b.confidence - a.confidence).slice(0, 3);
+
+    // Cross-validation aggregator (after all parallel groups)
+    if (plan.parallelGroups.length > 0) {
+      plan.sequentialSteps.push("cross-validation-aggregator");
+    }
+
+    // Always end with quality gate
+    plan.sequentialSteps.push("quality-gate");
+
+    // Calculate totals
+    plan.totalProcessors =
+      plan.sequentialSteps.length +
+      plan.parallelGroups.reduce(
+        (sum, group) => sum + group.processors.length,
+        0,
+      );
+
+    // Estimate duration (simplified: parallel groups count as 1 unit)
+    plan.estimatedDuration =
+      plan.sequentialSteps.length + plan.parallelGroups.length;
+
+    return plan;
+  }
+
+  /**
+   * Converts processing plan to simple step array (backwards compatibility)
+   */
+  static getProcessingSteps(detectedSections: string[]): string[] {
+    const plan = this.createProcessingPlan(detectedSections);
+    const steps: string[] = [];
+
+    // Add sequential steps
+    steps.push(...plan.sequentialSteps);
+
+    // Add all processors from parallel groups (flattened)
+    for (const group of plan.parallelGroups) {
+      steps.push(...group.processors);
+    }
+
+    return steps;
   }
 
   /**
    * Enhances analysis with available metadata
    */
   private static enhanceWithMetadata(
-    analysis: DocumentTypeAnalysis, 
-    metadata: Record<string, any>
+    analysis: DocumentTypeAnalysis,
+    metadata: Record<string, any>,
   ): void {
     // Use metadata hints to boost confidence
-    if (metadata.documentType && metadata.documentType === analysis.detectedType) {
-      analysis.confidence = Math.min(analysis.confidence + 0.2, 1.0);
-    }
-    
-    // Check for specialty in metadata
-    if (metadata.specialty) {
-      const specialtyMatch = analysis.detectedType === metadata.specialty.toLowerCase();
-      if (specialtyMatch) {
-        analysis.confidence = Math.min(analysis.confidence + 0.15, 1.0);
+    if (metadata.documentType) {
+      if (metadata.documentType === analysis.documentType) {
+        analysis.confidence = Math.min(analysis.confidence + 0.1, 1.0);
       }
     }
-    
+
+    // Check for specialty in metadata
+    if (metadata.specialty) {
+      const specialtyMatch = analysis.medicalSpecialty.includes(
+        metadata.specialty.toLowerCase(),
+      );
+      if (specialtyMatch) {
+        analysis.confidence = Math.min(analysis.confidence + 0.05, 1.0);
+      }
+    }
+
     // Source system hints
     if (metadata.source) {
       const sourceHints = {
-        'surgical_system': 'surgical',
-        'pathology_lab': 'pathology',
-        'cardiology_dept': 'cardiology',
-        'radiology_pacs': 'radiology',
-        'oncology_ehr': 'oncology'
+        surgical_system: "surgery",
+        pathology_lab: "pathology",
+        cardiology_dept: "cardiology",
+        radiology_pacs: "radiology",
+        oncology_ehr: "oncology",
       };
-      
-      const hintedType = sourceHints[metadata.source as keyof typeof sourceHints];
-      if (hintedType === analysis.detectedType) {
-        analysis.confidence = Math.min(analysis.confidence + 0.1, 1.0);
+
+      const hintedSpecialty =
+        sourceHints[metadata.source as keyof typeof sourceHints];
+      if (
+        hintedSpecialty &&
+        analysis.medicalSpecialty.includes(hintedSpecialty)
+      ) {
+        analysis.confidence = Math.min(analysis.confidence + 0.05, 1.0);
       }
     }
   }
 }
 
 /**
- * LangGraph node implementation for document type routing
+ * LangGraph node implementation for AI-based document routing
  */
 export async function documentTypeRouterNode(
-  state: DocumentProcessingState
+  state: DocumentProcessingState,
 ): Promise<Partial<DocumentProcessingState>> {
-  console.log("🔍 Analyzing document type for specialized processing");
-
-  // Skip if feature flag disabled
-  if (!FEATURE_FLAGS.ENABLE_ENHANCED_SCHEMAS) {
-    console.log("📋 Enhanced schemas disabled, using standard processing");
-    return {
-      documentTypeAnalysis: {
-        detectedType: "standard",
-        confidence: 1.0,
-        alternativeTypes: [],
-        contentFeatures: {
-          medicalTermDensity: 0,
-          structuredData: false,
-          reportLength: 0,
-          specialtyIndicators: [],
-        },
-        schemaRecommendation: null,
-      },
-    };
+  log.analysis.info("Analyzing AI feature detection results for processing routing");
+  
+  // Debug logging: what state do we have? (only if enabled)
+  if (isStateTransitionDebuggingEnabled()) {
+    log.analysis.debug("Document router received state", {
+      hasFeatureDetection: !!state.featureDetection,
+      hasFeatureDetectionResults: !!state.featureDetectionResults,
+      featureDetectionType: state.featureDetection?.type,
+      featureDetectionConfidence: state.featureDetection?.confidence,
+      featureResultsIsMedical: state.featureDetectionResults?.isMedical,
+      featureResultsDocType: state.featureDetectionResults?.documentType
+    });
   }
 
-  try {
-    // Extract content for analysis
-    const textContent = state.content
-      ?.map(c => c.text || '')
-      .join(' ') || '';
+  // Emit progress start
+  state.emitProgress?.(
+    "document_type_router",
+    0,
+    "Starting document type analysis",
+  );
 
-    if (!textContent.trim()) {
-      console.warn("⚠️ No text content available for document type analysis");
+  try {
+    // Extract AI feature detection results
+    state.emitProgress?.(
+      "document_type_router",
+      20,
+      "Analyzing AI feature detection results",
+    );
+
+    const aiResults = state.featureDetectionResults;
+    if (!aiResults || !aiResults.isMedical) {
+      log.analysis.warn("No AI feature detection results or not medical content", {
+        hasFeatureDetection: !!state.featureDetection,
+        confidence: state.featureDetection?.confidence,
+        type: state.featureDetection?.type,
+        features: state.featureDetection?.features
+      });
+      state.emitComplete?.(
+        "document_type_router",
+        "Document identified as non-medical",
+        {
+          documentType: "non_medical",
+          skipProcessing: true,
+        },
+      );
       return {
         documentTypeAnalysis: {
-          detectedType: null,
+          detectedSections: [],
           confidence: 0,
-          alternativeTypes: [],
+          documentType: "non_medical",
+          detectedType: "non_medical",
+          medicalSpecialty: [],
+          urgencyLevel: 1,
+          language: "en",
           contentFeatures: {
             medicalTermDensity: 0,
             structuredData: false,
             reportLength: 0,
             specialtyIndicators: [],
           },
-          schemaRecommendation: null,
+          sectionFlags: {},
         },
+        nextSteps: ["quality-gate"], // Skip processing for non-medical content
       };
     }
 
-    // Perform document type analysis
-    const analysis = DocumentTypeRouter.analyzeDocumentType(
-      textContent,
-      state.metadata
+    // Extract content for feature analysis
+    state.emitProgress?.(
+      "document_type_router",
+      40,
+      "Extracting content for analysis",
     );
 
-    console.log(`📊 Document type analysis complete:`);
-    console.log(`   Detected: ${analysis.detectedType || 'none'}`);
-    console.log(`   Confidence: ${(analysis.confidence * 100).toFixed(1)}%`);
-    console.log(`   Schema: ${analysis.schemaRecommendation?.specialty || 'standard'}`);
-    
-    if (analysis.alternativeTypes.length > 0) {
-      console.log(`   Alternatives: ${analysis.alternativeTypes.map(alt => 
-        `${alt.type}(${(alt.confidence * 100).toFixed(1)}%)`
-      ).join(', ')}`);
+    const textContent = state.content?.map((c) => c.text || "").join(" ") || "";
+
+    // Perform analysis based on AI detection
+    state.emitProgress?.(
+      "document_type_router",
+      60,
+      "Analyzing document sections and type",
+    );
+
+    const analysis = DocumentTypeRouter.analyzeDocumentSections(
+      aiResults,
+      textContent,
+      state.metadata,
+    );
+
+    // Create parallel processing plan
+    state.emitProgress?.(
+      "document_type_router",
+      80,
+      "Creating processing plan",
+    );
+
+    const processingPlan = DocumentTypeRouter.createProcessingPlan(
+      analysis.detectedSections,
+    );
+
+    // Get simple steps for backwards compatibility
+    const nextSteps = DocumentTypeRouter.getProcessingSteps(
+      analysis.detectedSections,
+    );
+
+    console.log(`📊 Document routing analysis complete:`);
+    console.log(`   Document type: ${analysis.documentType}`);
+    console.log(
+      `   Medical specialty: ${analysis.medicalSpecialty.join(", ")}`,
+    );
+    console.log(
+      `   Detected sections: ${analysis.detectedSections.join(", ")}`,
+    );
+    console.log(`   Urgency level: ${analysis.urgencyLevel}`);
+    console.log(`   Language: ${analysis.language}`);
+
+    // Emit completion with analysis results
+    state.emitComplete?.(
+      "document_type_router",
+      "Document type analysis completed",
+      {
+        documentType: analysis.documentType,
+        sectionsDetected: analysis.detectedSections.length,
+        medicalSpecialty: analysis.medicalSpecialty,
+        processingComplexity: determineProcessingComplexity(
+          analysis.detectedSections,
+        ),
+        totalProcessors: processingPlan.totalProcessors,
+      },
+    );
+
+    // Log parallel processing plan
+    console.log(`
+📋 Processing Plan:`);
+    console.log(
+      `   Sequential steps: ${processingPlan.sequentialSteps.join(" → ")}`,
+    );
+    if (processingPlan.parallelGroups.length > 0) {
+      console.log(`   Parallel groups:`);
+      for (const group of processingPlan.parallelGroups) {
+        console.log(`     - ${group.name}: [${group.processors.join(", ")}]`);
+      }
     }
+    console.log(`   Total processors: ${processingPlan.totalProcessors}`);
+    console.log(
+      `   Estimated duration: ${processingPlan.estimatedDuration} units`,
+    );
 
     return {
       documentTypeAnalysis: analysis,
-      selectedSchema: analysis.schemaRecommendation?.schema || null,
-      processingComplexity: analysis.schemaRecommendation?.processingComplexity || "low",
+      nextSteps,
+      processingPlan,
+      processingComplexity: determineProcessingComplexity(
+        analysis.detectedSections,
+      ),
     };
   } catch (error) {
     console.error("❌ Error in document type router:", error);
-    
-    // Fallback to standard processing
+
+    // Emit error
+    state.emitError?.(
+      "document_type_router",
+      "Document type analysis failed",
+      error,
+    );
+
+    // Fallback to minimal processing
     return {
       documentTypeAnalysis: {
-        detectedType: "error",
+        detectedSections: [],
         confidence: 0,
-        alternativeTypes: [],
+        documentType: "unknown",
+        detectedType: "unknown",
+        medicalSpecialty: [],
+        urgencyLevel: 1,
+        language: "en",
         contentFeatures: {
           medicalTermDensity: 0,
           structuredData: false,
           reportLength: 0,
           specialtyIndicators: [],
         },
-        schemaRecommendation: null,
+        sectionFlags: {},
       },
+      nextSteps: ["quality-gate"],
       processingErrors: [
         ...(state.processingErrors || []),
-        `Document type routing failed: ${error.message}`
+        `Document routing failed: ${error instanceof Error ? error.message : String(error)}`,
       ],
     };
   }
+}
+
+/**
+ * Determines processing complexity based on detected sections
+ */
+function determineProcessingComplexity(
+  detectedSections: string[],
+): "low" | "medium" | "high" {
+  if (detectedSections.length === 0) return "low";
+
+  // High complexity sections require advanced processing
+  const highComplexitySections = [
+    "molecular",
+    "tumorcharacteristics",
+    "treatmentplan",
+    "treatmentresponse",
+    "imagingfindings",
+    "specialstains",
+    "anesthesia",
+  ];
+
+  // Medium complexity sections require moderate processing
+  const mediumComplexitySections = [
+    "specimens",
+    "microscopic",
+    "procedures",
+    "imaging",
+    "grossfindings",
+    "ecg",
+    "echo",
+    "triage",
+    "treatments",
+    "assessment",
+  ];
+
+  if (
+    detectedSections.some((section) => highComplexitySections.includes(section))
+  ) {
+    return "high";
+  }
+
+  if (
+    detectedSections.some((section) =>
+      mediumComplexitySections.includes(section),
+    )
+  ) {
+    return "medium";
+  }
+
+  return "low";
 }

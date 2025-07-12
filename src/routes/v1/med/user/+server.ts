@@ -1,10 +1,9 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({
+export const GET: RequestHandler = async ({
   request,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   // Removed noisy console.log
 
   try {
@@ -50,4 +49,4 @@ export async function GET({
     console.error("[API] /v1/med/user - Unexpected error:", authError);
     return error(500, { message: "Internal server error" });
   }
-}
+};

@@ -6,7 +6,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { AIProvider, ProviderRegistry } from "./registry";
 import type { Content, TokenUsage } from "$lib/ai/types.d";
 import { env } from "$env/dynamic/private";
@@ -220,7 +220,7 @@ export class AIProviderAbstraction {
       temperature: options.temperature || 0,
       callbacks: [
         {
-          handleLLMEnd(output, runId, parentRunId, tags) {
+          handleLLMEnd: (output, runId, parentRunId, tags) => {
             // Gemini token counting may differ, estimate for now
             const estimatedTokens = this.estimateTokens(content);
             tokenUsage.total += estimatedTokens;
@@ -271,7 +271,7 @@ export class AIProviderAbstraction {
       temperature: options.temperature || 0,
       callbacks: [
         {
-          handleLLMEnd(output, runId, parentRunId, tags) {
+          handleLLMEnd: (output, runId, parentRunId, tags) => {
             const estimatedTokens = this.estimateTokens(content);
             tokenUsage.total += estimatedTokens;
             tokenUsage[schema.description] = estimatedTokens;

@@ -1,10 +1,10 @@
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { error } from "@sveltejs/kit";
 import transcript from "$lib/session/session.transcript";
 import { DIAGNOSIS_CONFIGS } from "$lib/configurations/session.diagnosis";
 import tags from "$lib/configurations/tags";
 import propertiesDefition from "$data/lab.properties.defaults.json";
-import { fetchGpt } from "$lib/ai/gpt";
+import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import signals from "$lib/configurations/core.signals";
 import { updateLanguage } from "$lib/ai/schema";
@@ -104,27 +104,41 @@ type Input = {
   previousAnalysis?: Partial<Analysis>; // Add previous context for gradual refinement
 };
 
-(signals.items.properties.signal.enum as string[]) =
+// Extended interface for schema objects that includes the properties we need
+interface ExtendedFunctionDefinition extends FunctionDefinition {
+  parameters: {
+    type: string;
+    properties: Record<string, any>;
+    required?: string[];
+  };
+  items?: {
+    properties: Record<string, any>;
+  };
+  properties?: Record<string, any>;
+  required?: string[];
+}
+
+((signals as ExtendedFunctionDefinition).items!.properties.signal.enum as string[]) =
   Object.keys(propertiesDefition);
 // Only add signals to diagnosis schema if it has the signals property
 if (
-  diagnosis.parameters?.properties &&
-  "signals" in diagnosis.parameters.properties
+  (diagnosis as ExtendedFunctionDefinition).parameters?.properties &&
+  "signals" in (diagnosis as ExtendedFunctionDefinition).parameters.properties
 ) {
-  diagnosis.parameters.properties.signals = signals;
+  (diagnosis as ExtendedFunctionDefinition).parameters.properties.signals = signals;
 }
 
 const schemas: {
-  [key: string]: FunctionDefinition;
+  [key: string]: ExtendedFunctionDefinition;
 } = {
-  diagnosis: diagnosis as FunctionDefinition,
-  transcript: transcript as FunctionDefinition,
+  diagnosis: diagnosis as ExtendedFunctionDefinition,
+  transcript: transcript as ExtendedFunctionDefinition,
 };
 
 let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 
 // extend common schemas
-(transcript.parameters.properties.symptoms.items.properties.bodyParts.items
+((transcript as ExtendedFunctionDefinition).parameters.properties.symptoms.items.properties.bodyParts.items
   .enum as string[]) = [...tags];
 
 export async function analyze(input: Input): Promise<Analysis> {
@@ -227,7 +241,7 @@ export async function evaluate(
 
   if (!schema) error(500, { message: "Invalid type " + type });
 
-  return (await fetchGpt(content, schema, tokenUsage, language)) as Analysis;
+  return (await fetchGptEnhanced(content, schema, tokenUsage, language)) as Analysis;
 }
 
 const TEST_DATA = {

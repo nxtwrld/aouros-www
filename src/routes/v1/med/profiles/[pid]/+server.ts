@@ -1,12 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({
+export const GET: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -29,13 +28,13 @@ export async function GET({
   console.log("get profile", params.pid);
 
   return json(data);
-}
+};
 
-export async function DELETE({
+export const DELETE: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -92,4 +91,4 @@ export async function DELETE({
   }
 
   return json({ message: "Profile link removed" });
-}
+};

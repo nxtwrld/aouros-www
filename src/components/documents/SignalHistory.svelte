@@ -79,7 +79,7 @@
 
 
     async function loadHistoryData() {
-        series = (await getLabValueFor(code, unit)).sort((a, b) => {
+        series = (await getLabValueFor(code, unit)).sort((a: any, b: any) => {
             return new Date(a.time).getTime() - new Date(b.time).getTime();
         });
 
@@ -138,9 +138,8 @@
 
         const xArea: [number, number] = [xExtent[0] - xPadding, xExtent[1] - 0 + xPadding];
         const yArea: [number, number] = [
-            min(ranges, function(d: Range) { return d.min; }),
-            max(ranges, function(d: Range) { return d.max; })
-            
+            min(ranges, function(d: Range) { return d.min; }) || 0,
+            max(ranges, function(d: Range) { return d.max; }) || 100
         ];
         // Scale the range of the data
         x.domain(xArea);
@@ -323,7 +322,7 @@
                 .append('circle')
                     .attr('class', (d) => {
                         const range = ranges.find(r => d.value >= r.min && d.value <= r.max);
-                        const isFromReport = (d.time as Date).toLocaleDateString() == (new Date(date)).toLocaleDateString() ? 'fromReport' : '';
+                        const isFromReport = (new Date(d.time as string)).toLocaleDateString() == (new Date(date)).toLocaleDateString() ? 'fromReport' : '';
                         return (range ? range.name + ' point' : 'point') + ' ' + isFromReport;
                     })
                     .attr('cx', (d) => d.x)
@@ -342,7 +341,7 @@
                     .append('tspan')
                         .attr('x', (d) => d.x)
                         .attr('y', (d) => d.y - 15)
-                        .text((d) => d.time.toLocaleDateString());
+                        .text((d) => new Date(d.time as string).toLocaleDateString());
 
 
 
@@ -427,12 +426,12 @@
     </h3>
 
     <h3 class="h3">
-        {#if percentChange > 0}
+        {#if Number(percentChange) > 0}
         <svg>
             <use href="/sprite.svg#trend-up"></use>
         </svg>
             +{percentChange}% change since last check-up
-        {:else if percentChange < 0}
+        {:else if Number(percentChange) < 0}
         <svg>
             <use href="/sprite.svg#trend-down"></use>
         </svg>

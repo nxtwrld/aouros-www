@@ -1,5 +1,6 @@
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { error } from "@sveltejs/kit";
+import { log } from "$lib/logging/logger";
 import featureDetection from "$lib/configurations/feature-detection";
 //import text from './text.json';
 import report from "$lib/configurations/report";
@@ -19,10 +20,15 @@ import jcard from "$lib/configurations/jcard.reduced";
 //import { extractText } from "./gemini";
 //import testPropserties from '$data/lab.synonyms.json';
 import propertiesDefition from "$data/lab.properties.defaults.json";
-import { fetchGpt } from "$lib/ai/gpt";
+import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { sleep } from "$lib/utils";
 import { env } from "$env/dynamic/private";
+
+// Extend global interface to include our custom properties
+declare global {
+  var reportSchemaLogged: boolean;
+}
 
 /**
  * TODO:
@@ -72,6 +78,9 @@ export interface ReportAnalysis {
   }[];
   recommendations?: string[];
   tokenUsage: TokenUsage;
+  // Add missing properties that are being accessed in the code
+  title?: string;
+  summary?: string;
 }
 
 type Input = {
@@ -80,55 +89,69 @@ type Input = {
   language?: string;
 };
 
+// Extended interface for schema objects that includes the properties we need
+interface ExtendedFunctionDefinition extends FunctionDefinition {
+  parameters: {
+    type: string;
+    properties: Record<string, any>;
+    required?: string[];
+  };
+  items?: {
+    properties: Record<string, any>;
+  };
+  properties?: Record<string, any>;
+  required?: string[];
+}
+
 const schemas: {
-  [key: string]: FunctionDefinition;
+  [key: string]: ExtendedFunctionDefinition;
 } = {
-  featureDetection: featureDetection as FunctionDefinition,
-  //text: text as FunctionDefinition,
-  report: report as FunctionDefinition,
-  laboratory: laboratory as FunctionDefinition,
-  dental: dental as FunctionDefinition,
-  prescription: prescription as FunctionDefinition,
-  immunization: immunization as FunctionDefinition,
-  imaging: imaging as FunctionDefinition, //,
-  //fhir: fhir as FunctionDefinition
+  featureDetection: featureDetection as ExtendedFunctionDefinition,
+  //text: text as ExtendedFunctionDefinition,
+  report: report as ExtendedFunctionDefinition,
+  laboratory: laboratory as ExtendedFunctionDefinition,
+  dental: dental as ExtendedFunctionDefinition,
+  prescription: prescription as ExtendedFunctionDefinition,
+  immunization: immunization as ExtendedFunctionDefinition,
+  imaging: imaging as ExtendedFunctionDefinition, //,
+  //fhir: fhir as ExtendedFunctionDefinition
 };
 
 let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 
 // extend common schemas
 
-(signals.items.properties.signal.enum as string[]) =
+((signals as ExtendedFunctionDefinition).items!.properties.signal.enum as string[]) =
   Object.keys(propertiesDefition); //testPropserties.map((item: any) => item[0]);
-(featureDetection.parameters.properties.tags.items.enum as string[]) = [
+((featureDetection as ExtendedFunctionDefinition).parameters.properties.tags.items.enum as string[]) = [
   ...tags,
-  ...signals.items.properties.signal.enum,
+  ...((signals as ExtendedFunctionDefinition).items!.properties.signal.enum as string[]),
 ];
 
-performer.properties = jcard.properties;
-performer.required = jcard.required;
+(performer as ExtendedFunctionDefinition).properties = (jcard as ExtendedFunctionDefinition).properties;
+(performer as ExtendedFunctionDefinition).required = (jcard as ExtendedFunctionDefinition).required;
 
-report.parameters.properties.performer = performer;
-imaging.parameters.properties.performer = performer;
-laboratory.parameters.properties.performer = performer;
-dental.parameters.properties.performer = performer;
+(report as ExtendedFunctionDefinition).parameters.properties.performer = performer;
+(imaging as ExtendedFunctionDefinition).parameters.properties.performer = performer;
+(laboratory as ExtendedFunctionDefinition).parameters.properties.performer = performer;
+(dental as ExtendedFunctionDefinition).parameters.properties.performer = performer;
 
-report.parameters.properties.patient = patient;
-imaging.parameters.properties.patient = patient;
-laboratory.parameters.properties.patient = patient;
-dental.parameters.properties.patient = patient;
+(report as ExtendedFunctionDefinition).parameters.properties.patient = patient;
+(imaging as ExtendedFunctionDefinition).parameters.properties.patient = patient;
+(laboratory as ExtendedFunctionDefinition).parameters.properties.patient = patient;
+(dental as ExtendedFunctionDefinition).parameters.properties.patient = patient;
 
 //report.parameters.properties.signals = signals;
-laboratory.parameters.properties.signals = signals;
+(laboratory as ExtendedFunctionDefinition).parameters.properties.signals = signals;
 
-report.parameters.properties.diagnosis = diagnosis;
-imaging.parameters.properties.diagnosis = diagnosis;
-dental.parameters.properties.diagnosis = diagnosis;
+(report as ExtendedFunctionDefinition).parameters.properties.diagnosis = diagnosis;
+(imaging as ExtendedFunctionDefinition).parameters.properties.diagnosis = diagnosis;
+(dental as ExtendedFunctionDefinition).parameters.properties.diagnosis = diagnosis;
 
-(bodyParts.items.properties.identification.enum as string[]) = [...tags];
+((bodyParts as ExtendedFunctionDefinition).items!.properties.identification.enum as string[]) = [...tags];
 
-report.parameters.properties.bodyParts = bodyParts;
-imaging.parameters.properties.bodyParts = bodyParts;
+(report as ExtendedFunctionDefinition).parameters.properties.bodyParts = bodyParts;
+(imaging as ExtendedFunctionDefinition).parameters.properties.bodyParts = bodyParts;
 
 function getContentDefinition(input: Input): Content[] {
   const content: Content[] = [];
@@ -153,6 +176,8 @@ function updateLanguage(
   schema: { [key: string]: any },
   language: string = "English",
 ) {
+  let replacementCount = 0;
+  
   for (const key in schema) {
     if (schema[key] instanceof Object) {
       schema[key] = updateLanguage(schema[key], language);
@@ -160,11 +185,12 @@ function updateLanguage(
       if (key === "description" && typeof schema[key] == "string") {
         if (schema[key].includes("[LANGUAGE]")) {
           schema[key] = schema[key].replace(/\[LANGUAGE\]/gi, language);
-          //  console.log('Updated', key, schema[key]);
+          replacementCount++;
         }
       }
     }
   }
+  
   return schema;
 }
 
@@ -176,12 +202,19 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
   const content: Content[] = getContentDefinition(input);
   const currentLanguage = input.language || "English";
 
+  console.log("🔍 About to update schemas for language:", currentLanguage);
+  console.log("🔍 Original report schema description preview:", 
+    schemas.report.description?.substring(0, 100) + "...");
+  
   localizedSchemas = updateLanguage(
     JSON.parse(JSON.stringify(schemas)),
     currentLanguage,
   );
 
-  console.log("Schema updated...", currentLanguage);
+  console.log("🔍 After language update - report schema description preview:", 
+    localizedSchemas.report.description.substring(0, 100) + "...");
+
+  log.analysis.info("Schema updated for language:", { language: currentLanguage });
 
   if (DEBUG) {
     await sleep(1500);
@@ -195,7 +228,7 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
     Types.featureDetection,
     tokenUsage,
   )) as ReportAnalysis;
-  console.log("input assesed...");
+  log.analysis.info("Input assessment completed");
 
   data.text = input.text || "";
 
@@ -235,21 +268,42 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
     }
   }
 
+  console.log("📊 Report Analysis - Processing type:", {
+    type: data.type,
+    isMedical: data.isMedical,
+    hasLabOrVitals: data.hasLabOrVitals,
+    hasPrescription: data.hasPrescription,
+    textLength: data.text.length,
+    language: currentLanguage
+  });
+
   switch (data.type) {
     case Types.report:
-      //data.report = await evaluate(content, Types.report);
+      console.log("🏥 Processing medical report...");
+      // FIXED: Use the same content (text + images) as feature detection
+      console.log("🔧 FIXED: Using same content structure for report extraction as feature detection");
+      console.log("📋 Content structure:", {
+        contentItems: content.length,
+        hasText: content.some(c => c.type === "text"),
+        hasImages: content.some(c => c.type === "image_url"),
+        textLength: data.text?.length || 0
+      });
+      
       data.report = await evaluate(
-        [
-          {
-            type: "text",
-            text: data.text,
-          },
-        ],
+        content, // Use original content (text + images) instead of just text
         Types.report,
         tokenUsage,
       );
+      
+      console.log("🏥 Report analysis completed:", {
+        hasReport: !!data.report,
+        reportKeys: data.report ? Object.keys(data.report) : [],
+        reportEmpty: Object.keys(data.report || {}).length === 0
+      });
+      
       // extract lab or vitals from the report
       if (data.hasLabOrVitals) {
+        console.log("🧪 Processing lab/vitals data...");
         const laboratory = await evaluate(
           [
             {
@@ -262,6 +316,9 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
         );
 
         data.report.signals = laboratory.signals;
+        console.log("🧪 Lab analysis completed:", {
+          signalsCount: laboratory.signals?.length || 0
+        });
       }
       break;
     case Types.laboratory:
@@ -298,6 +355,13 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
       data.report.category = "imaging";
       break;
   }
+
+  // Safety check: ensure data.report exists
+  if (!data.report) {
+    log.analysis.warn(`Medical analysis: data.report is undefined for type "${data.type}". Creating empty report object.`);
+    data.report = {};
+  }
+
   /*
     data.fhir = await evaluate([{
       type: 'text',
@@ -306,7 +370,7 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
 */
 
   // extend tags with body parts
-  if (data.report.bodyParts) {
+  if (data.report && data.report.bodyParts) {
     data.tags = [
       ...new Set(
         data.tags.concat(
@@ -316,7 +380,7 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
     ];
   }
 
-  if (data.report.signals) {
+  if (data.report && data.report.signals) {
     data.report.signals = data.report.signals.map((item: any) => {
       if (item.signal) {
         item.signal = item.signal.toLowerCase();
@@ -331,7 +395,11 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
 
   data.tokenUsage = tokenUsage;
 
-  console.log("All done...", data.tokenUsage.total);
+  log.analysis.info("Analysis completed", { 
+    totalTokens: data.tokenUsage.total,
+    type: data.type,
+    isMedical: data.isMedical 
+  });
   // return item
   return data;
 }
@@ -345,7 +413,56 @@ export async function evaluate(
 
   if (!schema) error(500, { message: "Invalid type" });
 
-  return (await fetchGpt(content, schema, tokenUsage)) as ReportAnalysis;
+  console.log(`🤖 AI Evaluation - Calling ${type} with schema:`, {
+    schemaName: schema.name,
+    hasSchema: !!schema,
+    contentLength: content[0]?.text?.length || 0,
+    schemaRequired: schema.parameters?.required || [],
+    schemaProperties: Object.keys(schema.parameters?.properties || {}),
+    schemaSize: JSON.stringify(schema).length
+  });
+  
+  // For report schema, log the actual structure being sent to OpenAI
+  if (type === 'report') {
+    console.log("📋 Report Schema Analysis:", {
+      propertiesCount: Object.keys(schema.parameters?.properties || {}).length,
+      requiredCount: schema.parameters?.required?.length || 0,
+      hasPerformer: !!schema.parameters?.properties?.performer,
+      hasPatient: !!schema.parameters?.properties?.patient,
+      hasBodyParts: !!schema.parameters?.properties?.bodyParts,
+      hasDiagnosis: !!schema.parameters?.properties?.diagnosis,
+      performerComplexity: schema.parameters?.properties?.performer ? 
+        Object.keys(schema.parameters.properties.performer.properties || {}).length : 0,
+      patientComplexity: schema.parameters?.properties?.patient ? 
+        Object.keys(schema.parameters.properties.patient.properties || {}).length : 0
+    });
+    
+    // Log the complete schema for debugging (only first time)
+    if (!global.reportSchemaLogged) {
+      console.log("🔍 Complete Report Schema being sent to OpenAI:");
+      console.log(JSON.stringify(schema, null, 2));
+      global.reportSchemaLogged = true;
+    }
+  }
+
+  const result = (await fetchGptEnhanced(content, schema, tokenUsage)) as ReportAnalysis;
+  
+  console.log(`🤖 AI Evaluation - ${type} result:`, {
+    resultKeys: Object.keys(result || {}),
+    isEmpty: Object.keys(result || {}).length === 0,
+    hasExpectedFields: type === 'report' ? !!result?.title || !!result?.summary : true,
+    fullResult: result, // Log the complete result for debugging
+    resultType: typeof result,
+    isNull: result === null,
+    isUndefined: result === undefined
+  });
+
+  if (!result) {
+    console.error(`❌ AI Evaluation - ${type} returned null/undefined result`);
+    return {} as ReportAnalysis;
+  }
+
+  return result;
 }
 
 const TEST_DATA: ReportAnalysis[] = [

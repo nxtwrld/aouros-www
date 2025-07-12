@@ -1,4 +1,4 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { ChatOpenAI } from "@langchain/openai";
 import { JsonOutputFunctionsParser } from "langchain/output_parsers";
 import { HumanMessage } from "@langchain/core/messages";
@@ -65,10 +65,7 @@ const extractionFunctionSchema = {
 }
  */
 
-/** @type {import('./$types.d').RequestHandler} */
-
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request }) {
+export const POST: RequestHandler = async ({ request }) => {
   //const str = url.searchParams.get('drug');
 
   const data = await request.json();
@@ -110,4 +107,4 @@ export async function POST({ request }) {
   //console.log({ result });
 
   return json(result);
-}
+};

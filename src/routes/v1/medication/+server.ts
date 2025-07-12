@@ -1,4 +1,4 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 
 const routes = {
   POR: "ORAL",
@@ -15,8 +15,7 @@ const form = {
   GEL: "TOPICAL",
 };
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({ url }) {
+export const GET: RequestHandler = async ({ url }) => {
   const str = url.searchParams.get("drug");
   const response = await fetch("https://prehledy.sukl.cz/prehledy/v1/dlprc", {
     method: "POST",
@@ -69,4 +68,4 @@ export async function GET({ url }) {
     }),
   );
   //return new Response(data);
-}
+};

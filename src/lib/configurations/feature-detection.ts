@@ -1,60 +1,265 @@
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
+
+/**
+ * Comprehensive AI Feature Detection for Medical Documents
+ *
+ * This AI-based detection system identifies which medical sections are present
+ * in documents across all languages. It replaces the previous registry-based
+ * approach with direct AI analysis that populates document sections.
+ *
+ * Philosophy: AI detects sections → Document contains sections → UI renders sections
+ */
 export default {
   name: "extractor",
   description:
-    "Proceed step by step. Identify the contents of the provided JSON  input. We are analyzing medical data, if it is not medical report, lab results of medical imaging, mark it as notMedical.   All results should be in [LANGUAGE] language, except for contents which is in the original language of the report.",
+    "Analyze medical documents comprehensively to identify ALL medical sections present. This analysis works in any language and determines which specific medical sections should be populated in the final document. If not medical content, mark as notMedical and skip other analysis.",
   parameters: {
     type: "object",
     properties: {
       isMedical: {
         type: "boolean",
         description:
-          "Is it a medical report, lab results or DICOM type image? true/false. If it is not a medical report, ignore the rest of the parameters.",
-      },
-      type: {
-        type: "string",
-        description:
-          "If it is a medical report, lab results, dental record, DNA analysis o, specify the type. ",
-        enum: ["report", "laboratory", "dental", "dna"],
+          "Is this medical content (report, lab results, imaging, clinical notes, etc.)? true/false. If false, ignore all other parameters.",
       },
       language: {
         type: "string",
         description:
-          "Language of the text in the image. If it is not in English, specify the language in a two character ISO-639 language code Set 1.",
+          "Language of the document content. Use ISO-639-1 two-character code (en, es, fr, de, cs, etc.)",
       },
+      documentType: {
+        type: "string",
+        description: "Primary document type based on content analysis",
+        enum: [
+          "clinical_report",
+          "laboratory_results",
+          "imaging_report",
+          "pathology_report",
+          "surgical_report",
+          "emergency_report",
+          "consultation_note",
+          "discharge_summary",
+          "prescription",
+          "immunization_record",
+          "dental_record",
+          "genetic_analysis",
+          "oncology_report",
+          "cardiology_report",
+          "radiology_report",
+        ],
+      },
+
+      // Core Medical Sections (Always Analyze)
+      hasSummary: {
+        type: "boolean",
+        description: "Does the document contain summary or findings section?",
+      },
+      hasDiagnosis: {
+        type: "boolean",
+        description:
+          "Does the document contain diagnosis information (ICD codes, conditions, etc.)?",
+      },
+      hasBodyParts: {
+        type: "boolean",
+        description:
+          "Does the document reference specific body parts, anatomy, or organ systems?",
+      },
+      hasPerformer: {
+        type: "boolean",
+        description:
+          "Does the document identify healthcare providers, physicians, or medical staff?",
+      },
+      hasRecommendations: {
+        type: "boolean",
+        description:
+          "Does the document contain recommendations, follow-up instructions, or care plans?",
+      },
+
+      // Measurements and Data Sections
+      hasSignals: {
+        type: "boolean",
+        description:
+          "Does the document contain vital signs, lab values, measurements, or quantitative data?",
+      },
+      hasPrescriptions: {
+        type: "boolean",
+        description:
+          "Does the document contain prescriptions, medications, or drug information?",
+      },
+      hasImmunizations: {
+        type: "boolean",
+        description:
+          "Does the document contain vaccination records or immunization information?",
+      },
+
+      // Medical Specialty Sections
+      hasImaging: {
+        type: "boolean",
+        description:
+          "Does the document contain imaging studies (CT, MRI, X-ray, ultrasound, etc.)?",
+      },
+      hasDental: {
+        type: "boolean",
+        description:
+          "Does the document contain dental examination or oral health information?",
+      },
+      hasAdmission: {
+        type: "boolean",
+        description:
+          "Does the document contain hospital admission/discharge information?",
+      },
+      hasProcedures: {
+        type: "boolean",
+        description:
+          "Does the document contain surgical or medical procedures?",
+      },
+      hasAnesthesia: {
+        type: "boolean",
+        description:
+          "Does the document contain anesthesia information or monitoring?",
+      },
+      hasSpecimens: {
+        type: "boolean",
+        description:
+          "Does the document contain specimen collection or tissue sample information?",
+      },
+      hasMicroscopic: {
+        type: "boolean",
+        description:
+          "Does the document contain microscopic examination or histology findings?",
+      },
+      hasMolecular: {
+        type: "boolean",
+        description:
+          "Does the document contain molecular, genetic, or biomarker analysis?",
+      },
+      hasECG: {
+        type: "boolean",
+        description:
+          "Does the document contain electrocardiogram or heart rhythm analysis?",
+      },
+      hasEcho: {
+        type: "boolean",
+        description:
+          "Does the document contain echocardiogram or cardiac ultrasound findings?",
+      },
+      hasTriage: {
+        type: "boolean",
+        description:
+          "Does the document contain emergency triage or acuity assessment?",
+      },
+      hasTreatments: {
+        type: "boolean",
+        description:
+          "Does the document contain treatment protocols or therapeutic interventions?",
+      },
+      hasAssessment: {
+        type: "boolean",
+        description:
+          "Does the document contain clinical assessment or specialist evaluation?",
+      },
+
+      // Enhanced Medical Specialty Sections
+      hasTumorCharacteristics: {
+        type: "boolean",
+        description:
+          "Does the document contain tumor staging, grading, or cancer characteristics?",
+      },
+      hasTreatmentPlan: {
+        type: "boolean",
+        description:
+          "Does the document contain structured treatment plans (chemotherapy, radiation, etc.)?",
+      },
+      hasTreatmentResponse: {
+        type: "boolean",
+        description:
+          "Does the document contain treatment response assessment (RECIST, etc.)?",
+      },
+      hasImagingFindings: {
+        type: "boolean",
+        description:
+          "Does the document contain detailed radiology findings and measurements?",
+      },
+      hasGrossFindings: {
+        type: "boolean",
+        description:
+          "Does the document contain gross pathological examination findings?",
+      },
+      hasSpecialStains: {
+        type: "boolean",
+        description:
+          "Does the document contain special stains or immunohistochemistry results?",
+      },
+      hasAllergies: {
+        type: "boolean",
+        description:
+          "Does the document contain allergy information or adverse reactions?",
+      },
+      hasMedications: {
+        type: "boolean",
+        description:
+          "Does the document contain current medications (separate from new prescriptions)?",
+      },
+      hasSocialHistory: {
+        type: "boolean",
+        description:
+          "Does the document contain social history or lifestyle factors?",
+      },
+
+      // Medical Context Tags
+      medicalSpecialty: {
+        type: "array",
+        description: "Medical specialties relevant to this document",
+        items: {
+          type: "string",
+          enum: [
+            "general_medicine",
+            "emergency_medicine",
+            "surgery",
+            "pathology",
+            "radiology",
+            "cardiology",
+            "oncology",
+            "dentistry",
+            "genetics",
+            "anesthesiology",
+            "immunology",
+            "dermatology",
+            "neurology",
+            "psychiatry",
+            "orthopedics",
+            "urology",
+            "gynecology",
+            "pediatrics",
+          ],
+        },
+      },
+
+      urgencyLevel: {
+        type: "number",
+        description:
+          "Clinical urgency level (1-5, where 1=routine, 5=critical/emergency)",
+        minimum: 1,
+        maximum: 5,
+      },
+
       tags: {
         type: "array",
         description:
-          "TaGS AND Labels of the image. If it is not a medical report, lab results or DICOM type image, list of labels. For example if it consideres a broken bone, list the latin bone name in tags, if the document mentions a desease, list the desease name in tags. If the document contains lab results, list the lab test names in english in tags. Everything will be provided in simplest form in latin and / or english form.",
+          "Medical tags and labels from the document. Include anatomical terms, diseases, procedures, medications, and test names in their standard medical terminology (Latin/English).",
         items: {
           type: "string",
-          enum: [],
         },
-      },
-      hasLabOrVitals: {
-        type: "boolean",
-        description:
-          "Does the document contain lab results or vital signs? true/false. If it does not contain lab results or vital signs set as false",
-      },
-      hasPrescription: {
-        type: "boolean",
-        description:
-          "Does the document contain a prescription? true/false. If it does not contain a prescription set as false",
-      },
-      hasImmunization: {
-        type: "boolean",
-        description:
-          "Does the document contain immunization records? true/false. If it does not contain immunization records set as false",
       },
     },
     required: [
       "isMedical",
-      "type",
-      "tags",
       "language",
-      "text",
-      "labels",
-      "hasPrescription",
+      "documentType",
+      "hasSummary",
+      "hasDiagnosis",
+      "hasSignals",
+      "urgencyLevel",
+      "tags",
     ],
   },
 } as FunctionDefinition;

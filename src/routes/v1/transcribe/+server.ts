@@ -1,8 +1,7 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { transcribeAudio } from "$lib/audio/whisper";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request }) {
+export const POST: RequestHandler = async ({ request }) => {
   //const str = url.searchParams.get('drug');
   let instructions = {
     lang: "en",
@@ -41,4 +40,4 @@ export async function POST({ request }) {
     const result = await transcribeAudio(bytes, instructions);*/
 
   return json(result);
-}
+};

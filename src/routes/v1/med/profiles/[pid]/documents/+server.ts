@@ -1,13 +1,12 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 const DOCUMENT_TYPES = ["document", "profile", "health"];
 const UNIQUE_TYPES = ["profile", "health"];
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({
+export const GET: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   const url = new URL(request.url);
@@ -33,13 +32,13 @@ export async function GET({
   }
 
   return json(documentsLoad);
-}
+};
 
-export async function POST({
+export const POST: RequestHandler = async ({
   request,
   params,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -114,4 +113,4 @@ export async function POST({
   }
 
   return json({ id: document_id });
-}
+};

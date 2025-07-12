@@ -15,6 +15,7 @@ import { setClient } from "$lib/supabase";
 import { session as CurrentSession } from "$lib/user";
 import "$lib/i18n"; // Import to initialize. Important :)
 import { locale, waitLocale } from "svelte-i18n";
+import "$lib/config/logging-config"; // Initialize logging from environment variables
 
 mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: false });
 

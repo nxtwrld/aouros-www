@@ -4,6 +4,17 @@ export enum DocumentType {
   "health" = "health",
 }
 
+export enum DocumentState {
+  NEW = "NEW",
+  ASSESSING = "ASSESSING",
+  ASSESSED = "ASSESSED",
+  PROCESSING = "PROCESSING",
+  PROCESSED = "PROCESSED",
+  ERROR = "ERROR",
+  NONMEDICAL = "NONMEDICAL",
+  CANCELED = "CANCELED",
+}
+
 export interface DocumentPreload {
   id: string;
   key: string;
@@ -61,7 +72,7 @@ export interface DocumentNew {
     tags: string[];
     [key: string]: any;
   };
-  attachments?: string[];
+  attachments?: Attachment[];
   user_id?: string;
 }
 
@@ -70,4 +81,5 @@ export interface Attachment {
   url: string;
   type?: string;
   thumbnail?: string;
+  file?: string; // Base64 encoded file data
 }

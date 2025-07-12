@@ -1,9 +1,9 @@
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
 
 import { error } from "@sveltejs/kit";
 import report from "$lib/configurations/session.report";
 import tags from "$lib/configurations/tags";
-import { fetchGpt } from "$lib/ai/gpt";
+import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
@@ -121,7 +121,7 @@ export async function evaluate(
 
   if (!schema) error(500, { message: "Invalid type" });
 
-  return (await fetchGpt(content, schema, tokenUsage)) as Report;
+  return (await fetchGptEnhanced(content, schema, tokenUsage)) as Report;
 }
 
 const TEST_DATA = [

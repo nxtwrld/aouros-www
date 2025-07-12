@@ -1,11 +1,10 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { finalize } from "$lib/session/finalizeReport";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({
+export const POST: RequestHandler = async ({
   request,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -20,4 +19,4 @@ export async function POST({
   const result = await finalize(data);
 
   return json(result);
-}
+};

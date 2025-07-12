@@ -1,4 +1,4 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { generateSessionId, createSession } from "$lib/session/manager";
 import OpenAI from "openai";
 import { env } from "$env/dynamic/private";
@@ -8,11 +8,10 @@ const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
 });
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({
+export const POST: RequestHandler = async ({
   request,
   locals: { supabase, safeGetSession, user },
-}) {
+}) => {
   const { session } = await safeGetSession();
 
   if (!session || !user) {
@@ -110,4 +109,4 @@ Please analyze each new statement incrementally and provide updated medical insi
     console.error("❌ Failed to create session:", err);
     error(500, { message: "Failed to create session" });
   }
-}
+};

@@ -1,7 +1,6 @@
-import { error } from "@sveltejs/kit";
+import { error, type RequestHandler } from "@sveltejs/kit";
 
-/** @type {import('./$types.d').RequestHandler} */
-export function GET({ url }) {
+export const GET: RequestHandler = async ({ url }) => {
   const min = Number(url.searchParams.get("min") ?? "0");
   const max = Number(url.searchParams.get("max") ?? "1");
 
@@ -14,7 +13,7 @@ export function GET({ url }) {
   const random = min + Math.random() * d;
 
   return new Response(String(random));
-}
+};
 
 /*
 async function submitImageToOpenAI(image: Blob): Promise<string> {

@@ -1,4 +1,4 @@
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
 export default {
   name: "extractor",
   description:
@@ -44,7 +44,7 @@ export default {
       localizedContent: {
         type: "string",
         description:
-          "Tak the output for the content property and translate the content to [LANGUAGE] language.",
+          "Take the output for the content property and translate the content to [LANGUAGE] language.",
       },
       recommendations: {
         type: "array",
@@ -74,13 +74,15 @@ export default {
       },
     },
     required: [
-      "observation_type",
+      "category",
+      "title", 
       "summary",
       "content",
-      "bodyParts",
       "date",
       "performer",
       "patient",
+      "bodyParts",
+      "diagnosis",
     ],
   },
 } as FunctionDefinition;

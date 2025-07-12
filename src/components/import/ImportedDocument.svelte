@@ -9,7 +9,7 @@
 
     let { doc }: Props = $props();
 
-    let thumbnail = $derived(doc.content?.attachments.find(a => {
+    let thumbnail = $derived(doc.content?.attachments.find((a: any) => {
         return a.thumbnail;
     }).thumbnail);
 

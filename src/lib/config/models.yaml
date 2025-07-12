@@ -1,0 +1,146 @@
+# AI Model Configuration
+# This file defines which models to use for different parts of the import flow
+# Edit this file to easily switch models for any flow without code changes
+
+# Default provider priority (first available will be used)
+default_providers:
+  - openai
+  - google    # Available when @langchain/google-genai is installed
+  - anthropic # Available when @langchain/anthropic is installed
+
+# Provider configurations
+providers:
+  openai:
+    name: "OpenAI"
+    enabled: true
+    api_key_env: "OPENAI_API_KEY"
+    models:
+      gpt4:
+        model_id: "gpt-4o-2024-08-06"
+        description: "GPT-4 Omni - Latest with vision capabilities"
+        max_tokens: 4096
+        temperature: 0
+        supports_vision: true
+        cost_per_1k_tokens: 0.03
+      gpt4_turbo:
+        model_id: "gpt-4-turbo-preview"
+        description: "GPT-4 Turbo - Fast and capable"
+        max_tokens: 4096
+        temperature: 0
+        supports_vision: true
+        cost_per_1k_tokens: 0.01
+      gpt3_5:
+        model_id: "gpt-3.5-turbo"
+        description: "GPT-3.5 Turbo - Cost effective"
+        max_tokens: 4096
+        temperature: 0
+        supports_vision: false
+        cost_per_1k_tokens: 0.002
+
+  # Google provider - configured to use OpenAI for now
+  google:
+    name: "Google (using OpenAI backend)"
+    enabled: true
+    api_key_env: "OPENAI_API_KEY"  # Use OpenAI key until Google is properly set up
+    models:
+      gemini_pro:
+        model_id: "gpt-4o-2024-08-06"  # Use OpenAI model for now
+        description: "Gemini Pro (backed by GPT-4)"
+        max_tokens: 4096
+        temperature: 0
+        supports_vision: true
+        cost_per_1k_tokens: 0.03
+
+  # Anthropic provider - configured to use OpenAI for now  
+  anthropic:
+    name: "Anthropic (using OpenAI backend)"
+    enabled: true
+    api_key_env: "OPENAI_API_KEY"  # Use OpenAI key until Anthropic is properly set up
+    models:
+      claude_opus:
+        model_id: "gpt-4o-2024-08-06"  # Use OpenAI model for now
+        description: "Claude Opus (backed by GPT-4)"
+        max_tokens: 4096
+        temperature: 0
+        supports_vision: true
+        cost_per_1k_tokens: 0.03
+
+# Flow-specific model assignments
+# ALL FLOWS USE OPENAI FOR DEVELOPMENT - Change provider/model here to switch
+flows:
+  # Document extraction (OCR + initial assessment)
+  extraction:
+    provider: "openai"
+    model: "gpt4"
+    description: "Extract text and perform initial document assessment"
+    fallback_models: ["gpt4_turbo", "gpt3_5"]
+
+  # Medical analysis (deep analysis using LangGraph)
+  medical_analysis:
+    provider: "openai"  # Using OpenAI for development
+    model: "gpt4"
+    description: "Deep medical content analysis"
+    fallback_models: ["gpt4_turbo", "gpt3_5"]
+    # Alternative: provider: "google", model: "gemini_pro"
+
+  # Feature detection
+  feature_detection:
+    provider: "openai"  # Using OpenAI for development
+    model: "gpt4"
+    description: "Detect document features and medical specialties"
+    fallback_models: ["gpt4_turbo", "gpt3_5"]
+    # Alternative: provider: "anthropic", model: "claude_opus"
+
+  # Signal processing
+  signal_processing:
+    provider: "openai"
+    model: "gpt4"
+    description: "Process and enhance medical signals"
+    fallback_models: ["gpt4_turbo", "gpt3_5"]
+
+  # Document type routing
+  document_type_routing:
+    provider: "openai"  # Using OpenAI for development
+    model: "gpt3_5"     # Use cheaper model for simple routing task
+    description: "Route documents to appropriate processing pipelines"
+    fallback_models: ["gpt4_turbo", "gpt4"]
+    # Alternative: provider: "google", model: "gemini_pro"
+
+  # Quality validation
+  quality_validation:
+    provider: "openai"  # Using OpenAI for development
+    model: "gpt4"
+    description: "Validate processing quality and completeness"
+    fallback_models: ["gpt4_turbo", "gpt3_5"]
+    # Alternative: provider: "anthropic", model: "claude_opus"
+
+# Performance settings
+performance:
+  max_retries: 3
+  timeout_ms: 30000
+  concurrent_requests: 5
+  rate_limit_per_minute: 100
+
+# Cost optimization
+cost_optimization:
+  # Use cheaper models for simple tasks
+  enable_cost_optimization: true
+  simple_task_model: "gpt3_5"
+  complex_task_model: "gpt4"
+  
+  # Task complexity classification
+  simple_tasks:
+    - "document_type_routing"
+    - "feature_detection"
+  complex_tasks:
+    - "extraction"
+    - "medical_analysis"
+    - "signal_processing"
+    - "quality_validation"
+
+# Monitoring and logging
+monitoring:
+  log_model_usage: true
+  track_token_costs: true
+  performance_metrics: true
+  error_tracking: true

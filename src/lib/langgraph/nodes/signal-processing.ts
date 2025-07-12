@@ -10,19 +10,36 @@ import { ENHANCED_SIGNAL_PROCESSING } from "$lib/config/feature-flags";
 export const signalProcessingNode = async (
   state: DocumentProcessingState,
 ): Promise<Partial<DocumentProcessingState>> => {
+  // Emit progress start
+  state.emitProgress?.("signal_processing", 0, "Starting signal processing");
+
   try {
     console.log("🔬 Starting signal processing...");
 
     // Check if enhanced signal processing is enabled
     if (ENHANCED_SIGNAL_PROCESSING) {
       console.log("🚀 Using enhanced signal processing");
+      state.emitProgress?.(
+        "signal_processing",
+        10,
+        "Using enhanced signal processing",
+      );
       return await processWithEnhancedSignals(state);
     } else {
       console.log("📄 Using basic signal processing");
+      state.emitProgress?.(
+        "signal_processing",
+        10,
+        "Using basic signal processing",
+      );
       return await processWithBasicSignals(state);
     }
   } catch (error) {
     console.error("❌ Signal processing error:", error);
+
+    // Emit error
+    state.emitError?.("signal_processing", "Signal processing failed", error);
+
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     return {
@@ -48,15 +65,30 @@ async function processWithEnhancedSignals(
   const relationshipEngine = new SignalRelationshipEngine();
 
   // Extract basic signals from medical analysis
+  state.emitProgress?.(
+    "signal_processing",
+    20,
+    "Extracting signals from medical analysis",
+  );
+
   const basicSignals = extractBasicSignals(state.medicalAnalysis);
   console.log(`📊 Extracted ${basicSignals.length} basic signals`);
 
   if (basicSignals.length === 0) {
     console.log("⚠️ No signals found in medical analysis");
+    state.emitComplete?.("signal_processing", "No signals found to process", {
+      signalsFound: 0,
+    });
     return { signals: [] };
   }
 
   // Enhance each signal with registry and validation
+  state.emitProgress?.(
+    "signal_processing",
+    40,
+    `Enhancing ${basicSignals.length} signals with registry validation`,
+  );
+
   const enhancedSignals: EnhancedSignal[] = [];
 
   for (const signal of basicSignals) {
@@ -90,7 +122,6 @@ async function processWithEnhancedSignals(
           clinicalNotes: resolution.isKnown
             ? `Known signal: ${resolution.definition.description}`
             : `New signal detected with ${(resolution.confidence * 100).toFixed(1)}% confidence`,
-          signalDefinition: resolution.definition,
         },
       };
 
@@ -110,6 +141,12 @@ async function processWithEnhancedSignals(
 
   // Analyze relationships between signals
   console.log("🔗 Analyzing signal relationships...");
+  state.emitProgress?.(
+    "signal_processing",
+    70,
+    "Analyzing relationships between signals",
+  );
+
   const patientContext = createPatientContext(state);
   const relationships = await relationshipEngine.analyzeRelationships(
     enhancedSignals,
@@ -117,6 +154,12 @@ async function processWithEnhancedSignals(
   );
 
   // Update signals with relationships
+  state.emitProgress?.(
+    "signal_processing",
+    85,
+    "Detecting clinical patterns and missing signals",
+  );
+
   const finalSignals = updateSignalRelationships(
     enhancedSignals,
     relationships,
@@ -136,6 +179,18 @@ async function processWithEnhancedSignals(
   console.log(`🔗 Found ${relationships.length} relationships`);
   console.log(`🩺 Detected ${clinicalPatterns.length} clinical patterns`);
 
+  // Emit completion
+  state.emitComplete?.(
+    "signal_processing",
+    "Enhanced signal processing completed",
+    {
+      signalsProcessed: finalSignals.length,
+      relationshipsFound: relationships.length,
+      clinicalPatterns: clinicalPatterns.length,
+      missingSignals: missingSignals.length,
+    },
+  );
+
   return {
     signals: finalSignals,
     relationships,
@@ -151,9 +206,21 @@ async function processWithBasicSignals(
   state: DocumentProcessingState,
 ): Promise<Partial<DocumentProcessingState>> {
   // Extract signals from medical analysis
+  state.emitProgress?.(
+    "signal_processing",
+    30,
+    "Extracting signals from medical analysis",
+  );
+
   const basicSignals: Signal[] = extractBasicSignals(state.medicalAnalysis);
 
   // Convert basic signals to enhanced signals with minimal enhancement
+  state.emitProgress?.(
+    "signal_processing",
+    60,
+    `Converting ${basicSignals.length} signals to enhanced format`,
+  );
+
   const enhancedSignals: EnhancedSignal[] = basicSignals.map((signal) => ({
     // Preserve all original fields
     ...signal,
@@ -185,6 +252,12 @@ async function processWithBasicSignals(
   }));
 
   // Apply existing signal processing logic
+  state.emitProgress?.(
+    "signal_processing",
+    80,
+    "Applying signal normalization and processing",
+  );
+
   const processedSignals = enhancedSignals.map((signal) => {
     // Normalize signal name to lowercase (existing logic)
     if (signal.signal) {
@@ -201,6 +274,15 @@ async function processWithBasicSignals(
 
   console.log(`✅ Basic signal processing completed`);
   console.log(`📊 Processed ${processedSignals.length} signals`);
+
+  // Emit completion
+  state.emitComplete?.(
+    "signal_processing",
+    "Basic signal processing completed",
+    {
+      signalsProcessed: processedSignals.length,
+    },
+  );
 
   return {
     signals: processedSignals,

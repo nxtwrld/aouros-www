@@ -1,7 +1,7 @@
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { error, text } from "@sveltejs/kit";
 import assessSchemaImage from "$lib/configurations/import.assesments";
-import { fetchGpt } from "$lib/ai/gpt";
+import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { sleep } from "$lib/utils";
 import { env } from "$env/dynamic/private";
@@ -23,6 +23,7 @@ export interface Assessment {
 export interface AssessmentDocument {
   title: string;
   date: string;
+  language: string; // Add missing language property
   isMedical: boolean;
   pages: number[];
 }
@@ -41,6 +42,9 @@ export interface AssessmentPage {
     };
     data: string;
   }[];
+  // Add missing properties that are accessed in the code
+  image?: string;
+  thumbnail?: string;
 }
 
 export default async function assess(input: Input): Promise<Assessment> {
@@ -66,7 +70,7 @@ export default async function assess(input: Input): Promise<Assessment> {
   //    return Promise.resolve(TEST_DATA);
 
   // get basic item info
-  let data = (await fetchGpt(
+  let data = (await fetchGptEnhanced(
     content,
     assessSchemaImage,
     tokenUsage,
@@ -98,7 +102,7 @@ const TEST_DATA = {
     total: 2181,
     "Proceed step by step. \n    Step 1: \n    Your input is a set of images of most probably a medical report or reports. \n    Your task is to extract all text from the image as plain markdown documents. Each image is page from the document.\n    Step 2:\n    Assess that all pages are from the same document or multiple documents. I multiple documents are detected, we will mark the invidual documents and the pages they consist of.\n    Step 3: if the page contains other data then text, like images, schemas or photos, extract that area and list them here. If the page is a DICOM image, list the image here. If the page is a photo, list the photo here.\n    ": 2181,
   },
-} as Assessment; /*{
+} as unknown as Assessment; /* Fix missing properties type casting */ /*{
     "pages": [
         {
             "page": 1,

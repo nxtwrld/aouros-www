@@ -1,7 +1,5 @@
 /** @type {import('svelte/action').Action}  */
 
-import type { O } from "vitest/dist/types-71ccd11d";
-
 type Options = {
   text: string;
   delay?: number;
@@ -54,7 +52,7 @@ export function tooltip(node: HTMLElement, options: string | Options) {
       document.documentElement.clientHeight -
       bottom +
       height +
-      opts.offset +
+      (opts.offset || 10) +
       "px";
 
     div.style.opacity = "1";

@@ -4,22 +4,20 @@
 
     import { type Document, DocumentState, type Task, TaskState }  from '$lib/import';
     import ScanningAnimation from '$components/import/ScanningAnimation.svelte';
-    import { createEventDispatcher } from 'svelte';
     import { scale } from 'svelte/transition';
-
-    const dispatch = createEventDispatcher();
-
 
     interface Props {
         doc: Document | Task;
         removable?: boolean;
+        onclick?: (doc: Document | Task) => void;
+        onremove?: (doc: Document | Task) => void;
     }
 
-    let { doc, removable = true }: Props = $props();
+    let { doc, removable = true, onclick, onremove }: Props = $props();
     console.log(doc);
 </script>
 
-<div class="report {doc.state}" onclick={() => dispatch('click', doc)} transition:scale role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dispatch('click', doc); } }} aria-label="Open document: {doc.title}">
+<div class="report {doc.state}" onclick={() => onclick?.(doc)} transition:scale role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick?.(doc); } }} aria-label="Open document: {doc.title}">
     
     <div class="preview">
         {#if doc.pages?.[0]?.thumbnail}
@@ -36,7 +34,7 @@
     <div class="title">{doc.title}</div>
 
     {#if removable && !(doc.state === DocumentState.PROCESSING || doc.state == TaskState.ASSESSING)}
-        <button class="remove" aria-label="Remove document" onclick={stopPropagation(() => dispatch('remove', doc))}>
+        <button class="remove" aria-label="Remove document" onclick={stopPropagation(() => onremove?.(doc))}>
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <use href="/icons.svg#close" />
             </svg>

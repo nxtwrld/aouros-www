@@ -34,11 +34,11 @@
 
 <div class="page">
     <h1 class="h1">Add new profile</h1>
-    {#if $user.subscriptionStats.profiles == 0}
+    {#if $user && 'subscriptionStats' in $user && $user.subscriptionStats.profiles == 0}
         <p class="p">You have reached the maximum number of profiles.</p>
         <a href="/med/upgrade" class="button -primary -large">Upgrade</a>
     {:else}
-        <p class="p">You can add {$user?.subscriptionStats?.profiles} more profiles.</p>
+        <p class="p">You can add {($user as any)?.subscriptionStats?.profiles} more profiles.</p>
 
 
         <input type="text" bind:value={newProfile.fullName} onclick={createNewProfile} />

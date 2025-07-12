@@ -11,3 +11,11 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vscode/
+
+# Test data (keep structure, ignore results)
+/test-data/extractions/
+/test-data/analyses/
+/test-data/results/
+# Keep directory structure
+!/test-data/extractions/.gitkeep
+!/test-data/analyses/.gitkeep

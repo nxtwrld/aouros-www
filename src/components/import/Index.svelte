@@ -1,8 +1,8 @@
 
 <script lang="ts">
     import { files, createTasks, processTask } from '$lib/files';
-    import { processDocument, DocumentState, type Task, TaskState  } from '$lib/import';
-    import { DocumentType, type DocumentNew, type Document  } from '$lib/documents/types.d';
+    import { processDocument, DocumentState, type Task, TaskState, type Document  } from '$lib/import';
+    import { DocumentType, type DocumentNew, type Document as SavedDocument } from '$lib/documents/types.d';
     import { addDocument } from '$lib/documents';
     import  user, { type User } from '$lib/user';
     import { onMount } from 'svelte';
@@ -20,19 +20,31 @@
     import { updateSignals } from '$lib/health/signals';
     import DocumentTile from '$components/documents/DocumentTile.svelte';
     
-    let documents: DocumentNew[] = $state([]);
-    let results: DocumentNew[] = $state([]);//empResults;
+    // SSE Import support
+    import { IMPORT_FEATURE_FLAGS, selectImportMode } from '$lib/config/import-flags';
+    import { SSEImportClient } from '$lib/import/sse-client';
+    import DualStageProgress from './DualStageProgress.svelte';
+    
+    let documents: Document[] = $state([]);
+    let results: Document[] = $state([]);//empResults;
     let byProfileDetected: {
         profile: Profile,
-        reports: DocumentNew[]
+        reports: Document[]
     }[] = $state([]);
-    let invalids: DocumentNew[]= $state([]);
+    let invalids: Document[]= $state([]);
     let tasks: Task[] = $state([]);
-    let savedDocuments: Document[] = $state([]);
+    let savedDocuments: SavedDocument[] = $state([]);
 
-    let currentFiles: File[] = [];
-    let processingFiles: File[] = [];
+    let currentFiles: File[] = $state([]);
+    let processingFiles: File[] = $state([]);
     let processedCount: number = $state(0);
+    
+    // SSE Import state
+    let importMode = selectImportMode();
+    let useSSE = IMPORT_FEATURE_FLAGS.ENABLE_SSE_IMPORT && importMode !== 'traditional';
+    let sseClient = useSSE ? new SSEImportClient() : null;
+    let currentStage: 'extract' | 'analyze' | null = $state(null);
+    let stageProgress = $state(0);
 
 
     enum AssessingState {
@@ -111,9 +123,149 @@
     }
 
     async function analyze(files: File[]) {
-        const newTasks  = await createTasks(files)
-        tasks = [...tasks, ...newTasks];
-        //assess();
+        if (useSSE && sseClient) {
+            // Use SSE import for real-time progress
+            await analyzeWithSSE(files);
+        } else {
+            // Use traditional import flow
+            const newTasks = await createTasks(files);
+            tasks = [...tasks, ...newTasks];
+            //assess();
+        }
+    }
+    
+    async function analyzeWithSSE(files: File[]) {
+        try {
+            assessingState = AssessingState.ASSESSING;
+            processingState = ProcessingState.PROCESSING;
+            
+            // Set up progress callback to update UI
+            sseClient!.onProgress((event) => {
+                console.log('📊 SSE Progress Event:', event);
+                
+                // Update stage and progress from actual SSE events
+                if (event.stage.includes('extract') || event.stage === 'initialization' || event.stage === 'image_processing' || event.stage === 'ocr_extraction') {
+                    currentStage = 'extract';
+                } else if (event.stage.includes('analyz') || event.stage === 'feature_detection' || event.stage === 'medical_analysis') {
+                    currentStage = 'analyze';
+                }
+                
+                // Use actual progress from SSE events
+                stageProgress = event.progress;
+            });
+            
+            // Set up error callback for detailed error logging
+            sseClient!.onError((error, fileId) => {
+                console.error('❌ SSE Import Error:', {
+                    error,
+                    fileId,
+                    errorMessage: error.message,
+                    errorStack: error.stack
+                });
+            });
+            
+            const result = await sseClient!.processDocumentsSSE(files, {
+                language: ($user as User)?.language || 'English',
+                onStageChange: (stage) => {
+                    currentStage = stage;
+                    // Don't override progress here - let SSE events handle it
+                }
+            });
+            
+            // Log the final result for debugging
+            console.log('✅ SSE Import Completed Successfully:', {
+                assessmentsCount: result.assessments.length,
+                analysesCount: result.analyses.length,
+                assessments: result.assessments,
+                analyses: result.analyses
+            });
+            
+            // Convert SSE results to the expected format
+            // Each analysis corresponds to a single document (one-by-one processing)
+            let analysisIndex = 0;
+            const documents = result.assessments.flatMap((assessment, assessmentIndex) => {
+                return assessment.documents.map((document, docIndex) => {
+                    // Get the corresponding analysis for this specific document
+                    const analysis = result.analyses[analysisIndex];
+                    analysisIndex++; // Move to next analysis for next document
+                    
+                    console.log(`📋 Converting Document ${assessmentIndex + 1}-${docIndex + 1}:`, {
+                        documentTitle: document.title,
+                        analysisIndex: analysisIndex - 1,
+                        hasAnalysis: !!analysis,
+                        analysisType: analysis?.type,
+                        analysisIsMedical: analysis?.isMedical,
+                        hasReport: !!analysis?.report,
+                        reportKeys: analysis?.report ? Object.keys(analysis.report) : []
+                    });
+                    
+                    // Extract the report content from the analysis
+                    const reportData = analysis?.report || {};
+                    
+                    // Create Document object (from import types), not DocumentNew
+                    return {
+                        title: reportData.title || document.title || `Document ${assessmentIndex + 1}-${docIndex + 1}`,
+                        date: reportData.date || document.date || new Date().toISOString(),
+                        isMedical: analysis?.isMedical !== undefined ? analysis.isMedical : document.isMedical,
+                        state: DocumentState.PROCESSED,
+                        pages: assessment.pages.filter(p => document.pages.includes(p.page)),
+                        content: {
+                            tags: analysis?.tags || [],
+                            title: reportData.title || document.title,
+                            date: reportData.date || document.date,
+                            category: reportData.category || analysis?.cagegory || 'report',
+                            summary: reportData.summary,
+                            diagnosis: reportData.diagnosis,
+                            bodyParts: reportData.bodyParts,
+                            signals: reportData.signals || analysis?.signals,
+                            recommendations: reportData.recommendations,
+                            // Include all report fields
+                            ...reportData
+                        },
+                        // Import Document doesn't have these fields but we need them for processing
+                        attachments: [],
+                        profile: undefined,
+                        language: assessment.documents[0]?.language || 'English'
+                    } as Document;
+                });
+            });
+            
+            // Update results
+            const validDocs = documents.filter(d => d.isMedical);
+            const invalidDocs = documents.filter(d => !d.isMedical).map(d => {
+                d.state = DocumentState.ERROR;
+                return d;
+            });
+            
+            console.log('📊 Document Categorization:', {
+                totalDocuments: documents.length,
+                validDocuments: validDocs.length,
+                invalidDocuments: invalidDocs.length,
+                validDocs: validDocs.map(d => ({ title: d.title, isMedical: d.isMedical })),
+                invalidDocs: invalidDocs.map(d => ({ title: d.title, isMedical: d.isMedical }))
+            });
+            
+            results = [...results, ...validDocs];
+            invalids = [...invalids, ...invalidDocs];
+            byProfileDetected = mergeNamesOnReports(results);
+            
+            play('focus');
+            
+        } catch (error) {
+            console.error('❌ SSE Import Failed:', {
+                error,
+                errorMessage: error instanceof Error ? error.message : String(error),
+                errorStack: error instanceof Error ? error.stack : undefined,
+                files: files.map(f => ({ name: f.name, size: f.size, type: f.type }))
+            });
+            play('error');
+            // Could fall back to traditional import here
+        } finally {
+            assessingState = AssessingState.IDLE;
+            processingState = ProcessingState.IDLE;
+            currentStage = null;
+            stageProgress = 0;
+        }
     }
 
     async function assess() {
@@ -139,8 +291,8 @@
                 doc.state = DocumentState.ERROR;
                 console.log('ERROR assessing document', e, doc);
             });
-        const valid = doc.filter(d => d.isMedical);
-        const invalid = doc.filter(d => !d.isMedical).map(d => {
+        const valid = doc.filter((d: Document) => d.isMedical);
+        const invalid = doc.filter((d: Document) => !d.isMedical).map((d: Document) => {
             d.state = DocumentState.ERROR;
             return d;
         });
@@ -170,26 +322,26 @@
                 .catch(e => {
                     doc.state = DocumentState.ERROR;
                     console.log('ERROR processing document', e, doc);
+                    return null;
                 });
+            
             documents = documents.slice(1);
-            delete report.isMedical;
+            
+            if (!report) {
+                continue;
+            }
 
-            results = [
-                ...results,
-                {
-
-                    ...doc,
-                    state: DocumentState.PROCESSED,
-                    title: report.report.title,
-                    content: {
-                        tags: report.tags,
-                        ...report.report
-                    },
-                    attachments : doc.attachments,
-                    profile: undefined,
-                    task: doc.task
+            const processedDoc: Document = {
+                ...doc,
+                state: DocumentState.PROCESSED,
+                title: report.report?.title || doc.title,
+                content: {
+                    tags: report.tags || [],
+                    ...report.report
                 }
-            ]
+            };
+            
+            results = [...results, processedDoc]
             play('focus');
             
             byProfileDetected = mergeNamesOnReports(results);
@@ -250,35 +402,38 @@
             // 2. add the documents to the database for each new profile
             while (profileDetected.reports.length > 0) {
                 const document = profileDetected.reports[0];
-                // 2.0 add user id to the document
-                document.user_id = profileDetected.profile.id;
-                document.type = DocumentType.document;
-                // 2.1 prepare metadata
-
-                document.metadata = {
-                    title: document.content.title,
-                    tags: document.content.tags,
-                    date: document.content.date,
-                    category: document.content.category,
-                    language: document.language
-                }
+                
+                // Convert Document to DocumentNew for saving
+                const documentNew: DocumentNew = {
+                    user_id: profileDetected.profile.id,
+                    type: DocumentType.document,
+                    metadata: {
+                        title: document.content.title,
+                        tags: document.content.tags,
+                        date: document.content.date,
+                        category: document.content.category,
+                        language: document.language || 'English'
+                    },
+                    content: document.content,
+                    attachments: document.attachments || []
+                };
 
                 if (document.content.summary) {
-                    document.metadata.summary = document.content.summary;
+                    documentNew.metadata!.summary = document.content.summary;
                 }
                 if (document.content.diagnosis) {
-                    document.metadata.diagnosis = document.content.diagnosis;
+                    documentNew.metadata!.diagnosis = document.content.diagnosis;
                 }
 
                 // 2.2 create a signals listing
                 if (document.content.signals) {
                     signals.push(...document.content.signals);
                     // add signals names to the metadata
-                    document.metadata.signals = document.content.signals.map(signal => signal.test);
+                    documentNew.metadata!.signals = document.content.signals.map((signal: any) => signal.test);
                 }
 
                 // 3. add documents to the database
-                const newSavedDocument = await addDocument(document);
+                const newSavedDocument = await addDocument(documentNew);
                 console.log('newSavedDocument', newSavedDocument);
                 // 4. update the signalas as well
                 if (signals.length > 0) await updateSignals(signals, profileDetected.profile.id, newSavedDocument.id);
@@ -348,17 +503,17 @@
         */
     }
 
-    let previewReport: DocumentNew | null = $state(null);
+    let previewReport: Document | null = $state(null);
 
-    let analyzingInProgress = $derived(assessingState === AssessingState.ASSESSING || processingState === ProcessingState.PROCESSING);
-    let remainingScans = $derived(($user?.subscriptionStats?.scans || 0) - processedCount);
+    let analyzingInProgress = $derived(assessingState === 'ASSESSING' || processingState === 'PROCESSING');
+    let remainingScans = $derived((($user as User)?.subscriptionStats?.scans || 0) - processedCount);
 </script>
 
 <div class="page -empty">
-{#if $user?.subscriptionStats?.scans <= 0}
+{#if ($user as User)?.subscriptionStats?.scans <= 0}
     <div class="alert -warning">
         { $t('app.import.maxium-scans-reached', { values: {
-            limit: $user?.subscriptionStats?.default_scans
+            limit: ($user as User)?.subscriptionStats?.scans
         }}) } { $t('app.upgrade.please-upgrade-your-subscription-to-continue') }
     </div>
 {:else}
@@ -381,7 +536,7 @@
                 <ImportProfile bind:profile={profileDetected.profile} />
                 {#each profileDetected.reports as doc}
                     <div class="report-import">    
-                        <ImportDocument {doc} onclick={() => previewReport = doc}  onremove={() => removeItem('results', doc)} />
+                        <ImportDocument {doc} onclick={() => previewReport = doc} onremove={() => removeItem('results', doc)} />
                         {#key JSON.stringify(profileDetected.profile)}
                         <SelectProfile contact={profileDetected.profile} bind:selected={profileDetected.profile}  />
                         {/key}
@@ -396,7 +551,7 @@
             {/each}
             {#each invalids as doc}
             <div class="report-import">
-                <ImportDocument {doc} onremove={() => removeItem('invalids', doc)}  />
+                <ImportDocument {doc} onremove={() => removeItem('invalids', doc)} />
             </div>
             {/each}
             {#each tasks as task}
@@ -427,7 +582,19 @@
             <button onclick={assess} class="button -primary -large" disabled={tasks.length == 0 || analyzingInProgress}>
                 {#if analyzingInProgress}
                     <div class="button-loading">
-                        <LoaderThinking />
+                        {#if useSSE && currentStage}
+                            <DualStageProgress 
+                                overallProgress={stageProgress}
+                                currentStage={currentStage || 'extract'}
+                                extractProgress={currentStage === 'extract' ? stageProgress : 100}
+                                analyzeProgress={currentStage === 'analyze' ? stageProgress : 0}
+                                currentMessage={currentStage === 'extract' ? "Extracting text and data..." : "Analyzing medical content..."}
+                                filesTotal={processingFiles.length}
+                                filesCompleted={processedCount}
+                            />
+                        {:else}
+                            <LoaderThinking />
+                        {/if}
                     </div>
                 {:else}
                     { $t('app.import.analyze-reports') }
@@ -453,8 +620,22 @@
 
 </div>
 {#if previewReport}
-    <ScreenOverlay title={previewReport.content.title} preventer={true} onclose={() => previewReport = null}>
-        <DocumentView document={previewReport} />
+    <ScreenOverlay title={previewReport.content.title} preventer={true} on:close={() => previewReport = null}>
+        <!-- Convert import Document to SavedDocument format for DocumentView -->
+        <DocumentView document={{
+            id: crypto.randomUUID(),
+            key: '',
+            user_id: '',
+            owner_id: '',
+            type: DocumentType.document,
+            metadata: previewReport.metadata || {
+                title: previewReport.content.title,
+                tags: previewReport.content.tags,
+                date: previewReport.content.date
+            },
+            content: previewReport.content,
+            attachments: []
+        } as SavedDocument} />
     </ScreenOverlay>
 {/if}
 

@@ -1,6 +1,6 @@
 import type { Signal } from "$lib/types";
 import type { Content, TokenUsage } from "$lib/ai/types";
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
 
 // Enhanced signal types for the new system
 export interface EnhancedSignal extends Signal {
@@ -60,6 +60,52 @@ export interface FeatureDetection {
   features: string[];
 }
 
+// AI feature detection results from comprehensive analysis
+export interface AIFeatureDetectionResults {
+  isMedical: boolean;
+  language: string;
+  documentType: string;
+  medicalSpecialty: string[];
+  urgencyLevel: number;
+  tags: string[];
+
+  // Core section flags
+  hasSummary: boolean;
+  hasDiagnosis: boolean;
+  hasBodyParts: boolean;
+  hasPerformer: boolean;
+  hasRecommendations: boolean;
+  hasSignals: boolean;
+  hasPrescriptions: boolean;
+  hasImmunizations: boolean;
+
+  // Medical specialty section flags
+  hasImaging: boolean;
+  hasDental: boolean;
+  hasAdmission: boolean;
+  hasProcedures: boolean;
+  hasAnesthesia: boolean;
+  hasSpecimens: boolean;
+  hasMicroscopic: boolean;
+  hasMolecular: boolean;
+  hasECG: boolean;
+  hasEcho: boolean;
+  hasTriage: boolean;
+  hasTreatments: boolean;
+  hasAssessment: boolean;
+
+  // Enhanced specialty section flags
+  hasTumorCharacteristics: boolean;
+  hasTreatmentPlan: boolean;
+  hasTreatmentResponse: boolean;
+  hasImagingFindings: boolean;
+  hasGrossFindings: boolean;
+  hasSpecialStains: boolean;
+  hasAllergies: boolean;
+  hasMedications: boolean;
+  hasSocialHistory: boolean;
+}
+
 // Medical analysis result from existing system
 export interface MedicalAnalysis {
   content: any;
@@ -70,17 +116,34 @@ export interface MedicalAnalysis {
 
 // Document type analysis result
 export interface DocumentTypeAnalysis {
-  detectedType: string | null;
+  detectedSections: string[];
   confidence: number;
-  alternativeTypes: Array<{ type: string; confidence: number }>;
+  documentType: string;
+  detectedType: string; // Add the missing detectedType property
+  medicalSpecialty: string[];
+  urgencyLevel: number;
+  language: string;
   contentFeatures: {
     medicalTermDensity: number;
     structuredData: boolean;
     reportLength: number;
     specialtyIndicators: string[];
   };
-  schemaRecommendation: any;
+  sectionFlags: Record<string, boolean>;
 }
+
+// Progress tracking interface for SSE updates
+export interface ProgressEvent {
+  type: "progress" | "complete" | "error";
+  stage: string;
+  progress: number;
+  message: string;
+  data?: any;
+  timestamp: number;
+}
+
+// Progress callback type
+export type ProgressCallback = (event: ProgressEvent) => void;
 
 // LangGraph workflow state
 export interface DocumentProcessingState {
@@ -91,12 +154,20 @@ export interface DocumentProcessingState {
   options?: any;
   metadata?: Record<string, any>;
 
+  // Progress tracking
+  progressCallback?: ProgressCallback;
+  currentStage?: string;
+  stageProgress?: number;
+  totalStages?: number;
+  completedStages?: number;
+
   // Processing state
   content: Content[];
   tokenUsage: TokenUsage;
 
   // Analysis results
   featureDetection?: FeatureDetection;
+  featureDetectionResults?: AIFeatureDetectionResults;
   medicalAnalysis?: MedicalAnalysis;
   signals?: EnhancedSignal[];
 
@@ -104,6 +175,8 @@ export interface DocumentProcessingState {
   documentTypeAnalysis?: DocumentTypeAnalysis;
   selectedSchema?: FunctionDefinition;
   processingComplexity?: "low" | "medium" | "high";
+  nextSteps?: string[];
+  processingPlan?: any; // ProcessingPlan interface from document-type-router
 
   // Enhanced capabilities
   selectedProvider?: string;
@@ -122,6 +195,19 @@ export interface DocumentProcessingState {
     timestamp: string;
   }>;
   processingErrors?: string[];
+
+  // Quality validation
+  qualityChecks?: string[];
+
+  // Progress tracking methods
+  emitProgress?: (
+    stage: string,
+    progress: number,
+    message: string,
+    data?: any,
+  ) => void;
+  emitComplete?: (stage: string, message: string, data?: any) => void;
+  emitError?: (stage: string, message: string, error?: any) => void;
 }
 
 // Node execution result

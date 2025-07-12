@@ -1,8 +1,7 @@
-import { error, json } from "@sveltejs/kit";
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { analyze } from "$lib/import.server/analyzeReport";
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request }) {
+export const POST: RequestHandler = async ({ request }) => {
   //const str = url.searchParams.get('drug');
 
   const data = await request.json();
@@ -13,4 +12,4 @@ export async function POST({ request }) {
   const result = await analyze(data);
 
   return json(result);
-}
+};

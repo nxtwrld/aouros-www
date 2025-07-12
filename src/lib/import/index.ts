@@ -93,6 +93,7 @@ export type DetectedProfileData = {
     number?: string;
     provider?: string;
   };
+  health?: any; // Add missing health property
 };
 
 export async function processDocument(

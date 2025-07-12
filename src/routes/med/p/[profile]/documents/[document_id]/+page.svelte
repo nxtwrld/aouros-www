@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { getDocument, type Document } from '$lib/documents';
+    import { getDocument } from '$lib/documents';
+    import type { Document } from '$lib/documents/types.d';
     import Loading from '$components/ui/Loading.svelte';
     import { onMount } from 'svelte';
     import DocumentView from '$components/documents/DocumentView.svelte';
@@ -17,7 +18,7 @@
 
     let document: Document | null = $state(null);
     onMount(async () => {
-        document = await getDocument(data.document_id);
+        document = await getDocument(data.document_id) || null;
     });
 
     

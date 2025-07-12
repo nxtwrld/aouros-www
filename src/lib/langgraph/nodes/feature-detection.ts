@@ -1,49 +1,233 @@
 import type { DocumentProcessingState } from "../state";
-import { fetchGpt } from "$lib/ai/gpt";
+import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import featureDetection from "$lib/configurations/feature-detection";
-import type { FunctionDefinition } from "@langchain/core/dist/language_models/base";
+import type { FunctionDefinition } from "@langchain/core/language_models/base";
+import { log } from "$lib/logging/logger";
+import { isStateTransitionDebuggingEnabled } from "$lib/config/logging-config";
+import { recordWorkflowStep } from "$lib/debug/workflow-recorder";
 
 export const featureDetectionNode = async (
   state: DocumentProcessingState,
 ): Promise<Partial<DocumentProcessingState>> => {
+  const stepStartTime = Date.now();
+  
+  // Emit progress start
+  state.emitProgress?.(
+    "feature_detection",
+    0,
+    "Starting feature detection analysis",
+  );
+
   try {
     // Use existing feature detection configuration
+    state.emitProgress?.(
+      "feature_detection",
+      20,
+      "Loading feature detection schema",
+    );
     const schema = featureDetection as FunctionDefinition;
 
-    // Perform feature detection using existing GPT function
-    const result = await fetchGpt(state.content, schema, "feature_detection");
+    // Perform feature detection using enhanced AI provider
+    state.emitProgress?.(
+      "feature_detection",
+      40,
+      "Analyzing document features with AI",
+    );
+    
+    // Initialize token usage tracking
+    const tokenUsage = { ...state.tokenUsage };
+    
+    const result = await fetchGptEnhanced(
+      state.content, 
+      schema, 
+      tokenUsage,
+      state.language || "English",
+      "feature_detection"
+    );
 
     // Update token usage
-    const tokenUsage = {
-      ...state.tokenUsage,
-      feature_detection: result.usage?.total_tokens || 0,
-      total: state.tokenUsage.total + (result.usage?.total_tokens || 0),
+    state.emitProgress?.("feature_detection", 70, "Processing AI response");
+
+    // Extract feature detection results - enhanced provider returns parsed data directly
+    state.emitProgress?.(
+      "feature_detection",
+      90,
+      "Extracting feature analysis results",
+    );
+
+    const parsedResult = result || {};
+    
+    // Verbose logging of AI results
+    log.analysis.debug("Feature detection AI response:", {
+      parsedResult,
+      hasCategory: !!parsedResult.category,
+      hasNotMedical: !!parsedResult.notMedical,
+      hasTags: !!parsedResult.tags,
+      tagsLength: parsedResult.tags?.length || 0
+    });
+    
+    // Log the boolean flags we received
+    console.log("📋 Feature Detection - AI Response Boolean Flags:", {
+      hasPrescriptions: parsedResult.hasPrescriptions,
+      hasImmunizations: parsedResult.hasImmunizations,
+      hasSignals: parsedResult.hasSignals,
+      hasDiagnosis: parsedResult.hasDiagnosis,
+      hasBodyParts: parsedResult.hasBodyParts,
+      documentType: parsedResult.documentType,
+      isMedical: parsedResult.isMedical
+    });
+
+    const featureDetectionResult = {
+      type: parsedResult.category || "unknown",
+      confidence: parsedResult.notMedical ? 0 : 0.9,
+      features: parsedResult.tags || [],
+    };
+    
+    log.analysis.info("Feature detection results:", {
+      type: featureDetectionResult.type,
+      confidence: featureDetectionResult.confidence,
+      featuresCount: featureDetectionResult.features.length,
+      isMedical: !parsedResult.notMedical
+    });
+
+    // Emit completion
+    state.emitComplete?.(
+      "feature_detection",
+      "Feature detection completed successfully",
+      {
+        category: featureDetectionResult.type,
+        confidence: featureDetectionResult.confidence,
+        featuresFound: featureDetectionResult.features.length,
+        tokensUsed: tokenUsage.feature_detection || 0,
+        isMedical: !parsedResult.notMedical,
+      },
+    );
+
+    // Create AI feature detection results for router compatibility
+    const aiFeatureDetectionResults = {
+      isMedical: !parsedResult.notMedical,
+      language: parsedResult.language || state.language || "English",
+      documentType: parsedResult.documentType || parsedResult.category || "unknown",
+      medicalSpecialty: parsedResult.medicalSpecialty || [],
+      urgencyLevel: parsedResult.urgencyLevel || 1,
+      tags: parsedResult.tags || [],
+      
+      // Core section flags - use actual values from AI response
+      hasSummary: parsedResult.hasSummary || false,
+      hasDiagnosis: parsedResult.hasDiagnosis || false,
+      hasBodyParts: parsedResult.hasBodyParts || false,
+      hasPerformer: parsedResult.hasPerformer || false,
+      hasRecommendations: parsedResult.hasRecommendations || false,
+      hasSignals: parsedResult.hasSignals || false,
+      hasPrescriptions: parsedResult.hasPrescriptions || false,
+      hasImmunizations: parsedResult.hasImmunizations || false,
+
+      // Medical specialty section flags - use actual values from AI response
+      hasImaging: parsedResult.hasImaging || false,
+      hasDental: parsedResult.hasDental || false,
+      hasAdmission: parsedResult.hasAdmission || false,
+      hasProcedures: parsedResult.hasProcedures || false,
+      hasAnesthesia: parsedResult.hasAnesthesia || false,
+      hasSpecimens: parsedResult.hasSpecimens || false,
+      hasMicroscopic: parsedResult.hasMicroscopic || false,
+      hasMolecular: parsedResult.hasMolecular || false,
+      hasECG: parsedResult.hasECG || false,
+      hasEcho: parsedResult.hasEcho || false,
+      hasTriage: parsedResult.hasTriage || false,
+      hasTreatments: parsedResult.hasTreatments || false,
+      hasAssessment: parsedResult.hasAssessment || false,
+
+      // Enhanced specialty section flags - use actual values from AI response
+      hasTumorCharacteristics: parsedResult.hasTumorCharacteristics || false,
+      hasTreatmentPlan: parsedResult.hasTreatmentPlan || false,
+      hasTreatmentResponse: parsedResult.hasTreatmentResponse || false,
+      hasImagingFindings: parsedResult.hasImagingFindings || false,
+      hasGrossFindings: parsedResult.hasGrossFindings || false,
+      hasSpecialStains: parsedResult.hasSpecialStains || false,
+      hasAllergies: parsedResult.hasAllergies || false,
+      hasMedications: parsedResult.hasMedications || false,
+      hasSocialHistory: parsedResult.hasSocialHistory || false,
     };
 
-    // Extract feature detection results
-    const detectionResult =
-      result.choices[0]?.message?.function_call?.arguments;
-    const parsedResult = detectionResult ? JSON.parse(detectionResult) : {};
+    // Verbose logging of state being returned (only if enabled)
+    if (isStateTransitionDebuggingEnabled()) {
+      log.analysis.debug("Feature detection node returning state", {
+        featureDetection: featureDetectionResult,
+        featureDetectionResults: {
+          isMedical: aiFeatureDetectionResults.isMedical,
+          documentType: aiFeatureDetectionResults.documentType,
+          language: aiFeatureDetectionResults.language,
+          tags: aiFeatureDetectionResults.tags
+        },
+        tokenUsageTotal: tokenUsage.total
+      });
+    }
 
-    return {
-      featureDetection: {
-        type: parsedResult.category || "unknown",
-        confidence: parsedResult.notMedical ? 0 : 0.9,
-        features: parsedResult.tags || [],
-      },
+    // Log key results
+    console.log("🔍 Feature Detection Results:", {
+      documentType: aiFeatureDetectionResults.documentType,
+      hasPrescriptions: aiFeatureDetectionResults.hasPrescriptions,
+      hasImmunizations: aiFeatureDetectionResults.hasImmunizations,
+      hasSignals: aiFeatureDetectionResults.hasSignals
+    });
+
+    const outputState = {
+      featureDetection: featureDetectionResult,
+      featureDetectionResults: aiFeatureDetectionResults,
       tokenUsage,
     };
+
+    // Record workflow step for debugging
+    const stepDuration = Date.now() - stepStartTime;
+    recordWorkflowStep(
+      "feature_detection",
+      state,
+      { ...state, ...outputState },
+      stepDuration,
+      [], // AI requests are recorded in enhanced abstraction
+      [],
+      {
+        provider: "enhanced-openai",
+        flowType: "feature_detection",
+        confidence: featureDetectionResult.confidence,
+        documentType: aiFeatureDetectionResults.documentType
+      }
+    );
+
+    return outputState;
   } catch (error) {
-    console.error("Feature detection error:", error);
-    return {
+    log.analysis.error("Feature detection error:", error);
+
+    // Emit error
+    state.emitError?.("feature_detection", "Feature detection failed", error);
+
+    const errorState = {
       errors: [
         ...(state.errors || []),
         {
           node: "feature_detection",
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           timestamp: new Date().toISOString(),
         },
       ],
     };
+
+    // Record failed step for debugging
+    const stepDuration = Date.now() - stepStartTime;
+    recordWorkflowStep(
+      "feature_detection",
+      state,
+      { ...state, ...errorState },
+      stepDuration,
+      [],
+      [error instanceof Error ? error.message : String(error)],
+      {
+        provider: "enhanced-openai",
+        flowType: "feature_detection",
+        failed: true
+      }
+    );
+
+    return errorState;
   }
 };
