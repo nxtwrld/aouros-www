@@ -34,14 +34,6 @@ export const POST: RequestHandler = async ({ request }) => {
       const sendEvent = (event: ProgressEvent) => {
         const message = `data: ${JSON.stringify(event)}\n\n`;
         
-        // Log all progress events for debugging (always enabled for now)
-        console.log("📡 SSE Progress Event:", {
-          type: event.type,
-          stage: event.stage,
-          progress: event.progress,
-          message: event.message
-        });
-        
         // Log all progress events for debugging (only if enabled)
         if (isSSEProgressDebuggingEnabled()) {
           log.sse.debug("Sending SSE progress event", {
@@ -90,37 +82,7 @@ export const POST: RequestHandler = async ({ request }) => {
           // Convert LangGraph workflow result to ReportAnalysis format
           // This ensures compatibility with SSE client expectations
           
-          // CRITICAL DEBUG: What did we receive from workflow?
-          console.log("🚨 SSE CRITICAL DEBUG - Received from workflow:", {
-            workflowResultType: typeof workflowResult,
-            workflowResultKeys: Object.keys(workflowResult),
-            workflowResultReportType: typeof workflowResult.report,
-            workflowResultReportIsArray: Array.isArray(workflowResult.report),
-            workflowResultReportContent: workflowResult.report,
-            workflowResultMedications: workflowResult.medications,
-            workflowResultProcedures: workflowResult.procedures
-          });
-
-          // Debug the workflow result structure
-          console.log("🔍 SSE Endpoint - Workflow Result Structure:", {
-            hasReport: !!workflowResult.report,
-            reportType: typeof workflowResult.report,
-            reportIsArray: Array.isArray(workflowResult.report),
-            reportContent: workflowResult.report,
-            hasSignals: !!workflowResult.signals,
-            hasMedications: !!workflowResult.medications,
-            hasProcedures: !!workflowResult.procedures,
-            hasMultiNodeResults: !!workflowResult.multiNodeResults,
-            hasMedicalAnalysis: !!workflowResult.medicalAnalysis,
-            topLevelKeys: Object.keys(workflowResult).filter(k => 
-              !['images', 'text', 'language', 'content', 'tokenUsage', 'errors', 'progressCallback', 'emitProgress', 'emitComplete', 'emitError'].includes(k)
-            ),
-            // Add more detailed debugging
-            workflowResultReport: workflowResult.report,
-            medicationsContent: workflowResult.medications,
-            proceduresContent: workflowResult.procedures,
-            useStructuredDataCheck: workflowResult.report && typeof workflowResult.report === 'object' && !Array.isArray(workflowResult.report)
-          });
+          console.log("📦 SSE: Processing workflow result for client");
           
           // Use structured data from multi-node processing if available, otherwise fall back to legacy
           const useStructuredData = workflowResult.report && typeof workflowResult.report === 'object' && !Array.isArray(workflowResult.report);
@@ -128,7 +90,7 @@ export const POST: RequestHandler = async ({ request }) => {
           let actualContent;
           
           if (useStructuredData) {
-            console.log("✅ Using structured multi-node processing results");
+            console.log("✅ Using structured report");
             // Use the structured data from multi-node processing
             actualContent = {
               ...workflowResult,
@@ -138,7 +100,7 @@ export const POST: RequestHandler = async ({ request }) => {
               isMedical: workflowResult.report?.isMedical !== undefined ? workflowResult.report.isMedical : true,
             };
           } else {
-            console.log("⚠️ Falling back to legacy medicalAnalysis.content structure");
+            console.log("⚠️ Falling back to legacy structure");
             // Fall back to legacy structure
             const medicalAnalysis = workflowResult.medicalAnalysis;
             const analysisContent = medicalAnalysis?.content || workflowResult.content || {};
@@ -176,14 +138,7 @@ export const POST: RequestHandler = async ({ request }) => {
             enhancedFields: actualContent.enhancedFields
           };
           
-          console.log("📤 SSE Endpoint - Final Result Structure:", {
-            hasStructuredReport: useStructuredData,
-            reportType: typeof result.report,
-            reportKeys: result.report && typeof result.report === 'object' ? Object.keys(result.report) : [],
-            signalsCount: result.signals?.length || 0,
-            medicationsPresent: !!result.medications,
-            proceduresPresent: !!result.procedures
-          });
+          console.log(`📤 SSE: Sending ${useStructuredData ? 'structured' : 'legacy'} report to client`);
           
           log.analysis.info("LangGraph workflow result converted to ReportAnalysis format", workflowResult);
         } else {

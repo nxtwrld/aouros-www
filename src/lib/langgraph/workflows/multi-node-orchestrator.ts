@@ -58,15 +58,7 @@ export class MultiNodeOrchestrator {
     try {
       await this.initialize();
 
-      // CRITICAL DEBUG: What state are we receiving?
-      console.log("🚨 ORCHESTRATOR START - Input state:", {
-        stateKeys: Object.keys(state),
-        stateReportType: typeof (state as any).report,
-        stateReportIsArray: Array.isArray((state as any).report),
-        stateReportContent: (state as any).report,
-        stateContent: state.content,
-        stateText: state.text
-      });
+      console.log("🎼 Multi-node orchestrator starting");
 
       // Emit initial progress
       this.emitProgress(state, 0, "Starting multi-node processing");
@@ -83,24 +75,9 @@ export class MultiNodeOrchestrator {
       // Select nodes based on feature detection
       this.emitProgress(state, 10, "Selecting processing nodes based on detected features");
       
-      // Debug logging for feature detection results
-      console.log("🔍 Multi-Node Orchestrator - Feature Detection Results:", {
-        featureDetectionResults: state.featureDetectionResults,
-        availableNodes: nodeRegistry.getAllNodes().map(n => ({
-          name: n.nodeName,
-          triggers: n.featureDetectionTriggers
-        }))
-      });
-      
       const selectedNodes = nodeRegistry.selectNodes(state.featureDetectionResults);
       
-      console.log("🎯 Multi-Node Orchestrator - Selected Nodes:", {
-        selectedCount: selectedNodes.length,
-        selectedNames: selectedNodes.map(n => n.nodeName),
-        triggeredFeatures: Object.entries(state.featureDetectionResults || {})
-          .filter(([, value]) => value === true)
-          .map(([key]) => key)
-      });
+      console.log(`🎯 Selected ${selectedNodes.length} nodes: ${selectedNodes.map(n => n.nodeName).join(', ')}`);
 
       if (selectedNodes.length === 0) {
         console.log("📝 No specialized nodes selected - document may not contain processable medical sections");
@@ -117,11 +94,7 @@ export class MultiNodeOrchestrator {
       this.emitProgress(state, 20, `Creating execution plan for ${selectedNodes.length} nodes`);
       const executionPlan = nodeRegistry.createExecutionPlan(selectedNodes);
 
-      console.log(`📋 Execution plan created:`, {
-        totalNodes: executionPlan.totalNodes,
-        parallelGroups: executionPlan.parallelGroups.length,
-        executionOrder: executionPlan.executionOrder,
-      });
+      console.log(`📋 Execution plan: ${executionPlan.totalNodes} nodes in ${executionPlan.parallelGroups.length} groups`);
 
       // Execute nodes according to plan
       this.emitProgress(state, 30, "Executing specialized processing nodes");
@@ -237,7 +210,7 @@ export class MultiNodeOrchestrator {
     for (const group of executionPlan.parallelGroups) {
       for (const node of group) {
         try {
-          console.log(`⚡ Executing ${node.nodeName}...`);
+          console.log(`🔄 Starting ${node.nodeName}`);
           const nodeResult = await Promise.race([
             node.nodeFunction(currentState),
             this.createNodeTimeout(node.nodeName),
@@ -249,7 +222,7 @@ export class MultiNodeOrchestrator {
           const progress = Math.round((completedNodes / executionPlan.totalNodes) * 100);
           progressCallback(progress, `Completed ${node.nodeName} (${completedNodes}/${executionPlan.totalNodes})`);
 
-          console.log(`✅ Completed ${node.nodeName}`);
+          console.log(`✅ ${node.nodeName} completed`);
         } catch (error) {
           console.error(`❌ Failed ${node.nodeName}:`, error);
           
@@ -395,44 +368,21 @@ export class MultiNodeOrchestrator {
       molecular: null,
     };
 
-    // Debug: Log what sections are in the processed state
-    console.log("🔍 Multi-Node Aggregation Debug:", {
-      processedStateKeys: Object.keys(processedState).filter(k => 
-        !['images', 'text', 'language', 'content', 'tokenUsage', 'featureDetection', 'featureDetectionResults', 'errors', 'progressCallback', 'emitProgress', 'emitComplete', 'emitError'].includes(k)
-      ),
-      sectionNameMap,
-      executionOrder: executionPlan.executionOrder
-    });
+    console.log("📊 Aggregating results from processed nodes");
 
     // Map each Universal Factory section result to the correct interface property
     for (const [sectionName, interfaceProperty] of Object.entries(sectionNameMap)) {
       if ((processedState as any)[sectionName]) {
-        console.log(`✅ Mapping section '${sectionName}' to '${interfaceProperty}'`, {
-          data: (processedState as any)[sectionName]
-        });
+        console.log(`✅ Adding ${sectionName} to report`);
         
         if (sectionName === 'medical-analysis') {
           // For the main medical-analysis, this IS the report data - merge it into reportObject
           let medicalData = (processedState as any)[sectionName];
-          console.log(`🔍 Medical-analysis data before processing:`, {
-            medicalDataType: typeof medicalData,
-            medicalDataIsArray: Array.isArray(medicalData),
-            medicalDataKeys: medicalData && typeof medicalData === 'object' ? Object.keys(medicalData) : 'not an object',
-            medicalDataContent: medicalData,
-            hasReportField: medicalData && typeof medicalData === 'object' && 'report' in medicalData,
-            reportFieldType: medicalData && typeof medicalData === 'object' && 'report' in medicalData ? typeof medicalData.report : 'no-report-field',
-            reportFieldIsArray: medicalData && typeof medicalData === 'object' && 'report' in medicalData ? Array.isArray(medicalData.report) : false
-          });
           
           // Fix: If medical data came back as an array, extract the first object
           if (Array.isArray(medicalData)) {
             console.log(`⚠️ Medical-analysis returned as array, extracting first element`);
             medicalData = medicalData.length > 0 && typeof medicalData[0] === 'object' ? medicalData[0] : {};
-            console.log(`✅ Extracted medical data:`, {
-              extractedType: typeof medicalData,
-              extractedKeys: medicalData && typeof medicalData === 'object' ? Object.keys(medicalData) : 'not an object',
-              extractedContent: medicalData
-            });
           }
           
           // Only merge if we have a valid object, but EXCLUDE any 'report' field to prevent override
@@ -440,19 +390,6 @@ export class MultiNodeOrchestrator {
             // Create a copy without the report field to prevent override
             const { report: _, ...medicalDataWithoutReport } = medicalData;
             Object.assign(reportObject, medicalDataWithoutReport);
-            console.log(`📋 Merged medical-analysis data into report object (excluding report field):`, {
-              medicalDataKeys: Object.keys(medicalData),
-              mergedKeys: Object.keys(medicalDataWithoutReport),
-              reportObjectKeysAfterMerge: Object.keys(reportObject),
-              reportObjectType: typeof reportObject,
-              reportObjectIsArray: Array.isArray(reportObject),
-              skippedReportField: 'report' in medicalData
-            });
-          } else {
-            console.warn(`⚠️ Invalid medical-analysis data structure, skipping merge:`, {
-              medicalDataType: typeof medicalData,
-              medicalDataIsArray: Array.isArray(medicalData)
-            });
           }
         } else {
           // For specialized sections, add to report object under the correct property name
@@ -461,38 +398,15 @@ export class MultiNodeOrchestrator {
           
           // Also add as separate field for backward compatibility
           structuredResults[interfaceProperty] = sectionData;
-          
-          console.log(`📊 Added ${sectionName} to report.${interfaceProperty}:`, {
-            dataType: typeof sectionData,
-            dataKeys: sectionData && typeof sectionData === 'object' ? Object.keys(sectionData) : []
-          });
         }
-      } else {
-        console.log(`⏭️ Section '${sectionName}' not found in processed state`);
       }
     }
 
     // Set the main report object
     structuredResults.report = reportObject;
     
-    console.log("📋 Final Report Object Created:", {
-      reportObjectKeys: Object.keys(reportObject),
-      reportObjectType: typeof reportObject,
-      hasRecommendations: !!reportObject.recommendations,
-      hasMedications: !!reportObject.medications,
-      hasProcedures: !!reportObject.procedures
-    });
+    console.log(`📋 Report object created with ${Object.keys(reportObject).length} sections`);
 
-    // Debug what's in processedState that might conflict with our structured results
-    console.log("🔍 ProcessedState structure before aggregation:", {
-      processedStateKeys: Object.keys(processedState),
-      hasReportInProcessedState: 'report' in processedState,
-      processedStateReportType: typeof (processedState as any).report,
-      processedStateReportContent: (processedState as any).report,
-      structuredResultsKeys: Object.keys(structuredResults),
-      structuredResultsReportType: typeof structuredResults.report,
-      structuredResultsReportKeys: structuredResults.report ? Object.keys(structuredResults.report) : []
-    });
 
     // Build aggregated results carefully to avoid conflicts
     const aggregatedResults = {
@@ -521,58 +435,18 @@ export class MultiNodeOrchestrator {
       report: reportObject,
     };
     
-    // Additional debugging and final check
-    console.log("🎯 FINAL REPORT OBJECT VERIFICATION:", {
-      aggregatedResultsReportType: typeof aggregatedResults.report,
-      aggregatedResultsReportIsArray: Array.isArray(aggregatedResults.report),
-      aggregatedResultsReportKeys: aggregatedResults.report && typeof aggregatedResults.report === 'object' && !Array.isArray(aggregatedResults.report) 
-        ? Object.keys(aggregatedResults.report) : 'not-an-object',
-      reportObjectBuilt: reportObject,
-      finalReportAssigned: aggregatedResults.report
-    });
-    
     // CRITICAL: Delete any existing report property that might be an array and force our object
     if (Array.isArray(aggregatedResults.report)) {
       console.log("🚨 CRITICAL: Report is still an array after aggregation, forcing object override");
       aggregatedResults.report = reportObject;
     };
     
-    console.log("📤 Final aggregated results structure:", {
-      aggregatedResultsKeys: Object.keys(aggregatedResults),
-      finalReportType: typeof aggregatedResults.report,
-      finalReportIsArray: Array.isArray(aggregatedResults.report),
-      finalReportKeys: aggregatedResults.report && typeof aggregatedResults.report === 'object' && !Array.isArray(aggregatedResults.report) 
-        ? Object.keys(aggregatedResults.report) : 'not-an-object',
-      finalReportContent: aggregatedResults.report,
-      reportObjectContent: reportObject,
-      reportObjectType: typeof reportObject,
-      reportObjectIsArray: Array.isArray(reportObject)
-    });
-
-    // Log summary
-    console.log("📊 Multi-node processing summary:", {
-      totalNodes: processedNodes.length,
-      successful,
-      failed: errors.length,
-      executionTime: `${executionTime}ms`,
-      structuredProperties: Object.keys(structuredResults).filter(k => k !== 'tokenUsage' && k !== 'errors'),
-    });
+    console.log("✅ Multi-node orchestration completed");
 
     if (isLangGraphDebuggingEnabled()) {
       log.analysis.debug("Multi-node execution results:", aggregatedResults.multiNodeResults);
       log.analysis.debug("Structured results mapping:", structuredResults);
     }
-
-    // CRITICAL DEBUG: Log what we're actually returning 
-    console.log("🚨 CRITICAL DEBUG - What orchestrator is returning:", {
-      returnType: typeof aggregatedResults,
-      returnKeys: Object.keys(aggregatedResults),
-      returnReportType: typeof aggregatedResults.report,
-      returnReportIsArray: Array.isArray(aggregatedResults.report),
-      returnReportContent: aggregatedResults.report,
-      returnMedications: aggregatedResults.medications,
-      returnProcedures: aggregatedResults.procedures
-    });
 
     return aggregatedResults;
   }
