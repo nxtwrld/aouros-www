@@ -34,6 +34,14 @@ export const POST: RequestHandler = async ({ request }) => {
       const sendEvent = (event: ProgressEvent) => {
         const message = `data: ${JSON.stringify(event)}\n\n`;
         
+        // Log all progress events for debugging (always enabled for now)
+        console.log("📡 SSE Progress Event:", {
+          type: event.type,
+          stage: event.stage,
+          progress: event.progress,
+          message: event.message
+        });
+        
         // Log all progress events for debugging (only if enabled)
         if (isSSEProgressDebuggingEnabled()) {
           log.sse.debug("Sending SSE progress event", {
@@ -81,12 +89,42 @@ export const POST: RequestHandler = async ({ request }) => {
           
           // Convert LangGraph workflow result to ReportAnalysis format
           // This ensures compatibility with SSE client expectations
-          // The medicalAnalysis.content contains the full ReportAnalysis from the traditional analyze function
-          const medicalAnalysis = workflowResult.medicalAnalysis;
-          const analysisContent = medicalAnalysis?.content || workflowResult.content || {};
           
-          // The workflow returns the analysis in medicalAnalysis.content
-          const actualContent = analysisContent;
+          // Debug the workflow result structure
+          console.log("🔍 SSE Endpoint - Workflow Result Structure:", {
+            hasReport: !!workflowResult.report,
+            hasSignals: !!workflowResult.signals,
+            hasPrescriptions: !!workflowResult.prescriptions,
+            hasProcedures: !!workflowResult.procedures,
+            hasMultiNodeResults: !!workflowResult.multiNodeResults,
+            hasMedicalAnalysis: !!workflowResult.medicalAnalysis,
+            topLevelKeys: Object.keys(workflowResult).filter(k => 
+              !['images', 'text', 'language', 'content', 'tokenUsage', 'errors', 'progressCallback', 'emitProgress', 'emitComplete', 'emitError'].includes(k)
+            )
+          });
+          
+          // Use structured data from multi-node processing if available, otherwise fall back to legacy
+          const useStructuredData = workflowResult.report && typeof workflowResult.report === 'object' && !Array.isArray(workflowResult.report);
+          
+          let actualContent;
+          
+          if (useStructuredData) {
+            console.log("✅ Using structured multi-node processing results");
+            // Use the structured data from multi-node processing
+            actualContent = {
+              ...workflowResult,
+              // Ensure backward compatibility fields are present
+              type: workflowResult.report?.type || "report",
+              category: workflowResult.report?.category || "report",
+              isMedical: workflowResult.report?.isMedical !== undefined ? workflowResult.report.isMedical : true,
+            };
+          } else {
+            console.log("⚠️ Falling back to legacy medicalAnalysis.content structure");
+            // Fall back to legacy structure
+            const medicalAnalysis = workflowResult.medicalAnalysis;
+            const analysisContent = medicalAnalysis?.content || workflowResult.content || {};
+            actualContent = analysisContent;
+          }
           
           result = {
             // Preserve the original ReportAnalysis structure if it exists
@@ -100,23 +138,40 @@ export const POST: RequestHandler = async ({ request }) => {
             hasImmunization: actualContent.hasImmunization || false,
             hasLabOrVitals: actualContent.hasLabOrVitals || false,
             content: actualContent.content || data.text,
-            report: actualContent.report || actualContent || {},
+            
+            // Use structured report data if available, otherwise fall back
+            report: useStructuredData ? workflowResult.report : (actualContent.report || actualContent || {}),
+            
+            // Use structured workflow results if available
             signals: workflowResult.signals || actualContent.signals || [],
+            prescriptions: workflowResult.prescriptions || actualContent.prescriptions,
+            immunizations: workflowResult.immunizations || actualContent.immunizations,
+            imaging: workflowResult.imaging || actualContent.imaging,
+            procedures: workflowResult.procedures || actualContent.procedures,
+            
             text: actualContent.text || data.text || "",
             tokenUsage: workflowResult.tokenUsage || actualContent.tokenUsage || { total: 0 },
+            
             // Include additional fields from analysis if available
-            prescriptions: actualContent.prescriptions,
-            immunizations: actualContent.immunizations,
-            imaging: actualContent.imaging,
             results: actualContent.results,
             recommendations: actualContent.recommendations,
+            
             // Include enhanced fields from workflow
-            documentType: analysisContent.documentType,
-            schemaUsed: analysisContent.schemaUsed,
-            confidence: analysisContent.confidence,
-            processingComplexity: analysisContent.processingComplexity,
-            enhancedFields: analysisContent.enhancedFields
+            documentType: actualContent.documentType,
+            schemaUsed: actualContent.schemaUsed,
+            confidence: actualContent.confidence,
+            processingComplexity: actualContent.processingComplexity,
+            enhancedFields: actualContent.enhancedFields
           };
+          
+          console.log("📤 SSE Endpoint - Final Result Structure:", {
+            hasStructuredReport: useStructuredData,
+            reportType: typeof result.report,
+            reportKeys: result.report && typeof result.report === 'object' ? Object.keys(result.report) : [],
+            signalsCount: result.signals?.length || 0,
+            prescriptionsPresent: !!result.prescriptions,
+            proceduresPresent: !!result.procedures
+          });
           
           log.analysis.info("LangGraph workflow result converted to ReportAnalysis format", workflowResult);
         } else {

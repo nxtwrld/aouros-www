@@ -199,6 +199,17 @@ export interface DocumentProcessingState {
   // Quality validation
   qualityChecks?: string[];
 
+  // Multi-node execution results
+  multiNodeResults?: {
+    processedNodes: string[];
+    successfulNodes?: number;
+    failedNodes?: number;
+    executionTime: number;
+    parallelGroups?: number;
+    executionStats?: any;
+    message?: string;
+  };
+
   // Progress tracking methods
   emitProgress?: (
     stage: string,

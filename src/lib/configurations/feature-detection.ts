@@ -12,7 +12,7 @@ import type { FunctionDefinition } from "@langchain/core/language_models/base";
 export default {
   name: "extractor",
   description:
-    "Analyze medical documents comprehensively to identify ALL medical sections present. This analysis works in any language and determines which specific medical sections should be populated in the final document. If not medical content, mark as notMedical and skip other analysis.",
+    "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.",
   parameters: {
     type: "object",
     properties: {
@@ -78,12 +78,12 @@ export default {
       hasSignals: {
         type: "boolean",
         description:
-          "Does the document contain vital signs, lab values, measurements, or quantitative data?",
+          "Does the document contain vital signs, lab values, measurements, or quantitative data? Look for: blood pressure, heart rate, temperature, lab test results, numerical values with units (mg, ml, %), blood counts, chemistry panels, etc.",
       },
       hasPrescriptions: {
         type: "boolean",
         description:
-          "Does the document contain prescriptions, medications, or drug information?",
+          "Does the document contain prescriptions, medications, or drug information? Look for: medication names, dosages (mg, ml), frequency instructions (1-0-1, twice daily), drug brand names, pharmaceutical prescriptions, medication recommendations, etc.",
       },
       hasImmunizations: {
         type: "boolean",
@@ -110,7 +110,7 @@ export default {
       hasProcedures: {
         type: "boolean",
         description:
-          "Does the document contain surgical or medical procedures?",
+          "Does the document contain surgical or medical procedures? Look for: surgery descriptions, endoscopic procedures, biopsies, treatments performed, operative reports, procedure codes (CPT), surgical techniques, medical interventions, etc.",
       },
       hasAnesthesia: {
         type: "boolean",

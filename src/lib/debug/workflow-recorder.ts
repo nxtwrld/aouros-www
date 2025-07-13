@@ -152,9 +152,9 @@ export class WorkflowRecorder {
     log.analysis.info("Started workflow recording", { 
       recordingId, 
       phase,
-      hasImages: !!input.images,
-      hasText: !!input.text,
-      language: input.language 
+      hasImages: !!(input?.images),
+      hasText: !!(input?.text),
+      language: input?.language 
     });
 
     return recordingId;

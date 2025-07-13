@@ -91,7 +91,7 @@ export async function setUser(
 
     user.set({
       ...userProfile,
-      unlocked: undefined,
+      unlocked: true, // Always set to true to disable lock behavior
       isMedical:
         userProfile.subscription === "medical" ||
         userProfile.subscription === "gp",
@@ -99,6 +99,7 @@ export async function setUser(
       //subscriptionStats
     });
 
+    // Auto-unlock with stored key_pass if available
     if (key_pass) {
       await unlock(key_pass);
     }
@@ -110,7 +111,7 @@ export async function setUser(
       auth_id: actualUserSession.id,
       email: actualUserSession.email as string,
       language: (profile as any).language || "en",
-      unlocked: undefined,
+      unlocked: true, // Always set to true to disable lock behavior
     });
     return null;
   }

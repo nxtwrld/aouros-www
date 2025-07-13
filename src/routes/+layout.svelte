@@ -16,8 +16,8 @@
 		if (!currentSupabase) return;
 		
 		const authListener = currentSupabase.auth.onAuthStateChange((event, sessionData) => {
-			// Only invalidate on actual auth changes, not initial load
-			if (event !== 'INITIAL_SESSION') {
+			// Only invalidate on actual auth changes, not session refresh or token refresh
+			if (event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED') {
 				invalidate('supabase:auth');
 			}
 		});

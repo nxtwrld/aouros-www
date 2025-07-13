@@ -11,8 +11,57 @@ export const featureDetectionNode = async (
 ): Promise<Partial<DocumentProcessingState>> => {
   const stepStartTime = Date.now();
   
+  console.log("🔍 Feature Detection Node - Progress Debug:", {
+    hasProgressCallback: !!state.progressCallback,
+    progressCallbackType: typeof state.progressCallback,
+    hasEmitProgress: !!state.emitProgress,
+    emitProgressType: typeof state.emitProgress,
+    stateKeys: Object.keys(state).filter(k => k.includes('progress') || k.includes('emit'))
+  });
+  
+  // Create local progress emitters if we have a progress callback
+  const hasCallback = !!state.progressCallback;
+  
+  const emitProgress = hasCallback 
+    ? (stage: string, progress: number, message: string) => {
+        state.progressCallback?.({
+          type: "progress",
+          stage,
+          progress,
+          message,
+          timestamp: Date.now(),
+        });
+      }
+    : state.emitProgress;
+    
+  const emitComplete = hasCallback
+    ? (stage: string, message: string, data?: any) => {
+        state.progressCallback?.({
+          type: "progress",
+          stage,
+          progress: 100,
+          message,
+          data,
+          timestamp: Date.now(),
+        });
+      }
+    : state.emitComplete;
+    
+  const emitError = hasCallback
+    ? (stage: string, message: string, error?: any) => {
+        state.progressCallback?.({
+          type: "error",
+          stage,
+          progress: 0,
+          message,
+          data: error,
+          timestamp: Date.now(),
+        });
+      }
+    : state.emitError;
+  
   // Emit progress start
-  state.emitProgress?.(
+  emitProgress?.(
     "feature_detection",
     0,
     "Starting feature detection analysis",
@@ -20,7 +69,7 @@ export const featureDetectionNode = async (
 
   try {
     // Use existing feature detection configuration
-    state.emitProgress?.(
+    emitProgress?.(
       "feature_detection",
       20,
       "Loading feature detection schema",
@@ -28,7 +77,7 @@ export const featureDetectionNode = async (
     const schema = featureDetection as FunctionDefinition;
 
     // Perform feature detection using enhanced AI provider
-    state.emitProgress?.(
+    emitProgress?.(
       "feature_detection",
       40,
       "Analyzing document features with AI",
@@ -42,14 +91,25 @@ export const featureDetectionNode = async (
       schema, 
       tokenUsage,
       state.language || "English",
-      "feature_detection"
+      "feature_detection",
+      hasCallback ? (stage, progress, message) => {
+        // Convert AI progress to node progress (map 0-100% to 40-70% of node progress)
+        const nodeProgress = 40 + (progress * 0.30);
+        state.progressCallback?.({
+          type: "progress",
+          stage: `feature_detection_${stage}`,
+          progress: nodeProgress,
+          message: `AI: ${message}`,
+          timestamp: Date.now(),
+        });
+      } : undefined
     );
 
     // Update token usage
-    state.emitProgress?.("feature_detection", 70, "Processing AI response");
+    emitProgress?.("feature_detection", 70, "Processing AI response");
 
     // Extract feature detection results - enhanced provider returns parsed data directly
-    state.emitProgress?.(
+    emitProgress?.(
       "feature_detection",
       90,
       "Extracting feature analysis results",
@@ -91,7 +151,7 @@ export const featureDetectionNode = async (
     });
 
     // Emit completion
-    state.emitComplete?.(
+    emitComplete?.(
       "feature_detection",
       "Feature detection completed successfully",
       {
@@ -199,7 +259,7 @@ export const featureDetectionNode = async (
     log.analysis.error("Feature detection error:", error);
 
     // Emit error
-    state.emitError?.("feature_detection", "Feature detection failed", error);
+    emitError?.("feature_detection", "Feature detection failed", error);
 
     const errorState = {
       errors: [

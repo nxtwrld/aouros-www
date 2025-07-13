@@ -17,15 +17,16 @@ import {
 } from "$lib/debug/workflow-recorder";
 import { createWorkflowReplay } from "$lib/debug/workflow-replay";
 
-// Import node implementations (to be created)
+// Import core workflow nodes (essential workflow structure)
 import { inputValidationNode } from "../nodes/input-validation";
 import { featureDetectionNode } from "../nodes/feature-detection";
-import { medicalAnalysisNode } from "../nodes/medical-analysis";
-import { signalProcessingNode } from "../nodes/signal-processing";
 import { providerSelectionNode } from "../nodes/provider-selection";
 import { externalValidationNode } from "../nodes/external-validation";
 import { qualityGateNode } from "../nodes/quality-gate";
 import { documentTypeRouterNode } from "../nodes/document-type-router";
+
+// Import unified multi-node processing
+import { executeMultiNodeProcessing } from "./multi-node-orchestrator";
 
 // Conditional edge functions
 const shouldProcessMedical = (state: DocumentProcessingState): string => {
@@ -88,8 +89,20 @@ const shouldUseEnhancedSchema = (state: DocumentProcessingState): string => {
   return "standard";
 };
 
-// Create the document processing workflow
-export const createDocumentProcessingWorkflow = (config?: WorkflowConfig) => {
+// Create the document processing workflow  
+export const createDocumentProcessingWorkflow = (config?: WorkflowConfig, progressCallback?: ProgressCallback) => {
+  // Create wrapper functions for nodes that have access to the progress callback
+  const createNodeWrapper = (nodeFn: any) => {
+    return async (state: DocumentProcessingState) => {
+      // Ensure progress callback is always available for live workflow execution
+      const enhancedState = {
+        ...state,
+        progressCallback: progressCallback || state.progressCallback,
+      };
+      return await nodeFn(enhancedState);
+    };
+  };
+
   // Create state graph with DocumentProcessingState type
   const workflow = new StateGraph<DocumentProcessingState>({
     channels: {
@@ -113,36 +126,42 @@ export const createDocumentProcessingWorkflow = (config?: WorkflowConfig) => {
       confidence: null,
       errors: null,
       processingErrors: null,
+      // Progress tracking fields (functions won't serialize but we need the channels)
+      progressCallback: null,
+      currentStage: null,
+      stageProgress: null,
+      totalStages: null,
+      completedStages: null,
+      emitProgress: null,
+      emitComplete: null,
+      emitError: null,
     },
   });
 
-  // Core processing nodes (wrapping existing functions)
-  workflow.addNode("input_validation", inputValidationNode);
-  workflow.addNode("feature_detection", featureDetectionNode);
-  workflow.addNode("medical_analysis", medicalAnalysisNode);
-  workflow.addNode("signal_processing", signalProcessingNode);
+  // Core workflow nodes (wrapped to preserve progress callback)
+  workflow.addNode("input_validation", createNodeWrapper(inputValidationNode));
+  workflow.addNode("feature_detection", createNodeWrapper(featureDetectionNode));
+  workflow.addNode("multi_node_processing", createNodeWrapper(executeMultiNodeProcessing));
 
   // Enhanced nodes (new capabilities)
-  workflow.addNode("provider_selection", providerSelectionNode);
-  workflow.addNode("document_type_router", documentTypeRouterNode);
-  workflow.addNode("external_validation", externalValidationNode);
-  workflow.addNode("quality_gate", qualityGateNode);
+  workflow.addNode("provider_selection", createNodeWrapper(providerSelectionNode));
+  workflow.addNode("document_type_router", createNodeWrapper(documentTypeRouterNode));
+  workflow.addNode("external_validation", createNodeWrapper(externalValidationNode));
+  workflow.addNode("quality_gate", createNodeWrapper(qualityGateNode));
 
-  // Define edges
+  // Define simplified workflow edges for unified processing
   workflow.addEdge("input_validation", "document_type_router");
   workflow.addEdge("document_type_router", "provider_selection");
   workflow.addEdge("provider_selection", "feature_detection");
 
-  // Conditional routing after feature detection
+  // Conditional routing after feature detection - now goes to unified multi-node processing
   workflow.addConditionalEdges("feature_detection", shouldProcessMedical, {
-    medical: "medical_analysis",
+    medical: "multi_node_processing",
     error: END,
   });
 
-  workflow.addEdge("medical_analysis", "signal_processing");
-
-  // Conditional external validation
-  workflow.addConditionalEdges("signal_processing", shouldValidateExternally, {
+  // Conditional external validation after multi-node processing
+  workflow.addConditionalEdges("multi_node_processing", shouldValidateExternally, {
     validate: "external_validation",
     skip: "quality_gate",
   });
@@ -233,8 +252,11 @@ const createProgressEmitters = (
   };
 };
 
-// Helper function to run workflow with backwards compatibility
-export async function runDocumentProcessingWorkflow(
+// Export unified workflow as primary implementation
+export { runUnifiedDocumentProcessingWorkflow as runDocumentProcessingWorkflow } from "./unified-workflow";
+
+// Legacy implementation kept for backward compatibility
+export async function runDocumentProcessingWorkflowLegacy(
   images?: string[],
   text?: string,
   language?: string,
@@ -246,6 +268,7 @@ export async function runDocumentProcessingWorkflow(
     const replayFilePath = workflowRecorder.getReplayFilePath();
     if (replayFilePath) {
       console.log("🔄 Replay mode detected, loading workflow from:", replayFilePath);
+      // In replay mode, we don't run the live workflow, only replay recorded events
       return await replayWorkflowFromFile(replayFilePath, progressCallback);
     }
   }
@@ -265,11 +288,19 @@ export async function runDocumentProcessingWorkflow(
       console.log("📹 Workflow recording started:", recordingId);
     }
   }
-  const workflow = createDocumentProcessingWorkflow(config);
+  const workflow = createDocumentProcessingWorkflow(config, progressCallback);
 
   // Create progress emitters
   const { emitProgress, emitComplete, emitError, totalStages } =
     createProgressEmitters(progressCallback);
+
+  // Create a shared context for progress tracking that persists across nodes
+  const progressContext = {
+    callback: progressCallback,
+    emitProgress,
+    emitComplete,
+    emitError,
+  };
 
   // Initialize state with progress tracking
   const initialState: DocumentProcessingState = {
@@ -289,6 +320,13 @@ export async function runDocumentProcessingWorkflow(
   try {
     // Emit initial progress
     emitProgress("workflow_start", 0, "Starting document processing workflow");
+
+    console.log("🔍 Workflow Progress Debug:", {
+      hasProgressCallback: !!progressCallback,
+      progressCallbackType: typeof progressCallback,
+      emitProgressType: typeof emitProgress,
+      isFunction: typeof progressCallback === 'function'
+    });
 
     if (isWorkflowTracingEnabled()) {
       console.log("🚀 Starting LangGraph workflow execution");

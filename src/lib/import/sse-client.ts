@@ -197,10 +197,24 @@ export class SSEImportClient {
               for (const line of lines) {
                 if (line.startsWith("data: ")) {
                   try {
-                    const eventData = JSON.parse(line.slice(6));
+                    const jsonData = line.slice(6);
+                    console.log("🔍 SSE raw data:", jsonData);
+                    
+                    if (!jsonData || jsonData.trim() === '') {
+                      console.warn("Empty SSE data received, skipping");
+                      continue;
+                    }
+                    
+                    const eventData = JSON.parse(jsonData);
+                    console.log("📨 SSE parsed event:", eventData);
+                    
                     this.handleSSEEvent(eventData, fileId, resolve, reject);
                   } catch (parseError) {
-                    console.error("Failed to parse SSE event:", parseError);
+                    console.error("Failed to parse SSE event:", {
+                      parseError,
+                      rawLine: line,
+                      jsonData: line.slice(6)
+                    });
                   }
                 }
               }
@@ -230,6 +244,15 @@ export class SSEImportClient {
     resolve: (value: T) => void,
     reject: (reason: any) => void,
   ): void {
+    // Safety check for undefined eventData
+    if (!eventData || typeof eventData !== 'object') {
+      console.error("SSE received invalid eventData:", eventData);
+      const error = new Error("Invalid SSE event data received");
+      this.onErrorCallback?.(error, fileId);
+      reject(error);
+      return;
+    }
+
     // Add fileId to event
     const enhancedEvent = { ...eventData, fileId };
 

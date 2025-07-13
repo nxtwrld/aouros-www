@@ -25,6 +25,7 @@ export interface AnalysisOptions {
   maxRetries?: number;
   timeoutMs?: number;
   flowType?: FlowType;
+  progressCallback?: (stage: string, progress: number, message: string) => void;
 }
 
 export interface AnalysisResult {
@@ -92,8 +93,13 @@ export class EnhancedAIProvider {
     const flowType = options.flowType || 'medical_analysis';
 
     try {
+      // Emit progress: Starting AI analysis
+      options.progressCallback?.(flowType, 0, `Initializing ${flowType} with AI provider`);
+
       // Get model configuration for this flow
       const { provider, modelInfo, config } = modelConfig.getModelForFlow(flowType);
+      
+      options.progressCallback?.(flowType, 10, `Configured ${provider} provider`);
       
       // Normalize schema with proper function name
       const normalizedSchema = this.normalizeSchema(schema);
@@ -103,6 +109,8 @@ export class EnhancedAIProvider {
 
       // Get API key
       const apiKey = modelConfig.getProviderApiKey(provider);
+      
+      options.progressCallback?.(flowType, 30, `Sending request to ${provider} AI`);
       
       // Execute with the appropriate provider
       const result = await this.executeWithProvider(
@@ -118,6 +126,8 @@ export class EnhancedAIProvider {
           maxTokens: modelInfo.max_tokens,
         }
       );
+
+      options.progressCallback?.(flowType, 80, `Processing ${provider} AI response`);
 
       // Log the actual AI response for debugging (only if enabled)
       if (isAIResponseLoggingEnabled()) {
@@ -154,8 +164,11 @@ export class EnhancedAIProvider {
         flowType
       });
 
+      options.progressCallback?.(flowType, 100, `${flowType} completed successfully`);
+
       return result;
     } catch (error) {
+      options.progressCallback?.(flowType, 0, `${flowType} failed: ${error instanceof Error ? error.message : String(error)}`);
       aiLogger.error(`Enhanced provider analysis (${flowType}) failed:`, error);
       throw error;
     }
@@ -535,11 +548,13 @@ export class EnhancedAIProvider {
     schema: FunctionDefinition,
     tokenUsage: TokenUsage,
     language: string = "English",
-    flowType: FlowType = 'medical_analysis'
+    flowType: FlowType = 'medical_analysis',
+    progressCallback?: (stage: string, progress: number, message: string) => void
   ): Promise<any> {
     return this.analyzeDocument(content, schema, tokenUsage, {
       language,
       flowType,
+      progressCallback,
     });
   }
 }
@@ -553,7 +568,8 @@ export async function fetchGptEnhanced(
   schema: FunctionDefinition,
   tokenUsage: TokenUsage,
   language: string = "English",
-  flowType: FlowType = 'medical_analysis'
+  flowType: FlowType = 'medical_analysis',
+  progressCallback?: (stage: string, progress: number, message: string) => void
 ): Promise<any> {
-  return enhancedAIProvider.fetchGptCompatible(content, schema, tokenUsage, language, flowType);
+  return enhancedAIProvider.fetchGptCompatible(content, schema, tokenUsage, language, flowType, progressCallback);
 }

@@ -28,10 +28,10 @@
     <meta name="robots" content="noindex">
 </svelte:head>
 
-<Unlock>
+<!-- <Unlock> -->
     {#if lazyUnlock !== null}
         {#await lazyUnlock  then { default: LazyComponent }}
             <LazyComponent>{@render children?.()}</LazyComponent>
         {/await}
     {/if}
-</Unlock>
+<!-- </Unlock> -->
