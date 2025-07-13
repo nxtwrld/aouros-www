@@ -116,6 +116,7 @@ export const createDocumentProcessingWorkflow = (config?: WorkflowConfig, progre
       featureDetectionResults: null,  // ← Missing field added!
       medicalAnalysis: null,
       signals: null,
+      report: null, // Add report channel
       documentTypeAnalysis: null,
       selectedSchema: null,
       processingComplexity: null,

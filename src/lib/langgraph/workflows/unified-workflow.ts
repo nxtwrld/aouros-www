@@ -91,9 +91,10 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
       medicalAnalysis: null,
       signals: null,
       imaging: null,
-      prescriptions: null,
+      medications: null,
       procedures: null,
       multiNodeResults: null,
+      report: null, // Add report channel
       
       // Workflow control
       documentTypeAnalysis: null,
@@ -195,11 +196,13 @@ export async function runUnifiedDocumentProcessingWorkflow(
       images,
       text,
       language: language || "English",
-      content: text,
+      content: text ? [{ type: "text" as const, text }] : [], // Fix content to be proper array
       metadata: {},
       tokenUsage: { total: 0 },
       errors: [],
       progressCallback,
+      // Explicitly initialize report as empty to prevent any default array assignment
+      report: undefined,
     };
 
     console.log("🚀 Executing unified workflow...");

@@ -1,8 +1,19 @@
 import type { FunctionDefinition } from "@langchain/core/language_models/base";
+import coreDiagnosis from "./core.diagnosis";
+import coreBodyParts from "./core.bodyParts";
+import corePerformer from "./core.performer";
+import corePatient from "./core.patient";
+
+/**
+ * Core Medical Report Schema
+ * 
+ * Main medical analysis schema that extracts core medical information
+ * from any medical document. Reuses core components to avoid duplication.
+ */
 export default {
-  name: "extractor",
+  name: "extract_medical_report",
   description:
-    "You are medical expert data analyzer. Proceed step by step. Identify the content of the image. We are analyzing medical data, if it is not medical report, lab results of medical imaging, mark it as notMedical. With each section provide only iformation contained in the document. For dates, if only a year is known, just list the year without day or month.  All results should be translated to [LANGUAGE] language, except for 'content' field that keeps the original language of the document.",
+    "Extract core medical information from any medical document including summary, diagnosis, performer, patient, and body parts. This is the primary medical analysis that runs for all medical documents.",
   parameters: {
     type: "object",
     properties: {
@@ -72,6 +83,25 @@ export default {
         description:
           "Date of the report. Format: YYYY-MM-DD HH:MM:SS or just YYYY-MM-DD if no specific time is available. Leave empty if the date is not available.",
       },
+      
+      // Core medical components - reuse shared schemas
+      diagnosis: coreDiagnosis,
+      bodyParts: coreBodyParts, 
+      performer: corePerformer,
+      patient: corePatient,
+      
+      // Core medical flags for other nodes
+      isMedical: {
+        type: "boolean",
+        description: "Is this a medical document?",
+      },
+      
+      confidence: {
+        type: "number",
+        minimum: 0,
+        maximum: 1,
+        description: "Confidence in medical report extraction (0-1)",
+      },
     },
     required: [
       "category",
@@ -83,6 +113,7 @@ export default {
       "patient",
       "bodyParts",
       "diagnosis",
+      "isMedical",
     ],
   },
 } as FunctionDefinition;

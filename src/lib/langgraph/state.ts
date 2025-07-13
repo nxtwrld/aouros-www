@@ -170,6 +170,7 @@ export interface DocumentProcessingState {
   featureDetectionResults?: AIFeatureDetectionResults;
   medicalAnalysis?: MedicalAnalysis;
   signals?: EnhancedSignal[];
+  report?: any; // Add report field
 
   // Document type routing
   documentTypeAnalysis?: DocumentTypeAnalysis;

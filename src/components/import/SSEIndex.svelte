@@ -232,6 +232,7 @@
             attachments: [],
             metadata: {
               title: analysis?.report?.title || docInfo.title,
+              tags: analysis?.tags || [],
               date: docInfo.date,
               category: analysis?.report?.category || 'report',
               isMedical: true,
@@ -304,7 +305,9 @@
     for (const group of byProfileDetected) {
       for (const doc of group.reports) {
         try {
-          const savedDoc = await addDocument(doc, group.profile.id);
+          // Set the user_id in the document before saving
+          doc.user_id = group.profile.id;
+          const savedDoc = await addDocument(doc);
           savedDocuments.push(savedDoc);
           
           // Update health signals
@@ -337,7 +340,7 @@
   }
 
   // File input reference
-  let fileInputRef: HTMLInputElement;
+  let fileInputRef: HTMLInputElement | undefined = $state();
 
   // File input handler
   function fileInput(e: any) {
@@ -349,15 +352,38 @@
   <!-- File Drop Area -->
   {#if processingState === ProcessingState.IDLE && processingFiles.length === 0}
     <div class="drop-section">
-      <DropFiles />
-      <input 
-        type="file" 
-        multiple 
-        accept="image/*,.pdf" 
-        style="display: none;" 
-        onchange={fileInput}
-        bind:this={fileInputRef}
-      />
+      <DropFiles>
+        <div class="upload-area">
+          <h3 class="upload-heading">Import medical reports and images</h3>
+          
+          <input 
+            type="file" 
+            id="upload-file"
+            multiple 
+            accept="image/*,.pdf,.jpg,.jpeg,.png,.webp" 
+            style="display: none;" 
+            onchange={fileInput}
+            bind:this={fileInputRef}
+          />
+          
+          <div class="upload-actions">
+            <label for="upload-file" class="upload-button">
+              <div class="upload-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </div>
+              <span>Choose Files</span>
+            </label>
+            
+            <p class="upload-hint">or drag and drop files here</p>
+          </div>
+          
+          <p class="file-types">Supports PDF, JPG, PNG, WEBP images</p>
+        </div>
+      </DropFiles>
     </div>
   {/if}
 
@@ -513,6 +539,72 @@
 
   .drop-section {
     margin-bottom: 32px;
+  }
+
+  .upload-area {
+    text-align: center;
+    padding: 48px 24px;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    background: #f9fafb;
+    transition: all 0.3s ease;
+  }
+
+  .upload-area:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+
+  .upload-heading {
+    color: #374151;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 24px 0;
+  }
+
+  .upload-actions {
+    margin-bottom: 16px;
+  }
+
+  .upload-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #3b82f6;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    border: none;
+    text-decoration: none;
+  }
+
+  .upload-button:hover {
+    background: #2563eb;
+  }
+
+  .upload-icon {
+    display: flex;
+    align-items: center;
+  }
+
+  .upload-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .upload-hint {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 12px 0 0 0;
+  }
+
+  .file-types {
+    color: #9ca3af;
+    font-size: 12px;
+    margin: 0;
   }
 
   .processing-section {
@@ -758,6 +850,19 @@
   @media (max-width: 768px) {
     .sse-import-container {
       padding: 16px;
+    }
+
+    .upload-area {
+      padding: 32px 16px;
+    }
+
+    .upload-heading {
+      font-size: 18px;
+    }
+
+    .upload-button {
+      padding: 10px 20px;
+      font-size: 14px;
     }
 
     .files-grid {

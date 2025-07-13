@@ -83,7 +83,7 @@ export default {
       hasPrescriptions: {
         type: "boolean",
         description:
-          "Does the document contain prescriptions, medications, or drug information? Look for: medication names, dosages (mg, ml), frequency instructions (1-0-1, twice daily), drug brand names, pharmaceutical prescriptions, medication recommendations, etc.",
+          "Does the document contain NEW prescriptions being issued? Look for: prescription documents, newly prescribed medications, dosage instructions for new medications (1-0-1, twice daily), drug brand names being prescribed, pharmaceutical prescriptions, medication recommendations from current visit, 'Take as directed', 'Dispense #30', refill information, etc.",
       },
       hasImmunizations: {
         type: "boolean",
@@ -197,7 +197,7 @@ export default {
       hasMedications: {
         type: "boolean",
         description:
-          "Does the document contain current medications (separate from new prescriptions)?",
+          "Does the document contain CURRENT medications or medication lists? Look for: current medication reconciliation, medication lists, home medications, ongoing medications, medication history, 'Patient takes', 'Currently on', medication compliance information, drug allergies, medication changes, discontinued medications, etc.",
       },
       hasSocialHistory: {
         type: "boolean",

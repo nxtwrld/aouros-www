@@ -90,17 +90,36 @@ export const POST: RequestHandler = async ({ request }) => {
           // Convert LangGraph workflow result to ReportAnalysis format
           // This ensures compatibility with SSE client expectations
           
+          // CRITICAL DEBUG: What did we receive from workflow?
+          console.log("🚨 SSE CRITICAL DEBUG - Received from workflow:", {
+            workflowResultType: typeof workflowResult,
+            workflowResultKeys: Object.keys(workflowResult),
+            workflowResultReportType: typeof workflowResult.report,
+            workflowResultReportIsArray: Array.isArray(workflowResult.report),
+            workflowResultReportContent: workflowResult.report,
+            workflowResultMedications: workflowResult.medications,
+            workflowResultProcedures: workflowResult.procedures
+          });
+
           // Debug the workflow result structure
           console.log("🔍 SSE Endpoint - Workflow Result Structure:", {
             hasReport: !!workflowResult.report,
+            reportType: typeof workflowResult.report,
+            reportIsArray: Array.isArray(workflowResult.report),
+            reportContent: workflowResult.report,
             hasSignals: !!workflowResult.signals,
-            hasPrescriptions: !!workflowResult.prescriptions,
+            hasMedications: !!workflowResult.medications,
             hasProcedures: !!workflowResult.procedures,
             hasMultiNodeResults: !!workflowResult.multiNodeResults,
             hasMedicalAnalysis: !!workflowResult.medicalAnalysis,
             topLevelKeys: Object.keys(workflowResult).filter(k => 
               !['images', 'text', 'language', 'content', 'tokenUsage', 'errors', 'progressCallback', 'emitProgress', 'emitComplete', 'emitError'].includes(k)
-            )
+            ),
+            // Add more detailed debugging
+            workflowResultReport: workflowResult.report,
+            medicationsContent: workflowResult.medications,
+            proceduresContent: workflowResult.procedures,
+            useStructuredDataCheck: workflowResult.report && typeof workflowResult.report === 'object' && !Array.isArray(workflowResult.report)
           });
           
           // Use structured data from multi-node processing if available, otherwise fall back to legacy
@@ -140,14 +159,7 @@ export const POST: RequestHandler = async ({ request }) => {
             content: actualContent.content || data.text,
             
             // Use structured report data if available, otherwise fall back
-            report: useStructuredData ? workflowResult.report : (actualContent.report || actualContent || {}),
-            
-            // Use structured workflow results if available
-            signals: workflowResult.signals || actualContent.signals || [],
-            prescriptions: workflowResult.prescriptions || actualContent.prescriptions,
-            immunizations: workflowResult.immunizations || actualContent.immunizations,
-            imaging: workflowResult.imaging || actualContent.imaging,
-            procedures: workflowResult.procedures || actualContent.procedures,
+            report: useStructuredData ? workflowResult.report : (actualContent.report || [{ type: "text", text: actualContent.text || data.text }]),
             
             text: actualContent.text || data.text || "",
             tokenUsage: workflowResult.tokenUsage || actualContent.tokenUsage || { total: 0 },
@@ -169,7 +181,7 @@ export const POST: RequestHandler = async ({ request }) => {
             reportType: typeof result.report,
             reportKeys: result.report && typeof result.report === 'object' ? Object.keys(result.report) : [],
             signalsCount: result.signals?.length || 0,
-            prescriptionsPresent: !!result.prescriptions,
+            medicationsPresent: !!result.medications,
             proceduresPresent: !!result.procedures
           });
           

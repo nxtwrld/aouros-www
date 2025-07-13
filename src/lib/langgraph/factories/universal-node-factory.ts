@@ -55,13 +55,34 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     nodeName: "imaging-processing",
     description: "Medical imaging analysis",
     schemaPath: "$lib/configurations/imaging",
-    triggers: ["hasImaging", "hasImagingFindings"],
+    triggers: ["hasImaging"],
     priority: 2,
   },
-  "prescription-processing": {
-    nodeName: "prescription-processing",
-    description: "Prescription and medication analysis",
-    schemaPath: "$lib/configurations/prescription",
+  "imaging-findings-processing": {
+    nodeName: "imaging-findings-processing",
+    description: "Detailed radiology findings and measurements analysis",
+    schemaPath: "$lib/configurations/imaging-findings",
+    triggers: ["hasImagingFindings"],
+    priority: 2,
+  },
+  "echo-processing": {
+    nodeName: "echo-processing",
+    description: "Echocardiogram cardiac ultrasound analysis",
+    schemaPath: "$lib/configurations/echo",
+    triggers: ["hasEcho"],
+    priority: 2,
+  },
+  "allergies-processing": {
+    nodeName: "allergies-processing",
+    description: "Patient allergy and adverse reaction analysis",
+    schemaPath: "$lib/configurations/allergies",
+    triggers: ["hasAllergies"],
+    priority: 2,
+  },
+  "medications-processing": {
+    nodeName: "medications-processing",
+    description: "Unified medication and prescription analysis",
+    schemaPath: "$lib/configurations/medications",
     triggers: ["hasPrescriptions", "hasMedications"],
     priority: 2,
   },
@@ -124,6 +145,71 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/dental",
     triggers: ["hasDental", "hasOralHealth"],
     priority: 4,
+  },
+
+  // Advanced Medical Analysis (Priority 5)
+  "tumor-characteristics-processing": {
+    nodeName: "tumor-characteristics-processing",
+    description: "Tumor staging, grading, and cancer characteristics analysis",
+    schemaPath: "$lib/configurations/tumor-characteristics",
+    triggers: ["hasTumorCharacteristics"],
+    priority: 5,
+  },
+  "treatment-plan-processing": {
+    nodeName: "treatment-plan-processing",
+    description: "Structured treatment plans including chemotherapy, radiation, surgery",
+    schemaPath: "$lib/configurations/treatment-plan",
+    triggers: ["hasTreatmentPlan"],
+    priority: 5,
+  },
+  "treatment-response-processing": {
+    nodeName: "treatment-response-processing",
+    description: "Treatment response assessment including RECIST criteria",
+    schemaPath: "$lib/configurations/treatment-response",
+    triggers: ["hasTreatmentResponse"],
+    priority: 5,
+  },
+  "gross-findings-processing": {
+    nodeName: "gross-findings-processing",
+    description: "Gross pathological examination findings analysis",
+    schemaPath: "$lib/configurations/gross-findings",
+    triggers: ["hasGrossFindings"],
+    priority: 5,
+  },
+  "special-stains-processing": {
+    nodeName: "special-stains-processing",
+    description: "Special stains and immunohistochemistry results analysis",
+    schemaPath: "$lib/configurations/special-stains",
+    triggers: ["hasSpecialStains"],
+    priority: 5,
+  },
+  "social-history-processing": {
+    nodeName: "social-history-processing",
+    description: "Social history and lifestyle factors analysis",
+    schemaPath: "$lib/configurations/social-history",
+    triggers: ["hasSocialHistory"],
+    priority: 5,
+  },
+  "treatments-processing": {
+    nodeName: "treatments-processing",
+    description: "Treatment protocols and therapeutic interventions analysis",
+    schemaPath: "$lib/configurations/treatments",
+    triggers: ["hasTreatments"],
+    priority: 5,
+  },
+  "assessment-processing": {
+    nodeName: "assessment-processing",
+    description: "Clinical assessment and specialist evaluation analysis",
+    schemaPath: "$lib/configurations/assessment",
+    triggers: ["hasAssessment"],
+    priority: 5,
+  },
+  "molecular-processing": {
+    nodeName: "molecular-processing",
+    description: "Molecular, genetic, and biomarker analysis",
+    schemaPath: "$lib/configurations/molecular",
+    triggers: ["hasMolecular"],
+    priority: 5,
   },
 };
 
@@ -307,16 +393,37 @@ export class UniversalNodeFactory {
 /**
  * Convenience functions for creating specific nodes
  */
-export const createECGNode = () => UniversalNodeFactory.createNode("ecg-processing");
-export const createTriageNode = () => UniversalNodeFactory.createNode("triage-processing");
-export const createDentalNode = () => UniversalNodeFactory.createNode("dental-processing");
-export const createAnesthesiaNode = () => UniversalNodeFactory.createNode("anesthesia-processing");
-export const createMicroscopicNode = () => UniversalNodeFactory.createNode("microscopic-processing");
-export const createSpecimensNode = () => UniversalNodeFactory.createNode("specimens-processing");
-export const createAdmissionNode = () => UniversalNodeFactory.createNode("admission-processing");
-export const createImmunizationNode = () => UniversalNodeFactory.createNode("immunization-processing");
-export const createImagingNode = () => UniversalNodeFactory.createNode("imaging-processing");
-export const createPrescriptionNode = () => UniversalNodeFactory.createNode("prescription-processing");
-export const createProceduresNode = () => UniversalNodeFactory.createNode("procedures-processing");
+// Core Processing (Priority 1)
 export const createMedicalAnalysisNode = () => UniversalNodeFactory.createNode("medical-analysis");
 export const createSignalProcessingNode = () => UniversalNodeFactory.createNode("signal-processing");
+
+// Specialized Medical Domains (Priority 2)
+export const createECGNode = () => UniversalNodeFactory.createNode("ecg-processing");
+export const createImagingNode = () => UniversalNodeFactory.createNode("imaging-processing");
+export const createImagingFindingsNode = () => UniversalNodeFactory.createNode("imaging-findings-processing");
+export const createEchoNode = () => UniversalNodeFactory.createNode("echo-processing");
+export const createAllergiesNode = () => UniversalNodeFactory.createNode("allergies-processing");
+export const createMedicationsNode = () => UniversalNodeFactory.createNode("medications-processing");
+export const createProceduresNode = () => UniversalNodeFactory.createNode("procedures-processing");
+
+// Specialized Medical Domains (Priority 3)
+export const createAnesthesiaNode = () => UniversalNodeFactory.createNode("anesthesia-processing");
+export const createMicroscopicNode = () => UniversalNodeFactory.createNode("microscopic-processing");
+export const createTriageNode = () => UniversalNodeFactory.createNode("triage-processing");
+export const createImmunizationNode = () => UniversalNodeFactory.createNode("immunization-processing");
+
+// Hospital Workflow Domains (Priority 4)
+export const createSpecimensNode = () => UniversalNodeFactory.createNode("specimens-processing");
+export const createAdmissionNode = () => UniversalNodeFactory.createNode("admission-processing");
+export const createDentalNode = () => UniversalNodeFactory.createNode("dental-processing");
+
+// Advanced Medical Analysis (Priority 5)
+export const createTumorCharacteristicsNode = () => UniversalNodeFactory.createNode("tumor-characteristics-processing");
+export const createTreatmentPlanNode = () => UniversalNodeFactory.createNode("treatment-plan-processing");
+export const createTreatmentResponseNode = () => UniversalNodeFactory.createNode("treatment-response-processing");
+export const createGrossFindingsNode = () => UniversalNodeFactory.createNode("gross-findings-processing");
+export const createSpecialStainsNode = () => UniversalNodeFactory.createNode("special-stains-processing");
+export const createSocialHistoryNode = () => UniversalNodeFactory.createNode("social-history-processing");
+export const createTreatmentsNode = () => UniversalNodeFactory.createNode("treatments-processing");
+export const createAssessmentNode = () => UniversalNodeFactory.createNode("assessment-processing");
+export const createMolecularNode = () => UniversalNodeFactory.createNode("molecular-processing");
