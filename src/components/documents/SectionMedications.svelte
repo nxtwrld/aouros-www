@@ -27,9 +27,9 @@
     let interactions = $derived(data?.interactions || []);
     let adherenceAssessment = $derived(data?.adherenceAssessment);
     
-    // Helper functions
-    function getStatusClass(status: string) {
-        const statusClasses = {
+    // Helper functions with proper typing
+    function getStatusClass(status: string): string {
+        const statusClasses: Record<string, string> = {
             'active': 'status-active',
             'completed': 'status-completed',
             'discontinued': 'status-discontinued',
@@ -39,8 +39,8 @@
         return statusClasses[status] || 'status-unknown';
     }
     
-    function getAdherenceClass(adherence: string) {
-        const adherenceClasses = {
+    function getAdherenceClass(adherence: string): string {
+        const adherenceClasses: Record<string, string> = {
             'excellent': 'adherence-excellent',
             'good': 'adherence-good', 
             'fair': 'adherence-fair',
@@ -50,8 +50,8 @@
         return adherenceClasses[adherence] || 'adherence-unknown';
     }
     
-    function getChangeTypeClass(changeType: string) {
-        const changeClasses = {
+    function getChangeTypeClass(changeType: string): string {
+        const changeClasses: Record<string, string> = {
             'dose_increase': 'change-increase',
             'dose_decrease': 'change-decrease',
             'frequency_change': 'change-frequency',
@@ -62,8 +62,8 @@
         return changeClasses[changeType] || 'change-neutral';
     }
     
-    function getSeverityClass(severity: string) {
-        const severityClasses = {
+    function getSeverityClass(severity: string): string {
+        const severityClasses: Record<string, string> = {
             'mild': 'severity-mild',
             'moderate': 'severity-moderate',
             'major': 'severity-major',
@@ -74,8 +74,8 @@
         return severityClasses[severity] || 'severity-unknown';
     }
     
-    function getRouteDisplay(route: string) {
-        const routeMap = {
+    function getRouteDisplay(route: string): string {
+        const routeMap: Record<string, string> = {
             'oral': 'By mouth',
             'sublingual': 'Under tongue',
             'nasal': 'Nasal',
@@ -98,14 +98,12 @@
 {#if hasMedications}
     <h3 class="h3 heading -sticky">{$t('report.medications')}</h3>
     
-    <div class="page -block">
         <!-- Current Medications -->
         {#if currentMedications.length > 0}
-            <div class="medication-section">
-                <h4 class="section-title">{$t('report.current-medications')}</h4>
-                <div class="medications-list">
+                <h4 class="section-title-sub">{$t('report.current-medications')}</h4>
+                <ul class="list-items">
                     {#each currentMedications as medication}
-                        <div class="medication-card">
+                        <li class="panel medication-active">
                             <div class="medication-header">
                                 <h5 class="medication-name">{medication.medicationName}</h5>
                                 <span class="medication-status {getStatusClass(medication.status)}">{medication.status || 'active'}</span>
@@ -172,19 +170,17 @@
                                     <p>{medication.notes}</p>
                                 </div>
                             {/if}
-                        </div>
+                        </li>
                     {/each}
-                </div>
-            </div>
+                </ul>
         {/if}
         
         <!-- New Prescriptions -->
         {#if newPrescriptions.length > 0}
-            <div class="medication-section">
-                <h4 class="section-title">{$t('report.new-prescriptions')}</h4>
-                <div class="medications-list">
+                <h4 class="section-title-sub">{$t('report.new-prescriptions')}</h4>
+                <ul class="list-items">
                     {#each newPrescriptions as prescription}
-                        <div class="medication-card prescription-card">
+                        <li class="panel medication-new">
                             <div class="medication-header">
                                 <h5 class="medication-name">{prescription.medicationName}</h5>
                                 <span class="prescription-badge">{$t('report.new')}</span>
@@ -230,19 +226,17 @@
                                     {/if}
                                 </div>
                             {/if}
-                        </div>
+                        </li>
                     {/each}
-                </div>
-            </div>
+                </ul>
         {/if}
         
         <!-- Medication Changes -->
         {#if medicationChanges.length > 0}
-            <div class="medication-section">
-                <h4 class="section-title">{$t('report.medication-changes')}</h4>
-                <div class="changes-list">
+                <h4 class="section-title-sub">{$t('report.medication-changes')}</h4>
+                <ul class="list-items">
                     {#each medicationChanges as change}
-                        <div class="change-item {getChangeTypeClass(change.changeType)}">
+                        <li class="panel {getChangeTypeClass(change.changeType)}">
                             <div class="change-header">
                                 <span class="medication-name">{change.medicationName}</span>
                                 <span class="change-type">{change.changeType.replace('_', ' ')}</span>
@@ -266,19 +260,17 @@
                                     <span class="value">{change.reason}</span>
                                 </div>
                             {/if}
-                        </div>
+                        </li>
                     {/each}
-                </div>
-            </div>
+                </ul>
         {/if}
         
         <!-- Discontinued Medications -->
         {#if discontinuedMedications.length > 0}
-            <div class="medication-section">
-                <h4 class="section-title">{$t('report.discontinued-medications')}</h4>
-                <div class="discontinued-list">
+                <h4 class="section-title-sub">{$t('report.discontinued-medications')}</h4>
+                <ul class="list-items">
                     {#each discontinuedMedications as discontinued}
-                        <div class="discontinued-item">
+                        <li class="panel medication-discontinued">
                             <span class="medication-name">{discontinued.medicationName}</span>
                             {#if discontinued.dateDiscontinued}
                                 <span class="date-discontinued">{discontinued.dateDiscontinued}</span>
@@ -286,19 +278,17 @@
                             {#if discontinued.reasonDiscontinued}
                                 <span class="reason">({discontinued.reasonDiscontinued})</span>
                             {/if}
-                        </div>
+                        </li>
                     {/each}
-                </div>
-            </div>
+                </ul>
         {/if}
         
         <!-- Drug Interactions -->
         {#if interactions.length > 0}
-            <div class="medication-section">
-                <h4 class="section-title">{$t('report.drug-interactions')}</h4>
-                <div class="interactions-list">
+                <h4 class="section-title-sub">{$t('report.drug-interactions')}</h4>
+                <ul class="list-items">
                     {#each interactions as interaction}
-                        <div class="interaction-item {getSeverityClass(interaction.severity)}">
+                        <li class="panel {getSeverityClass(interaction.severity)}">
                             <div class="interaction-drugs">
                                 <span class="drug1">{interaction.drug1}</span>
                                 <span class="interaction-symbol">⚠️</span>
@@ -310,67 +300,65 @@
                                     <span class="effect">{interaction.effect}</span>
                                 {/if}
                             </div>
-                        </div>
+                        </li>
                     {/each}
-                </div>
-            </div>
+                </ul>
         {/if}
         
         <!-- Medication Allergies -->
         {#if medicationAllergies.length > 0}
-            <div class="medication-section">
-                <h4 class="section-title">{$t('report.medication-allergies')}</h4>
-                <div class="allergies-list">
+                <h4 class="section-title-sub">{$t('report.medication-allergies')}</h4>
+                <ul class="list-items">
                     {#each medicationAllergies as allergy}
-                        <div class="allergy-item {getSeverityClass(allergy.severity)}">
+                        <li class="panel allergy-item {getSeverityClass(allergy.severity)}">
                             <span class="medication">{allergy.medication}</span>
                             <span class="reaction">{allergy.reaction}</span>
                             {#if allergy.severity}
                                 <span class="severity {getSeverityClass(allergy.severity)}">{allergy.severity}</span>
                             {/if}
-                        </div>
+                        </li>
                     {/each}
-                </div>
-            </div>
+                </ul>
         {/if}
         
         <!-- Adherence Assessment -->
         {#if adherenceAssessment}
-            <div class="medication-section">
-                <h4 class="section-title">{$t('report.adherence-assessment')}</h4>
-                <div class="adherence-card">
-                    {#if adherenceAssessment.overallAdherence}
-                        <div class="overall-adherence">
-                            <span class="label">{$t('report.overall-adherence')}:</span>
-                            <span class="value {getAdherenceClass(adherenceAssessment.overallAdherence)}">{adherenceAssessment.overallAdherence}</span>
-                        </div>
-                    {/if}
-                    
-                    {#if adherenceAssessment.barriers?.length > 0}
-                        <div class="barriers">
-                            <span class="label">{$t('report.barriers')}:</span>
-                            <ul>
-                                {#each adherenceAssessment.barriers as barrier}
-                                    <li>{barrier}</li>
-                                {/each}
-                            </ul>
-                        </div>
-                    {/if}
-                    
-                    {#if adherenceAssessment.interventions?.length > 0}
-                        <div class="interventions">
-                            <span class="label">{$t('report.interventions')}:</span>
-                            <ul>
-                                {#each adherenceAssessment.interventions as intervention}
-                                    <li>{intervention}</li>
-                                {/each}
-                            </ul>
-                        </div>
-                    {/if}
-                </div>
-            </div>
+            
+                <h4 class="section-title-sub">{$t('report.adherence-assessment')}</h4>
+                <ul class="list-items">
+                    <li class="panel adherence-panel">
+                        {#if adherenceAssessment.overallAdherence}
+                            <div class="overall-adherence">
+                                <span class="label">{$t('report.overall-adherence')}:</span>
+                                <span class="value {getAdherenceClass(adherenceAssessment.overallAdherence)}">{adherenceAssessment.overallAdherence}</span>
+                            </div>
+                        {/if}
+                        
+                        {#if adherenceAssessment.barriers?.length > 0}
+                            <div class="barriers">
+                                <span class="label">{$t('report.barriers')}:</span>
+                                <ul>
+                                    {#each adherenceAssessment.barriers as barrier}
+                                        <li>{barrier}</li>
+                                    {/each}
+                                </ul>
+                            </div>
+                        {/if}
+                        
+                        {#if adherenceAssessment.interventions?.length > 0}
+                            <div class="interventions">
+                                <span class="label">{$t('report.interventions')}:</span>
+                                <ul>
+                                    {#each adherenceAssessment.interventions as intervention}
+                                        <li>{intervention}</li>
+                                    {/each}
+                                </ul>
+                            </div>
+                        {/if}
+                    </li>
+                </ul>
+            
         {/if}
-    </div>
 {:else if data}
     <h3 class="h3 heading -sticky">{$t('report.medications')}</h3>
     <div class="page -block">
@@ -379,42 +367,81 @@
 {/if}
 
 <style>
-    .heading {
-        margin-bottom: 0;
-    }
-    
-    .medication-section {
-        margin-bottom: 2rem;
-    }
-    
-    .section-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin: 0 0 1rem 0;
-        color: var(--color-primary);
-        border-bottom: 2px solid var(--color-primary-light);
-        padding-bottom: 0.5rem;
-    }
-    
-    .medications-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .medication-card {
-        padding: 1rem;
-        border: 1px solid var(--color-gray-300);
-        border-radius: 0.5rem;
+    .section-title-sub {
         background-color: var(--color-background);
-        border-left: 4px solid var(--color-info);
+        padding: .5rem;
+        margin-bottom: var(--gap);
     }
     
-    .prescription-card {
+    /* List structure following SectionRecommendations pattern */
+    .list-items {
+        list-style: none;
+        padding: 0;
+        --indicator-width: 0.5rem;
+    }
+    
+    .list-items li {
+        padding: 1rem;
+        background-color: var(--color-background);
+        margin-bottom: var(--gap);
+    }
+
+    li.panel {
+        border-left: var(--indicator-width) solid var(--color-info);
+    }
+    
+    /* Panel type variations */
+    .medication-active {
         border-left-color: var(--color-success);
-        background-color: var(--color-success-light);
     }
     
+    .medication-new {
+        border-left-color: var(--color-info);
+    }
+    
+    .medication-discontinued {
+        border-left-color: var(--color-danger);
+    }
+    
+    .change-increase {
+        border-left-color: var(--color-success);
+    }
+    
+    .change-decrease {
+        border-left-color: var(--color-warning);
+    }
+    
+    .change-discontinued {
+        border-left-color: var(--color-danger);
+    }
+    
+    .change-added {
+        border-left-color: var(--color-info);
+    }
+    
+    .severity-mild {
+        border-left-color: var(--color-info);
+    }
+    
+    .severity-moderate {
+        border-left-color: var(--color-warning);
+    }
+    
+    .severity-major,
+    .severity-severe,
+    .severity-critical {
+        border-left-color: var(--color-danger);
+    }
+    
+    .allergy-item {
+        border-left-color: var(--color-danger);
+    }
+    
+    .adherence-panel {
+        border-left-color: var(--color-info);
+    }
+    
+    /* Content styling */
     .medication-header {
         display: flex;
         justify-content: space-between;
@@ -538,38 +565,6 @@
     }
     
     /* Medication Changes */
-    .changes-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .change-item {
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid;
-    }
-    
-    .change-increase {
-        background-color: var(--color-success-light);
-        border-left-color: var(--color-success);
-    }
-    
-    .change-decrease {
-        background-color: var(--color-warning-light);
-        border-left-color: var(--color-warning);
-    }
-    
-    .change-discontinued {
-        background-color: var(--color-danger-light);
-        border-left-color: var(--color-danger);
-    }
-    
-    .change-added {
-        background-color: var(--color-info-light);
-        border-left-color: var(--color-info);
-    }
-    
     .change-header {
         display: flex;
         justify-content: space-between;
@@ -600,61 +595,21 @@
         font-weight: 600;
     }
     
-    /* Discontinued Medications */
-    .discontinued-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .discontinued-item {
-        padding: 0.5rem;
-        background-color: var(--color-gray-100);
-        border-radius: 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
+    /* Discontinued medications */
     .date-discontinued {
         font-size: 0.8rem;
         color: var(--color-text-secondary);
+        margin-left: 0.5rem;
     }
     
     .reason {
         font-size: 0.8rem;
         color: var(--color-text-secondary);
         font-style: italic;
+        margin-left: 0.5rem;
     }
     
     /* Drug Interactions */
-    .interactions-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .interaction-item {
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid;
-    }
-    
-    .severity-mild {
-        background-color: var(--color-info-light);
-        border-left-color: var(--color-info);
-    }
-    
-    .severity-moderate {
-        background-color: var(--color-warning-light);
-        border-left-color: var(--color-warning);
-    }
-    
-    .severity-major, .severity-severe, .severity-critical {
-        background-color: var(--color-danger-light);
-        border-left-color: var(--color-danger);
-    }
-    
     .interaction-drugs {
         display: flex;
         align-items: center;
@@ -680,34 +635,16 @@
     }
     
     /* Allergies */
-    .allergies-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .allergy-item {
-        padding: 0.5rem;
-        border-radius: 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        border-left: 4px solid var(--color-danger);
-        background-color: var(--color-danger-light);
-    }
-    
     .allergy-item .medication {
         font-weight: 600;
+        margin-right: 0.5rem;
+    }
+    
+    .allergy-item .reaction {
+        margin-right: 0.5rem;
     }
     
     /* Adherence Assessment */
-    .adherence-card {
-        padding: 1rem;
-        background-color: var(--color-background-secondary);
-        border-radius: 0.5rem;
-        border: 1px solid var(--color-gray-300);
-    }
-    
     .overall-adherence {
         display: flex;
         align-items: center;
