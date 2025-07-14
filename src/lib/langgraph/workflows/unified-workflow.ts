@@ -11,13 +11,12 @@ import type {
   WorkflowConfig,
   ProgressCallback,
 } from "../state";
-import { 
-  isLangGraphDebuggingEnabled,
-} from "$lib/config/logging-config";
+// Logging config no longer needed here - using workflow recorder's debug state
 import { 
   startWorkflowRecording, 
   finishWorkflowRecording, 
   isWorkflowReplayMode,
+  isWorkflowRecordingEnabled,
   workflowRecorder,
 } from "$lib/debug/workflow-recorder";
 import { createWorkflowReplay } from "$lib/debug/workflow-replay";
@@ -157,7 +156,7 @@ export async function runUnifiedDocumentProcessingWorkflow(
   config: WorkflowConfig = {},
   progressCallback?: ProgressCallback,
 ): Promise<DocumentProcessingState> {
-  const debugEnabled = isLangGraphDebuggingEnabled();
+  const debugEnabled = isWorkflowRecordingEnabled();
   
   console.log("🎯 Starting Unified Document Processing Workflow", {
     hasImages: images && images.length > 0,
@@ -184,7 +183,7 @@ export async function runUnifiedDocumentProcessingWorkflow(
     recordingId = startWorkflowRecording("analysis", {
       workflowType: "unified-document-processing",
       inputs: { images, text, language, config },
-    });
+    }) || undefined;
   }
 
   try {
@@ -223,9 +222,12 @@ export async function runUnifiedDocumentProcessingWorkflow(
 
     // Finish recording if we started one
     if (recordingId && debugEnabled) {
+      console.log("WorkflowRecorder: 🎬 Attempting to finish workflow recording:", recordingId);
       const savedFile = finishWorkflowRecording(result);
       if (savedFile) {
-        console.log("📹 Workflow recording saved to:", savedFile);
+        console.log("WorkflowRecorder: 📹 Workflow recording saved to:", savedFile);
+      } else {
+        console.log("WorkflowRecorder: ❌ Failed to save workflow recording");
       }
     }
 
@@ -236,6 +238,7 @@ export async function runUnifiedDocumentProcessingWorkflow(
     
     // Still save recording on error
     if (recordingId && debugEnabled) {
+      console.log("WorkflowRecorder: 💥 Saving recording on error for:", recordingId);
       const errorResult = {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,

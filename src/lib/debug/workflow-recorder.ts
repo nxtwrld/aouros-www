@@ -143,11 +143,21 @@ export class WorkflowRecorder {
    * Start a new workflow recording
    */
   startRecording(phase: "extract" | "analysis", input: any): string | null {
-    console.log("WorkflowRecorder.startRecording called:", { phase, recordingEnabled: this.recordingEnabled });
+    console.log("WorkflowRecorder.startRecording called:", { 
+      phase, 
+      recordingEnabled: this.recordingEnabled,
+      hasExistingRecording: !!this.currentRecording,
+      debugDir: this.debugDir
+    });
     
     if (!this.recordingEnabled) {
       console.log("WorkflowRecorder: Recording disabled, not starting recording");
       return null;
+    }
+
+    // Clear any existing recording
+    if (this.currentRecording) {
+      console.log("WorkflowRecorder: Warning - clearing existing recording:", this.currentRecording.recordingId);
     }
 
     const recordingId = `workflow-${phase}-${new Date().toISOString().replace(/[:.]/g, "-")}`;
@@ -179,6 +189,12 @@ export class WorkflowRecorder {
     });
     
     console.log("WorkflowRecorder: Recording started with ID:", recordingId);
+    console.log("WorkflowRecorder: Current recording state:", {
+      id: this.currentRecording.recordingId,
+      phase: this.currentRecording.phase,
+      inputKeys: Object.keys(this.currentRecording.input || {}),
+      stepsCount: this.currentRecording.steps.length
+    });
 
     return recordingId;
   }
@@ -195,7 +211,20 @@ export class WorkflowRecorder {
     errors: string[] = [],
     metadata: any = {}
   ) {
-    if (!this.currentRecording) return;
+    console.log("WorkflowRecorder.recordStep called:", {
+      stepName,
+      hasCurrentRecording: !!this.currentRecording,
+      recordingId: this.currentRecording?.recordingId,
+      currentStepsCount: this.currentRecording?.steps?.length || 0,
+      duration,
+      aiRequestsCount: aiRequests.length,
+      errorsCount: errors.length
+    });
+
+    if (!this.currentRecording) {
+      console.log("WorkflowRecorder: No current recording - cannot record step");
+      return;
+    }
 
     const stepId = `${this.currentRecording.steps.length + 1}-${stepName}`;
     
@@ -222,6 +251,13 @@ export class WorkflowRecorder {
     if (step.tokenUsage.total) {
       this.currentRecording.totalTokenUsage.total += step.tokenUsage.total;
     }
+
+    console.log("WorkflowRecorder: Step recorded successfully:", {
+      stepId,
+      totalSteps: this.currentRecording.steps.length,
+      totalDuration: this.currentRecording.totalDuration,
+      totalTokens: this.currentRecording.totalTokenUsage.total
+    });
 
     log.analysis.debug("Recorded workflow step", {
       stepId,
@@ -261,7 +297,12 @@ export class WorkflowRecorder {
    * Finish recording and save to file
    */
   finishRecording(finalResult: any): string | null {
-    console.log("WorkflowRecorder.finishRecording called:", { hasCurrentRecording: !!this.currentRecording });
+    console.log("WorkflowRecorder.finishRecording called:", { 
+      hasCurrentRecording: !!this.currentRecording,
+      recordingId: this.currentRecording?.recordingId,
+      stepsCount: this.currentRecording?.steps?.length || 0,
+      finalResultExists: !!finalResult
+    });
     
     if (!this.currentRecording) {
       console.log("WorkflowRecorder: No current recording to finish");
@@ -275,9 +316,21 @@ export class WorkflowRecorder {
     
     console.log("WorkflowRecorder: Attempting to save to:", filePath);
     console.log("WorkflowRecorder: Directory exists:", existsSync(this.debugDir));
+    console.log("WorkflowRecorder: Recording data size:", JSON.stringify(this.currentRecording).length, "bytes");
     
     try {
-      writeFileSync(filePath, JSON.stringify(this.currentRecording, null, 2));
+      const jsonData = JSON.stringify(this.currentRecording, null, 2);
+      console.log("WorkflowRecorder: JSON serialization successful, size:", jsonData.length);
+      
+      writeFileSync(filePath, jsonData);
+      console.log("WorkflowRecorder: File write successful");
+      
+      // Verify file was actually written
+      if (existsSync(filePath)) {
+        console.log("WorkflowRecorder: File verification successful, size:", require('fs').statSync(filePath).size);
+      } else {
+        console.error("WorkflowRecorder: File verification failed - file does not exist after write");
+      }
       
       log.analysis.info("Workflow recording saved", {
         file: fileName,
@@ -294,6 +347,11 @@ export class WorkflowRecorder {
     } catch (error) {
       log.analysis.error("Failed to save workflow recording", error);
       console.error("WorkflowRecorder: Error saving recording:", error);
+      console.error("WorkflowRecorder: Error details:", {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       return null;
     }
   }
