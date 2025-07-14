@@ -100,9 +100,32 @@ export class MultiNodeOrchestrator {
       this.emitProgress(state, 30, "Executing specialized processing nodes");
       const startTime = Date.now();
 
+      // Create a wrapped state that intercepts progress callbacks from child nodes
+      const wrappedState = {
+        ...state,
+        progressCallback: state.progressCallback ? (event: any) => {
+          // Intercept all progress events from child nodes and prevent them from reaching SSE directly
+          // The orchestrator will manage progress instead
+          if (event.type === "progress") {
+            console.log(`📊 Child node progress intercepted: ${event.stage} - ${event.progress}% - ${event.message}`);
+            return; // Block all progress events from child nodes
+          }
+          // For non-progress events (errors, etc), pass through
+          state.progressCallback!(event);
+        } : undefined,
+        emitProgress: (stage: string, progress: number, message: string) => {
+          // Child nodes progress is ignored - orchestrator manages progress
+          console.log(`📊 Child node emitProgress intercepted: ${stage} - ${progress}% - ${message}`);
+        },
+        emitComplete: (stage: string, message: string, data?: any) => {
+          // Child nodes completion is ignored - orchestrator manages completion
+          console.log(`✅ Child node completion intercepted: ${stage} - ${message}`);
+        }
+      };
+      
       const processedState = await this.executeWithPlan(
         executionPlan,
-        state,
+        wrappedState,
         (progress, message) => {
           // Map node execution progress to 30-90% of total progress
           const totalProgress = 30 + (progress * 0.6);
@@ -492,15 +515,8 @@ export class MultiNodeOrchestrator {
    * Emit progress updates
    */
   private emitProgress(state: DocumentProcessingState, progress: number, message: string): void {
-    if (state.progressCallback) {
-      state.progressCallback({
-        type: "progress",
-        stage: "multi_node_processing",
-        progress,
-        message,
-        timestamp: Date.now(),
-      });
-    }
+    // Use the state's emitProgress function which handles cumulative progress
+    // The unified workflow wrapper will handle the progress range calculation
     state.emitProgress?.("multi_node_processing", progress, message);
   }
 

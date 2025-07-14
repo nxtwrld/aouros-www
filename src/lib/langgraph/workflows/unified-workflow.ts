@@ -61,11 +61,29 @@ const shouldValidateExternally = (state: DocumentProcessingState): string => {
 // Create the unified document processing workflow  
 export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig, progressCallback?: ProgressCallback) => {
   // Create wrapper functions for nodes that have access to the progress callback
-  const createNodeWrapper = (nodeFn: any) => {
+  // Each node gets assigned a progress range to avoid conflicts
+  const createNodeWrapper = (nodeFn: any, nodeProgressRange: { start: number; end: number }) => {
     return async (state: DocumentProcessingState) => {
       const enhancedState = {
         ...state,
         progressCallback: progressCallback || state.progressCallback,
+        emitProgress: (stage: string, progress: number, message: string) => {
+          // Calculate cumulative progress for this node
+          const nodeProgress = nodeProgressRange.start + (progress * (nodeProgressRange.end - nodeProgressRange.start) / 100);
+          
+          if (state.progressCallback) {
+            state.progressCallback({
+              type: "progress",
+              stage,
+              progress: Math.min(nodeProgress, 100),
+              message,
+              timestamp: Date.now(),
+            });
+          }
+          
+          // Also call the original emitProgress if it exists
+          state.emitProgress?.(stage, Math.min(nodeProgress, 100), message);
+        },
       };
       return await nodeFn(enhancedState);
     };
@@ -112,14 +130,14 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
     },
   });
 
-  // Add essential workflow nodes
-  workflow.addNode("input_validation", createNodeWrapper(inputValidationNode));
-  workflow.addNode("document_type_router", createNodeWrapper(documentTypeRouterNode));
-  workflow.addNode("provider_selection", createNodeWrapper(providerSelectionNode));
-  workflow.addNode("feature_detection", createNodeWrapper(featureDetectionNode));
-  workflow.addNode("multi_node_processing", createNodeWrapper(executeMultiNodeProcessing));
-  workflow.addNode("external_validation", createNodeWrapper(externalValidationNode));
-  workflow.addNode("quality_gate", createNodeWrapper(qualityGateNode));
+  // Add essential workflow nodes with progress ranges
+  workflow.addNode("input_validation", createNodeWrapper(inputValidationNode, { start: 30, end: 40 }));
+  workflow.addNode("document_type_router", createNodeWrapper(documentTypeRouterNode, { start: 40, end: 50 }));
+  workflow.addNode("provider_selection", createNodeWrapper(providerSelectionNode, { start: 50, end: 60 }));
+  workflow.addNode("feature_detection", createNodeWrapper(featureDetectionNode, { start: 60, end: 70 }));
+  workflow.addNode("multi_node_processing", createNodeWrapper(executeMultiNodeProcessing, { start: 70, end: 95 }));
+  workflow.addNode("external_validation", createNodeWrapper(externalValidationNode, { start: 95, end: 98 }));
+  workflow.addNode("quality_gate", createNodeWrapper(qualityGateNode, { start: 98, end: 100 }));
 
   // Define clean workflow flow
   workflow.addEdge("input_validation", "document_type_router");
@@ -328,55 +346,12 @@ async function replayWorkflowFromFile(
   // Get the final result from the recording
   const recording = replay.exportResults().recording;
   
-  // Apply our new aggregation logic to the final result
-  console.log("🔄 Applying updated aggregation logic to replayed data");
+  // Use the recorded final result directly - don't re-run multi-node processing
+  console.log("🔄 Using recorded workflow result directly (no duplicate processing)");
   const finalState = recording.steps[recording.steps.length - 1].outputState;
   
-  // Run the multi-node aggregation on the replayed data
-  const { executeMultiNodeProcessing } = await import("./multi-node-orchestrator");
-  
-  // Ensure progressCallback and progress functions are available for the aggregation
-  const stateWithCallback = {
-    ...finalState,
-    progressCallback,
-    emitProgress: (stage: string, progress: number, message: string) => {
-      if (progressCallback) {
-        progressCallback({
-          type: "progress",
-          stage,
-          progress,
-          message,
-          timestamp: Date.now(),
-        });
-      }
-    },
-    emitComplete: (stage: string, message: string, data?: any) => {
-      if (progressCallback) {
-        progressCallback({
-          type: "progress",
-          stage,
-          progress: 100,
-          message,
-          data,
-          timestamp: Date.now(),
-        });
-      }
-    },
-    emitError: (stage: string, message: string, error?: any) => {
-      if (progressCallback) {
-        progressCallback({
-          type: "error",
-          stage,
-          progress: 0,
-          message,
-          data: error,
-          timestamp: Date.now(),
-        });
-      }
-    },
-  };
-  
-  const aggregatedResult = await executeMultiNodeProcessing(stateWithCallback);
+  // The workflow was already completed during recording, so use that result
+  const aggregatedResult = recording.finalResult || finalState;
   
   
   console.log("✅ Workflow replay completed with updated aggregation:", {
