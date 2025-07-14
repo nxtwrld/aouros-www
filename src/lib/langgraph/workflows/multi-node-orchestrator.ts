@@ -269,65 +269,8 @@ export class MultiNodeOrchestrator {
     const errors = processedState.errors || [];
     const successful = processedNodes.length - errors.filter(e => processedNodes.includes(e.node)).length;
 
-    // Map Universal Factory section names to ReportAnalysis interface properties
-    // Section names are node names with '-processing' removed, except medical-analysis stays as-is
-    const sectionNameMap: Record<string, string> = {
-      'medical-analysis': 'medical-analysis', // This contains the main medical data
-      'signal-processing': 'signals', 
-      'medications-processing': 'medications',
-      'prescriptions-processing': 'prescriptions', // Add prescriptions mapping
-      'immunization-processing': 'immunizations',
-      'imaging-processing': 'imaging',
-      'procedures-processing': 'procedures',
-      'ecg-processing': 'ecg',
-      'echo-processing': 'echo',
-      'imaging-findings-processing': 'imagingFindings',
-      'allergies-processing': 'allergies',
-      'anesthesia-processing': 'anesthesia',
-      'microscopic-processing': 'microscopic',
-      'triage-processing': 'triage',
-      'specimens-processing': 'specimens',
-      'admission-processing': 'admission',
-      'dental-processing': 'dental',
-      
-      // Advanced Medical Analysis (Priority 5)
-      'tumor-characteristics-processing': 'tumorCharacteristics',
-      'treatment-plan-processing': 'treatmentPlan',
-      'treatment-response-processing': 'treatmentResponse',
-      'gross-findings-processing': 'grossFindings',
-      'special-stains-processing': 'specialStains',
-      'social-history-processing': 'socialHistory',
-      'treatments-processing': 'treatments',
-      'assessment-processing': 'assessment',
-      'molecular-processing': 'molecular',
-      
-      // Also check for the actual section names (node names with -processing removed)
-      'signal': 'signals',
-      'medications': 'medications',
-      'prescriptions': 'prescriptions',
-      'immunization': 'immunizations',
-      'imaging': 'imaging',
-      'procedures': 'procedures',
-      'ecg': 'ecg',
-      'echo': 'echo',
-      'imagingFindings': 'imagingFindings',
-      'allergies': 'allergies',
-      'anesthesia': 'anesthesia',
-      'microscopic': 'microscopic',
-      'triage': 'triage',
-      'specimens': 'specimens',
-      'admission': 'admission',
-      'dental': 'dental',
-      'tumorCharacteristics': 'tumorCharacteristics',
-      'treatmentPlan': 'treatmentPlan',
-      'treatmentResponse': 'treatmentResponse',
-      'grossFindings': 'grossFindings',
-      'specialStains': 'specialStains',
-      'socialHistory': 'socialHistory',
-      'treatments': 'treatments',
-      'assessment': 'assessment',
-      'molecular': 'molecular',
-    };
+    // Get output mappings from node configurations instead of hardcoded map
+    const outputMappings = UniversalNodeFactory.getAllOutputMappings();
 
     // Build properly structured result matching ReportAnalysis interface
     const structuredResults: any = {
@@ -340,6 +283,12 @@ export class MultiNodeOrchestrator {
     const reportObject: any = {
       recommendations: [],
       summary: "",
+      // Core medical components (from separate nodes)
+      diagnosis: [],
+      performer: null,
+      patient: null,
+      bodyParts: [],
+      // Specialized medical sections
       medications: [],
       prescriptions: [],
       signals: [],
@@ -369,36 +318,67 @@ export class MultiNodeOrchestrator {
     };
 
     console.log("📊 Aggregating results from processed nodes");
+    console.log("🔍 Available keys in processedState:", Object.keys(processedState));
+    console.log("🔍 ProcessedState data structure:");
+    for (const [key, value] of Object.entries(processedState)) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        console.log(`  ${key}: ${Object.keys(value).slice(0, 5).join(', ')}${Object.keys(value).length > 5 ? '...' : ''}`);
+      } else {
+        console.log(`  ${key}: ${typeof value} (${Array.isArray(value) ? `array[${value.length}]` : String(value).slice(0, 50)})`);
+      }
+    }
+    console.log("🔍 Output mappings:", outputMappings);
 
-    // Map each Universal Factory section result to the correct interface property
-    for (const [sectionName, interfaceProperty] of Object.entries(sectionNameMap)) {
-      if ((processedState as any)[sectionName]) {
-        console.log(`✅ Adding ${sectionName} to report`);
+    // Map each processed node result to the correct interface property using configuration
+    for (const [nodeId, mapping] of Object.entries(outputMappings)) {
+      console.log(`🔍 Checking for nodeId: ${nodeId} in processedState`);
+      
+      // The key in processedState is the reportField from output mapping
+      // Get the actual storage key used by the node
+      const storageKey = mapping?.reportField || nodeId.replace('-processing', '');
+      const actualKey = (processedState as any)[storageKey] ? storageKey : 
+                        (processedState as any)[nodeId] ? nodeId : null;
+      
+      console.log(`🔍 Looking for data under key: ${actualKey} (nodeId: ${nodeId}, storageKey: ${storageKey})`);
+      
+      if (actualKey && (processedState as any)[actualKey]) {
+        console.log(`✅ Adding ${nodeId} to report (found data under key: ${actualKey})`);
         
-        if (sectionName === 'medical-analysis') {
-          // For the main medical-analysis, this IS the report data - merge it into reportObject
-          let medicalData = (processedState as any)[sectionName];
-          
+        let nodeData = (processedState as any)[actualKey];
+        
+        // Handle unwrapping if specified in configuration
+        if (mapping?.unwrapField) {
+          if (nodeData && typeof nodeData === 'object' && nodeData[mapping.unwrapField]) {
+            nodeData = nodeData[mapping.unwrapField];
+            console.log(`🔧 Unwrapped ${nodeId} data from field: ${mapping.unwrapField}`);
+          }
+        }
+        
+        // Handle main report data (medical-analysis)
+        if (mapping?.isMainReport) {
           // Fix: If medical data came back as an array, extract the first object
-          if (Array.isArray(medicalData)) {
-            console.log(`⚠️ Medical-analysis returned as array, extracting first element`);
-            medicalData = medicalData.length > 0 && typeof medicalData[0] === 'object' ? medicalData[0] : {};
+          if (Array.isArray(nodeData)) {
+            console.log(`⚠️ Main report data returned as array, extracting first element`);
+            nodeData = nodeData.length > 0 && typeof nodeData[0] === 'object' ? nodeData[0] : {};
           }
           
           // Only merge if we have a valid object, but EXCLUDE any 'report' field to prevent override
-          if (medicalData && typeof medicalData === 'object' && !Array.isArray(medicalData)) {
+          if (nodeData && typeof nodeData === 'object' && !Array.isArray(nodeData)) {
             // Create a copy without the report field to prevent override
-            const { report: _, ...medicalDataWithoutReport } = medicalData;
-            Object.assign(reportObject, medicalDataWithoutReport);
+            const { report: _, ...dataWithoutReport } = nodeData;
+            Object.assign(reportObject, dataWithoutReport);
           }
         } else {
           // For specialized sections, add to report object under the correct property name
-          const sectionData = (processedState as any)[sectionName];
-          reportObject[interfaceProperty] = sectionData;
-          
-          // Also add as separate field for backward compatibility
-          structuredResults[interfaceProperty] = sectionData;
+          if (mapping?.reportField) {
+            reportObject[mapping.reportField] = nodeData;
+            
+            // Also add as separate field for backward compatibility
+            structuredResults[mapping.reportField] = nodeData;
+          }
         }
+      } else {
+        console.log(`❌ No data found for nodeId: ${nodeId} (checked keys: ${storageKey}, ${nodeId})`);
       }
     }
 

@@ -79,7 +79,9 @@ export class WorkflowRecorder {
   private debugDir: string;
 
   private constructor() {
+    console.log("WorkflowRecorder: Constructor called");
     this.debugDir = join(process.cwd(), "test-data", "workflows");
+    console.log("WorkflowRecorder: Debug directory set to:", this.debugDir);
     this.ensureDebugDirectory();
     this.initializeFromEnvironment();
   }
@@ -95,13 +97,21 @@ export class WorkflowRecorder {
     // Check for DEBUG_ANALYSIS environment variable
     const debugAnalysis = env.DEBUG_ANALYSIS;
     
+    console.log("WorkflowRecorder: Initializing from environment");
+    console.log("WorkflowRecorder: DEBUG_ANALYSIS =", debugAnalysis);
+    console.log("WorkflowRecorder: typeof DEBUG_ANALYSIS =", typeof debugAnalysis);
+    
     if (debugAnalysis === "true") {
       this.recordingEnabled = true;
       log.analysis.info("Debug recording enabled - will save workflow steps");
+      console.log("WorkflowRecorder: Recording ENABLED");
     } else if (debugAnalysis && debugAnalysis !== "false") {
       // Path to replay file provided
       this.replayMode = debugAnalysis;
       log.analysis.info("Debug replay mode enabled", { file: debugAnalysis });
+      console.log("WorkflowRecorder: Replay mode ENABLED");
+    } else {
+      console.log("WorkflowRecorder: Recording DISABLED");
     }
 
     // Also check legacy DEBUG_EXTRACTOR for backwards compatibility
@@ -133,7 +143,12 @@ export class WorkflowRecorder {
    * Start a new workflow recording
    */
   startRecording(phase: "extract" | "analysis", input: any): string | null {
-    if (!this.recordingEnabled) return null;
+    console.log("WorkflowRecorder.startRecording called:", { phase, recordingEnabled: this.recordingEnabled });
+    
+    if (!this.recordingEnabled) {
+      console.log("WorkflowRecorder: Recording disabled, not starting recording");
+      return null;
+    }
 
     const recordingId = `workflow-${phase}-${new Date().toISOString().replace(/[:.]/g, "-")}`;
     
@@ -149,13 +164,21 @@ export class WorkflowRecorder {
       version: "1.0"
     };
 
+    // Handle both legacy and unified workflow input structures
+    const hasImages = !!(input?.images || input?.inputs?.images);
+    const hasText = !!(input?.text || input?.inputs?.text);
+    const language = input?.language || input?.inputs?.language;
+
     log.analysis.info("Started workflow recording", { 
       recordingId, 
       phase,
-      hasImages: !!(input?.images),
-      hasText: !!(input?.text),
-      language: input?.language 
+      hasImages,
+      hasText,
+      language,
+      workflowType: input?.workflowType
     });
+    
+    console.log("WorkflowRecorder: Recording started with ID:", recordingId);
 
     return recordingId;
   }
@@ -238,12 +261,20 @@ export class WorkflowRecorder {
    * Finish recording and save to file
    */
   finishRecording(finalResult: any): string | null {
-    if (!this.currentRecording) return null;
+    console.log("WorkflowRecorder.finishRecording called:", { hasCurrentRecording: !!this.currentRecording });
+    
+    if (!this.currentRecording) {
+      console.log("WorkflowRecorder: No current recording to finish");
+      return null;
+    }
 
     this.currentRecording.finalResult = finalResult;
     
     const fileName = `${this.currentRecording.recordingId}.json`;
     const filePath = join(this.debugDir, fileName);
+    
+    console.log("WorkflowRecorder: Attempting to save to:", filePath);
+    console.log("WorkflowRecorder: Directory exists:", existsSync(this.debugDir));
     
     try {
       writeFileSync(filePath, JSON.stringify(this.currentRecording, null, 2));
@@ -254,13 +285,15 @@ export class WorkflowRecorder {
         totalDuration: this.currentRecording.totalDuration,
         totalTokens: this.currentRecording.totalTokenUsage.total
       });
+      
+      console.log("WorkflowRecorder: Recording saved successfully to:", filePath);
 
-      const recordingId = this.currentRecording.recordingId;
       this.currentRecording = null;
       
       return filePath;
     } catch (error) {
       log.analysis.error("Failed to save workflow recording", error);
+      console.error("WorkflowRecorder: Error saving recording:", error);
       return null;
     }
   }

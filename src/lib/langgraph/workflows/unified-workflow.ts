@@ -221,16 +221,29 @@ export async function runUnifiedDocumentProcessingWorkflow(
       });
     }
 
+    // Finish recording if we started one
+    if (recordingId && debugEnabled) {
+      const savedFile = finishWorkflowRecording(result);
+      if (savedFile) {
+        console.log("📹 Workflow recording saved to:", savedFile);
+      }
+    }
+
     return result;
 
   } catch (error) {
     console.error("❌ Unified workflow error:", error);
-    throw error;
-  } finally {
-    // Finish recording if we started one
+    
+    // Still save recording on error
     if (recordingId && debugEnabled) {
-      finishWorkflowRecording(recordingId);
+      const errorResult = {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      };
+      finishWorkflowRecording(errorResult);
     }
+    
+    throw error;
   }
 }
 

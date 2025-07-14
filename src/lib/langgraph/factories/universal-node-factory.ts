@@ -16,6 +16,12 @@ export interface UniversalNodeConfig {
   priority: number;
   timeout?: number;
   customValidation?: (data: any, state: DocumentProcessingState) => any | Promise<any>;
+  // Output mapping configuration
+  outputMapping?: {
+    reportField: string;           // Field name in final report object
+    unwrapField?: string;          // Field to unwrap from extraction wrapper
+    isMainReport?: boolean;        // Whether this is the main report data to merge
+  };
 }
 
 export interface NodeRegistry {
@@ -31,9 +37,57 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
   "medical-analysis": {
     nodeName: "medical-analysis",
     description: "General medical content analysis and core sections",
-    schemaPath: "$lib/configurations/report",
-    triggers: ["hasSummary", "hasDiagnosis", "hasBodyParts", "hasPerformer", "hasRecommendations"],
+    schemaPath: "$lib/configurations/report.core",
+    triggers: ["isMedical"], // Always run for medical documents
     priority: 1,
+    outputMapping: {
+      reportField: "medical-analysis",
+      isMainReport: true,
+    },
+  },
+  "diagnosis-processing": {
+    nodeName: "diagnosis-processing",
+    description: "Medical diagnosis extraction and analysis",
+    schemaPath: "$lib/configurations/diagnosis.extraction",
+    triggers: ["hasDiagnosis"],
+    priority: 1,
+    outputMapping: {
+      reportField: "diagnosis",
+      unwrapField: "diagnosis",
+    },
+  },
+  "performer-processing": {
+    nodeName: "performer-processing", 
+    description: "Medical professional and healthcare provider analysis",
+    schemaPath: "$lib/configurations/performer.extraction",
+    triggers: ["isMedical"], // Always run for medical documents
+    priority: 1,
+    outputMapping: {
+      reportField: "performer",
+      unwrapField: "performer",
+    },
+  },
+  "patient-processing": {
+    nodeName: "patient-processing",
+    description: "Patient information extraction and analysis", 
+    schemaPath: "$lib/configurations/patient.extraction",
+    triggers: ["isMedical"], // Always run for medical documents
+    priority: 1,
+    outputMapping: {
+      reportField: "patient",
+      unwrapField: "patient",
+    },
+  },
+  "body-parts-processing": {
+    nodeName: "body-parts-processing",
+    description: "Anatomical regions and body parts analysis",
+    schemaPath: "$lib/configurations/bodyparts.extraction", 
+    triggers: ["isMedical"], // Always run for medical documents
+    priority: 1,
+    outputMapping: {
+      reportField: "bodyParts",
+      unwrapField: "bodyParts",
+    },
   },
   "signal-processing": {
     nodeName: "signal-processing", 
@@ -41,6 +95,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/core.signals",
     triggers: ["hasSignals"],
     priority: 1,
+    outputMapping: {
+      reportField: "signals",
+    },
   },
 
   // Specialized Medical Domains (Priority 2)
@@ -50,6 +107,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/ecg",
     triggers: ["hasECG"],
     priority: 2,
+    outputMapping: {
+      reportField: "ecg",
+    },
   },
   "imaging-processing": {
     nodeName: "imaging-processing",
@@ -57,6 +117,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/imaging",
     triggers: ["hasImaging"],
     priority: 2,
+    outputMapping: {
+      reportField: "imaging",
+    },
   },
   "imaging-findings-processing": {
     nodeName: "imaging-findings-processing",
@@ -64,6 +127,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/imaging-findings",
     triggers: ["hasImagingFindings"],
     priority: 2,
+    outputMapping: {
+      reportField: "imagingFindings",
+    },
   },
   "echo-processing": {
     nodeName: "echo-processing",
@@ -71,6 +137,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/echo",
     triggers: ["hasEcho"],
     priority: 2,
+    outputMapping: {
+      reportField: "echo",
+    },
   },
   "allergies-processing": {
     nodeName: "allergies-processing",
@@ -78,6 +147,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/allergies",
     triggers: ["hasAllergies"],
     priority: 2,
+    outputMapping: {
+      reportField: "allergies",
+    },
   },
   "medications-processing": {
     nodeName: "medications-processing",
@@ -85,6 +157,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/medications",
     triggers: ["hasPrescriptions", "hasMedications"],
     priority: 2,
+    outputMapping: {
+      reportField: "medications",
+    },
   },
   "procedures-processing": {
     nodeName: "procedures-processing",
@@ -92,6 +167,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/procedures",
     triggers: ["hasProcedures"],
     priority: 3,
+    outputMapping: {
+      reportField: "procedures",
+    },
   },
 
   // Specialized Medical Domains (Priority 3)
@@ -101,6 +179,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/anesthesia",
     triggers: ["hasAnesthesia"],
     priority: 3,
+    outputMapping: {
+      reportField: "anesthesia",
+    },
   },
   "microscopic-processing": {
     nodeName: "microscopic-processing",
@@ -108,6 +189,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/microscopic",
     triggers: ["hasMicroscopic"],
     priority: 3,
+    outputMapping: {
+      reportField: "microscopic",
+    },
   },
   "triage-processing": {
     nodeName: "triage-processing",
@@ -115,6 +199,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/triage",
     triggers: ["hasTriage"],
     priority: 3,
+    outputMapping: {
+      reportField: "triage",
+    },
   },
   "immunization-processing": {
     nodeName: "immunization-processing",
@@ -122,6 +209,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/immunization",
     triggers: ["hasImmunizations"],
     priority: 3,
+    outputMapping: {
+      reportField: "immunizations",
+    },
   },
 
   // Hospital Workflow Domains (Priority 4)
@@ -131,6 +221,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/specimens",
     triggers: ["hasSpecimens"],
     priority: 4,
+    outputMapping: {
+      reportField: "specimens",
+    },
   },
   "admission-processing": {
     nodeName: "admission-processing",
@@ -138,13 +231,19 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/admission",
     triggers: ["hasAdmission"],
     priority: 4,
+    outputMapping: {
+      reportField: "admission",
+    },
   },
   "dental-processing": {
     nodeName: "dental-processing",
     description: "Dental and oral health records analysis using schema-driven extraction",
     schemaPath: "$lib/configurations/dental",
-    triggers: ["hasDental", "hasOralHealth"],
+    triggers: ["hasDental"],
     priority: 4,
+    outputMapping: {
+      reportField: "dental",
+    },
   },
 
   // Advanced Medical Analysis (Priority 5)
@@ -154,6 +253,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/tumor-characteristics",
     triggers: ["hasTumorCharacteristics"],
     priority: 5,
+    outputMapping: {
+      reportField: "tumorCharacteristics",
+    },
   },
   "treatment-plan-processing": {
     nodeName: "treatment-plan-processing",
@@ -161,6 +263,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/treatment-plan",
     triggers: ["hasTreatmentPlan"],
     priority: 5,
+    outputMapping: {
+      reportField: "treatmentPlan",
+    },
   },
   "treatment-response-processing": {
     nodeName: "treatment-response-processing",
@@ -168,6 +273,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/treatment-response",
     triggers: ["hasTreatmentResponse"],
     priority: 5,
+    outputMapping: {
+      reportField: "treatmentResponse",
+    },
   },
   "gross-findings-processing": {
     nodeName: "gross-findings-processing",
@@ -175,6 +283,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/gross-findings",
     triggers: ["hasGrossFindings"],
     priority: 5,
+    outputMapping: {
+      reportField: "grossFindings",
+    },
   },
   "special-stains-processing": {
     nodeName: "special-stains-processing",
@@ -182,6 +293,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/special-stains",
     triggers: ["hasSpecialStains"],
     priority: 5,
+    outputMapping: {
+      reportField: "specialStains",
+    },
   },
   "social-history-processing": {
     nodeName: "social-history-processing",
@@ -189,6 +303,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/social-history",
     triggers: ["hasSocialHistory"],
     priority: 5,
+    outputMapping: {
+      reportField: "socialHistory",
+    },
   },
   "treatments-processing": {
     nodeName: "treatments-processing",
@@ -196,6 +313,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/treatments",
     triggers: ["hasTreatments"],
     priority: 5,
+    outputMapping: {
+      reportField: "treatments",
+    },
   },
   "assessment-processing": {
     nodeName: "assessment-processing",
@@ -203,6 +323,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/assessment",
     triggers: ["hasAssessment"],
     priority: 5,
+    outputMapping: {
+      reportField: "assessment",
+    },
   },
   "molecular-processing": {
     nodeName: "molecular-processing",
@@ -210,6 +333,9 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
     schemaPath: "$lib/configurations/molecular",
     triggers: ["hasMolecular"],
     priority: 5,
+    outputMapping: {
+      reportField: "molecular",
+    },
   },
 };
 
@@ -250,7 +376,10 @@ export class UniversalProcessingNode extends BaseProcessingNode {
   }
 
   protected getSectionName(): string {
-    return this.nodeConfig.nodeName.replace('-processing', '');
+    // Use the reportField from output mapping if available, otherwise derive from nodeName
+    const sectionName = this.nodeConfig.outputMapping?.reportField || this.nodeConfig.nodeName.replace('-processing', '');
+    console.log(`🔧 ${this.nodeConfig.nodeName} getSectionName() returning: "${sectionName}"`);
+    return sectionName;
   }
 
   /**
@@ -381,6 +510,27 @@ export class UniversalNodeFactory {
   }
 
   /**
+   * Get output mapping configuration for a node
+   */
+  static getOutputMapping(nodeId: string): UniversalNodeConfig['outputMapping'] | undefined {
+    const config = NODE_CONFIGURATIONS[nodeId];
+    return config?.outputMapping;
+  }
+
+  /**
+   * Get all nodes with their output mappings
+   */
+  static getAllOutputMappings(): Record<string, UniversalNodeConfig['outputMapping']> {
+    const mappings: Record<string, UniversalNodeConfig['outputMapping']> = {};
+    for (const [nodeId, config] of Object.entries(NODE_CONFIGURATIONS)) {
+      if (config.outputMapping) {
+        mappings[nodeId] = config.outputMapping;
+      }
+    }
+    return mappings;
+  }
+
+  /**
    * Get nodes by trigger
    */
   static getNodesByTrigger(trigger: string): UniversalNodeConfig[] {
@@ -395,6 +545,10 @@ export class UniversalNodeFactory {
  */
 // Core Processing (Priority 1)
 export const createMedicalAnalysisNode = () => UniversalNodeFactory.createNode("medical-analysis");
+export const createDiagnosisProcessingNode = () => UniversalNodeFactory.createNode("diagnosis-processing");
+export const createPerformerProcessingNode = () => UniversalNodeFactory.createNode("performer-processing");
+export const createPatientProcessingNode = () => UniversalNodeFactory.createNode("patient-processing");
+export const createBodyPartsProcessingNode = () => UniversalNodeFactory.createNode("body-parts-processing");
 export const createSignalProcessingNode = () => UniversalNodeFactory.createNode("signal-processing");
 
 // Specialized Medical Domains (Priority 2)

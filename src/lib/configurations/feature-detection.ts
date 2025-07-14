@@ -56,7 +56,7 @@ export default {
       hasDiagnosis: {
         type: "boolean",
         description:
-          "Does the document contain diagnosis information (ICD codes, conditions, etc.)?",
+          "Does the document contain diagnostic information? Look for: diagnosis statements, medical conditions, disease names, ICD codes, primary/secondary diagnoses, clinical impressions, working diagnoses, differential diagnoses, final diagnoses, or conclusive medical assessments. Examples: 'Diagnosis: Hypertension', 'R50.9 Fever unspecified', 'Acute appendicitis', 'Clinical impression: pneumonia'.",
       },
       hasBodyParts: {
         type: "boolean",
@@ -67,6 +67,11 @@ export default {
         type: "boolean",
         description:
           "Does the document identify healthcare providers, physicians, or medical staff?",
+      },
+      hasPatient: {
+        type: "boolean",
+        description:
+          "Does the document contain patient information, demographics, or patient identifiers?",
       },
       hasRecommendations: {
         type: "boolean",
@@ -255,9 +260,43 @@ export default {
       "isMedical",
       "language",
       "documentType",
+      // Core Medical Sections
       "hasSummary",
       "hasDiagnosis",
+      "hasBodyParts",
+      "hasPerformer",
+      "hasPatient",
+      "hasRecommendations",
+      // Measurements and Data Sections
       "hasSignals",
+      "hasPrescriptions",
+      "hasImmunizations",
+      // Medical Specialty Sections
+      "hasImaging",
+      "hasDental",
+      "hasAdmission",
+      "hasProcedures",
+      "hasAnesthesia",
+      "hasSpecimens",
+      "hasMicroscopic",
+      "hasMolecular",
+      "hasECG",
+      "hasEcho",
+      "hasTriage",
+      "hasTreatments",
+      "hasAssessment",
+      // Enhanced Medical Specialty Sections
+      "hasTumorCharacteristics",
+      "hasTreatmentPlan",
+      "hasTreatmentResponse",
+      "hasImagingFindings",
+      "hasGrossFindings",
+      "hasSpecialStains",
+      "hasAllergies",
+      "hasMedications",
+      "hasSocialHistory",
+      // Medical Context
+      "medicalSpecialty",
       "urgencyLevel",
       "tags",
     ],
