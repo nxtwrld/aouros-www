@@ -119,6 +119,117 @@ export class WorkflowReplay {
   }
 
   /**
+   * Replay the entire workflow and reconstruct the final state
+   */
+  async replayWorkflowWithStateReconstruction(options: ReplayOptions = {}): Promise<{
+    finalState: Partial<DocumentProcessingState>;
+    replayResults: ReplayResult[];
+    recording: WorkflowRecording;
+  }> {
+    if (!this.recording) {
+      throw new Error("No workflow loaded for replay");
+    }
+
+    // Start with the initial state
+    let currentState = this.getInitialState();
+    const results: ReplayResult[] = [];
+    
+    const { 
+      stepDelay, 
+      stopAtStep, 
+      skipSteps = [], 
+      verbose = false,
+      useEnvironmentDelay = true 
+    } = options;
+
+    // Determine the delay to use
+    let delayMs = stepDelay;
+    if (delayMs === undefined && useEnvironmentDelay) {
+      delayMs = workflowRecorder.getReplayDelay();
+    } else if (delayMs === undefined) {
+      delayMs = 500;
+    }
+
+    log.analysis.info("Starting workflow replay with state reconstruction", {
+      recordingId: this.recording.recordingId,
+      totalSteps: this.recording.steps.length,
+      stepDelay: delayMs,
+      stopAtStep,
+      skipSteps,
+      useEnvironmentDelay
+    });
+
+    // Replay each step and build up the state progressively
+    for (let i = 0; i < this.recording.steps.length; i++) {
+      const step = this.recording.steps[i];
+
+      // Check if we should stop at this step
+      if (stopAtStep && step.stepName === stopAtStep) {
+        log.analysis.info("Stopping replay at requested step", { stepName: stopAtStep });
+        break;
+      }
+
+      // Skip steps if requested
+      if (skipSteps.includes(step.stepName)) {
+        if (verbose) {
+          log.analysis.debug("Skipping step", { stepName: step.stepName });
+        }
+        continue;
+      }
+
+      if (verbose) {
+        log.analysis.debug("Replaying step with state reconstruction", {
+          stepId: step.stepId,
+          stepName: step.stepName,
+          duration: step.duration,
+          tokenUsage: step.tokenUsage.total
+        });
+      }
+
+      // Execute the step to get the result
+      const result = this.executeNextStep();
+      if (result) {
+        results.push(result);
+        
+        // Apply the recorded outputState to build the progressive state
+        // This reconstructs the state as it would have been after each step
+        currentState = {
+          ...currentState,
+          ...result.recordedState
+        };
+
+        if (verbose) {
+          log.analysis.debug("State updated after step", {
+            stepName: step.stepName,
+            stateKeys: Object.keys(currentState),
+            hasSignals: !!(currentState.signals?.length),
+            hasMedicalAnalysis: !!currentState.medicalAnalysis,
+            tokenUsage: currentState.tokenUsage?.total
+          });
+        }
+      }
+
+      // Add delay between steps
+      if (delayMs > 0) {
+        await sleep(delayMs);
+      }
+    }
+
+    log.analysis.info("Workflow replay with state reconstruction completed", {
+      totalSteps: results.length,
+      successful: results.filter(r => r.success).length,
+      failed: results.filter(r => !r.success).length,
+      finalStateKeys: Object.keys(currentState)
+    });
+
+    return {
+      finalState: currentState,
+      replayResults: results,
+      recording: this.recording
+    };
+  }
+
+  /**
    * Replay the entire workflow automatically
    */
   async replayWorkflow(options: ReplayOptions = {}): Promise<ReplayResult[]> {
@@ -322,6 +433,23 @@ export function createWorkflowReplay(filePath: string): WorkflowReplay | null {
     return replay;
   }
   return null;
+}
+
+// Helper function to replay a workflow with full state reconstruction
+export async function replayWorkflowWithStateReconstruction(
+  filePath: string,
+  options: ReplayOptions = {}
+): Promise<{
+  finalState: Partial<DocumentProcessingState>;
+  replayResults: ReplayResult[];
+  recording: WorkflowRecording;
+} | null> {
+  const replay = createWorkflowReplay(filePath);
+  if (!replay) {
+    return null;
+  }
+  
+  return await replay.replayWorkflowWithStateReconstruction(options);
 }
 
 // Helper function to get available recordings

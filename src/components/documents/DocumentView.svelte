@@ -10,6 +10,7 @@
     import SectionLinks from './SectionLinks.svelte';
     import SectionAttachments from './SectionAttachments.svelte';
     import SectionPrescriptions from './SectionPrescriptions.svelte';
+    import SectionMedications from './SectionMedications.svelte';
     
     import type { Document } from '$lib/documents/types.d';
 
@@ -32,6 +33,7 @@
         { id: 'links', component: SectionLinks, name: 'Related Links' },
         { id: 'attachments', component: SectionAttachments, name: 'Attachments' },
         { id: 'prescriptions', component: SectionPrescriptions, name: 'Prescriptions' },
+        { id: 'medications', component: SectionMedications, name: 'Medications' },
         // Note: Additional section components will be added as they're implemented:
         // { id: 'imaging', component: SectionImaging, name: 'Imaging Studies' },
         // { id: 'procedures', component: SectionProcedures, name: 'Procedures' },

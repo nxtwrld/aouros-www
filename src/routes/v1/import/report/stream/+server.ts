@@ -140,7 +140,7 @@ export const POST: RequestHandler = async ({ request }) => {
           
           console.log(`📤 SSE: Sending ${useStructuredData ? 'structured' : 'legacy'} report to client`);
           
-          log.analysis.info("LangGraph workflow result converted to ReportAnalysis format", workflowResult);
+          //log.analysis.info("LangGraph workflow result converted to ReportAnalysis format", workflowResult);
         } else {
           // Fall back to existing analyze function with manual progress events
           sendEvent({

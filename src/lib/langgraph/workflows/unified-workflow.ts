@@ -362,11 +362,6 @@ async function replayWorkflowFromFile(
   
   const aggregatedResult = await executeMultiNodeProcessing(stateWithCallback);
   
-  console.log("🔍 Aggregation result:", {
-    resultType: typeof aggregatedResult,
-    resultKeys: aggregatedResult ? Object.keys(aggregatedResult) : [],
-    result: aggregatedResult
-  });
   
   console.log("✅ Workflow replay completed with updated aggregation:", {
     stepsReplayed: replayResults.length,

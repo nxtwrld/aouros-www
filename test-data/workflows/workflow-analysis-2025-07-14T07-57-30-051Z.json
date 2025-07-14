@@ -1,6 +1,6 @@
 {
-  "recordingId": "workflow-analysis-2025-07-13T11-44-52-402Z",
-  "timestamp": "2025-07-13T11:44:52.402Z",
+  "recordingId": "workflow-analysis-2025-07-14T07-57-30-051Z",
+  "timestamp": "2025-07-14T07:57:30.051Z",
   "phase": "analysis",
   "input": {
     "workflowType": "unified-document-processing",
@@ -18,7 +18,7 @@
     {
       "stepId": "1-feature_detection",
       "stepName": "feature_detection",
-      "timestamp": "2025-07-13T11:44:54.879Z",
+      "timestamp": "2025-07-14T07:57:34.576Z",
       "inputState": {
         "images": null,
         "text": "Fakultní Thomayerova nemocnice \nIČ: 00064190\nVídeňská 800, 140 59 Praha 4 Krč\n\nOddělení ORL a chirurgie hlavy a krku \nPřednosta: MUDr. Aleš Čoček, Ph.D. Dr. med. \nORL oddělení - ambulance ORL\n\nORL vyšetření\n\nPacient: Mašková Irena\nBydliště: Severní IV 614/13, Praha 4, 140 00  \nDatum vyšetření: 30.01.2023, 8:19\n\nPoř.: 111\nIdent.č.: 485811033\nDatum narození: 11.8.1948\nPohlaví: žena\n\nNález:\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, \ndecha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. \nNyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\nobj.\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky\nsymetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\nZáv: Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne \nvšak zcela upravením nálezu\n\nDop: Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam \npřeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\nDiagnózy epizody:\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\nTisk: 30.01.2023 08:19\n\n\nMUDr. Ludmila Vylečková,\nV Praze, 30.1.2023\n\nStrana: 1 / 1",
@@ -38,9 +38,10 @@
         "medicalAnalysis": null,
         "signals": null,
         "imaging": null,
-        "prescriptions": null,
+        "medications": null,
         "procedures": null,
         "multiNodeResults": null,
+        "report": null,
         "documentTypeAnalysis": {
           "detectedSections": [],
           "confidence": 0,
@@ -102,8 +103,8 @@
           }
         ],
         "tokenUsage": {
-          "total": 7405,
-          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405
+          "total": 7441,
+          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441
         },
         "featureDetection": {
           "type": "unknown",
@@ -116,17 +117,14 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ]
         },
         "featureDetectionResults": {
@@ -145,22 +143,19 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ],
           "hasSummary": false,
           "hasDiagnosis": true,
-          "hasBodyParts": true,
-          "hasPerformer": true,
+          "hasBodyParts": false,
+          "hasPerformer": false,
           "hasRecommendations": false,
           "hasSignals": false,
           "hasPrescriptions": true,
@@ -191,9 +186,10 @@
         "medicalAnalysis": null,
         "signals": null,
         "imaging": null,
-        "prescriptions": null,
+        "medications": null,
         "procedures": null,
         "multiNodeResults": null,
+        "report": null,
         "documentTypeAnalysis": {
           "detectedSections": [],
           "confidence": 0,
@@ -243,10 +239,10 @@
         "emitComplete": "[Function]",
         "emitError": "[Function]"
       },
-      "duration": 2470,
+      "duration": 4513,
       "tokenUsage": {
-        "total": 7405,
-        "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405
+        "total": 7441,
+        "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441
       },
       "aiRequests": [],
       "errors": [],
@@ -261,7 +257,7 @@
     {
       "stepId": "2-medical-analysis",
       "stepName": "medical-analysis",
-      "timestamp": "2025-07-13T11:45:12.466Z",
+      "timestamp": "2025-07-14T07:59:01.728Z",
       "inputState": {
         "images": null,
         "text": "Fakultní Thomayerova nemocnice \nIČ: 00064190\nVídeňská 800, 140 59 Praha 4 Krč\n\nOddělení ORL a chirurgie hlavy a krku \nPřednosta: MUDr. Aleš Čoček, Ph.D. Dr. med. \nORL oddělení - ambulance ORL\n\nORL vyšetření\n\nPacient: Mašková Irena\nBydliště: Severní IV 614/13, Praha 4, 140 00  \nDatum vyšetření: 30.01.2023, 8:19\n\nPoř.: 111\nIdent.č.: 485811033\nDatum narození: 11.8.1948\nPohlaví: žena\n\nNález:\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, \ndecha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. \nNyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\nobj.\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky\nsymetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\nZáv: Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne \nvšak zcela upravením nálezu\n\nDop: Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam \npřeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\nDiagnózy epizody:\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\nTisk: 30.01.2023 08:19\n\n\nMUDr. Ludmila Vylečková,\nV Praze, 30.1.2023\n\nStrana: 1 / 1",
@@ -274,8 +270,8 @@
           }
         ],
         "tokenUsage": {
-          "total": 7405,
-          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405
+          "total": 7441,
+          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441
         },
         "featureDetection": {
           "type": "unknown",
@@ -288,17 +284,14 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ]
         },
         "featureDetectionResults": {
@@ -317,22 +310,19 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ],
           "hasSummary": false,
           "hasDiagnosis": true,
-          "hasBodyParts": true,
-          "hasPerformer": true,
+          "hasBodyParts": false,
+          "hasPerformer": false,
           "hasRecommendations": false,
           "hasSignals": false,
           "hasPrescriptions": true,
@@ -363,9 +353,10 @@
         "medicalAnalysis": null,
         "signals": null,
         "imaging": null,
-        "prescriptions": null,
+        "medications": null,
         "procedures": null,
         "multiNodeResults": null,
+        "report": null,
         "documentTypeAnalysis": {
           "detectedSections": [],
           "confidence": 0,
@@ -427,8 +418,8 @@
           }
         ],
         "tokenUsage": {
-          "total": 7405,
-          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405
+          "total": 7441,
+          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441
         },
         "featureDetection": {
           "type": "unknown",
@@ -441,17 +432,14 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ]
         },
         "featureDetectionResults": {
@@ -470,22 +458,19 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ],
           "hasSummary": false,
           "hasDiagnosis": true,
-          "hasBodyParts": true,
-          "hasPerformer": true,
+          "hasBodyParts": false,
+          "hasPerformer": false,
           "hasRecommendations": false,
           "hasSignals": false,
           "hasPrescriptions": true,
@@ -516,9 +501,10 @@
         "medicalAnalysis": null,
         "signals": null,
         "imaging": null,
-        "prescriptions": null,
+        "medications": null,
         "procedures": null,
         "multiNodeResults": null,
+        "report": null,
         "documentTypeAnalysis": {
           "detectedSections": [],
           "confidence": 0,
@@ -570,9 +556,9 @@
         "medical-analysis": {
           "category": "exam",
           "title": "ORL vyšetření - asymetrická hypertrofie L arytenoidní oblasti",
-          "summary": "Pacientka byla vyšetřena pro týden trvající odynofagii s bolestmi v krku. Byla přeléčena Herpesinem a užívala helicid. Nyní bolesti při polykání nejsou, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi.",
-          "content": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
-          "localizedContent": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
+          "summary": "Pacientka Mašková Irena byla vyšetřena na ORL oddělení pro týden trvající odynofagii a bolesti v krku. Po léčbě Herpesinem a užívání helicidu při nausee se bolesti při polykání zmírnily, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s exscisemi na 10.2.2023.",
+          "content": "**ORL vyšetření**\n\n**Nález:**\n- NO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\n- OA: aHT, artroza\n- FA: antihypertenziva\n\n**Objektivní nález:**\n- palp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\n- oro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\n- laryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Závěr:**\n- Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Doporučení:**\n- Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\n- Přeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\n**Diagnózy epizody:**\n- J060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\n**Endoskopické výkony provedny pomocí videořetězce.**",
+          "localizedContent": "**ORL examination**\n\n**Findings:**\n- NO: 12.1.23 examined for a week of gradually increasing odynophagia, with throat pain, swallowing through pain free, breathing without difficulty, voice clear, afebrile. Treated with Herpesin, used helicid for nausea. Now no pain when swallowing, but irritation to cough prevails during the day, but does not feel cold.\n- OA: aHT, arthrosis\n- FA: antihypertensives\n\n**Objective findings:**\n- palp. on the neck without resistance, fce n. VII preserved, exit n.V palp. painless.\n- oro- mucosa diu calm, tongue not coated, sticks out in the middle, salivary gland ducts calm, saliva clear, tonsils calm B\n- laryng (opt.)- larynx hyperemic, free epiglottis slender, smooth, pharynx pypylev, without leukoplakia, vocal cords symmetrical in natural width, piriform sinuses with slight asymmetry of the left side.\n\n**Conclusion:**\n- Asymmetrical hypertrophy of the L arytenoid area with transition to the piriform sinus, treated aphthous infection, with regression, but not completely resolved\n\n**Recommendations:**\n- Helicoid 20mg 1-0-1. The date for MLS and esophagoscopy with probat. excisions on 10.2.23, admission 9.2. Preoperative examination list issued.\n- Preoperative anesthesiology examination 8.2.23 at 9 am (patient G6)\n\n**Episode diagnoses:**\n- J060 - Acute inflammation of the pharynx and larynx - laryngopharyngitis acuta\n\n**Endoscopic procedures performed using a video chain.**",
           "recommendations": [
             {
               "urgency": 3,
@@ -580,14 +566,26 @@
             },
             {
               "urgency": 4,
-              "description": "Plánována MLS a esofagoskopie s excizemi na 10.2.23, příjem 9.2."
+              "description": "Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2."
             },
             {
               "urgency": 3,
-              "description": "Přeoperativní anesteziologické vyšetření 8.2.23 v 9 hod."
+              "description": "Přeoperativní anesteziologické vyšetření 8.2.2023 v 9 hod."
             }
           ],
           "date": "2023-01-30",
+          "diagnosis": {
+            "code": "J060",
+            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
+          },
+          "bodyParts": [
+            {
+              "identification": "larynx",
+              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu",
+              "treatment": "Pokračovat v léčbě helicidem 20mg 1-0-1. Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2.",
+              "urgency": 3
+            }
+          ],
           "performer": {
             "adr": [
               {
@@ -631,41 +629,31 @@
               }
             ],
             "title": [
-              "Přednosta"
+              "Lékařka"
             ]
           },
           "patient": {
-            "fullName": "Irena Mašková",
+            "fullName": "Mašková Irena",
             "biologicalSex": "female",
             "identifier": "485811033",
             "birthDate": "1948-08-11"
           },
-          "diagnosis": {
-            "code": "J060",
-            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
-          },
-          "bodyParts": [
-            {
-              "identification": "larynx",
-              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu",
-              "treatment": "Pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi",
-              "urgency": 3
-            }
-          ],
+          "isMedical": true,
+          "confidence": 0.98,
           "documentContext": {
             "documentType": "clinical_report",
             "language": "cs",
             "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:12.465Z",
+            "processingTimestamp": "2025-07-14T07:59:01.728Z",
             "nodeId": "medical-analysis",
             "priority": 1
           }
         }
       },
-      "duration": 17578,
+      "duration": 87137,
       "tokenUsage": {
-        "total": 7405,
-        "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405
+        "total": 7441,
+        "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441
       },
       "aiRequests": [],
       "errors": [],
@@ -677,9 +665,9 @@
       }
     },
     {
-      "stepId": "3-prescription-processing",
-      "stepName": "prescription-processing",
-      "timestamp": "2025-07-13T11:45:13.410Z",
+      "stepId": "3-medications-processing",
+      "stepName": "medications-processing",
+      "timestamp": "2025-07-14T07:59:08.290Z",
       "inputState": {
         "images": null,
         "text": "Fakultní Thomayerova nemocnice \nIČ: 00064190\nVídeňská 800, 140 59 Praha 4 Krč\n\nOddělení ORL a chirurgie hlavy a krku \nPřednosta: MUDr. Aleš Čoček, Ph.D. Dr. med. \nORL oddělení - ambulance ORL\n\nORL vyšetření\n\nPacient: Mašková Irena\nBydliště: Severní IV 614/13, Praha 4, 140 00  \nDatum vyšetření: 30.01.2023, 8:19\n\nPoř.: 111\nIdent.č.: 485811033\nDatum narození: 11.8.1948\nPohlaví: žena\n\nNález:\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, \ndecha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. \nNyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\nobj.\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky\nsymetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\nZáv: Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne \nvšak zcela upravením nálezu\n\nDop: Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam \npřeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\nDiagnózy epizody:\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\nTisk: 30.01.2023 08:19\n\n\nMUDr. Ludmila Vylečková,\nV Praze, 30.1.2023\n\nStrana: 1 / 1",
@@ -692,8 +680,8 @@
           }
         ],
         "tokenUsage": {
-          "total": 7405,
-          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405,
+          "total": 7441,
+          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441,
           "medical-analysis": 0
         },
         "featureDetection": {
@@ -707,17 +695,14 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ]
         },
         "featureDetectionResults": {
@@ -736,22 +721,19 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ],
           "hasSummary": false,
           "hasDiagnosis": true,
-          "hasBodyParts": true,
-          "hasPerformer": true,
+          "hasBodyParts": false,
+          "hasPerformer": false,
           "hasRecommendations": false,
           "hasSignals": false,
           "hasPrescriptions": true,
@@ -782,9 +764,10 @@
         "medicalAnalysis": null,
         "signals": null,
         "imaging": null,
-        "prescriptions": null,
+        "medications": null,
         "procedures": null,
         "multiNodeResults": null,
+        "report": null,
         "documentTypeAnalysis": {
           "detectedSections": [],
           "confidence": 0,
@@ -836,9 +819,9 @@
         "medical-analysis": {
           "category": "exam",
           "title": "ORL vyšetření - asymetrická hypertrofie L arytenoidní oblasti",
-          "summary": "Pacientka byla vyšetřena pro týden trvající odynofagii s bolestmi v krku. Byla přeléčena Herpesinem a užívala helicid. Nyní bolesti při polykání nejsou, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi.",
-          "content": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
-          "localizedContent": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
+          "summary": "Pacientka Mašková Irena byla vyšetřena na ORL oddělení pro týden trvající odynofagii a bolesti v krku. Po léčbě Herpesinem a užívání helicidu při nausee se bolesti při polykání zmírnily, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s exscisemi na 10.2.2023.",
+          "content": "**ORL vyšetření**\n\n**Nález:**\n- NO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\n- OA: aHT, artroza\n- FA: antihypertenziva\n\n**Objektivní nález:**\n- palp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\n- oro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\n- laryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Závěr:**\n- Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Doporučení:**\n- Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\n- Přeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\n**Diagnózy epizody:**\n- J060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\n**Endoskopické výkony provedny pomocí videořetězce.**",
+          "localizedContent": "**ORL examination**\n\n**Findings:**\n- NO: 12.1.23 examined for a week of gradually increasing odynophagia, with throat pain, swallowing through pain free, breathing without difficulty, voice clear, afebrile. Treated with Herpesin, used helicid for nausea. Now no pain when swallowing, but irritation to cough prevails during the day, but does not feel cold.\n- OA: aHT, arthrosis\n- FA: antihypertensives\n\n**Objective findings:**\n- palp. on the neck without resistance, fce n. VII preserved, exit n.V palp. painless.\n- oro- mucosa diu calm, tongue not coated, sticks out in the middle, salivary gland ducts calm, saliva clear, tonsils calm B\n- laryng (opt.)- larynx hyperemic, free epiglottis slender, smooth, pharynx pypylev, without leukoplakia, vocal cords symmetrical in natural width, piriform sinuses with slight asymmetry of the left side.\n\n**Conclusion:**\n- Asymmetrical hypertrophy of the L arytenoid area with transition to the piriform sinus, treated aphthous infection, with regression, but not completely resolved\n\n**Recommendations:**\n- Helicoid 20mg 1-0-1. The date for MLS and esophagoscopy with probat. excisions on 10.2.23, admission 9.2. Preoperative examination list issued.\n- Preoperative anesthesiology examination 8.2.23 at 9 am (patient G6)\n\n**Episode diagnoses:**\n- J060 - Acute inflammation of the pharynx and larynx - laryngopharyngitis acuta\n\n**Endoscopic procedures performed using a video chain.**",
           "recommendations": [
             {
               "urgency": 3,
@@ -846,14 +829,26 @@
             },
             {
               "urgency": 4,
-              "description": "Plánována MLS a esofagoskopie s excizemi na 10.2.23, příjem 9.2."
+              "description": "Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2."
             },
             {
               "urgency": 3,
-              "description": "Přeoperativní anesteziologické vyšetření 8.2.23 v 9 hod."
+              "description": "Přeoperativní anesteziologické vyšetření 8.2.2023 v 9 hod."
             }
           ],
           "date": "2023-01-30",
+          "diagnosis": {
+            "code": "J060",
+            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
+          },
+          "bodyParts": [
+            {
+              "identification": "larynx",
+              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu",
+              "treatment": "Pokračovat v léčbě helicidem 20mg 1-0-1. Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2.",
+              "urgency": 3
+            }
+          ],
           "performer": {
             "adr": [
               {
@@ -897,32 +892,22 @@
               }
             ],
             "title": [
-              "Přednosta"
+              "Lékařka"
             ]
           },
           "patient": {
-            "fullName": "Irena Mašková",
+            "fullName": "Mašková Irena",
             "biologicalSex": "female",
             "identifier": "485811033",
             "birthDate": "1948-08-11"
           },
-          "diagnosis": {
-            "code": "J060",
-            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
-          },
-          "bodyParts": [
-            {
-              "identification": "larynx",
-              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu",
-              "treatment": "Pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi",
-              "urgency": 3
-            }
-          ],
+          "isMedical": true,
+          "confidence": 0.98,
           "documentContext": {
             "documentType": "clinical_report",
             "language": "cs",
             "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:12.465Z",
+            "processingTimestamp": "2025-07-14T07:59:01.728Z",
             "nodeId": "medical-analysis",
             "priority": 1
           }
@@ -940,8 +925,8 @@
           }
         ],
         "tokenUsage": {
-          "total": 7405,
-          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405,
+          "total": 7441,
+          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441,
           "medical-analysis": 0
         },
         "featureDetection": {
@@ -955,17 +940,14 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ]
         },
         "featureDetectionResults": {
@@ -984,22 +966,19 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ],
           "hasSummary": false,
           "hasDiagnosis": true,
-          "hasBodyParts": true,
-          "hasPerformer": true,
+          "hasBodyParts": false,
+          "hasPerformer": false,
           "hasRecommendations": false,
           "hasSignals": false,
           "hasPrescriptions": true,
@@ -1030,9 +1009,105 @@
         "medicalAnalysis": null,
         "signals": null,
         "imaging": null,
-        "prescriptions": null,
+        "medications": {
+          "documentType": "medication_list",
+          "hasMedications": true,
+          "newPrescriptions": [
+            {
+              "medicationName": "Helicoid 20mg",
+              "genericName": "omeprazol",
+              "strength": "20mg",
+              "dosage": "1-0-1",
+              "route": "oral",
+              "form": "tablet",
+              "frequency": {
+                "timesPerDay": 2,
+                "schedule": "twice daily"
+              },
+              "instructions": {
+                "administration": "před jídlem",
+                "specialInstructions": "užívat pravidelně",
+                "asNeeded": false
+              },
+              "prescriber": {
+                "adr": [
+                  {
+                    "street-address": "Vídeňská 800",
+                    "locality": "Praha 4",
+                    "postal-code": "140 59",
+                    "country-name": "Česká republika"
+                  }
+                ],
+                "email": [
+                  {
+                    "value": "ludmila.vyleckova@ftn.cz"
+                  }
+                ],
+                "fn": "MUDr. Ludmila Vylečková",
+                "n": {
+                  "family-name": [
+                    "Vylečková"
+                  ],
+                  "given-name": [
+                    "Ludmila"
+                  ]
+                },
+                "org": [
+                  {
+                    "organization-name": "Fakultní Thomayerova nemocnice",
+                    "organization-unit": [
+                      "Oddělení ORL a chirurgie hlavy a krku"
+                    ]
+                  }
+                ],
+                "role": [
+                  "lékař"
+                ],
+                "tel": [
+                  {
+                    "value": "+420261083111"
+                  }
+                ],
+                "title": [
+                  "MUDr."
+                ]
+              },
+              "indication": "aftosní infekt",
+              "prescriptionDate": "2023-01-30"
+            }
+          ],
+          "currentMedications": [
+            {
+              "medicationName": "Herpesin",
+              "genericName": "acyklovir",
+              "indication": "odynofagie",
+              "status": "completed"
+            },
+            {
+              "medicationName": "Helicid",
+              "genericName": "omeprazol",
+              "indication": "nausea",
+              "status": "active"
+            }
+          ],
+          "context": {
+            "isMedicationList": true,
+            "source": "clinic_notes",
+            "reliability": "verified",
+            "lastUpdated": "2023-01-30"
+          },
+          "documentContext": {
+            "documentType": "clinical_report",
+            "language": "cs",
+            "extractedFrom": "universal_schema_driven_analysis",
+            "processingTimestamp": "2025-07-14T07:59:08.290Z",
+            "nodeId": "medications-processing",
+            "priority": 2
+          }
+        },
         "procedures": null,
         "multiNodeResults": null,
+        "report": null,
         "documentTypeAnalysis": {
           "detectedSections": [],
           "confidence": 0,
@@ -1084,9 +1159,9 @@
         "medical-analysis": {
           "category": "exam",
           "title": "ORL vyšetření - asymetrická hypertrofie L arytenoidní oblasti",
-          "summary": "Pacientka byla vyšetřena pro týden trvající odynofagii s bolestmi v krku. Byla přeléčena Herpesinem a užívala helicid. Nyní bolesti při polykání nejsou, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi.",
-          "content": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
-          "localizedContent": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
+          "summary": "Pacientka Mašková Irena byla vyšetřena na ORL oddělení pro týden trvající odynofagii a bolesti v krku. Po léčbě Herpesinem a užívání helicidu při nausee se bolesti při polykání zmírnily, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s exscisemi na 10.2.2023.",
+          "content": "**ORL vyšetření**\n\n**Nález:**\n- NO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\n- OA: aHT, artroza\n- FA: antihypertenziva\n\n**Objektivní nález:**\n- palp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\n- oro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\n- laryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Závěr:**\n- Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Doporučení:**\n- Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\n- Přeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\n**Diagnózy epizody:**\n- J060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\n**Endoskopické výkony provedny pomocí videořetězce.**",
+          "localizedContent": "**ORL examination**\n\n**Findings:**\n- NO: 12.1.23 examined for a week of gradually increasing odynophagia, with throat pain, swallowing through pain free, breathing without difficulty, voice clear, afebrile. Treated with Herpesin, used helicid for nausea. Now no pain when swallowing, but irritation to cough prevails during the day, but does not feel cold.\n- OA: aHT, arthrosis\n- FA: antihypertensives\n\n**Objective findings:**\n- palp. on the neck without resistance, fce n. VII preserved, exit n.V palp. painless.\n- oro- mucosa diu calm, tongue not coated, sticks out in the middle, salivary gland ducts calm, saliva clear, tonsils calm B\n- laryng (opt.)- larynx hyperemic, free epiglottis slender, smooth, pharynx pypylev, without leukoplakia, vocal cords symmetrical in natural width, piriform sinuses with slight asymmetry of the left side.\n\n**Conclusion:**\n- Asymmetrical hypertrophy of the L arytenoid area with transition to the piriform sinus, treated aphthous infection, with regression, but not completely resolved\n\n**Recommendations:**\n- Helicoid 20mg 1-0-1. The date for MLS and esophagoscopy with probat. excisions on 10.2.23, admission 9.2. Preoperative examination list issued.\n- Preoperative anesthesiology examination 8.2.23 at 9 am (patient G6)\n\n**Episode diagnoses:**\n- J060 - Acute inflammation of the pharynx and larynx - laryngopharyngitis acuta\n\n**Endoscopic procedures performed using a video chain.**",
           "recommendations": [
             {
               "urgency": 3,
@@ -1094,14 +1169,26 @@
             },
             {
               "urgency": 4,
-              "description": "Plánována MLS a esofagoskopie s excizemi na 10.2.23, příjem 9.2."
+              "description": "Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2."
             },
             {
               "urgency": 3,
-              "description": "Přeoperativní anesteziologické vyšetření 8.2.23 v 9 hod."
+              "description": "Přeoperativní anesteziologické vyšetření 8.2.2023 v 9 hod."
             }
           ],
           "date": "2023-01-30",
+          "diagnosis": {
+            "code": "J060",
+            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
+          },
+          "bodyParts": [
+            {
+              "identification": "larynx",
+              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu",
+              "treatment": "Pokračovat v léčbě helicidem 20mg 1-0-1. Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2.",
+              "urgency": 3
+            }
+          ],
           "performer": {
             "adr": [
               {
@@ -1145,68 +1232,46 @@
               }
             ],
             "title": [
-              "Přednosta"
+              "Lékařka"
             ]
           },
           "patient": {
-            "fullName": "Irena Mašková",
+            "fullName": "Mašková Irena",
             "biologicalSex": "female",
             "identifier": "485811033",
             "birthDate": "1948-08-11"
           },
-          "diagnosis": {
-            "code": "J060",
-            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
-          },
-          "bodyParts": [
-            {
-              "identification": "larynx",
-              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu",
-              "treatment": "Pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi",
-              "urgency": 3
-            }
-          ],
+          "isMedical": true,
+          "confidence": 0.98,
           "documentContext": {
             "documentType": "clinical_report",
             "language": "cs",
             "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:12.465Z",
+            "processingTimestamp": "2025-07-14T07:59:01.728Z",
             "nodeId": "medical-analysis",
             "priority": 1
           }
-        },
-        "prescription": {
-          "isPrescription": false,
-          "prescriptions": [],
-          "documentContext": {
-            "documentType": "clinical_report",
-            "language": "cs",
-            "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:13.410Z",
-            "nodeId": "prescription-processing",
-            "priority": 2
-          }
         }
       },
-      "duration": 940,
+      "duration": 6561,
       "tokenUsage": {
-        "total": 7405,
-        "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405,
+        "total": 7441,
+        "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441,
         "medical-analysis": 0
       },
       "aiRequests": [],
       "errors": [],
       "metadata": {
-        "nodeType": "prescription-processing",
+        "nodeType": "medications-processing",
         "provider": "enhanced-openai",
-        "flowType": "prescription-processing",
-        "confidence": 0.7
+        "flowType": "medications-processing",
+        "confidence": 0.8
       }
     },
     {
       "stepId": "4-procedures-processing",
       "stepName": "procedures-processing",
-      "timestamp": "2025-07-13T11:45:29.590Z",
+      "timestamp": "2025-07-14T07:59:09.118Z",
       "inputState": {
         "images": null,
         "text": "Fakultní Thomayerova nemocnice \nIČ: 00064190\nVídeňská 800, 140 59 Praha 4 Krč\n\nOddělení ORL a chirurgie hlavy a krku \nPřednosta: MUDr. Aleš Čoček, Ph.D. Dr. med. \nORL oddělení - ambulance ORL\n\nORL vyšetření\n\nPacient: Mašková Irena\nBydliště: Severní IV 614/13, Praha 4, 140 00  \nDatum vyšetření: 30.01.2023, 8:19\n\nPoř.: 111\nIdent.č.: 485811033\nDatum narození: 11.8.1948\nPohlaví: žena\n\nNález:\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, \ndecha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. \nNyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\nobj.\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky\nsymetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\nZáv: Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne \nvšak zcela upravením nálezu\n\nDop: Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam \npřeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\nDiagnózy epizody:\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\nTisk: 30.01.2023 08:19\n\n\nMUDr. Ludmila Vylečková,\nV Praze, 30.1.2023\n\nStrana: 1 / 1",
@@ -1219,10 +1284,10 @@
           }
         ],
         "tokenUsage": {
-          "total": 7405,
-          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405,
+          "total": 7441,
+          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441,
           "medical-analysis": 0,
-          "prescription-processing": 0
+          "medications-processing": 0
         },
         "featureDetection": {
           "type": "unknown",
@@ -1235,17 +1300,14 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ]
         },
         "featureDetectionResults": {
@@ -1264,22 +1326,19 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ],
           "hasSummary": false,
           "hasDiagnosis": true,
-          "hasBodyParts": true,
-          "hasPerformer": true,
+          "hasBodyParts": false,
+          "hasPerformer": false,
           "hasRecommendations": false,
           "hasSignals": false,
           "hasPrescriptions": true,
@@ -1310,9 +1369,105 @@
         "medicalAnalysis": null,
         "signals": null,
         "imaging": null,
-        "prescriptions": null,
+        "medications": {
+          "documentType": "medication_list",
+          "hasMedications": true,
+          "newPrescriptions": [
+            {
+              "medicationName": "Helicoid 20mg",
+              "genericName": "omeprazol",
+              "strength": "20mg",
+              "dosage": "1-0-1",
+              "route": "oral",
+              "form": "tablet",
+              "frequency": {
+                "timesPerDay": 2,
+                "schedule": "twice daily"
+              },
+              "instructions": {
+                "administration": "před jídlem",
+                "specialInstructions": "užívat pravidelně",
+                "asNeeded": false
+              },
+              "prescriber": {
+                "adr": [
+                  {
+                    "street-address": "Vídeňská 800",
+                    "locality": "Praha 4",
+                    "postal-code": "140 59",
+                    "country-name": "Česká republika"
+                  }
+                ],
+                "email": [
+                  {
+                    "value": "ludmila.vyleckova@ftn.cz"
+                  }
+                ],
+                "fn": "MUDr. Ludmila Vylečková",
+                "n": {
+                  "family-name": [
+                    "Vylečková"
+                  ],
+                  "given-name": [
+                    "Ludmila"
+                  ]
+                },
+                "org": [
+                  {
+                    "organization-name": "Fakultní Thomayerova nemocnice",
+                    "organization-unit": [
+                      "Oddělení ORL a chirurgie hlavy a krku"
+                    ]
+                  }
+                ],
+                "role": [
+                  "lékař"
+                ],
+                "tel": [
+                  {
+                    "value": "+420261083111"
+                  }
+                ],
+                "title": [
+                  "MUDr."
+                ]
+              },
+              "indication": "aftosní infekt",
+              "prescriptionDate": "2023-01-30"
+            }
+          ],
+          "currentMedications": [
+            {
+              "medicationName": "Herpesin",
+              "genericName": "acyklovir",
+              "indication": "odynofagie",
+              "status": "completed"
+            },
+            {
+              "medicationName": "Helicid",
+              "genericName": "omeprazol",
+              "indication": "nausea",
+              "status": "active"
+            }
+          ],
+          "context": {
+            "isMedicationList": true,
+            "source": "clinic_notes",
+            "reliability": "verified",
+            "lastUpdated": "2023-01-30"
+          },
+          "documentContext": {
+            "documentType": "clinical_report",
+            "language": "cs",
+            "extractedFrom": "universal_schema_driven_analysis",
+            "processingTimestamp": "2025-07-14T07:59:08.290Z",
+            "nodeId": "medications-processing",
+            "priority": 2
+          }
+        },
         "procedures": null,
         "multiNodeResults": null,
+        "report": null,
         "documentTypeAnalysis": {
           "detectedSections": [],
           "confidence": 0,
@@ -1364,9 +1519,9 @@
         "medical-analysis": {
           "category": "exam",
           "title": "ORL vyšetření - asymetrická hypertrofie L arytenoidní oblasti",
-          "summary": "Pacientka byla vyšetřena pro týden trvající odynofagii s bolestmi v krku. Byla přeléčena Herpesinem a užívala helicid. Nyní bolesti při polykání nejsou, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi.",
-          "content": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
-          "localizedContent": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
+          "summary": "Pacientka Mašková Irena byla vyšetřena na ORL oddělení pro týden trvající odynofagii a bolesti v krku. Po léčbě Herpesinem a užívání helicidu při nausee se bolesti při polykání zmírnily, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s exscisemi na 10.2.2023.",
+          "content": "**ORL vyšetření**\n\n**Nález:**\n- NO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\n- OA: aHT, artroza\n- FA: antihypertenziva\n\n**Objektivní nález:**\n- palp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\n- oro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\n- laryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Závěr:**\n- Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Doporučení:**\n- Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\n- Přeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\n**Diagnózy epizody:**\n- J060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\n**Endoskopické výkony provedny pomocí videořetězce.**",
+          "localizedContent": "**ORL examination**\n\n**Findings:**\n- NO: 12.1.23 examined for a week of gradually increasing odynophagia, with throat pain, swallowing through pain free, breathing without difficulty, voice clear, afebrile. Treated with Herpesin, used helicid for nausea. Now no pain when swallowing, but irritation to cough prevails during the day, but does not feel cold.\n- OA: aHT, arthrosis\n- FA: antihypertensives\n\n**Objective findings:**\n- palp. on the neck without resistance, fce n. VII preserved, exit n.V palp. painless.\n- oro- mucosa diu calm, tongue not coated, sticks out in the middle, salivary gland ducts calm, saliva clear, tonsils calm B\n- laryng (opt.)- larynx hyperemic, free epiglottis slender, smooth, pharynx pypylev, without leukoplakia, vocal cords symmetrical in natural width, piriform sinuses with slight asymmetry of the left side.\n\n**Conclusion:**\n- Asymmetrical hypertrophy of the L arytenoid area with transition to the piriform sinus, treated aphthous infection, with regression, but not completely resolved\n\n**Recommendations:**\n- Helicoid 20mg 1-0-1. The date for MLS and esophagoscopy with probat. excisions on 10.2.23, admission 9.2. Preoperative examination list issued.\n- Preoperative anesthesiology examination 8.2.23 at 9 am (patient G6)\n\n**Episode diagnoses:**\n- J060 - Acute inflammation of the pharynx and larynx - laryngopharyngitis acuta\n\n**Endoscopic procedures performed using a video chain.**",
           "recommendations": [
             {
               "urgency": 3,
@@ -1374,14 +1529,26 @@
             },
             {
               "urgency": 4,
-              "description": "Plánována MLS a esofagoskopie s excizemi na 10.2.23, příjem 9.2."
+              "description": "Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2."
             },
             {
               "urgency": 3,
-              "description": "Přeoperativní anesteziologické vyšetření 8.2.23 v 9 hod."
+              "description": "Přeoperativní anesteziologické vyšetření 8.2.2023 v 9 hod."
             }
           ],
           "date": "2023-01-30",
+          "diagnosis": {
+            "code": "J060",
+            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
+          },
+          "bodyParts": [
+            {
+              "identification": "larynx",
+              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu",
+              "treatment": "Pokračovat v léčbě helicidem 20mg 1-0-1. Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2.",
+              "urgency": 3
+            }
+          ],
           "performer": {
             "adr": [
               {
@@ -1425,46 +1592,24 @@
               }
             ],
             "title": [
-              "Přednosta"
+              "Lékařka"
             ]
           },
           "patient": {
-            "fullName": "Irena Mašková",
+            "fullName": "Mašková Irena",
             "biologicalSex": "female",
             "identifier": "485811033",
             "birthDate": "1948-08-11"
           },
-          "diagnosis": {
-            "code": "J060",
-            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
-          },
-          "bodyParts": [
-            {
-              "identification": "larynx",
-              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu",
-              "treatment": "Pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi",
-              "urgency": 3
-            }
-          ],
+          "isMedical": true,
+          "confidence": 0.98,
           "documentContext": {
             "documentType": "clinical_report",
             "language": "cs",
             "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:12.465Z",
+            "processingTimestamp": "2025-07-14T07:59:01.728Z",
             "nodeId": "medical-analysis",
             "priority": 1
-          }
-        },
-        "prescription": {
-          "isPrescription": false,
-          "prescriptions": [],
-          "documentContext": {
-            "documentType": "clinical_report",
-            "language": "cs",
-            "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:13.410Z",
-            "nodeId": "prescription-processing",
-            "priority": 2
           }
         }
       },
@@ -1480,10 +1625,10 @@
           }
         ],
         "tokenUsage": {
-          "total": 7405,
-          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405,
+          "total": 7441,
+          "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441,
           "medical-analysis": 0,
-          "prescription-processing": 0
+          "medications-processing": 0
         },
         "featureDetection": {
           "type": "unknown",
@@ -1496,17 +1641,14 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ]
         },
         "featureDetectionResults": {
@@ -1525,22 +1667,19 @@
             "swallowing",
             "cough",
             "infection",
-            "medication",
+            "hypertrophy",
+            "asymmetry",
             "endoscopy",
-            "diagnosis",
             "acute_laryngopharyngitis",
+            "Helicoid",
             "anesthesia",
-            "procedure",
-            "appointment",
-            "prescription",
-            "preoperative",
-            "anesthesia_consultation",
-            "video_endoscopy"
+            "excision",
+            "videoendoscopy"
           ],
           "hasSummary": false,
           "hasDiagnosis": true,
-          "hasBodyParts": true,
-          "hasPerformer": true,
+          "hasBodyParts": false,
+          "hasPerformer": false,
           "hasRecommendations": false,
           "hasSignals": false,
           "hasPrescriptions": true,
@@ -1571,19 +1710,115 @@
         "medicalAnalysis": null,
         "signals": null,
         "imaging": null,
-        "prescriptions": null,
+        "medications": {
+          "documentType": "medication_list",
+          "hasMedications": true,
+          "newPrescriptions": [
+            {
+              "medicationName": "Helicoid 20mg",
+              "genericName": "omeprazol",
+              "strength": "20mg",
+              "dosage": "1-0-1",
+              "route": "oral",
+              "form": "tablet",
+              "frequency": {
+                "timesPerDay": 2,
+                "schedule": "twice daily"
+              },
+              "instructions": {
+                "administration": "před jídlem",
+                "specialInstructions": "užívat pravidelně",
+                "asNeeded": false
+              },
+              "prescriber": {
+                "adr": [
+                  {
+                    "street-address": "Vídeňská 800",
+                    "locality": "Praha 4",
+                    "postal-code": "140 59",
+                    "country-name": "Česká republika"
+                  }
+                ],
+                "email": [
+                  {
+                    "value": "ludmila.vyleckova@ftn.cz"
+                  }
+                ],
+                "fn": "MUDr. Ludmila Vylečková",
+                "n": {
+                  "family-name": [
+                    "Vylečková"
+                  ],
+                  "given-name": [
+                    "Ludmila"
+                  ]
+                },
+                "org": [
+                  {
+                    "organization-name": "Fakultní Thomayerova nemocnice",
+                    "organization-unit": [
+                      "Oddělení ORL a chirurgie hlavy a krku"
+                    ]
+                  }
+                ],
+                "role": [
+                  "lékař"
+                ],
+                "tel": [
+                  {
+                    "value": "+420261083111"
+                  }
+                ],
+                "title": [
+                  "MUDr."
+                ]
+              },
+              "indication": "aftosní infekt",
+              "prescriptionDate": "2023-01-30"
+            }
+          ],
+          "currentMedications": [
+            {
+              "medicationName": "Herpesin",
+              "genericName": "acyklovir",
+              "indication": "odynofagie",
+              "status": "completed"
+            },
+            {
+              "medicationName": "Helicid",
+              "genericName": "omeprazol",
+              "indication": "nausea",
+              "status": "active"
+            }
+          ],
+          "context": {
+            "isMedicationList": true,
+            "source": "clinic_notes",
+            "reliability": "verified",
+            "lastUpdated": "2023-01-30"
+          },
+          "documentContext": {
+            "documentType": "clinical_report",
+            "language": "cs",
+            "extractedFrom": "universal_schema_driven_analysis",
+            "processingTimestamp": "2025-07-14T07:59:08.290Z",
+            "nodeId": "medications-processing",
+            "priority": 2
+          }
+        },
         "procedures": {
           "hasProcedures": false,
           "documentContext": {
             "documentType": "clinical_report",
             "language": "cs",
             "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:29.590Z",
+            "processingTimestamp": "2025-07-14T07:59:09.118Z",
             "nodeId": "procedures-processing",
             "priority": 3
           }
         },
         "multiNodeResults": null,
+        "report": null,
         "documentTypeAnalysis": {
           "detectedSections": [],
           "confidence": 0,
@@ -1635,9 +1870,9 @@
         "medical-analysis": {
           "category": "exam",
           "title": "ORL vyšetření - asymetrická hypertrofie L arytenoidní oblasti",
-          "summary": "Pacientka byla vyšetřena pro týden trvající odynofagii s bolestmi v krku. Byla přeléčena Herpesinem a užívala helicid. Nyní bolesti při polykání nejsou, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi.",
-          "content": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
-          "localizedContent": "**ORL vyšetření**\n\n**Nález:**\nNO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\nOA: aHT, artroza\nFA: antihypertenziva\n\n**obj.**\npalp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\noro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\nlaryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Záv:** Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Dop:** Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\nPřeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\nEndoskopické výkony provedny pomocí videořetězce.\n\n**Diagnózy epizody:**\nJ060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta",
+          "summary": "Pacientka Mašková Irena byla vyšetřena na ORL oddělení pro týden trvající odynofagii a bolesti v krku. Po léčbě Herpesinem a užívání helicidu při nausee se bolesti při polykání zmírnily, ale přetrvává dráždění ke kašli. Vyšetření odhalilo asymetrickou hypertrofii levé arytenoidní oblasti s přechodem do piriformního sinu. Byla diagnostikována akutní laryngofaryngitida. Doporučeno pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s exscisemi na 10.2.2023.",
+          "content": "**ORL vyšetření**\n\n**Nález:**\n- NO: 12.1.23 vyšetřena pro týden postupně narůstající odynofagie, s bolestmi v krku, polykání přes bolesti volné, decha bez obtíží, hlas jasny, afebrilní. Přeléčena Herpesin, při nausee uzivala helicid. Nyní bolesti při polykání nejsou, převažují dráždení ke kašli přes den, ale nastydlá se necítí.\n- OA: aHT, artroza\n- FA: antihypertenziva\n\n**Objektivní nález:**\n- palp. na krku bez rezistence, fce n. VII zachovalá, výstup n.V palp. nebol.\n- oro- sliznice diu klidné, jazyk nepovleklý, plazi středem, vývody slinných žlaz klidné, slina čirá, tonsily klidné B\n- laryng (opt.)- hrtan žhyperemický, volné epiglottis štíhlá, hlevká, hltan pýpylev, bez leukoplákií, hlasivky symetrické v přirozené šíři, piriformní sínusy s lehrou asymetrií levé strany.\n\n**Závěr:**\n- Asymetrická hypertrofie L arytenoidní oblasti s přechodem do pirif. sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu\n\n**Doporučení:**\n- Helicoid 20mg 1-0-1. Platí termín k MLS a esofogsropii s probat. exscisemi na 10.2.23, příjem 9.2. Seznam přeoper. vyš. vydán.\n- Přeoper. anesteziol. vyš. 8.2.23 v 9 hod (pac. G6)\n\n**Diagnózy epizody:**\n- J060 - Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta\n\n**Endoskopické výkony provedny pomocí videořetězce.**",
+          "localizedContent": "**ORL examination**\n\n**Findings:**\n- NO: 12.1.23 examined for a week of gradually increasing odynophagia, with throat pain, swallowing through pain free, breathing without difficulty, voice clear, afebrile. Treated with Herpesin, used helicid for nausea. Now no pain when swallowing, but irritation to cough prevails during the day, but does not feel cold.\n- OA: aHT, arthrosis\n- FA: antihypertensives\n\n**Objective findings:**\n- palp. on the neck without resistance, fce n. VII preserved, exit n.V palp. painless.\n- oro- mucosa diu calm, tongue not coated, sticks out in the middle, salivary gland ducts calm, saliva clear, tonsils calm B\n- laryng (opt.)- larynx hyperemic, free epiglottis slender, smooth, pharynx pypylev, without leukoplakia, vocal cords symmetrical in natural width, piriform sinuses with slight asymmetry of the left side.\n\n**Conclusion:**\n- Asymmetrical hypertrophy of the L arytenoid area with transition to the piriform sinus, treated aphthous infection, with regression, but not completely resolved\n\n**Recommendations:**\n- Helicoid 20mg 1-0-1. The date for MLS and esophagoscopy with probat. excisions on 10.2.23, admission 9.2. Preoperative examination list issued.\n- Preoperative anesthesiology examination 8.2.23 at 9 am (patient G6)\n\n**Episode diagnoses:**\n- J060 - Acute inflammation of the pharynx and larynx - laryngopharyngitis acuta\n\n**Endoscopic procedures performed using a video chain.**",
           "recommendations": [
             {
               "urgency": 3,
@@ -1645,14 +1880,26 @@
             },
             {
               "urgency": 4,
-              "description": "Plánována MLS a esofagoskopie s excizemi na 10.2.23, příjem 9.2."
+              "description": "Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2."
             },
             {
               "urgency": 3,
-              "description": "Přeoperativní anesteziologické vyšetření 8.2.23 v 9 hod."
+              "description": "Přeoperativní anesteziologické vyšetření 8.2.2023 v 9 hod."
             }
           ],
           "date": "2023-01-30",
+          "diagnosis": {
+            "code": "J060",
+            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
+          },
+          "bodyParts": [
+            {
+              "identification": "larynx",
+              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu, zaléčen aftosní infekt, s regresí, ne však zcela upravením nálezu",
+              "treatment": "Pokračovat v léčbě helicidem 20mg 1-0-1. Plánována MLS a esofagoskopie s exscisemi na 10.2.2023, příjem 9.2.",
+              "urgency": 3
+            }
+          ],
           "performer": {
             "adr": [
               {
@@ -1696,55 +1943,33 @@
               }
             ],
             "title": [
-              "Přednosta"
+              "Lékařka"
             ]
           },
           "patient": {
-            "fullName": "Irena Mašková",
+            "fullName": "Mašková Irena",
             "biologicalSex": "female",
             "identifier": "485811033",
             "birthDate": "1948-08-11"
           },
-          "diagnosis": {
-            "code": "J060",
-            "description": "Akutní zánět hltanu i hrtanu - laryngopharyngitis acuta"
-          },
-          "bodyParts": [
-            {
-              "identification": "larynx",
-              "status": "Asymetrická hypertrofie L arytenoidní oblasti s přechodem do piriformního sinu",
-              "treatment": "Pokračovat v léčbě helicidem a plánována MLS a esofagoskopie s excizemi",
-              "urgency": 3
-            }
-          ],
+          "isMedical": true,
+          "confidence": 0.98,
           "documentContext": {
             "documentType": "clinical_report",
             "language": "cs",
             "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:12.465Z",
+            "processingTimestamp": "2025-07-14T07:59:01.728Z",
             "nodeId": "medical-analysis",
             "priority": 1
           }
-        },
-        "prescription": {
-          "isPrescription": false,
-          "prescriptions": [],
-          "documentContext": {
-            "documentType": "clinical_report",
-            "language": "cs",
-            "extractedFrom": "universal_schema_driven_analysis",
-            "processingTimestamp": "2025-07-13T11:45:13.410Z",
-            "nodeId": "prescription-processing",
-            "priority": 2
-          }
         }
       },
-      "duration": 16180,
+      "duration": 828,
       "tokenUsage": {
-        "total": 7405,
-        "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7405,
+        "total": 7441,
+        "Analyze medical documents comprehensively to identify ALL medical sections present. Carefully examine the entire document for: prescriptions/medications (drug names, dosages like '20mg 1-0-1'), procedures (surgical/endoscopic operations), lab values/measurements (numbers with units), imaging studies, diagnoses, etc. Set each boolean flag to true if that content type exists anywhere in the document. This analysis works in any language. If not medical content, mark as notMedical and skip other analysis.": 7441,
         "medical-analysis": 0,
-        "prescription-processing": 0
+        "medications-processing": 0
       },
       "aiRequests": [],
       "errors": [],
@@ -1756,10 +1981,10 @@
       }
     }
   ],
-  "finalResult": "workflow-analysis-2025-07-13T11-44-52-402Z",
-  "totalDuration": 37168,
+  "finalResult": "workflow-analysis-2025-07-14T07-57-30-051Z",
+  "totalDuration": 99039,
   "totalTokenUsage": {
-    "total": 29620
+    "total": 29764
   },
   "version": "1.0"
 }

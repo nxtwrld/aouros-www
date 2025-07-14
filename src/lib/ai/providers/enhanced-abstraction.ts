@@ -92,6 +92,18 @@ export class EnhancedAIProvider {
     const startTime = Date.now();
     const flowType = options.flowType || 'medical_analysis';
 
+    // CRITICAL: Prevent AI calls during replay mode
+    if (workflowRecorder.isReplayMode()) {
+      const replayFilePath = workflowRecorder.getReplayFilePath();
+      aiLogger.error(`🚫 AI call blocked during replay mode`, {
+        flowType,
+        replayFile: replayFilePath,
+        schemaName: schema.name,
+        stack: new Error().stack
+      });
+      throw new Error(`AI calls are not allowed during replay mode. Replay file: ${replayFilePath}. This suggests the replay mechanism is not working correctly.`);
+    }
+
     try {
       // Emit progress: Starting AI analysis
       options.progressCallback?.(flowType, 0, `Initializing ${flowType} with AI provider`);

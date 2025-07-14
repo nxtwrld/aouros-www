@@ -10,7 +10,7 @@ import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { log } from "$lib/logging/logger";
 // import { isStateTransitionDebuggingEnabled } from "$lib/config/logging-config";
-import { recordWorkflowStep } from "$lib/debug/workflow-recorder";
+import { recordWorkflowStep, workflowRecorder } from "$lib/debug/workflow-recorder";
 
 export interface BaseProcessingNodeConfig {
   nodeName: string;
@@ -47,6 +47,17 @@ export abstract class BaseProcessingNode {
    */
   async process(state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> {
     const stepStartTime = Date.now();
+    
+    // CRITICAL: Check if we're in replay mode and should not execute real processing
+    if (workflowRecorder.isReplayMode()) {
+      const replayFilePath = workflowRecorder.getReplayFilePath();
+      log.analysis.error(`🚫 BaseProcessingNode execution blocked during replay mode`, {
+        nodeName: this.config.nodeName,
+        replayFile: replayFilePath,
+        stack: new Error().stack
+      });
+      throw new Error(`BaseProcessingNode (${this.config.nodeName}) should not be executed during replay mode. Replay file: ${replayFilePath}. This suggests the replay mechanism is bypassing node execution incorrectly.`);
+    }
     
     try {
       // Check if this node should execute based on feature detection
