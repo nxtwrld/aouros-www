@@ -10,6 +10,7 @@
     import SectionLinks from './SectionLinks.svelte';
     import SectionAttachments from './SectionAttachments.svelte';
     import SectionMedications from './SectionMedications.svelte';
+    import SectionProcedures from './SectionProcedures.svelte';
     
     import type { Document } from '$lib/documents/types.d';
 
@@ -32,9 +33,9 @@
         { id: 'links', component: SectionLinks, name: 'Related Links' },
         { id: 'attachments', component: SectionAttachments, name: 'Attachments' },
         { id: 'medications', component: SectionMedications, name: 'Medications' },
+        { id: 'procedures', component: SectionProcedures, name: 'Procedures' },
         // Note: Additional section components will be added as they're implemented:
         // { id: 'imaging', component: SectionImaging, name: 'Imaging Studies' },
-        // { id: 'procedures', component: SectionProcedures, name: 'Procedures' },
         // { id: 'specimens', component: SectionSpecimens, name: 'Specimens' },
         // etc.
     ];
@@ -43,9 +44,68 @@
     let sectionsToRender = $derived(() => {
         return availableSections.filter(section => {
             const data = getSectionData(section.id);
-            return data !== null && data !== undefined;
+            return hasRelevantData(section.id, data);
         });
     });
+    
+    // Check if section data is meaningful and should be rendered
+    function hasRelevantData(sectionId: string, data: any): boolean {
+        if (!data || data === null || data === undefined) {
+            return false;
+        }
+        
+        // Special handling for different section types
+        switch(sectionId) {
+            case 'medications':
+                return data.hasMedications || 
+                       (data.currentMedications && data.currentMedications.length > 0) ||
+                       (data.newPrescriptions && data.newPrescriptions.length > 0) ||
+                       (data.discontinuedMedications && data.discontinuedMedications.length > 0) ||
+                       (data.medicationChanges && data.medicationChanges.length > 0);
+            
+            case 'procedures':
+                return data.hasProcedures || 
+                       (data.procedures && data.procedures.length > 0);
+            
+            case 'signals':
+                return (data.signals && data.signals.length > 0) ||
+                       (data.laboratory && data.laboratory.length > 0) ||
+                       (data.vitals && data.vitals.length > 0);
+            
+            case 'recommendations':
+                return Array.isArray(data) ? data.length > 0 : 
+                       (data.recommendations && data.recommendations.length > 0);
+            
+            case 'diagnosis':
+                return Array.isArray(data) ? data.length > 0 :
+                       (data.diagnoses && data.diagnoses.length > 0);
+            
+            case 'bodyParts':
+                return Array.isArray(data) ? data.length > 0 :
+                       (data.bodyParts && data.bodyParts.length > 0);
+            
+            case 'attachments':
+                return Array.isArray(data) ? data.length > 0 :
+                       (data.attachments && data.attachments.length > 0);
+            
+            case 'links':
+                return Array.isArray(data) ? data.length > 0 :
+                       (data.links && data.links.length > 0);
+            
+            // For other sections, check if it's a non-empty string, non-empty array, or has meaningful properties
+            default:
+                if (typeof data === 'string') {
+                    return data.trim().length > 0;
+                }
+                if (Array.isArray(data)) {
+                    return data.length > 0;
+                }
+                if (typeof data === 'object') {
+                    return Object.keys(data).length > 0;
+                }
+                return !!data;
+        }
+    }
     
     // Get data for a section from the document
     function getSectionData(sectionId: string) {
@@ -120,6 +180,8 @@
             case 'medications':
                 // Include both medications and prescriptions data for comprehensive view
                 return document.content.medications || document.content.prescriptions || document.content.prescription;
+            case 'procedures':
+                return document.content.procedures;
             case 'socialHistory':
                 return document.content.socialHistory;
             default:
@@ -135,7 +197,7 @@
     {#each sectionsToRender() as section}
         {#if section.id === 'summary'}
             <!-- Special handling for summary section to include tags -->
-            <section.component data={getSectionData(section.id)} />
+            <section.component data={getSectionData(section.id)} {document} key={document.key} />
             <div class="page -block">
                 <Tags tags={document.content.tags} />
             </div>

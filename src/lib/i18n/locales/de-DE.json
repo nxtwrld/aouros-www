@@ -421,6 +421,20 @@
     "overall-adherence": "Gesamte Therapietreue",
     "barriers": "Hindernisse",
     "interventions": "Interventionen",
-    "no-medication-data": "Keine Medikamentendaten verfügbar"
+    "no-medication-data": "Keine Medikamentendaten verfügbar",
+    "procedures": "Verfahren",
+    "performed-procedures": "Durchgeführte Verfahren",
+    "technique": "Technik",
+    "duration": "Dauer",
+    "time": "Zeit",
+    "outcome": "Ergebnis",
+    "findings": "Befunde",
+    "complications": "Komplikationen",
+    "surgical-team": "Chirurgisches Team",
+    "location": "Ort",
+    "no-procedure-data": "Keine Verfahrensdaten verfügbar",
+    "diagnoses-list": "Diagnosen",
+    "diagnosis-date": "Diagnosedatum",
+    "no-diagnosis-data": "Keine Diagnosedaten verfügbar"
   }
 }

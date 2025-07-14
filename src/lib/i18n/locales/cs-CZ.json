@@ -421,6 +421,20 @@
     "overall-adherence": "Celkové dodržování",
     "barriers": "Překážky",
     "interventions": "Intervence",
-    "no-medication-data": "Žádné údaje o lécích nejsou k dispozici"
+    "no-medication-data": "Žádné údaje o lécích nejsou k dispozici",
+    "procedures": "Zákroky",
+    "performed-procedures": "Provedené zákroky",
+    "technique": "Technika",
+    "duration": "Trvání",
+    "time": "Čas",
+    "outcome": "Výsledek",
+    "findings": "Nálezy",
+    "complications": "Komplikace",
+    "surgical-team": "Chirurgický tým",
+    "location": "Místo",
+    "no-procedure-data": "Žádné údaje o zákrocích nejsou k dispozici",
+    "diagnoses-list": "Diagnózy",
+    "diagnosis-date": "Datum diagnózy",
+    "no-diagnosis-data": "Žádné údaje o diagnóze nejsou k dispozici"
   }
 }

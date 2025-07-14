@@ -421,6 +421,20 @@
     "overall-adherence": "Overall Adherence",
     "barriers": "Barriers",
     "interventions": "Interventions",
-    "no-medication-data": "No medication data available"
+    "no-medication-data": "No medication data available",
+    "procedures": "Procedures",
+    "performed-procedures": "Performed Procedures",
+    "technique": "Technique",
+    "duration": "Duration",
+    "time": "Time",
+    "outcome": "Outcome",
+    "findings": "Findings",
+    "complications": "Complications",
+    "surgical-team": "Surgical Team",
+    "location": "Location",
+    "no-procedure-data": "No procedure data available",
+    "diagnoses-list": "Diagnoses",
+    "diagnosis-date": "Diagnosis Date",
+    "no-diagnosis-data": "No diagnosis data available"
   }
 }

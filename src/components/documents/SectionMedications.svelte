@@ -8,7 +8,6 @@
     }
 
     let { data, document, key }: Props = $props();
-        console.log('Medications input',$state.snapshot(data) )
     // Check if we have medication data
     let hasMedications = $derived(data && (
         data.hasMedications || 
