@@ -8,7 +8,7 @@
     }
 
     let { data, document, key }: Props = $props();
-        console.log('Medications input', data )
+        console.log('Medications input',$state.snapshot(data) )
     // Check if we have medication data
     let hasMedications = $derived(data && (
         data.hasMedications || 
@@ -19,13 +19,13 @@
     ));
     
     // Extract medication sections
-    let currentMedications = $derived(() => data?.currentMedications || []);
-    let newPrescriptions = $derived(() => data?.newPrescriptions || []);
-    let discontinuedMedications = $derived(() => data?.discontinuedMedications || []);
-    let medicationChanges = $derived(() => data?.medicationChanges || []);
-    let medicationAllergies = $derived(() => data?.medicationAllergies || []);
-    let interactions = $derived(() => data?.interactions || []);
-    let adherenceAssessment = $derived(() => data?.adherenceAssessment);
+    let currentMedications = $derived(data?.currentMedications || []);
+    let newPrescriptions = $derived(data?.newPrescriptions || []);
+    let discontinuedMedications = $derived(data?.discontinuedMedications || []);
+    let medicationChanges = $derived(data?.medicationChanges || []);
+    let medicationAllergies = $derived(data?.medicationAllergies || []);
+    let interactions = $derived(data?.interactions || []);
+    let adherenceAssessment = $derived(data?.adherenceAssessment);
     
     // Helper functions
     function getStatusClass(status: string) {

@@ -9,7 +9,6 @@
     import SectionPerformer from './SectionPerformer.svelte';
     import SectionLinks from './SectionLinks.svelte';
     import SectionAttachments from './SectionAttachments.svelte';
-    import SectionPrescriptions from './SectionPrescriptions.svelte';
     import SectionMedications from './SectionMedications.svelte';
     
     import type { Document } from '$lib/documents/types.d';
@@ -32,7 +31,6 @@
         { id: 'performer', component: SectionPerformer, name: 'Healthcare Provider' },
         { id: 'links', component: SectionLinks, name: 'Related Links' },
         { id: 'attachments', component: SectionAttachments, name: 'Attachments' },
-        { id: 'prescriptions', component: SectionPrescriptions, name: 'Prescriptions' },
         { id: 'medications', component: SectionMedications, name: 'Medications' },
         // Note: Additional section components will be added as they're implemented:
         // { id: 'imaging', component: SectionImaging, name: 'Imaging Studies' },
@@ -63,8 +61,6 @@
             case 'signals':
                 // Signals section handles both signals and laboratory data
                 return document.content.signals || document.content.laboratory;
-            case 'prescriptions':
-                return document.content.prescriptions || document.content.prescription;
             case 'text':
                 return {
                     original: document.content.content,
@@ -122,7 +118,8 @@
             case 'allergies':
                 return document.content.allergies;
             case 'medications':
-                return document.content.medications;
+                // Include both medications and prescriptions data for comprehensive view
+                return document.content.medications || document.content.prescriptions || document.content.prescription;
             case 'socialHistory':
                 return document.content.socialHistory;
             default:
