@@ -20,6 +20,12 @@
     import { updateSignals } from '$lib/health/signals';
     import DocumentTile from '$components/documents/DocumentTile.svelte';
     
+    // Attachment processing imports
+    import { selectPagesFromPdf, createPdfFromImageBuffers } from '$lib/files/pdf';
+    import { toBase64, base64ToArrayBuffer } from '$lib/arrays';
+    import { resizeImage } from '$lib/images';
+    import { THUMBNAIL_SIZE } from '$lib/files/CONFIG';
+    
     // SSE Import support
     import { IMPORT_FEATURE_FLAGS, selectImportMode } from '$lib/config/import-flags';
     import { SSEImportClient } from '$lib/import/sse-client';
@@ -43,6 +49,7 @@
     let importMode = selectImportMode();
     let useSSE = IMPORT_FEATURE_FLAGS.ENABLE_SSE_IMPORT && importMode !== 'traditional';
     let sseClient = useSSE ? new SSEImportClient() : null;
+    
     let currentStage: 'extract' | 'analyze' | null = $state(null);
     let stageProgress = $state(0);
 
@@ -141,8 +148,6 @@
             
             // Set up progress callback to update UI
             sseClient!.onProgress((event) => {
-                console.log('📊 SSE Progress Event:', event);
-                
                 // Update stage and progress from actual SSE events
                 if (event.stage.includes('extract') || event.stage === 'initialization' || event.stage === 'image_processing' || event.stage === 'ocr_extraction') {
                     currentStage = 'extract';
@@ -156,12 +161,7 @@
             
             // Set up error callback for detailed error logging
             sseClient!.onError((error, fileId) => {
-                console.error('❌ SSE Import Error:', {
-                    error,
-                    fileId,
-                    errorMessage: error.message,
-                    errorStack: error.stack
-                });
+                console.error('SSE Import Error:', error);
             });
             
             const result = await sseClient!.processDocumentsSSE(files, {
@@ -172,35 +172,92 @@
                 }
             });
             
-            // Log the final result for debugging
-            console.log('✅ SSE Import Completed Successfully:', {
-                assessmentsCount: result.assessments.length,
-                analysesCount: result.analyses.length,
-                assessments: result.assessments,
-                analyses: result.analyses
-            });
-            
-            // Convert SSE results to the expected format
+            // Convert SSE results to the expected format and create attachments
             // Each analysis corresponds to a single document (one-by-one processing)
             let analysisIndex = 0;
-            const documents = result.assessments.flatMap((assessment, assessmentIndex) => {
-                return assessment.documents.map((document, docIndex) => {
+            
+            const documentsPromises = result.assessments.map(async (assessment, assessmentIndex) => {
+                const originalFile = files[assessmentIndex];
+                
+                return await Promise.all(assessment.documents.map(async (document, docIndex) => {
                     // Get the corresponding analysis for this specific document
                     const analysis = result.analyses[analysisIndex];
                     analysisIndex++; // Move to next analysis for next document
                     
-                    console.log(`📋 Converting Document ${assessmentIndex + 1}-${docIndex + 1}:`, {
-                        documentTitle: document.title,
-                        analysisIndex: analysisIndex - 1,
-                        hasAnalysis: !!analysis,
-                        analysisType: analysis?.type,
-                        analysisIsMedical: analysis?.isMedical,
-                        hasReport: !!analysis?.report,
-                        reportKeys: analysis?.report ? Object.keys(analysis.report) : []
-                    });
                     
                     // Extract the report content from the analysis
                     const reportData = analysis?.report || {};
+                    
+                    // Create attachment from original file
+                    let attachment: {
+                        thumbnail: string;
+                        type: string;
+                        file: string;
+                    } | null = null;
+                    
+                    if (originalFile) {
+                        // Get pages for this document
+                        const docPages = assessment.pages.filter(p => document.pages.includes(p.page));
+                        
+                        try {
+                            if (originalFile.type === 'application/pdf') {
+                                // Extract specific pages from PDF
+                                const pdfBuffer = await originalFile.arrayBuffer();
+                                
+                                // Generate thumbnail from first page if not available
+                                let thumbnail = docPages[0]?.thumbnail || '';
+                                if (!thumbnail) {
+                                    try {
+                                        // Use the PDF processing to generate a thumbnail
+                                        const { processPDF } = await import('$lib/files/pdf');
+                                        const processedPdf = await processPDF(pdfBuffer, originalFile.name);
+                                        thumbnail = processedPdf.pages[0]?.thumbnail || '';
+                                    } catch (e) {
+                                        console.warn('Could not generate PDF thumbnail:', e);
+                                    }
+                                }
+                                
+                                const extractedPdf = await selectPagesFromPdf(
+                                    pdfBuffer,
+                                    document.pages.map(p => p + 1)
+                                );
+                                
+                                attachment = {
+                                    thumbnail,
+                                    type: "application/pdf",
+                                    file: await toBase64(extractedPdf)
+                                };
+                                
+                            } else if (originalFile.type.startsWith('image/')) {
+                                // For images, we need to process the original file directly
+                                // since SSE response doesn't include image data
+                                const reader = new FileReader();
+                                const originalImageBase64 = await new Promise<string>((resolve, reject) => {
+                                    reader.onload = () => resolve(reader.result as string);
+                                    reader.onerror = reject;
+                                    reader.readAsDataURL(originalFile);
+                                });
+                                
+                                // Convert single image to PDF
+                                // Extract base64 part from data URL (remove "data:image/jpeg;base64," prefix)
+                                const base64Data = originalImageBase64.split(',')[1];
+                                
+                                const imageBuffer = base64ToArrayBuffer(base64Data);
+                                const thumbnail = await resizeImage(originalImageBase64, THUMBNAIL_SIZE);
+                                
+                                const pdfBuffer = await createPdfFromImageBuffers([imageBuffer]);
+                                
+                                attachment = {
+                                    thumbnail,
+                                    type: "application/pdf",
+                                    file: await toBase64(pdfBuffer)
+                                };
+                                
+                            }
+                        } catch (error) {
+                            console.error('Failed to create attachment:', error);
+                        }
+                    }
                     
                     // Create Document object (from import types), not DocumentNew
                     return {
@@ -222,13 +279,20 @@
                             // Include all report fields
                             ...reportData
                         },
-                        // Import Document doesn't have these fields but we need them for processing
-                        attachments: [],
+                        // Add the created attachment
+                        attachments: attachment ? [attachment] : [],
                         profile: undefined,
-                        language: assessment.documents[0]?.language || 'English'
+                        language: assessment.documents[0]?.language || 'English',
+                        // Add missing properties for Document type
+                        type: originalFile?.type || 'application/pdf',
+                        files: originalFile ? [originalFile] : [],
+                        task: undefined
                     } as Document;
-                });
+                }));
             });
+            
+            // Flatten the results
+            const documents = (await Promise.all(documentsPromises)).flat();
             
             // Update results
             const validDocs = documents.filter(d => d.isMedical);
@@ -237,13 +301,6 @@
                 return d;
             });
             
-            console.log('📊 Document Categorization:', {
-                totalDocuments: documents.length,
-                validDocuments: validDocs.length,
-                invalidDocuments: invalidDocs.length,
-                validDocs: validDocs.map(d => ({ title: d.title, isMedical: d.isMedical })),
-                invalidDocs: invalidDocs.map(d => ({ title: d.title, isMedical: d.isMedical }))
-            });
             
             results = [...results, ...validDocs];
             invalids = [...invalids, ...invalidDocs];
@@ -252,12 +309,7 @@
             play('focus');
             
         } catch (error) {
-            console.error('❌ SSE Import Failed:', {
-                error,
-                errorMessage: error instanceof Error ? error.message : String(error),
-                errorStack: error instanceof Error ? error.stack : undefined,
-                files: files.map(f => ({ name: f.name, size: f.size, type: f.type }))
-            });
+            console.error('SSE Import Failed:', error);
             play('error');
             // Could fall back to traditional import here
         } finally {

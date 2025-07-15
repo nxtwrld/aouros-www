@@ -27,17 +27,20 @@
         { id: 'diagnosis', component: SectionDiagnosis, name: 'Diagnosis' },
         { id: 'bodyParts', component: SectionBody, name: 'Body Parts' },
         { id: 'recommendations', component: SectionRecommendations, name: 'Recommendations' },
-        { id: 'signals', component: SectionSignals, name: 'Signals & Lab Results' },
-        { id: 'text', component: SectionText, name: 'Text Content' },
-        { id: 'performer', component: SectionPerformer, name: 'Healthcare Provider' },
-        { id: 'links', component: SectionLinks, name: 'Related Links' },
-        { id: 'attachments', component: SectionAttachments, name: 'Attachments' },
         { id: 'medications', component: SectionMedications, name: 'Medications' },
         { id: 'procedures', component: SectionProcedures, name: 'Procedures' },
-        // Note: Additional section components will be added as they're implemented:
-        // { id: 'imaging', component: SectionImaging, name: 'Imaging Studies' },
+        { id: 'signals', component: SectionSignals, name: 'Signals & Lab Results' },
+        { id: 'text', component: SectionText, name: 'Text Content' },
+                // { id: 'imaging', component: SectionImaging, name: 'Imaging Studies' },
         // { id: 'specimens', component: SectionSpecimens, name: 'Specimens' },
+        { id: 'performer', component: SectionPerformer, name: 'Healthcare Provider' },
+        { id: 'links', component: SectionLinks, name: 'Related Links' },
+        
+        
+        // Note: Additional section components will be added as they're implemented:
+
         // etc.
+        { id: 'attachments', component: SectionAttachments, name: 'Attachments' }
     ];
     
     // Get sections that have data in the document
