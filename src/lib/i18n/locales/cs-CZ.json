@@ -391,6 +391,11 @@
       "treatment": "Léčba"
     },
     "attachments": "Přílohy",
+    "attachments-click-to-preview": "Klikněte pro náhled {filename}",
+    "attachments-preview": "Náhled přílohy",
+    "attachments-loading": "Načítání přílohy...",
+    "attachments-load-failed": "Nepodařilo se načíst přílohu",
+    "attachments-try-again": "Zkusit znovu",
     "diagnosis": "Diagnóza",
     "performer": "Provedl",
     "recommendations": "Doporučení",

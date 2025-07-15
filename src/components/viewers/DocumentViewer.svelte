@@ -4,6 +4,7 @@
     import ImageViewer from './ImageViewer.svelte';
     import TextViewer from './TextViewer.svelte';
     import UnsupportedViewer from './UnsupportedViewer.svelte';
+    import { t } from '$lib/i18n';
 
     interface Props {
         data: ArrayBuffer;
@@ -141,19 +142,6 @@
 </style>
 
 <div class="document-viewer" class:preview-mode={isPreview}>
-    {#if !isPreview}
-        <div class="document-header">
-            <div class="document-info">
-                <h3>{fileName}</h3>
-                <p>Type: {mimeType}</p>
-            </div>
-            <div class="document-actions">
-                <button class="btn" on:click={() => dispatch('close')}>Close</button>
-                <button class="btn primary" on:click={() => dispatch('download')}>Download</button>
-            </div>
-        </div>
-    {/if}
-    
     <div class="viewer-content">
         <svelte:component 
             this={ViewerComponent} 

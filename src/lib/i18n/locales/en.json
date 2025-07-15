@@ -48,6 +48,7 @@
       "en": ""
     },
     "name": "mediqom",
+    "download": "Download",
     "nav": {
       "add-profile": "Add Profile",
       "documents": "Documents",
@@ -391,6 +392,12 @@
       "treatment": "Treatment"
     },
     "attachments": "Attachments",
+    "attachments-click-to-preview": "Click to preview {filename}",
+    "attachments-preview": "Attachment Preview",
+    "attachments-loading": "Loading attachment...",
+    "attachments-load-failed": "Failed to load attachment",
+    "attachments-try-again": "Try Again",
+    "attachments-download": "Download",
     "diagnosis": "Diagnosis",
     "performer": "Provided by",
     "recommendations": "Recommendations",

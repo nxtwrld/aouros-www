@@ -391,6 +391,11 @@
       "treatment": "Behandlung"
     },
     "attachments": "Anhänge",
+    "attachments-click-to-preview": "Klicken Sie hier, um {filename} anzuzeigen",
+    "attachments-preview": "Anhang-Vorschau",
+    "attachments-loading": "Anhang wird geladen...",
+    "attachments-load-failed": "Anhang konnte nicht geladen werden",
+    "attachments-try-again": "Erneut versuchen",
     "diagnosis": "Diagnose",
     "performer": "Bereitgestellt von",
     "recommendations": "Empfehlungen",
