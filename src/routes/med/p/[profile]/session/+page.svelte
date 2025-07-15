@@ -1097,7 +1097,7 @@
                     log.session.debug('Analysis Result:', result);
                     log.session.debug('Treatment suggestions language check:');
                     if (result.treatment && result.treatment.length > 0) {
-                        result.treatment.forEach((treatment, index) => {
+                        result.treatment.forEach((treatment: any, index: number) => {
                             log.session.debug(`  ${index + 1}. "${treatment.description}"`);
                         });
                     }
@@ -1165,7 +1165,7 @@
         <AudioButton 
             bind:speechChunks={speechChunks} 
             bind:state={audioState}
-            bind:sessionId={sessionId}
+            bind:sessionId={sessionId as any}
             useRealtime={useRealtime}
             language={getLanguageForAPI('session')}
             models={models.filter(m => m.active).map(m => m.name)}
@@ -1194,7 +1194,7 @@
     </div>
 {/if}
 <div class="models">
-<Models bind:models={models} {activeModels} />
+<Models models={models} {activeModels} />
 </div>
 
 {#if view === Views.start}

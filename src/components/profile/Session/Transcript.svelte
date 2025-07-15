@@ -27,14 +27,16 @@
 
     let { conversation = [], newSpeech = false }: Props = $props();
 
-    let scrollEl: HTMLDivElement = $state();
+    let scrollEl: HTMLDivElement | undefined = $state();
 
 
     function scollToEnd() {
-        scrollEl.scrollBy({
-            top: scrollEl.scrollHeight,
-            behavior: 'smooth'
-        });
+        if (scrollEl) {
+            scrollEl.scrollBy({
+                top: scrollEl.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
     }
 
     onMount(() => {

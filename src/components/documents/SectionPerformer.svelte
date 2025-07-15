@@ -4,98 +4,102 @@
     import { logger } from '$lib/logging/logger';
 
     interface Props {
-        data: any;
+        data: any[] | any; // Accept both array and single object for backward compatibility
     }
 
     let { data }: Props = $props();
     logger.api.debug('Performer data:', data)
+
+    // Normalize data to always be an array
+    const performers = $derived(Array.isArray(data) ? data : (data ? [data] : []));
 </script>
 
-{#if data}
-
+{#if performers.length > 0}
     <h3 class="h3 heading -sticky">{ $t('report.performer') }</h3>
 
-    <div class="contact-card card">
-        <div class="image">
-            <ProfileImage size={8} />
-        </div>
-        <div class="actions -vertical">
-            {#if data.tel && data.tel[0] && data.email[0].value}
-            {@const tel = data.tel[0]}
-            <a href="tel:{data.email[0].value}" aria-label="Call phone number">
-                <svg>
-                    <use href="/icons.svg#phone" />
-                </svg>
-            </a>
-            {/if}
-            {#if data.email && data.email[0] && data.email[0].value}
-            <a href="mailto:{data.email[0].value}" aria-label="Send email">
-                <svg>
-                    <use href="/icons.svg#email" />
-                </svg>
-            </a>
-            {/if}
-            {#if data.adr && data.adr[0]}  
-                {@const address = data.adr[0]}
-                <a href="https://www.google.com/maps/search/?q={address['street-address']}+{address.locality}+{address['postal-code']}" target="_blank" aria-label="View location on maps">
+    {#each performers as performer}
+        <div class="contact-card card">
+            <div class="image">
+                <ProfileImage size={8} />
+            </div>
+            <div class="actions -vertical">
+                {#if performer.tel && performer.tel[0] && performer.email[0].value}
+                {@const tel = performer.tel[0]}
+                <a href="tel:{performer.email[0].value}" aria-label="Call phone number">
                     <svg>
-                        <use href="/icons.svg#location-medical" />
+                        <use href="/icons.svg#phone" />
                     </svg>
                 </a>
-            {/if}
-            <div class="-filler"></div>
-        </div>
-        <div class="details">
-            <div class="contacts">
-                {#if data.fn}
-                    <p class="p name"> {data.fn}</p>
                 {/if}
+                {#if performer.email && performer.email[0] && performer.email[0].value}
+                <a href="mailto:{performer.email[0].value}" aria-label="Send email">
+                    <svg>
+                        <use href="/icons.svg#email" />
+                    </svg>
+                </a>
+                {/if}
+                {#if performer.adr && performer.adr[0]}  
+                    {@const address = performer.adr[0]}
+                    <a href="https://www.google.com/maps/search/?q={address['street-address']}+{address.locality}+{address['postal-code']}" target="_blank" aria-label="View location on maps">
+                        <svg>
+                            <use href="/icons.svg#location-medical" />
+                        </svg>
+                    </a>
+                {/if}
+                <div class="-filler"></div>
+            </div>
+            <div class="details">
+                <div class="contacts">
+                    {#if performer.fn}
+                        <p class="p name"> {performer.fn}</p>
+                    {/if}
 
-                {#if data.org}
-                    {#each data.org as org}
-                    <p class="p"> {org['organization-name']}</p>
-                        {#if org['organization-unit']}
-                        {#each org['organization-unit'] as unit}
-                            <p class="p"> {unit}</p>
+                    {#if performer.org}
+                        {#each performer.org as org}
+                        <p class="p"> {org['organization-name']}</p>
+                            {#if org['organization-unit']}
+                            {#each org['organization-unit'] as unit}
+                                <p class="p"> {unit}</p>
+                            {/each}
+                            {/if}
                         {/each}
+                    {/if}
+
+                    {#if performer.tel}
+                        {#each performer.tel as {value}}
+                        {#if value}
+                        <p class="p"><a class="a" href="tel:{value}">{value}</a></p>
                         {/if}
-                    {/each}
-                {/if}
-
-                {#if data.tel}
-                    {#each data.tel as {value}}
-                    {#if value}
-                    <p class="p"><a class="a" href="tel:{value}">{value}</a></p>
+                        {/each}
                     {/if}
-                    {/each}
-                {/if}
 
-                {#if data.email}
-                    {#each data.email as {value}}
-                    {#if value}
-                        <p class="p"><a class="a" href="mailto:{value}">{value}</a></p>
+                    {#if performer.email}
+                        {#each performer.email as {value}}
+                        {#if value}
+                            <p class="p"><a class="a" href="mailto:{value}">{value}</a></p>
+                        {/if}
+                        {/each}
                     {/if}
-                    {/each}
-                {/if}
 
-                {#if data.url}
-                    {#each data.url as {value}}
-                    <p class="p"><a class="a" href="{value}" target="_blank">{value}</a></p>
-                    {/each}
-                {/if}
-            </div>
-            <div class="location">
-                {#if data.adr}
-                    {#each data.adr as adr}
-                    <p class="p"> {adr['street-address']}</p>
-                    <p class="p"> {adr.locality}</p>
-                    <p class="p"> {adr['postal-code']}</p>
-                    <p class="p"> {adr['country-name']}</p>
-                    {/each}
-                {/if}
+                    {#if performer.url}
+                        {#each performer.url as {value}}
+                        <p class="p"><a class="a" href="{value}" target="_blank">{value}</a></p>
+                        {/each}
+                    {/if}
+                </div>
+                <div class="location">
+                    {#if performer.adr}
+                        {#each performer.adr as adr}
+                        <p class="p"> {adr['street-address']}</p>
+                        <p class="p"> {adr.locality}</p>
+                        <p class="p"> {adr['postal-code']}</p>
+                        <p class="p"> {adr['country-name']}</p>
+                        {/each}
+                    {/if}
+                </div>
             </div>
         </div>
-    </div>
+    {/each}
 {/if}
 
 

@@ -67,9 +67,9 @@
             {:else}
             <button class="button -request" onclick={stopPropagation(() => requestAccess(profile.id))}>{ $t('app.profiles.request-access') }</button>
             {/if}
-            {#if profile.id != $user.id}
+            {#if profile.id != $user?.id}
             <button onclick={stopPropagation(() => deleteUser(profile.id))} class="button -danger">
-                {#if profile.auth_id}
+                {#if (profile as any).auth_id}
                 { $t('app.profiles.unlink') }
                 {:else}
                 { $t('app.profiles.delete') }

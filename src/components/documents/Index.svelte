@@ -15,10 +15,10 @@
 
 //    console.log('documents', $documents);
 
-    function sortByDate(a: Document, b: Document) {
+    function sortByDate(a: any, b: any) {
         if (!a.metadata.date) return 1;
         if (!b.metadata.date) return -1;
-        return new Date(b.metadata.date) - new Date(a.metadata.date);
+        return new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime();
     }
 
 
@@ -32,7 +32,7 @@
 {#if documents}
 <div class="tiles">
 {#each $documents.sort(sortByDate) as document}
-  <DocumentTile {document} />
+  <DocumentTile document={document as Document} />
 {/each}
 </div>
 {/if}

@@ -1,140 +1,137 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 :root {
-    --ui-height-unit: 3rem;
-    --toolbar-height: var(--ui-height-unit);
-    --heading-height: var(--ui-height-unit);
-    --action-height: var(--ui-height-unit);
-    --action-height-icon: calc(var(--ui-height-unit) - 1.5rem);
-    --font-face-print: "Verdana", sans-serif;
-    --font-face: "Mulish", sans-serif;
-    --font-face-system: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    --font-face-heading: "Montserrat", sans-serif;
-    --font-face-values:  "Roboto Mono", "Fira Code", monospace;
-    --font-face-cursive: 'Caveat', cursive;
-    --color-blue: #3571FF;
-    --color-purple: #A989EE;
-    --color-reglight: #ff6f93;
-    --color-red: #FB104A;
-    --color-yellow: #FEC400;
-    --color-green: #29CC97;
+  --ui-height-unit: 3rem;
+  --toolbar-height: var(--ui-height-unit);
+  --heading-height: var(--ui-height-unit);
+  --action-height: var(--ui-height-unit);
+  --action-height-icon: calc(var(--ui-height-unit) - 1.5rem);
+  --font-face-print: "Verdana", sans-serif;
+  --font-face: "Mulish", sans-serif;
+  --font-face-system:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  --font-face-heading: "Montserrat", sans-serif;
+  --font-face-values: "Roboto Mono", "Fira Code", monospace;
+  --font-face-cursive: "Caveat", cursive;
+  --color-blue: #3571ff;
+  --color-purple: #a989ee;
+  --color-reglight: #ff6f93;
+  --color-red: #fb104a;
+  --color-yellow: #fec400;
+  --color-green: #29cc97;
 
-    --color-black: #252733;
-    --color-gray-900: #464957;
-    --color-gray-800: #9FA2B4;
-    --color-gray-600: #bdbec5;
-    --color-gray-500: #d0d1d7;
-    --color-gray-400: #e0e0e3;
-    --color-gray-300: #E6E7EA;
-    --color-gray-800-alpha: #06060a7c;
-    --color-gray-500-alpha: #d0d1d77c;
-    --color-gray-400-alpha: #e0e0e37c;
-    --color-gray-300-alpha: #E6E7EA7c;
-    --color-white: #FFFFFF;
+  --color-black: #252733;
+  --color-gray-900: #464957;
+  --color-gray-800: #9fa2b4;
+  --color-gray-600: #bdbec5;
+  --color-gray-500: #d0d1d7;
+  --color-gray-400: #e0e0e3;
+  --color-gray-300: #e6e7ea;
+  --color-gray-800-alpha: #06060a7c;
+  --color-gray-500-alpha: #d0d1d77c;
+  --color-gray-400-alpha: #e0e0e37c;
+  --color-gray-300-alpha: #e6e7ea7c;
+  --color-white: #ffffff;
 
+  --color-background: var(--color-gray-300);
+  --color-border: var(--color-white);
 
-    --color-background: var(--color-gray-300);
-    --color-border: var(--color-white);
+  --color-positive: var(--color-green);
+  --color-positive-text: var(--color-white);
 
-    --color-positive: var(--color-green);
-    --color-positive-text: var(--color-white);
+  --color-negative: var(--color-red);
+  --color-negative-text: var(--color-white);
 
-    --color-negative: var(--color-red);
-    --color-negative-text: var(--color-white);
+  --color-neutral: var(--color-blue);
+  --color-neutral-text: var(--color-white);
 
-    --color-neutral: var(--color-blue);
-    --color-neutral-text: var(--color-white);
+  --color-warning: var(--color-yellow);
+  --color-warning-text: var(--color-black);
 
-    --color-warning: var(--color-yellow);
-    --color-warning-text: var(--color-black);
+  --color-info: var(--color-purple);
+  --color-info-text: var(--color-white);
 
-    --color-info: var(--color-purple);
-    --color-info-text: var(--color-white);
+  --color-interactivity: var(--color-blue);
+  --color-interactivity-text: var(--color-white);
 
-    --color-interactivity: var(--color-blue);
-    --color-interactivity-text: var(--color-white);
-   
-    --color-highlight: var(--color-purple);
-    --color-highlight-text: var(--color-white);
+  --color-highlight: var(--color-purple);
+  --color-highlight-text: var(--color-white);
 
-    --color-urgency-low: var(--color-warning);
-    --color-urgency-medium: var(--color-redlight);
-    --color-urgency-high: var(--color-negative);
+  --color-urgency-low: var(--color-warning);
+  --color-urgency-medium: var(--color-redlight);
+  --color-urgency-high: var(--color-negative);
 
-    --background: var(--color-gray-500);
-    --text: var(--color-black);
-    --text-bold: 700;
+  --background: var(--color-gray-500);
+  --text: var(--color-black);
+  --text-bold: 700;
 
+  --radius-24: 2rem;
+  --radius-16: 1rem;
+  --radius-8: 0.5rem;
 
-    --radius-24: 2rem;
-    --radius-16: 1rem;
-    --radius-8: .5rem;
+  --button-color: var(--color-gray-300);
+  --button-border-color: var(--color-gray-800);
+  --button-border-color-hover: var(--color-black);
+  --button-text-color: var(--color-black);
 
+  --button-color-primary: var(--color-blue);
+  --button-border-color-primary: var(--color-blue);
+  --button-border-color-primary-hover: var(--color-blue);
+  --button-text-color-primary: var(--color-white);
 
-    --button-color: var(--color-gray-300);
-    --button-border-color: var(--color-gray-800);
-    --button-border-color-hover: var(--color-black);
-    --button-text-color: var(--color-black);
+  --input-height: 2.5rem;
+  --input-color: var(--color-white);
 
-    --button-color-primary: var(--color-blue);
-    --button-border-color-primary: var(--color-blue);
-    --button-border-color-primary-hover: var(--color-blue);
-    --button-text-color-primary: var(--color-white);
+  --gap: 2px;
 
-    --input-height: 2.5rem;
-    --input-color: var(--color-white);
+  --shadow-interactivity: 0 0.3rem 0.2rem -0.2rem rgba(0, 0, 0, 0.1);
 
-    --gap: 2px;
-
-    --shadow-interactivity: 0 .3rem .2rem -.2rem rgba(0,0,0,.1);
-
-
-    --shadow-modal: 0 2rem 2rem -.75rem rgba(0,0,0,.2);
-    --sticky-top: 0;
-    --sticky-z-index: 10;
-
+  --shadow-modal: 0 2rem 2rem -0.75rem rgba(0, 0, 0, 0.2);
+  --sticky-top: 0;
+  --sticky-z-index: 10;
 }
 
-html, body {
-    height: 100%;
-    font-family: var(--font-face);
-    font-optical-sizing: auto;
-    font-weight: 300;
-    font-style: normal;
-    background-color: var(--background);
-    text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-    overflow: hidden;
+html,
+body {
+  height: 100%;
+  font-family: var(--font-face);
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+  background-color: var(--background);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overflow: hidden;
 }
 
 @media print {
-    * {
-        font-family: var(--font-face-print) !important;
-    }
+  * {
+    font-family: var(--font-face-print) !important;
+  }
 }
 
-
-
-input, textarea {
-    font-family: inherit;
-    font-size: inherit;
-    color: inherit;
-
+input,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
 
-button, a {
-    cursor: pointer;
-    text-decoration: none;
-    border: none;
-    outline: none;
-    font-family: inherit;
-    font-size: inherit;
-    color: inherit;
-    background-color: transparent;
+button,
+a {
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background-color: transparent;
 }

@@ -12,14 +12,37 @@
         initialProfile?: Profile;
     }
 
-    let { profile = $bindable(), initialProfile = structuredClone(profile) }: Props = $props();
+    // Safe clone function for Profile objects that may contain non-cloneable properties
+    function safeCloneProfile(prof: Profile): Profile {
+        try {
+            return structuredClone(prof);
+        } catch (error) {
+            // Fallback to manual cloning of safe properties
+            return {
+                id: prof.id,
+                language: prof.language,
+                fullName: prof.fullName,
+                publicKey: prof.publicKey,
+                avatarUrl: prof.avatarUrl,
+                status: prof.status,
+                profileDocumentId: prof.profileDocumentId,
+                healthDocumentId: prof.healthDocumentId,
+                // For complex objects, do JSON clone (loses functions but preserves data)
+                vcard: prof.vcard ? JSON.parse(JSON.stringify(prof.vcard)) : prof.vcard,
+                health: prof.health ? JSON.parse(JSON.stringify(prof.health)) : prof.health,
+                insurance: prof.insurance ? JSON.parse(JSON.stringify(prof.insurance)) : prof.insurance,
+            };
+        }
+    }
+
+    let { profile = $bindable(), initialProfile = safeCloneProfile(profile) }: Props = $props();
 
     let isNewProfile = $derived(profile.id === PROFILE_NEW_ID);
     let showProfile: boolean = $state(false);
 
 
     function reset() {
-        profile = structuredClone(initialProfile);
+        profile = safeCloneProfile(initialProfile);
         showProfile = false;
     }
     function done() {

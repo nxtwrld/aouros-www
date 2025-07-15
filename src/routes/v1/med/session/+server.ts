@@ -1,27 +1,24 @@
+import { error, json, type RequestHandler } from "@sveltejs/kit";
+import { analyze } from "$lib/session/analyzeConversation";
 
-import { error, json } from '@sveltejs/kit';
-import { analyze } from '$lib/session/analyzeConversation';
+export const POST: RequestHandler = async ({
+  request,
+  locals: { supabase, safeGetSession, user },
+}) => {
+  //const str = url.searchParams.get('drug');
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request, locals: { supabase, safeGetSession, user } }) {
-	//const str = url.searchParams.get('drug');
+  const { session } = await safeGetSession();
 
+  if (!session || !user) {
+    error(401, { message: "Unauthorized" });
+  }
 
-    const { session } = await safeGetSession()
+  const data = await request.json();
+  if (data.text === undefined) {
+    error(400, { message: "No  text provided" });
+  }
 
-    if (!session || !user) {
-        error(401, { message: 'Unauthorized' });
-    }
+  const result = await analyze(data);
 
-    const data = await request.json();
-    if (data.text === undefined) {
-        error(400, { message: 'No  text provided' });
-    }
-
-
-    const result = await analyze(data);
-    
-
-    return json(result);
-}
-
+  return json(result);
+};

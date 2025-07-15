@@ -104,7 +104,7 @@
         }
     }
 
-    function showUnit(unit: sring) {
+    function showUnit(unit: string) {
         if (!unit) return '';
         const localized = $t(`medical.units.${signal.unit}`);
         if (localized && localized !== `medical.units.${signal.unit}`) {

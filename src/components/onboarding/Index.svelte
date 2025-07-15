@@ -15,6 +15,7 @@
 			fullName: string;
 			avatarUrl: string;
 			birthDate: string;
+			language: string;
 		};
 		vcard: VCard;
 		health: Record<string, any>;
@@ -56,7 +57,7 @@
 		});
 	})
 
-	let profileForm: HTMLFormElement = $state()
+	        let profileForm: HTMLFormElement | undefined = $state()
 	let loading = $state(false)
 
 	let editData: EditData = $state({
@@ -94,9 +95,9 @@
 		formData.append('subscription', editData.subscription);
 		formData.append('insurance', JSON.stringify(editData.insurance));
 		formData.append('health', JSON.stringify(editData.health));
-		formData.append('publicKey', editData.privacy.publicKey);
-		formData.append('privateKey', editData.privacy.privateKey);
-		formData.append('key_hash', editData.privacy.key_hash);
+		formData.append('publicKey', editData.privacy.publicKey || '');
+		formData.append('privateKey', editData.privacy.privateKey || '');
+		formData.append('key_hash', editData.privacy.key_hash || '');
 
 		// TODO
 		if (editData.privacy.enabled) {
@@ -126,7 +127,7 @@
 		location.hash = step.toString();
 	}
 	
-	let { session, profile } = $derived(data);
+	        let { session: derivedSession, profile: derivedProfile } = $derived(data);
 	run(() => {
 		if (hash == '') {
 			setLocation(STEP.toString());

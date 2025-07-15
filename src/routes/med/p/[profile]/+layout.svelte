@@ -8,7 +8,7 @@
     let { children }: Props = $props();
 
     onDestroy(() => {
-        profile.set(null);
+        profile.set(null as any);
     });
 </script>
 

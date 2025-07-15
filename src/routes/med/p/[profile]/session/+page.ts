@@ -9,4 +9,4 @@ export const ssr = false;
 export const csr = true;
 
 // Prerender is not needed for this dynamic page
-export const prerender = false; 
+export const prerender = false;

@@ -5,6 +5,7 @@
     import FinalizeReportBlock from "./FinalizeReportBlock.svelte";
     import { profile } from '$lib/profiles';
     import FinalizeReportHeader from "./FinalizeReportHeader.svelte";
+    import { ReportComponent, type Report, type ReportFinal } from '$lib/report/types.d';
     //import Markdown from '$components/ui/Markdown.svelte';
     /*interface Report {
         findings: string;
@@ -23,25 +24,7 @@
     }*/
 
 
-    enum ReportComponent {
-        Findings = 'findings',
-        Treatment = 'treatment',
-        Medication = 'medication',
-        FollowUp = 'follow-up',
-        Recommendations = 'recommendations',
-        Paragraph = 'paragraph',
-        Doctor = 'doctor'
-    }
-
-    type Report = {
-        [key in ReportComponent]: string;
-    };
-
-    type ReportFinal = {
-        [key in ReportComponent]?: string;
-
-
-    };
+    // Types imported from $lib/report/types.d
 
     interface Props {
         report: Report;

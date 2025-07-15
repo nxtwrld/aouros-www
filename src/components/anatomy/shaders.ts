@@ -4,14 +4,13 @@ import aura from "./aura.shader";
 import heart from "./heart.shader";
 
 export default {
-    pulsating,
-    aura,
-    heart
-}
-
+  pulsating,
+  aura,
+  heart,
+};
 
 export interface Shader {
-    vertexShader: string;
-    fragmentShader: string;
-    uniforms: { [uniform: string]: { value: any } };
+  vertexShader: string;
+  fragmentShader: string;
+  uniforms: { [uniform: string]: { value: any } };
 }

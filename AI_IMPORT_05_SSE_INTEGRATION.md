@@ -11,6 +11,7 @@ Based on analysis of existing SSE implementation in `/src/lib/session/sse-client
 ### Current SSE Infrastructure Analysis
 
 Your existing implementation already provides:
+
 - **Real-time transcript streaming** for audio sessions
 - **Analysis updates** for conversation analysis
 - **Session status tracking** with automatic reconnection
@@ -20,6 +21,7 @@ Your existing implementation already provides:
 ### Perfect Fit for Document Processing
 
 Document import workflows share similar characteristics with audio transcription:
+
 - **Long-running processes** (3-25 seconds per document)
 - **Multi-stage processing** with intermediate results
 - **User engagement requirement** to prevent abandonment
@@ -45,7 +47,8 @@ Document import workflows share similar characteristics with audio transcription
 }
 ```
 
-**Expected Impact**: 
+**Expected Impact**:
+
 - 80% reduction in user abandonment during processing
 - Better perceived performance even with same processing time
 - Improved user trust through transparency
@@ -69,6 +72,7 @@ Document import workflows share similar characteristics with audio transcription
 ```
 
 **Expected Impact**:
+
 - Users can review and correct data while processing continues
 - Better user experience with immediate value
 - Faster overall workflow completion
@@ -93,6 +97,7 @@ Document import workflows share similar characteristics with audio transcription
 ```
 
 **Expected Impact**:
+
 - Users understand what's happening during failures
 - Opportunity for human intervention when needed
 - Better debugging and support capabilities
@@ -103,75 +108,85 @@ Document import workflows share similar characteristics with audio transcription
 
 ```typescript
 // Enhanced node with SSE streaming
-export const medicalClassifier = traceNode("medical_classifier")(
-  async (state: DocumentProcessingState, sseStream?: SSEStream): Promise<Partial<DocumentProcessingState>> => {
-    // Emit progress start
+export const medicalClassifier = traceNode("medical_classifier")(async (
+  state: DocumentProcessingState,
+  sseStream?: SSEStream,
+): Promise<Partial<DocumentProcessingState>> => {
+  // Emit progress start
+  sseStream?.emit("processing_progress", {
+    step: "medical_classification",
+    progress: 0.0,
+    message: "Starting medical document analysis...",
+  });
+
+  try {
+    const result = await provider.processVision(content, schema);
+
+    // Emit progress completion
     sseStream?.emit("processing_progress", {
       step: "medical_classification",
-      progress: 0.0,
-      message: "Starting medical document analysis..."
+      progress: 1.0,
+      message: "Medical classification complete",
+      confidence: result.confidence,
     });
 
-    try {
-      const result = await provider.processVision(content, schema);
-      
-      // Emit progress completion
-      sseStream?.emit("processing_progress", {
-        step: "medical_classification",
-        progress: 1.0,
-        message: "Medical classification complete",
-        confidence: result.confidence
-      });
+    // Emit partial results
+    sseStream?.emit("partial_extraction", {
+      documentType: result.type,
+      classification: result,
+    });
 
-      // Emit partial results
-      sseStream?.emit("partial_extraction", {
-        documentType: result.type,
-        classification: result
-      });
+    return result;
+  } catch (error) {
+    // Emit error with recovery info
+    sseStream?.emit("processing_error", {
+      step: "medical_classification",
+      error: error.message,
+      action: "attempting_fallback",
+    });
 
-      return result;
-    } catch (error) {
-      // Emit error with recovery info
-      sseStream?.emit("processing_error", {
-        step: "medical_classification",
-        error: error.message,
-        action: "attempting_fallback"
-      });
-      
-      throw error;
-    }
+    throw error;
   }
-);
+});
 ```
 
 ### Workflow Progress Mapping
 
 ```typescript
 const workflowSteps = {
-  "input_validator": { progress: 0.05, message: "Validating input..." },
-  "schema_localizer": { progress: 0.10, message: "Preparing schemas..." },
-  "medical_classifier": { progress: 0.25, message: "Analyzing document type..." },
-  "prescription_extractor": { progress: 0.40, message: "Extracting prescriptions..." },
-  "immunization_extractor": { progress: 0.50, message: "Extracting immunizations..." },
-  "report_processor": { progress: 0.70, message: "Processing medical report..." },
-  "tag_enhancer": { progress: 0.85, message: "Enhancing metadata..." },
-  "output_assembler": { progress: 1.0, message: "Finalizing results..." }
+  input_validator: { progress: 0.05, message: "Validating input..." },
+  schema_localizer: { progress: 0.1, message: "Preparing schemas..." },
+  medical_classifier: { progress: 0.25, message: "Analyzing document type..." },
+  prescription_extractor: {
+    progress: 0.4,
+    message: "Extracting prescriptions...",
+  },
+  immunization_extractor: {
+    progress: 0.5,
+    message: "Extracting immunizations...",
+  },
+  report_processor: { progress: 0.7, message: "Processing medical report..." },
+  tag_enhancer: { progress: 0.85, message: "Enhancing metadata..." },
+  output_assembler: { progress: 1.0, message: "Finalizing results..." },
 };
 ```
 
 ## Implementation Strategy
 
 ### Phase 1: Basic Progress Streaming (Week 1)
+
 - Integrate SSE into LangGraph node execution
 - Emit progress events for each major step
 - Update UI to display progress indicators
 
 ### Phase 2: Partial Results Streaming (Week 2)
+
 - Stream extraction results as they become available
 - Enable user review of partial data
 - Implement real-time corrections
 
 ### Phase 3: Interactive Error Handling (Week 3)
+
 - Real-time error reporting with context
 - User intervention options for low-confidence results
 - Provider fallback transparency
@@ -179,11 +194,13 @@ const workflowSteps = {
 ## Expected Performance & UX Impact
 
 ### User Experience Improvements
+
 - **80% reduction** in user abandonment during processing
 - **70% improvement** in perceived performance
 - **90% reduction** in support tickets related to "stuck" processing
 
 ### Technical Benefits
+
 - Better debugging and monitoring capabilities
 - Improved error handling and recovery
 - Enhanced user engagement and satisfaction

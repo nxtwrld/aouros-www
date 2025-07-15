@@ -1,1349 +1,1346 @@
 {
-    "birthDate": {
-      "signal": "birthDate",
-      "type": "date",
-      "valueExpirationInDays": -1
-    },
-    "age": {
-        "signal": "age",
-        "type": "number",
-        "valueExpirationInDays": -1
-    },
-    "biologicalSex": {
-        "signal": "biologicalSex",
-        "type": "enum",
-        "localize": true,
-        "options": ["male", "female", "intersex"],
-        "valueExpirationInDays": -1
-    },
-    "bloodType": {
-        "signal": "bloodType",
-        "type": "enum",
-        "options": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
-        "valueExpirationInDays": -1
-    },  
-    "height": {
-      "type": "number",
-      "unit": "cm",
-      "referenceRange": [],
-      "valueExpirationInDays": 365
-    },
-    "weight": {
-      "type": "number",
-      "unit": "kg",
-      "referenceRange": [],
-      "valueExpirationInDays": 30
-    },
-    "bmi": {
-      "type": "number",
-      "unit": "kg/m²",
-      "referenceRange": [],
-      "valueExpirationInDays": 30
-    },
-    "temperature": {
-      "type": "number",
-      "unit": "°C",
-      "valueExpirationInDays": 0.5,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 2 },
-          "low": 36.4,
-          "high": 38.0
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 3, "max": 10 },
-          "low": 36.1,
-          "high": 37.8
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 11, "max": 100 },
-          "low": 35.9,
-          "high": 37.6
-        }
-
-      ]
-    },
-    "systolic": {
-      "type": "number",
-      "unit": "mmHg",
-      "valueExpirationInDays": 1,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 1 },
-          "low": 75,
-          "high": 100
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 1, "max": 13 },
-          "low": 80,
-          "high": 115
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 13, "max": 18 },
-          "low": 95,
-          "high": 140
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 30 },
-          "low": 110,
-          "high": 140
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 30, "max": 50 },
-          "low": 115,
-          "high": 150
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 50, "max": 100 },
-          "low": 120,
-          "high": 160
-        }
-      ]
-    },
-    "diastolic": {
-      "type": "number",
-      "unit": "mmHg",
-      "valueExpirationInDays": 1,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 13 },
-          "low": 50,
-          "high": 80
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 13, "max": 18 },
-          "low": 60,
-          "high": 90
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 30 },
-          "low": 70,
-          "high": 90
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 30, "max": 50 },
-          "low": 75,
-          "high": 100
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 50, "max": 100 },
-          "low": 75,
-          "high": 110
-        }
-      ]
-    },
-    "oxygen_saturation": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 10,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 95,
-          "high": 100
-        }
-      ]
-    },
-    "blood_sugar": {
-      "type": "number",
-      "unit": "mg/dL",
-      "valueExpirationInDays": 10,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 70,
-          "high": 100
-        }
-      ]
-    },
-    "respiratory_rate": {
-      "type": "number",
-      "unit": "breaths/min",
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 2 },
-          "low": 24,
-          "high": 60
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 2, "max": 12 },
-          "low": 18,
-          "high": 34
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 12, "max": 18 },
-          "low": 12,
-          "high": 16
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 12,
-          "high": 20
-        }
-      ]
-    },
-    "heart_rate": {
-      "type": "number",
-      "unit": "beats/min",
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 2 },
-          "low": 100,
-          "high": 160
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 2, "max": 12 },
-          "low": 870,
-          "high": 120
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 12, "max": 100 },
-          "low": 60,
-          "high": 100
-        }
-      ] 
-    },
-    "waist_circumference": {
-      "type": "number",
-      "unit": "cm",
-      "valueExpirationInDays": 30,
-      "referenceRange": []
-    },
-    "hip_circumference": {
-      "type": "number",
-      "unit": "cm",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "waist_to_hip_ratio": {
-      "type": "number",
-      "unit": "",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "waist_to_height_ratio": {
-      "type": "number",
-      "unit": "",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "body_fat_percentage": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "lean_body_mass": {
-      "type": "number",
-      "unit": "kg",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "fat_mass": {
-      "type": "number",
-      "unit": "kg",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "cardiac_output": {
-      "type": "number",
-      "unit": "L/min",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "stroke_volume": {
-      "type": "number",
-      "unit": "mL/beat",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "cardiac_index": {
-      "type": "number",
-      "unit": "L/min/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "ejection_fraction": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_mass": {
-      "type": "number",
-      "unit": "g",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_mass_index": {
-      "type": "number",
-      "unit": "g/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_end_diastolic_volume": {
-      "type": "number",
-      "unit": "mL",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_end_systolic_volume": {
-      "type": "number",
-      "unit": "mL",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_end_diastolic_diameter": {
-      "type": "number",
-      "unit": "cm",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_end_systolic_diameter": {
-      "type": "number",
-      "unit": "cm",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_end_diastolic_volume_index": {
-      "type": "number",
-      "unit": "mL/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_end_systolic_volume_index": {
-      "type": "number",
-      "unit": "mL/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_end_diastolic_diameter_index": {
-      "type": "number",
-      "unit": "cm/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_end_systolic_diameter_index": {
-      "type": "number",
-      "unit": "cm/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_end_diastolic_volume": {
-      "type": "number",
-      "unit": "mL",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_end_systolic_volume": {
-      "type": "number",
-      "unit": "mL",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_end_diastolic_diameter": {
-      "type": "number",
-      "unit": "cm",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_end_systolic_diameter": {
-      "type": "number",
-      "unit": "cm",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_end_diastolic_volume_index": {
-      "type": "number",
-      "unit": "mL/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_end_systolic_volume_index": {
-      "type": "number",
-      "unit": "mL/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_end_diastolic_diameter_index": {
-      "type": "number",
-      "unit": "cm/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_end_systolic_diameter_index": {
-      "type": "number",
-      "unit": "cm/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "pulmonary_artery_systolic_pressure": {
-      "type": "number",
-      "unit": "mmHg",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "pulmonary_artery_diastolic_pressure": {
-      "type": "number",
-      "unit": "mmHg",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "pulmonary_artery_mean_pressure": {
-      "type": "number",
-      "unit": "mmHg",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "pulmonary_capillary_wedge_pressure": {
-      "type": "number",
-      "unit": "mmHg",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "pulmonary_vascular_resistance": {
-      "type": "number",
-      "unit": "dyn·s/cm⁵",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "systemic_vascular_resistance": {
-      "type": "number",
-      "unit": "dyn·s/cm⁵",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "cardiac_output_index": {
-      "type": "number",
-      "unit": "L/min/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "stroke_volume_index": {
-      "type": "number",
-      "unit": "mL/beat/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "heart_rate_index": {
-      "type": "number",
-      "unit": "beats/min/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_ejection_time": {
-      "type": "number",
-      "unit": "ms",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_ejection_time_index": {
-      "type": "number",
-      "unit": "ms/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_ejection_fraction": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "left_ventricular_ejection_fraction_index": {
-      "type": "number",
-      "unit": "%/m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "right_ventricular_ejection_time": {
-      "type": "number",
-      "unit": "ms",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "urea": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 60 },
-          "low": 2.5,
-          "high": 7.8
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 60, "max": 100 },
-          "low": 2.9,
-          "high": 8.2
-        }
-      ]
-    },
-    "creatinine": {
-      "type": "number",
-      "unit": "µmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 59 },
-          "low": 64,
-          "high": 104
-        },
-        {
-          "sex": "male",
-          "ageRange": { "min": 60, "max": 100 },
-          "low": 64,
-          "high": 111
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 59 },
-          "low": 49,
-          "high": 90
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 60, "max": 100 },
-          "low": 49,
-          "high": 96
-        }
-      ]
-    },
-    "uric_acid": {
-      "type": "number",
-      "unit": "µmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 202,
-          "high": 416
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 143,
-          "high": 357
-        }
-      ]
-    },
-    "egfr": {
-      "type": "number",
-      "unit": "mL/min/1.73m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 90,
-          "high": null
-        }
-      ]
-    },
-    "sodium": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 135,
-          "high": 145
-        }
-      ]
-    },
-    "potassium": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 3.5,
-          "high": 5.1
-        }
-      ]
-    },
-    "chloride": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 98,
-          "high": 107
-        }
-      ]
-    },
-    "magnesium": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0.7,
-          "high": 1.0
-        }
-      ]
-    },
-    "iron": {
-      "type": "number",
-      "unit": "µmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 11.6,
-          "high": 31.3
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 9.0,
-          "high": 30.4
-        }
-      ]
-    },
-    "ferritin": {
-      "type": "number",
-      "unit": "µg/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 30,
-          "high": 400
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 13,
-          "high": 150
-        }
-      ]
-    },
-    "bilirubin": {
-      "type": "number",
-      "unit": "µmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 21
-        }
-      ]
-    },
-    "alt": {
-      "type": "number",
-      "unit": "U/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 45
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 34
-        }
-      ]
-    },
-    "ast": {
-      "type": "number",
-      "unit": "U/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 40
-        }
-      ]
-    },
-    "ggt": {
-      "type": "number",
-      "unit": "U/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 55
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 38
-        }
-      ]
-    },
-    "alp": {
-      "type": "number",
-      "unit": "U/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 30,
-          "high": 120
-        }
-      ]
-    },
-    "total_protein": {
-      "type": "number",
-      "unit": "g/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 60,
-          "high": 80
-        }
-      ]
-    },
-    "albumin": {
-      "type": "number",
-      "unit": "g/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 35,
-          "high": 50
-        }
-      ]
-    },
-    "cholesterol": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 5.2
-        }
-      ]
-    },
-    "hdl_cholesterol": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0.9,
-          "high": null
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 1.2,
-          "high": null
-        }
-      ]
-    },
-    "ldl_cholesterol": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 3.4
-        }
-      ]
-    },
-    "triglycerides": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 0,
-          "high": 1.7
-        }
-      ]
-    },
-    "vitamin_d": {
-      "type": "number",
-      "unit": "nmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 50,
-          "high": null
-        }
-      ]
-    },
-    "glucose": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 3.9,
-          "high": 5.5
-        }
-      ]
-    },
-    "glucose_urine": {
-      "type": "number",
-      "unit": "arb.j.",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "blood_urine": {
-      "type": "number",
-      "unit": "arb.j.",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "white_blood_cells": {
-      "type": "number",
-      "unit": "10^9/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 4.0,
-          "high": 11.0
-        }
-      ]
-    },
-    "red_blood_cells": {
-      "type": "number",
-      "unit": "10^12/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 4.5,
-          "high": 5.9
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 4.0,
-          "high": 5.2
-        }
-      ]
-    },
-    "hemoglobin": {
-      "type": "number",
-      "unit": "g/dL",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 13.5,
-          "high": 17.5
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 12.0,
-          "high": 16.0
-        }
-      ]
-    },
-    "hematocrit": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 41,
-          "high": 53
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 36,
-          "high": 46
-        }
-      ]
-    },
-    "mcv": {
-      "type": "number",
-      "unit": "fL",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 80,
-          "high": 100
-        }
-      ]
-    },
-    "mchc": {
-      "type": "number",
-      "unit": "g/dL",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 32,
-          "high": 36
-        }
-      ]
-    },
-    "mch": {
-      "type": "number",
-      "unit": "pg",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 27,
-          "high": 33
-        }
-      ]
-    },
-    "platelets": {
-      "type": "number",
-      "unit": "10^9/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 150,
-          "high": 400
-        }
-      ]
-    },
-    "rdw": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 11.5,
-          "high": 14.5
-        }
-      ]
-    },
-    "neutrophils": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 40,
-          "high": 70
-        }
-      ]
-    },
-    "lymphocytes": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 20,
-          "high": 40
-        }
-      ]
-    },
-    "monocytes": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 2,
-          "high": 8
-        }
-      ]
-    },
-    "eosinophils": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 1,
-          "high": 4
-        }
-      ]
-    },
-    "basophils": {
-      "type": "number",
-      "unit": "%",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0,
-          "high": 1
-        }
-      ]
-    },
-    "absolute_neutrophils": {
-      "type": "number",
-      "unit": "10^9/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 2.0,
-          "high": 7.5
-        }
-      ]
-    },
-    "absolute_lymphocytes": {
-      "type": "number",
-      "unit": "10^9/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 1.0,
-          "high": 4.0
-        }
-      ]
-    },
-    "absolute_monocytes": {
-      "type": "number",
-      "unit": "10^9/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0.2,
-          "high": 0.8
-        }
-      ]
-    },
-    "absolute_eosinophils": {
-      "type": "number",
-      "unit": "10^9/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0.02,
-          "high": 0.5
-        }
-      ]
-    },
-    "absolute_basophils": {
-      "type": "number",
-      "unit": "10^9/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0,
-          "high": 0.1
-        }
-      ]
-    },
-    "crp": {
-      "type": "number",
-      "unit": "mg/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0,
-          "high": 5
-        }
-      ]
-    },
-    "tsh": {
-      "type": "number",
-      "unit": "mIU/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0.4,
-          "high": 4.0
-        }
-      ]
-    },
-    "ft4": {
-      "type": "number",
-      "unit": "pmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 9,
-          "high": 21
-        }
-      ]
-    },
-    "protein": {
-      "type": "number",
-      "unit": "g/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 60,
-          "high": 80
-        }
-      ]
-    },
-    "urobilinogen": {
-      "type": "number",
-      "unit": "µmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0,
-          "high": 17
-        }
-      ]
-    },
-    "ketones": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0,
-          "high": 0.6
-        }
-      ]
-    },
-    "ketones_urine": {
-      "type": "number",
-      "unit": "arb.j.",
-      "valueExpirationInDays": 360,
-      "referenceRange": []
-    },
-    "nitrites": {
-      "type": "number",
-      "unit": "arb.j.",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": "Negative",
-          "high": "Negative"
-        }
-      ]
-    },
-    "specific_gravity": {
-      "type": "number",
-      "unit": "kg/m^3",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 1.005,
-          "high": 1.030
-        }
-      ]
-    },
-    "total_amylase": {
-      "type": "number",
-      "unit": "U/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 30,
-          "high": 110
-        }
-      ]
-    },
-    "non_hdl_cholesterol": {
-      "type": "number",
-      "unit": "mmol/L",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 0,
-          "high": 3.9
-        }
-      ]
-    },
-    "esr": {
-      "type": "number",
-      "unit": "mm/hr",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 50 },
-          "low": 0,
-          "high": 15
-        },
-        {
-          "sex": "male",
-          "ageRange": { "min": 51, "max": 100 },
-          "low": 0,
-          "high": 20
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 50 },
-          "low": 0,
-          "high": 20
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 51, "max": 100 },
-          "low": 0,
-          "high": 30
-        }
-      ]
-    },
-    "bacteria": {
-      "type": "number",
-      "unit": "elem/µL",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 18 },
-          "low": 30,
-          "high": 100
-        },
-        {
-          "sex": "male",
-          "ageRange": { "min": 18, "max": 65 },
-          "low": 15,
-          "high": 80
-        },
-        {
-          "sex": "female",
-          "ageRange": { "min": 18, "max": 65 },
-          "low": 10,
-          "high": 70
-        },
-        {
-          "sex": "any",
-          "ageRange": { "min": 65, "max": 100 },
-          "low": 20,
-          "high": 100
-        }
-      ]
-
-    },
-    "mdrd_ureaalb": {
-      "type": "number",
-      "unit": "mL/min/1.73m²",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 18, "max": 100 },
-          "low": 90,
-          "high": null
-        }
-      ]
-    },
-    "ph": {
-      "type": "number",
-      "unit": "",
-      "valueExpirationInDays": 360,
-      "referenceRange": [
-        {
-          "sex": "any",
-          "ageRange": { "min": 0, "max": 100 },
-          "low": 7.35,
-          "high": 7.45
-        }
-      ]
-    }
+  "birthDate": {
+    "signal": "birthDate",
+    "type": "date",
+    "valueExpirationInDays": -1
+  },
+  "age": {
+    "signal": "age",
+    "type": "number",
+    "valueExpirationInDays": -1
+  },
+  "biologicalSex": {
+    "signal": "biologicalSex",
+    "type": "enum",
+    "localize": true,
+    "options": ["male", "female", "intersex"],
+    "valueExpirationInDays": -1
+  },
+  "bloodType": {
+    "signal": "bloodType",
+    "type": "enum",
+    "options": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+    "valueExpirationInDays": -1
+  },
+  "height": {
+    "type": "number",
+    "unit": "cm",
+    "referenceRange": [],
+    "valueExpirationInDays": 365
+  },
+  "weight": {
+    "type": "number",
+    "unit": "kg",
+    "referenceRange": [],
+    "valueExpirationInDays": 30
+  },
+  "bmi": {
+    "type": "number",
+    "unit": "kg/m²",
+    "referenceRange": [],
+    "valueExpirationInDays": 30
+  },
+  "temperature": {
+    "type": "number",
+    "unit": "°C",
+    "valueExpirationInDays": 0.5,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 2 },
+        "low": 36.4,
+        "high": 38.0
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 3, "max": 10 },
+        "low": 36.1,
+        "high": 37.8
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 11, "max": 100 },
+        "low": 35.9,
+        "high": 37.6
+      }
+    ]
+  },
+  "systolic": {
+    "type": "number",
+    "unit": "mmHg",
+    "valueExpirationInDays": 1,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 1 },
+        "low": 75,
+        "high": 100
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 1, "max": 13 },
+        "low": 80,
+        "high": 115
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 13, "max": 18 },
+        "low": 95,
+        "high": 140
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 30 },
+        "low": 110,
+        "high": 140
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 30, "max": 50 },
+        "low": 115,
+        "high": 150
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 50, "max": 100 },
+        "low": 120,
+        "high": 160
+      }
+    ]
+  },
+  "diastolic": {
+    "type": "number",
+    "unit": "mmHg",
+    "valueExpirationInDays": 1,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 13 },
+        "low": 50,
+        "high": 80
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 13, "max": 18 },
+        "low": 60,
+        "high": 90
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 30 },
+        "low": 70,
+        "high": 90
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 30, "max": 50 },
+        "low": 75,
+        "high": 100
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 50, "max": 100 },
+        "low": 75,
+        "high": 110
+      }
+    ]
+  },
+  "oxygen_saturation": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 10,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 95,
+        "high": 100
+      }
+    ]
+  },
+  "blood_sugar": {
+    "type": "number",
+    "unit": "mg/dL",
+    "valueExpirationInDays": 10,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 70,
+        "high": 100
+      }
+    ]
+  },
+  "respiratory_rate": {
+    "type": "number",
+    "unit": "breaths/min",
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 2 },
+        "low": 24,
+        "high": 60
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 2, "max": 12 },
+        "low": 18,
+        "high": 34
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 12, "max": 18 },
+        "low": 12,
+        "high": 16
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 12,
+        "high": 20
+      }
+    ]
+  },
+  "heart_rate": {
+    "type": "number",
+    "unit": "beats/min",
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 2 },
+        "low": 100,
+        "high": 160
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 2, "max": 12 },
+        "low": 870,
+        "high": 120
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 12, "max": 100 },
+        "low": 60,
+        "high": 100
+      }
+    ]
+  },
+  "waist_circumference": {
+    "type": "number",
+    "unit": "cm",
+    "valueExpirationInDays": 30,
+    "referenceRange": []
+  },
+  "hip_circumference": {
+    "type": "number",
+    "unit": "cm",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "waist_to_hip_ratio": {
+    "type": "number",
+    "unit": "",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "waist_to_height_ratio": {
+    "type": "number",
+    "unit": "",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "body_fat_percentage": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "lean_body_mass": {
+    "type": "number",
+    "unit": "kg",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "fat_mass": {
+    "type": "number",
+    "unit": "kg",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "cardiac_output": {
+    "type": "number",
+    "unit": "L/min",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "stroke_volume": {
+    "type": "number",
+    "unit": "mL/beat",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "cardiac_index": {
+    "type": "number",
+    "unit": "L/min/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "ejection_fraction": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_mass": {
+    "type": "number",
+    "unit": "g",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_mass_index": {
+    "type": "number",
+    "unit": "g/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_end_diastolic_volume": {
+    "type": "number",
+    "unit": "mL",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_end_systolic_volume": {
+    "type": "number",
+    "unit": "mL",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_end_diastolic_diameter": {
+    "type": "number",
+    "unit": "cm",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_end_systolic_diameter": {
+    "type": "number",
+    "unit": "cm",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_end_diastolic_volume_index": {
+    "type": "number",
+    "unit": "mL/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_end_systolic_volume_index": {
+    "type": "number",
+    "unit": "mL/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_end_diastolic_diameter_index": {
+    "type": "number",
+    "unit": "cm/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_end_systolic_diameter_index": {
+    "type": "number",
+    "unit": "cm/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_end_diastolic_volume": {
+    "type": "number",
+    "unit": "mL",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_end_systolic_volume": {
+    "type": "number",
+    "unit": "mL",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_end_diastolic_diameter": {
+    "type": "number",
+    "unit": "cm",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_end_systolic_diameter": {
+    "type": "number",
+    "unit": "cm",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_end_diastolic_volume_index": {
+    "type": "number",
+    "unit": "mL/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_end_systolic_volume_index": {
+    "type": "number",
+    "unit": "mL/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_end_diastolic_diameter_index": {
+    "type": "number",
+    "unit": "cm/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_end_systolic_diameter_index": {
+    "type": "number",
+    "unit": "cm/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "pulmonary_artery_systolic_pressure": {
+    "type": "number",
+    "unit": "mmHg",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "pulmonary_artery_diastolic_pressure": {
+    "type": "number",
+    "unit": "mmHg",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "pulmonary_artery_mean_pressure": {
+    "type": "number",
+    "unit": "mmHg",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "pulmonary_capillary_wedge_pressure": {
+    "type": "number",
+    "unit": "mmHg",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "pulmonary_vascular_resistance": {
+    "type": "number",
+    "unit": "dyn·s/cm⁵",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "systemic_vascular_resistance": {
+    "type": "number",
+    "unit": "dyn·s/cm⁵",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "cardiac_output_index": {
+    "type": "number",
+    "unit": "L/min/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "stroke_volume_index": {
+    "type": "number",
+    "unit": "mL/beat/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "heart_rate_index": {
+    "type": "number",
+    "unit": "beats/min/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_ejection_time": {
+    "type": "number",
+    "unit": "ms",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_ejection_time_index": {
+    "type": "number",
+    "unit": "ms/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_ejection_fraction": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "left_ventricular_ejection_fraction_index": {
+    "type": "number",
+    "unit": "%/m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "right_ventricular_ejection_time": {
+    "type": "number",
+    "unit": "ms",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "urea": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 60 },
+        "low": 2.5,
+        "high": 7.8
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 60, "max": 100 },
+        "low": 2.9,
+        "high": 8.2
+      }
+    ]
+  },
+  "creatinine": {
+    "type": "number",
+    "unit": "µmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 59 },
+        "low": 64,
+        "high": 104
+      },
+      {
+        "sex": "male",
+        "ageRange": { "min": 60, "max": 100 },
+        "low": 64,
+        "high": 111
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 59 },
+        "low": 49,
+        "high": 90
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 60, "max": 100 },
+        "low": 49,
+        "high": 96
+      }
+    ]
+  },
+  "uric_acid": {
+    "type": "number",
+    "unit": "µmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 202,
+        "high": 416
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 143,
+        "high": 357
+      }
+    ]
+  },
+  "egfr": {
+    "type": "number",
+    "unit": "mL/min/1.73m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 90,
+        "high": null
+      }
+    ]
+  },
+  "sodium": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 135,
+        "high": 145
+      }
+    ]
+  },
+  "potassium": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 3.5,
+        "high": 5.1
+      }
+    ]
+  },
+  "chloride": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 98,
+        "high": 107
+      }
+    ]
+  },
+  "magnesium": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0.7,
+        "high": 1.0
+      }
+    ]
+  },
+  "iron": {
+    "type": "number",
+    "unit": "µmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 11.6,
+        "high": 31.3
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 9.0,
+        "high": 30.4
+      }
+    ]
+  },
+  "ferritin": {
+    "type": "number",
+    "unit": "µg/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 30,
+        "high": 400
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 13,
+        "high": 150
+      }
+    ]
+  },
+  "bilirubin": {
+    "type": "number",
+    "unit": "µmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 21
+      }
+    ]
+  },
+  "alt": {
+    "type": "number",
+    "unit": "U/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 45
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 34
+      }
+    ]
+  },
+  "ast": {
+    "type": "number",
+    "unit": "U/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 40
+      }
+    ]
+  },
+  "ggt": {
+    "type": "number",
+    "unit": "U/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 55
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 38
+      }
+    ]
+  },
+  "alp": {
+    "type": "number",
+    "unit": "U/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 30,
+        "high": 120
+      }
+    ]
+  },
+  "total_protein": {
+    "type": "number",
+    "unit": "g/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 60,
+        "high": 80
+      }
+    ]
+  },
+  "albumin": {
+    "type": "number",
+    "unit": "g/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 35,
+        "high": 50
+      }
+    ]
+  },
+  "cholesterol": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 5.2
+      }
+    ]
+  },
+  "hdl_cholesterol": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0.9,
+        "high": null
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 1.2,
+        "high": null
+      }
+    ]
+  },
+  "ldl_cholesterol": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 3.4
+      }
+    ]
+  },
+  "triglycerides": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 0,
+        "high": 1.7
+      }
+    ]
+  },
+  "vitamin_d": {
+    "type": "number",
+    "unit": "nmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 50,
+        "high": null
+      }
+    ]
+  },
+  "glucose": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 3.9,
+        "high": 5.5
+      }
+    ]
+  },
+  "glucose_urine": {
+    "type": "number",
+    "unit": "arb.j.",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "blood_urine": {
+    "type": "number",
+    "unit": "arb.j.",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "white_blood_cells": {
+    "type": "number",
+    "unit": "10^9/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 4.0,
+        "high": 11.0
+      }
+    ]
+  },
+  "red_blood_cells": {
+    "type": "number",
+    "unit": "10^12/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 4.5,
+        "high": 5.9
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 4.0,
+        "high": 5.2
+      }
+    ]
+  },
+  "hemoglobin": {
+    "type": "number",
+    "unit": "g/dL",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 13.5,
+        "high": 17.5
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 12.0,
+        "high": 16.0
+      }
+    ]
+  },
+  "hematocrit": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 41,
+        "high": 53
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 36,
+        "high": 46
+      }
+    ]
+  },
+  "mcv": {
+    "type": "number",
+    "unit": "fL",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 80,
+        "high": 100
+      }
+    ]
+  },
+  "mchc": {
+    "type": "number",
+    "unit": "g/dL",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 32,
+        "high": 36
+      }
+    ]
+  },
+  "mch": {
+    "type": "number",
+    "unit": "pg",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 27,
+        "high": 33
+      }
+    ]
+  },
+  "platelets": {
+    "type": "number",
+    "unit": "10^9/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 150,
+        "high": 400
+      }
+    ]
+  },
+  "rdw": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 11.5,
+        "high": 14.5
+      }
+    ]
+  },
+  "neutrophils": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 40,
+        "high": 70
+      }
+    ]
+  },
+  "lymphocytes": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 20,
+        "high": 40
+      }
+    ]
+  },
+  "monocytes": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 2,
+        "high": 8
+      }
+    ]
+  },
+  "eosinophils": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 1,
+        "high": 4
+      }
+    ]
+  },
+  "basophils": {
+    "type": "number",
+    "unit": "%",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0,
+        "high": 1
+      }
+    ]
+  },
+  "absolute_neutrophils": {
+    "type": "number",
+    "unit": "10^9/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 2.0,
+        "high": 7.5
+      }
+    ]
+  },
+  "absolute_lymphocytes": {
+    "type": "number",
+    "unit": "10^9/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 1.0,
+        "high": 4.0
+      }
+    ]
+  },
+  "absolute_monocytes": {
+    "type": "number",
+    "unit": "10^9/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0.2,
+        "high": 0.8
+      }
+    ]
+  },
+  "absolute_eosinophils": {
+    "type": "number",
+    "unit": "10^9/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0.02,
+        "high": 0.5
+      }
+    ]
+  },
+  "absolute_basophils": {
+    "type": "number",
+    "unit": "10^9/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0,
+        "high": 0.1
+      }
+    ]
+  },
+  "crp": {
+    "type": "number",
+    "unit": "mg/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0,
+        "high": 5
+      }
+    ]
+  },
+  "tsh": {
+    "type": "number",
+    "unit": "mIU/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0.4,
+        "high": 4.0
+      }
+    ]
+  },
+  "ft4": {
+    "type": "number",
+    "unit": "pmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 9,
+        "high": 21
+      }
+    ]
+  },
+  "protein": {
+    "type": "number",
+    "unit": "g/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 60,
+        "high": 80
+      }
+    ]
+  },
+  "urobilinogen": {
+    "type": "number",
+    "unit": "µmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0,
+        "high": 17
+      }
+    ]
+  },
+  "ketones": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0,
+        "high": 0.6
+      }
+    ]
+  },
+  "ketones_urine": {
+    "type": "number",
+    "unit": "arb.j.",
+    "valueExpirationInDays": 360,
+    "referenceRange": []
+  },
+  "nitrites": {
+    "type": "number",
+    "unit": "arb.j.",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": "Negative",
+        "high": "Negative"
+      }
+    ]
+  },
+  "specific_gravity": {
+    "type": "number",
+    "unit": "kg/m^3",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 1.005,
+        "high": 1.03
+      }
+    ]
+  },
+  "total_amylase": {
+    "type": "number",
+    "unit": "U/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 30,
+        "high": 110
+      }
+    ]
+  },
+  "non_hdl_cholesterol": {
+    "type": "number",
+    "unit": "mmol/L",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 0,
+        "high": 3.9
+      }
+    ]
+  },
+  "esr": {
+    "type": "number",
+    "unit": "mm/hr",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 50 },
+        "low": 0,
+        "high": 15
+      },
+      {
+        "sex": "male",
+        "ageRange": { "min": 51, "max": 100 },
+        "low": 0,
+        "high": 20
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 50 },
+        "low": 0,
+        "high": 20
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 51, "max": 100 },
+        "low": 0,
+        "high": 30
+      }
+    ]
+  },
+  "bacteria": {
+    "type": "number",
+    "unit": "elem/µL",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 18 },
+        "low": 30,
+        "high": 100
+      },
+      {
+        "sex": "male",
+        "ageRange": { "min": 18, "max": 65 },
+        "low": 15,
+        "high": 80
+      },
+      {
+        "sex": "female",
+        "ageRange": { "min": 18, "max": 65 },
+        "low": 10,
+        "high": 70
+      },
+      {
+        "sex": "any",
+        "ageRange": { "min": 65, "max": 100 },
+        "low": 20,
+        "high": 100
+      }
+    ]
+  },
+  "mdrd_ureaalb": {
+    "type": "number",
+    "unit": "mL/min/1.73m²",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 18, "max": 100 },
+        "low": 90,
+        "high": null
+      }
+    ]
+  },
+  "ph": {
+    "type": "number",
+    "unit": "",
+    "valueExpirationInDays": 360,
+    "referenceRange": [
+      {
+        "sex": "any",
+        "ageRange": { "min": 0, "max": 100 },
+        "low": 7.35,
+        "high": 7.45
+      }
+    ]
   }
-  
+}

@@ -1,26 +1,22 @@
+import { error, json, type RequestHandler } from "@sveltejs/kit";
+import { finalize } from "$lib/session/finalizeReport";
 
-import { error, json } from '@sveltejs/kit';
-import { finalize } from '$lib/session/finalizeReport';
+export const POST: RequestHandler = async ({
+  request,
+  locals: { supabase, safeGetSession, user },
+}) => {
+  const { session } = await safeGetSession();
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function POST({ request, locals: { supabase, safeGetSession, user } }) {
+  if (!session || !user) {
+    error(401, { message: "Unauthorized" });
+  }
 
-    const { session } = await safeGetSession()
+  const data = await request.json();
+  if (data.text === undefined) {
+    error(400, { message: "No  text provided" });
+  }
 
-    if (!session || !user) {
-        error(401, { message: 'Unauthorized' });
-    }
+  const result = await finalize(data);
 
-
-    const data = await request.json();
-    if (data.text === undefined) {
-        error(400, { message: 'No  text provided' });
-    }
-
-
-    const result = await finalize(data);
-    
-
-    return json(result);
-}
-
+  return json(result);
+};

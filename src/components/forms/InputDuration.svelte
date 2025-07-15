@@ -1,32 +1,18 @@
 <script lang="ts">
     import { run } from 'svelte/legacy';
 
-    import {parse, serialize} from 'tinyduration';
-
-
-    type Duration = {
-        years?: number,
-        months?: number,
-        weeks?: number,
-        days?: number,
-        hours?: number,
-        minutes?: number,
-        seconds?: number,
-        milliseconds?: number
-    }
-
-    let duration: Duration = $state(extendDuration(parse(value)));
+    import {parse, serialize, type Duration} from 'tinyduration';
 
     function extendDuration(d: Duration): Duration {
         return {
-            years: parseInt(d.years || 0),
-            months: parseInt(d.months || 0),
-            weeks: parseInt(d.weeks || 0),
-            days: parseInt(d.days || 0),
-            hours: parseInt(d.hours || 0),
-            minutes: parseInt(d.minutes || 0),
-            seconds: parseInt(d.seconds || 0),
-            milliseconds: parseInt(d.milliseconds || 0),
+            years: parseInt(String(d.years || 0)),
+            months: parseInt(String(d.months || 0)),
+            weeks: parseInt(String(d.weeks || 0)),
+            days: parseInt(String(d.days || 0)),
+            hours: parseInt(String(d.hours || 0)),
+            minutes: parseInt(String(d.minutes || 0)),
+            seconds: parseInt(String(d.seconds || 0)),
+            milliseconds: parseInt(String(d.milliseconds || 0)),
         }
     }
 
@@ -49,6 +35,8 @@
         class: className = 'input',
         children
     }: Props = $props();
+
+    let duration: Duration = $state(extendDuration(parse(value || 'PT0S')));
     
     function updateDuration() {
         duration = extendDuration(duration);
@@ -69,7 +57,7 @@
 {#each Object.keys(duration) as key}
 
     <div class="duration-segment">
-        <input type="text" inputmode="numeric" id="{id}-{key}" {name} class={className} bind:value={duration[key]} placeholder={key} onkeyup={updateDuration}/>
+        <input type="text" inputmode="numeric" id="{id}-{key}" {name} class={className} bind:value={duration[key as keyof Duration]} placeholder={key} onkeyup={updateDuration}/>
         <label for="{id}-{key}">{key}</label>
     </div>
 {/each}

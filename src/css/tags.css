@@ -1,23 +1,23 @@
 /** TAGS **/
 
 .tags {
-    display: inline-block;
+  display: inline-block;
 }
 .tag {
-    display: inline-block;
-    padding: .2rem .5rem;
-    margin-right: .2rem;
-    margin-bottom: .2rem;
-    border-radius: var(--border-radius);
-    font-size : inherit;
-    background-color: var(--color-white);
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  margin-right: 0.2rem;
+  margin-bottom: 0.2rem;
+  border-radius: var(--border-radius);
+  font-size: inherit;
+  background-color: var(--color-white);
 }
 .tag.-object {
-    background-color: var(--color-interactivity);
-    color: var(--color-interactivity-text);
+  background-color: var(--color-interactivity);
+  color: var(--color-interactivity-text);
 }
 
 .tag.-highlight {
-    background-color: var(--color-highlight);
-    color: var(--color-highlight-text);
+  background-color: var(--color-highlight);
+  color: var(--color-highlight-text);
 }

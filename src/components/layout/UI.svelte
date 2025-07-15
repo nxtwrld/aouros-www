@@ -90,7 +90,7 @@
         {#if $uiState.viewer}
             <section class="layout-viewer" transition:fade><Viewer /></section>
         {/if}
-        <section class="layout-content">{@render children()}</section>
+        <section class="layout-content">{@render children?.()}</section>
     </main>
 
 
@@ -116,7 +116,7 @@
             logger.ui.debug('Health property modal close event fired');
             dialogs.healthProperty = false;
         }}>
-            <HealthProperty property={dialogs.healthProperty}  on:abort={() => {
+            <HealthProperty property={dialogs.healthProperty as any}  on:abort={() => {
                 logger.ui.debug('Health property abort event fired');
                 dialogs.healthProperty = false;
             }}/>

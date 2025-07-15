@@ -23,15 +23,19 @@
         );
     }
 
-    function viewport(element) {
+    function viewport(element: HTMLElement) {
         ensureIntersectionObserver();
 
-        intersectionObserver.observe(element);
+        if (intersectionObserver) {
+            intersectionObserver.observe(element);
+        }
 
         return {
             destroy() {
-                intersectionObserver.unobserve(element);
-                //intersectionObserver.disconnect();
+                if (intersectionObserver) {
+                    intersectionObserver.unobserve(element);
+                    //intersectionObserver.disconnect();
+                }
                 intersectionObserver = null;
             }
         }

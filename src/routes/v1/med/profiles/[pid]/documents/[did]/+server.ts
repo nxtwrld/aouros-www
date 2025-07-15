@@ -1,117 +1,124 @@
+import { error, json, type RequestHandler } from "@sveltejs/kit";
 
-import { error, json } from '@sveltejs/kit';
+export const GET: RequestHandler = async ({
+  request,
+  params,
+  locals: { supabase, safeGetSession, user },
+}) => {
+  const { session } = await safeGetSession();
 
+  if (!session || !user) {
+    return error(401, { message: "Unauthorized" });
+  }
 
-/** @type {import('./$types.d').RequestHandler} */
-export async function GET({ request, params, locals: { supabase, safeGetSession, user }}) {
+  const { data: documentsLoad, error: documentsError } = await supabase
+    .from("documents")
+    .select(
+      "id, metadata, content, type, attachments, user_id, author_id, keys!inner(key, owner_id)",
+    )
+    .eq("user_id", params.pid)
+    .eq("id", params.did)
+    .eq("keys.user_id", user.id)
+    .single();
 
+  if (documentsError) {
+    console.error("Error loading documents", documentsError);
+    return error(500, { message: "Error loading documents" });
+  }
 
-    const { session } = await safeGetSession();
-
-    if (!session || !user) {
-      return error(401, { message: 'Unauthorized' });
-    }
-
-
-    const { data: documentsLoad, error: documentsError } = await supabase.from('documents').select('id, metadata, content, type, attachments, user_id, author_id, keys!inner(key, owner_id)')
-        .eq('user_id', params.pid)
-        .eq('id', params.did)
-        .eq('keys.user_id', user.id).single();
-
-
-    if (documentsError) {
-        console.error('Error loading documents', documentsError);
-        return error(500, { message: 'Error loading documents' });
-    }
-
-    
-
-    return json(documentsLoad);
-}
-
+  return json(documentsLoad);
+};
 
 /**
  * Update document with new data
- * @param param0 
- * @returns 
+ * @param param0
+ * @returns
  */
-export async function PUT({ request, params, locals: { supabase, safeGetSession, user }}) {
+export const PUT: RequestHandler = async ({
+  request,
+  params,
+  locals: { supabase, safeGetSession, user },
+}) => {
+  const { session } = await safeGetSession();
 
-    const { session } = await safeGetSession();
+  if (!session || !user) {
+    return error(401, { message: "Unauthorized" });
+  }
 
-    if (!session || !user) {
-      return error(401, { message: 'Unauthorized' });
-    }
+  // check if user has proper keys to update document
+  const { data: documentKeys, error: documentKeysError } = await supabase
+    .from("keys")
+    .select("id, key, owner_id, user_id")
+    .eq("document_id", params.did)
+    .eq("owner_id", params.pid)
+    .eq("user_id", user.id)
+    .single();
 
+  if (documentKeysError) {
+    console.error("Error loading document keys", documentKeysError);
+    return error(500, { message: "Error loading document keys" });
+  }
 
-    // check if user has proper keys to update document
-    const { data: documentKeys, error: documentKeysError } = await supabase.from('keys').select('id, key, owner_id, user_id')
-        .eq('document_id', params.did)
-        .eq('owner_id', params.pid)
-        .eq('user_id', user.id)
-        .single();
+  if (!documentKeys) {
+    return error(401, { message: "Unauthorized" });
+  }
 
-    if (documentKeysError) {
-        console.error('Error loading document keys', documentKeysError);
-        return error(500, { message: 'Error loading document keys' });
-    }
+  const { metadata, content, attachments } = await request.json();
 
-    if (!documentKeys) {
-        return error(401, { message: 'Unauthorized' });
-    }
+  if (!metadata || !content) {
+    return error(400, { message: "Invalid request" });
+  }
 
-    const { metadata, content, attachments } = await request.json();
+  console.log("Update document", params.did, params.pid);
 
-    if (!metadata || !content) {
-        return error(400, { message: 'Invalid request' });
-    }
+  const { data: documentUpdate, error: documentUpdateError } = await supabase
+    .from("documents")
+    .update({
+      metadata,
+      content,
+      attachments,
+      updated_at: new Date(),
+    })
+    .eq("user_id", params.pid)
+    .eq("id", params.did);
+  //        .eq('keys.user_id', user.id);
 
-    console.log('Update document', params.did, params.pid);
+  if (documentUpdateError) {
+    console.error("Error updating document", documentUpdateError);
+    return error(500, { message: "Error updating document" });
+  }
+  console.log("Document udpated", documentUpdate);
 
-    const { data: documentUpdate, error: documentUpdateError } = await supabase.from('documents')
-        .update({ 
-            metadata, 
-            content,
-            attachments,
-            updated_at: new Date()
-        })
-        .eq('user_id', params.pid)
-        .eq('id', params.did);
-//        .eq('keys.user_id', user.id);
-
-    if (documentUpdateError) {
-        console.error('Error updating document', documentUpdateError);
-        return error(500, { message: 'Error updating document' });
-    }
-    console.log('Document udpated', documentUpdate);
-
-    return json(documentUpdate);
-}
-
+  return json(documentUpdate);
+};
 
 /**
  * Delete document
- * @param param0 
- * @returns 
+ * @param param0
+ * @returns
  */
 
-export async function DELETE({ request, params, locals: { supabase, safeGetSession, user }}) {
+export const DELETE: RequestHandler = async ({
+  request,
+  params,
+  locals: { supabase, safeGetSession, user },
+}) => {
+  const { session } = await safeGetSession();
 
-    const { session } = await safeGetSession();
+  if (!session || !user) {
+    return error(401, { message: "Unauthorized" });
+  }
 
-    if (!session || !user) {
-      return error(401, { message: 'Unauthorized' });
-    }
+  const { data: documentDelete, error: documentDeleteError } = await supabase
+    .from("documents")
+    .delete()
+    .eq("id", params.did)
+    .eq("user_id", params.pid);
 
-    const { data: documentDelete, error: documentDeleteError } = await supabase.from('documents')
-        .delete()
-        .eq('id', params.did)
-        .eq('user_id', params.pid);
+  if (documentDeleteError) {
+    console.error("Error deleting document", documentDeleteError);
+    return error(500, { message: "Error deleting document" });
+  }
 
-    if (documentDeleteError) {
-        console.error('Error deleting document', documentDeleteError);
-        return error(500, { message: 'Error deleting document' });
-    }
-
-    return json(documentDelete);
-}
+  return json(documentDelete);
+};

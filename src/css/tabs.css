@@ -1,54 +1,55 @@
-
 .tab-heads {
-    --radius: 0;
-    display: flex;
-    width: 100%;
-    justify-content: stretch;
-    align-items: stretch;
-    gap: var(--gap);
+  --radius: 0;
+  display: flex;
+  width: 100%;
+  justify-content: stretch;
+  align-items: stretch;
+  gap: var(--gap);
 }
 .tab-heads > button,
 .tab-heads > a {
-    flex-grow: 1;
-    padding: .5rem;
-    background-color: var(--color-white);
-    border-top: 3px solid var(--color-interactivity);
-    transition: background-color .5s, color .5s, border-color .5s;
-    margin-bottom: var(--gap);
+  flex-grow: 1;
+  padding: 0.5rem;
+  background-color: var(--color-white);
+  border-top: 3px solid var(--color-interactivity);
+  transition:
+    background-color 0.5s,
+    color 0.5s,
+    border-color 0.5s;
+  margin-bottom: var(--gap);
 }
 
 .tab-heads > button:first-child,
 .tab-heads > a:first-child {
-    border-top-left-radius: var(--radius);
+  border-top-left-radius: var(--radius);
 }
 
 .tab-heads > button:last-child,
 .tab-heads > a:last-child {
-    border-right: none;
-    border-top-right-radius: var(--radius);
+  border-right: none;
+  border-top-right-radius: var(--radius);
 }
 
 .tab-heads > button:hover,
 .tab-heads > a:hover {
-    background-color: var(--color-interactivity);
-    border-color: var(--color-interactivity);
-    color: var(--color-interactivity-text);
-    font-weight: 700;
+  background-color: var(--color-interactivity);
+  border-color: var(--color-interactivity);
+  color: var(--color-interactivity-text);
+  font-weight: 700;
 }
 
 .tab-heads > button.-active,
 .tab-heads > a.-active {
-    font-weight: 700;
-    border-color: var(--color-highlight);
-    color: var(--color-highlight);
-    background-color: var(--color-background);
-    margin-bottom: 0;
+  font-weight: 700;
+  border-color: var(--color-highlight);
+  color: var(--color-highlight);
+  background-color: var(--color-background);
+  margin-bottom: 0;
 }
-
 
 .tab-body {
-    display: none;
+  display: none;
 }
 .tab-body.-active {
-    display: block;
+  display: block;
 }

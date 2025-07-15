@@ -1,261 +1,252 @@
 //import EventEmmiter from 'events';
-import Meyda from 'meyda';
-import { Mp3Encoder } from 'lamejs';
-import MPEGMode from 'lamejs/src/js/MPEGMode';
-import Lame from 'lamejs/src/js/Lame';
-import BitStream from 'lamejs/src/js/BitStream';
-import type { AudioData } from 'assemblyai';
+import Meyda from "meyda";
+import { Mp3Encoder } from "lamejs";
+import MPEGMode from "lamejs/src/js/MPEGMode";
+import Lame from "lamejs/src/js/Lame";
+import BitStream from "lamejs/src/js/BitStream";
+import type { AudioData } from "assemblyai";
 //import { MicVAD } from "@ricky0123/vad-web";
-
-
 
 const CHUNK_SIZE = 1024;
 
-
 export enum AudioState {
-    listening = 'listening',
-    speaking = 'speaking',
-    stopping = 'stopping',
-    stopped = 'stopped',
-    ready = 'ready'
+  listening = "listening",
+  speaking = "speaking",
+  stopping = "stopping",
+  stopped = "stopped",
+  ready = "ready",
 }
 
 export type AudioOptions = {
-    dataSize?: number,
-    analyzer?: boolean,
-    bufferSize?: number,
-    audioContext?: boolean
-}
+  dataSize?: number;
+  analyzer?: boolean;
+  bufferSize?: number;
+  audioContext?: boolean;
+};
 
-export interface AudioControls  {
-    stop: () => void;
-    start: () => void;
-    state: AudioState;
-    onFeatures:  (d: Meyda.MeydaFeaturesObject) => void;
-    onData:  (d: AudioData) => void;
-    mediaRecorder?: MediaRecorder;
-    audioContext?: AudioContext; 
-    source?: MediaStreamAudioSourceNode;
-    stream?: MediaStream;
+export interface AudioControls {
+  stop: () => void;
+  start: () => void;
+  state: AudioState;
+  onFeatures: (d: Meyda.MeydaFeaturesObject) => void;
+  onData: (d: AudioData) => void;
+  mediaRecorder?: MediaRecorder;
+  audioContext?: AudioContext;
+  source?: MediaStreamAudioSourceNode;
+  stream?: MediaStream;
 }
 
 export interface AudioControlsVad extends AudioControls {
-    onFrameProcessed: (callback: (frame: Float32Array) => void) => void;
-    onSpeechStart: () => void;
-    onSpeechEnd: (audio: Float32Array) => void;
+  onFrameProcessed: (callback: (frame: Float32Array) => void) => void;
+  onSpeechStart: () => void;
+  onSpeechEnd: (audio: Float32Array) => void;
 }
 
 async function loadScript(src: string) {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.onload = resolve;
-        script.onerror = reject;
-        script.src = src;
-        document.head.appendChild(script);
-    });
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.onload = resolve;
+    script.onerror = reject;
+    script.src = src;
+    document.head.appendChild(script);
+  });
 }
 
-
-export async function getAudioVAD(options: AudioOptions  =  {
+export async function getAudioVAD(
+  options: AudioOptions = {
     dataSize: 250,
     analyzer: false,
     bufferSize: 512,
-    audioContext: true
-}): Promise<AudioControlsVad | Error> {
-    options = Object.assign({
-        dataSize: 250,
-        analyzer: false,
-        bufferSize: 512,
-        audioContext: true
-    }, options, {
-        audioContext: true
-    });
+    audioContext: true,
+  },
+): Promise<AudioControlsVad | Error> {
+  options = Object.assign(
+    {
+      dataSize: 250,
+      analyzer: false,
+      bufferSize: 512,
+      audioContext: true,
+    },
+    options,
+    {
+      audioContext: true,
+    },
+  );
 
-    const controls = await getAudio(options) as AudioControlsVad;
+  const controls = (await getAudio(options)) as AudioControlsVad;
 
-    await loadScript('/onnx/ort.js');
-    await loadScript('/onnx/bundle.min.js');
-    
+  await loadScript("/onnx/ort.js");
+  await loadScript("/onnx/bundle.min.js");
 
+  const mvad = await vad.MicVAD.new({
+    stream: controls.stream,
+    onSpeechStart: () => {
+      //console.log("Speech start detected")
+      controls.state = AudioState.speaking;
+      if (controls.onSpeechStart) controls.onSpeechStart();
+    },
+    onSpeechEnd: (audio: Float32Array) => {
+      // do something with `audio` (Float32Array of audio samples at sample rate 16000)...
+      //console.log("Speech end detected", audio)
 
-    const mvad = await vad.MicVAD.new({
-        stream: controls.stream,
-        onSpeechStart: () => {
-            //console.log("Speech start detected")
-            controls.state = AudioState.speaking;
-            if (controls.onSpeechStart) controls.onSpeechStart();
+      if (controls.state == AudioState.stopping) {
+        mvad.pause();
+        stop();
+        controls.state = AudioState.stopped;
+      } else {
+        controls.state = AudioState.listening;
+      }
+      if (controls.onSpeechEnd) controls.onSpeechEnd(audio);
+    },
+  });
+  const start = controls.start;
+  const stop = controls.stop;
+  controls.start = () => {
+    start();
+    mvad.start();
+  };
+  controls.stop = () => {
+    //if (controls.state != AudioState.speaking) {
+    mvad.pause();
+    stop();
+    controls.state = AudioState.stopped;
+    //} else {
+    //   mvad.pause();
+    //stop();
+    controls.state = AudioState.stopped;
+    //controls.state = AudioState.stopping;
+    //}
+  };
 
-          },
-          onSpeechEnd: (audio: Float32Array) => {
-            // do something with `audio` (Float32Array of audio samples at sample rate 16000)...
-            //console.log("Speech end detected", audio)
-            
-            if (controls.state == AudioState.stopping) {
-                mvad.pause();
-                stop();
-                controls.state = AudioState.stopped;
-            } else {
-               controls.state = AudioState.listening;    
-            }
-            if (controls.onSpeechEnd) controls.onSpeechEnd(audio);
-          }
-    });
-    const start = controls.start;
-    const stop = controls.stop;
-    controls.start = () => {
-        start();
-        mvad.start();
-    }
-    controls.stop = () => {
-        //if (controls.state != AudioState.speaking) {
-            mvad.pause();
-            stop();
-            controls.state = AudioState.stopped;
-        //} else {
-         //   mvad.pause();
-            //stop();
-            controls.state = AudioState.stopped;
-            //controls.state = AudioState.stopping;
-        //}
-
-     
-
-    }
-
-    return controls as AudioControlsVad;
+  return controls as AudioControlsVad;
 }
-
 
 let userMedia: MediaStream | null = null;
 
-export async function getAudio(options: AudioOptions =  {
+export async function getAudio(
+  options: AudioOptions = {
     dataSize: 250,
     analyzer: false,
     audioContext: false,
     bufferSize: 512,
-}): Promise<AudioControls | Error> {
+  },
+): Promise<AudioControls | Error> {
+  options = Object.assign(
+    {
+      dataSize: 250,
+      analyzer: false,
+      bufferSize: 512,
+    },
+    options,
+  );
 
-    options = Object.assign({
-        dataSize: 250,
-        analyzer: false,
-        bufferSize: 512,
-    }, options);
+  return await navigator.mediaDevices
+    .getUserMedia({ audio: true })
+    .then((stream) => {
+      // Proceed with audio processing
 
+      const mediaRecorder = new MediaRecorder(stream);
+      let analyzer: Meyda.MeydaAnalyzer;
+      let audioContext: AudioContext;
+      let source: MediaStreamAudioSourceNode;
 
-    return await navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            // Proceed with audio processing
+      // create audio context
+      if (options.audioContext || options.analyzer) {
+        audioContext = new AudioContext();
+        source = audioContext.createMediaStreamSource(stream);
+      }
 
-            const mediaRecorder = new MediaRecorder(stream);
-            let analyzer: Meyda.MeydaAnalyzer;
-            let audioContext: AudioContext;
-            let source: MediaStreamAudioSourceNode;
+      const controls: AudioControls = {
+        mediaRecorder,
+        audioContext,
+        source,
+        stream,
+        state: AudioState.ready,
+        stop: () => {
+          if (analyzer) analyzer.stop();
+          mediaRecorder.stop();
+          controls.state = AudioState.stopped;
 
-            // create audio context
-            if(options.audioContext || options.analyzer) {
-                audioContext = new AudioContext();
-                source = audioContext.createMediaStreamSource(stream);
-            }
+          stream.getTracks().forEach((track) => {
+            track.stop();
+            stream!.removeTrack(track);
+          });
+          delete controls.stream;
+          delete controls.mediaRecorder;
+          delete controls.audioContext;
+          delete controls.source;
+        },
+        start: () => {
+          mediaRecorder.start(options.dataSize);
+          if (analyzer) analyzer.start();
+          controls.state = AudioState.listening;
+        },
+      };
 
+      mediaRecorder.addEventListener("dataavailable", (event) => {
+        if (controls.onData) controls.onData(event.data);
+      });
 
-        
-            const controls: AudioControls = {
-                mediaRecorder,
-                audioContext,
-                source,
-                stream,
-                state : AudioState.ready,
-                stop: () => {
-                    if (analyzer) analyzer.stop();
-                    mediaRecorder.stop();
-                    controls.state = AudioState.stopped;
-
-                    stream.getTracks().forEach(track => {
-                        track.stop();
-                        stream!.removeTrack(track);
-                    });
-                    delete controls.stream;
-                    delete controls.mediaRecorder;
-                    delete controls.audioContext;
-                    delete controls.source;
-                },
-                start: () => {
-                    mediaRecorder.start(options.dataSize);
-                    if (analyzer) analyzer.start();
-                    controls.state = AudioState.listening;
-                }                
-            };
-
-            
-            mediaRecorder.addEventListener('dataavailable', event => {
-                if (controls.onData)  controls.onData(event.data);
-            });
-
-
-            // create analyzer instance
-            if (options.analyzer) {
-
-                analyzer = Meyda.createMeydaAnalyzer({
-                    audioContext,
-                    source,
-                    bufferSize: options.bufferSize,
-                    featureExtractors: ['rms', 'energy'], // 'zcr', 'amplitudeSpectrum', 'chroma', 'mfcc', 'loudness'],
-                    callback: (features: Meyda.MeydaFeaturesObject) => {
-                        //console.log(features);
-                        if (controls.onFeatures) controls.onFeatures(features);
-                        
-                    }
-                });
-
-            }
-            return controls;
-        })
-        .catch(error => {
-            console.error('Microphone access denied:', error);
-            return error;
+      // create analyzer instance
+      if (options.analyzer) {
+        analyzer = Meyda.createMeydaAnalyzer({
+          audioContext,
+          source,
+          bufferSize: options.bufferSize,
+          featureExtractors: ["rms", "energy"], // 'zcr', 'amplitudeSpectrum', 'chroma', 'mfcc', 'loudness'],
+          callback: (features: Meyda.MeydaFeaturesObject) => {
+            //console.log(features);
+            if (controls.onFeatures) controls.onFeatures(features);
+          },
         });
-
+      }
+      return controls;
+    })
+    .catch((error) => {
+      console.error("Microphone access denied:", error);
+      return error;
+    });
 }
 
+export async function convertFloat32ToMp3(
+  arrayBuffer: Float32Array,
+  sampleRate: number = 16000,
+): Promise<Blob> {
+  window.MPEGMode = MPEGMode;
+  window.Lame = Lame;
+  window.BitStream = BitStream;
 
-export async function convertFloat32ToMp3(arrayBuffer: Float32Array, sampleRate:  number = 16000): Promise<Blob> {
+  const int16Array = convertFloat32ToInt16(arrayBuffer);
+  const mp3encoder = new Mp3Encoder(1, sampleRate, 128); // Mono, sample rate, 128 kbps
+  const sampleBlockSize = 1152; // Number of samples per frame
+  const mp3Data = [];
 
-    window.MPEGMode = MPEGMode;
-    window.Lame = Lame;
-    window.BitStream = BitStream;
-
-    const int16Array = convertFloat32ToInt16(arrayBuffer);
-    const mp3encoder = new Mp3Encoder(1, sampleRate, 128); // Mono, sample rate, 128 kbps
-    const sampleBlockSize = 1152; // Number of samples per frame
-    const mp3Data = [];
-    
-    for (let i = 0; i < int16Array.length; i += sampleBlockSize) {
-        const sampleChunk = int16Array.subarray(i, i + sampleBlockSize);
-        const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
-        if (mp3buf.length > 0) {
-        mp3Data.push(mp3buf);
-        }
+  for (let i = 0; i < int16Array.length; i += sampleBlockSize) {
+    const sampleChunk = int16Array.subarray(i, i + sampleBlockSize);
+    const mp3buf = mp3encoder.encodeBuffer(sampleChunk);
+    if (mp3buf.length > 0) {
+      mp3Data.push(mp3buf);
     }
-    const endBuf = mp3encoder.flush();
-    if (endBuf.length > 0) {
-        mp3Data.push(endBuf);
-    }
-    return new Blob(mp3Data, { type: 'audio/mp3' });
+  }
+  const endBuf = mp3encoder.flush();
+  if (endBuf.length > 0) {
+    mp3Data.push(endBuf);
+  }
+  return new Blob(mp3Data, { type: "audio/mp3" });
 }
-
 
 export async function convertBlobToMp3(audioBlob: Blob): Promise<Blob> {
-
-    window.MPEGMode = MPEGMode;
-    window.Lame = Lame;
-    window.BitStream = BitStream;
+  window.MPEGMode = MPEGMode;
+  window.Lame = Lame;
+  window.BitStream = BitStream;
 
   // Step 1: Decode the merged Blob to obtain PCM data
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const audioContext = new (window.AudioContext ||
+    (window as any).webkitAudioContext)();
   const arrayBuffer = await audioBlob.arrayBuffer();
   const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-  console.log('AudioBuffer', audioBuffer);
+  console.log("AudioBuffer", audioBuffer);
   // Step 2: Encode PCM data into MP3 format
   const numChannels = audioBuffer.numberOfChannels;
   const sampleRate = audioBuffer.sampleRate;
@@ -273,12 +264,20 @@ export async function convertBlobToMp3(audioBlob: Blob): Promise<Blob> {
   let sampleIndex = 0;
 
   while (sampleIndex < samplesLeft.length) {
-    const sampleChunkLeft = samplesLeft.subarray(sampleIndex, sampleIndex + sampleBlockSize);
+    const sampleChunkLeft = samplesLeft.subarray(
+      sampleIndex,
+      sampleIndex + sampleBlockSize,
+    );
     let mp3buf: Int8Array | Uint8Array;
 
     if (numChannels === 2 && samplesRight) {
-      const sampleChunkRight = samplesRight.subarray(sampleIndex, sampleIndex + sampleBlockSize);
-      mp3buf = mp3Encoder.encodeBuffer(interleaveSamples(sampleChunkLeft, sampleChunkRight));
+      const sampleChunkRight = samplesRight.subarray(
+        sampleIndex,
+        sampleIndex + sampleBlockSize,
+      );
+      mp3buf = mp3Encoder.encodeBuffer(
+        interleaveSamples(sampleChunkLeft, sampleChunkRight),
+      );
     } else {
       mp3buf = mp3Encoder.encodeBuffer(convertFloat32ToInt16(sampleChunkLeft));
     }
@@ -296,7 +295,7 @@ export async function convertBlobToMp3(audioBlob: Blob): Promise<Blob> {
   }
 
   // Create a Blob from MP3 data
-  const mp3Blob = new Blob(mp3Data, { type: 'audio/mp3' });
+  const mp3Blob = new Blob(mp3Data, { type: "audio/mp3" });
 
   return mp3Blob;
 }
@@ -308,13 +307,16 @@ function convertFloat32ToInt16(buffer: Float32Array): Int16Array {
 
   for (let i = 0; i < l; i++) {
     let s = Math.max(-1, Math.min(1, buffer[i]));
-    buf[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    buf[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
   }
   return buf;
 }
 
 // Helper function to interleave samples for stereo audio
-function interleaveSamples(left: Float32Array, right: Float32Array): Int16Array {
+function interleaveSamples(
+  left: Float32Array,
+  right: Float32Array,
+): Int16Array {
   const length = left.length + right.length;
   const result = new Int16Array(length);
 
@@ -323,10 +325,10 @@ function interleaveSamples(left: Float32Array, right: Float32Array): Int16Array 
 
   while (index < length) {
     let s = Math.max(-1, Math.min(1, left[inputIndex]));
-    result[index++] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    result[index++] = s < 0 ? s * 0x8000 : s * 0x7fff;
 
     s = Math.max(-1, Math.min(1, right[inputIndex]));
-    result[index++] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    result[index++] = s < 0 ? s * 0x8000 : s * 0x7fff;
 
     inputIndex++;
   }
@@ -367,5 +369,3 @@ export async function getAudio() {
     }
 }
 */
-
-

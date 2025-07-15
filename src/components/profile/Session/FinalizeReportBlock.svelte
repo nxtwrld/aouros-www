@@ -11,7 +11,7 @@
 
     let { value = $bindable(), focus = false, size = 1 }: Props = $props();
 
-    let element: HTMLTextAreaElement = $state();
+    let element: HTMLTextAreaElement | undefined = $state();
 
     let oldValue = $state(value);
 
@@ -34,7 +34,7 @@
 
     onMount(() => {
         sizeTextarea();
-        if (focus) element.focus();
+        if (focus && element) element.focus();
     })
 
     run(() => {

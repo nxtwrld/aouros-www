@@ -1,491 +1,532 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Session Local Storage Test</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .test-section {
-            background: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        button {
-            padding: 10px 15px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            background: #007bff;
-            color: white;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .danger {
-            background: #dc3545;
-        }
-        .danger:hover {
-            background: #a71e2a;
-        }
-        .success {
-            background: #28a745;
-        }
-        .success:hover {
-            background: #1e7e34;
-        }
-        pre {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
-        }
-        .status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status.warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .test-section {
+        background: white;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        padding: 10px 15px;
+        margin: 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background: #007bff;
+        color: white;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .danger {
+        background: #dc3545;
+      }
+      .danger:hover {
+        background: #a71e2a;
+      }
+      .success {
+        background: #28a745;
+      }
+      .success:hover {
+        background: #1e7e34;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      .status.info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .status.warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>🔬 Session Local Storage Test Suite</h1>
-    <p>This page tests the session local storage functionality that prevents data loss during Chrome reloads.</p>
+    <p>
+      This page tests the session local storage functionality that prevents data
+      loss during Chrome reloads.
+    </p>
 
     <div class="test-section">
-        <h2>📊 Current Storage Status</h2>
-        <div id="storage-status"></div>
-        <button onclick="refreshStatus()">🔄 Refresh Status</button>
-        <button onclick="performMaintenance()" class="success">🧹 Perform Maintenance</button>
-        <button onclick="clearAllData()" class="danger">🗑️ Clear All Data</button>
+      <h2>📊 Current Storage Status</h2>
+      <div id="storage-status"></div>
+      <button onclick="refreshStatus()">🔄 Refresh Status</button>
+      <button onclick="performMaintenance()" class="success">
+        🧹 Perform Maintenance
+      </button>
+      <button onclick="clearAllData()" class="danger">🗑️ Clear All Data</button>
     </div>
 
     <div class="test-section">
-        <h2>💾 Test Session Creation & Storage</h2>
-        <button onclick="createTestSession()">➕ Create Test Session</button>
-        <button onclick="addMockAnalysis()">🔬 Add Mock Analysis Data</button>
-        <button onclick="addMockTranscripts()">📝 Add Mock Transcripts</button>
-        <button onclick="forceSaveSession()">💾 Force Save Session</button>
-        <div id="test-results"></div>
+      <h2>💾 Test Session Creation & Storage</h2>
+      <button onclick="createTestSession()">➕ Create Test Session</button>
+      <button onclick="addMockAnalysis()">🔬 Add Mock Analysis Data</button>
+      <button onclick="addMockTranscripts()">📝 Add Mock Transcripts</button>
+      <button onclick="forceSaveSession()">💾 Force Save Session</button>
+      <div id="test-results"></div>
     </div>
 
     <div class="test-section">
-        <h2>📂 Test Data Restoration</h2>
-        <button onclick="simulatePageReload()">🔄 Simulate Page Reload</button>
-        <button onclick="restoreLatestSession()">📂 Restore Latest Session</button>
-        <div id="restoration-results"></div>
+      <h2>📂 Test Data Restoration</h2>
+      <button onclick="simulatePageReload()">🔄 Simulate Page Reload</button>
+      <button onclick="restoreLatestSession()">
+        📂 Restore Latest Session
+      </button>
+      <div id="restoration-results"></div>
     </div>
 
     <div class="test-section">
-        <h2>🧹 Test Cleanup</h2>
-        <button onclick="createExpiredSession()">⏰ Create Expired Session</button>
-        <button onclick="createOrphanedData()">👻 Create Orphaned Data</button>
-        <button onclick="testCleanup()">🧹 Test Cleanup Process</button>
-        <div id="cleanup-results"></div>
+      <h2>🧹 Test Cleanup</h2>
+      <button onclick="createExpiredSession()">
+        ⏰ Create Expired Session
+      </button>
+      <button onclick="createOrphanedData()">👻 Create Orphaned Data</button>
+      <button onclick="testCleanup()">🧹 Test Cleanup Process</button>
+      <div id="cleanup-results"></div>
     </div>
 
     <div class="test-section">
-        <h2>📈 Storage Details</h2>
-        <div id="storage-details"></div>
+      <h2>📈 Storage Details</h2>
+      <div id="storage-details"></div>
     </div>
 
     <script type="module">
-        // Import the local storage module (adjust path as needed)
-        // For testing, we'll implement a simplified version here
-        
-        class TestSessionStorage {
-            constructor() {
-                this.prefix = 'mediqom_session_';
-                this.indexKey = 'mediqom_session_index';
-                this.maxAge = 24 * 60 * 60 * 1000; // 24 hours
-            }
+      // Import the local storage module (adjust path as needed)
+      // For testing, we'll implement a simplified version here
 
-            saveSession(sessionId, data) {
-                const sessionData = {
-                    sessionId,
-                    analysisData: data.analysisData || {},
-                    transcripts: data.transcripts || [],
-                    realtimeTranscripts: data.realtimeTranscripts || [],
-                    texts: data.texts || [],
-                    view: data.view || 'start',
-                    timestamp: Date.now(),
-                    lastUpdated: Date.now(),
-                    models: data.models || [],
-                    language: data.language || 'en'
-                };
-
-                localStorage.setItem(this.prefix + sessionId, JSON.stringify(sessionData));
-                this.updateIndex(sessionId);
-                return sessionData;
-            }
-
-            loadSession(sessionId) {
-                const data = localStorage.getItem(this.prefix + sessionId);
-                if (!data) return null;
-
-                const sessionData = JSON.parse(data);
-                const age = Date.now() - sessionData.lastUpdated;
-                
-                if (age > this.maxAge) {
-                    this.removeSession(sessionId);
-                    return null;
-                }
-
-                return sessionData;
-            }
-
-            removeSession(sessionId) {
-                localStorage.removeItem(this.prefix + sessionId);
-                this.removeFromIndex(sessionId);
-            }
-
-            getAllSessions() {
-                const index = this.getIndex();
-                return index.sessions || [];
-            }
-
-            clearAll() {
-                const sessions = this.getAllSessions();
-                sessions.forEach(sessionId => this.removeSession(sessionId));
-                localStorage.removeItem(this.indexKey);
-            }
-
-            performMaintenance() {
-                const sessions = this.getAllSessions();
-                let removedCount = 0;
-
-                sessions.forEach(sessionId => {
-                    if (!this.loadSession(sessionId)) {
-                        removedCount++;
-                    }
-                });
-
-                this.cleanupOrphaned();
-                return removedCount;
-            }
-
-            updateIndex(sessionId) {
-                const index = this.getIndex();
-                if (!index.sessions.includes(sessionId)) {
-                    index.sessions.push(sessionId);
-                    index.lastUpdated = Date.now();
-                    localStorage.setItem(this.indexKey, JSON.stringify(index));
-                }
-            }
-
-            removeFromIndex(sessionId) {
-                const index = this.getIndex();
-                index.sessions = index.sessions.filter(id => id !== sessionId);
-                index.lastUpdated = Date.now();
-                localStorage.setItem(this.indexKey, JSON.stringify(index));
-            }
-
-            getIndex() {
-                const data = localStorage.getItem(this.indexKey);
-                return data ? JSON.parse(data) : { sessions: [], lastUpdated: Date.now() };
-            }
-
-            cleanupOrphaned() {
-                const sessions = this.getAllSessions();
-                let removed = 0;
-
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith(this.prefix) && key !== this.indexKey) {
-                        const sessionId = key.replace(this.prefix, '');
-                        if (!sessions.includes(sessionId)) {
-                            localStorage.removeItem(key);
-                            removed++;
-                        }
-                    }
-                }
-
-                return removed;
-            }
-
-            getStorageSize() {
-                let total = 0;
-                for (let key in localStorage) {
-                    if (localStorage.hasOwnProperty(key)) {
-                        total += localStorage[key].length + key.length;
-                    }
-                }
-                return total;
-            }
+      class TestSessionStorage {
+        constructor() {
+          this.prefix = "mediqom_session_";
+          this.indexKey = "mediqom_session_index";
+          this.maxAge = 24 * 60 * 60 * 1000; // 24 hours
         }
 
-        // Initialize test storage
-        const testStorage = new TestSessionStorage();
-        let currentTestSessionId = null;
+        saveSession(sessionId, data) {
+          const sessionData = {
+            sessionId,
+            analysisData: data.analysisData || {},
+            transcripts: data.transcripts || [],
+            realtimeTranscripts: data.realtimeTranscripts || [],
+            texts: data.texts || [],
+            view: data.view || "start",
+            timestamp: Date.now(),
+            lastUpdated: Date.now(),
+            models: data.models || [],
+            language: data.language || "en",
+          };
 
-        // Test functions
-        window.refreshStatus = function() {
-            const sessions = testStorage.getAllSessions();
-            const storageSize = testStorage.getStorageSize();
-            
-            document.getElementById('storage-status').innerHTML = `
+          localStorage.setItem(
+            this.prefix + sessionId,
+            JSON.stringify(sessionData),
+          );
+          this.updateIndex(sessionId);
+          return sessionData;
+        }
+
+        loadSession(sessionId) {
+          const data = localStorage.getItem(this.prefix + sessionId);
+          if (!data) return null;
+
+          const sessionData = JSON.parse(data);
+          const age = Date.now() - sessionData.lastUpdated;
+
+          if (age > this.maxAge) {
+            this.removeSession(sessionId);
+            return null;
+          }
+
+          return sessionData;
+        }
+
+        removeSession(sessionId) {
+          localStorage.removeItem(this.prefix + sessionId);
+          this.removeFromIndex(sessionId);
+        }
+
+        getAllSessions() {
+          const index = this.getIndex();
+          return index.sessions || [];
+        }
+
+        clearAll() {
+          const sessions = this.getAllSessions();
+          sessions.forEach((sessionId) => this.removeSession(sessionId));
+          localStorage.removeItem(this.indexKey);
+        }
+
+        performMaintenance() {
+          const sessions = this.getAllSessions();
+          let removedCount = 0;
+
+          sessions.forEach((sessionId) => {
+            if (!this.loadSession(sessionId)) {
+              removedCount++;
+            }
+          });
+
+          this.cleanupOrphaned();
+          return removedCount;
+        }
+
+        updateIndex(sessionId) {
+          const index = this.getIndex();
+          if (!index.sessions.includes(sessionId)) {
+            index.sessions.push(sessionId);
+            index.lastUpdated = Date.now();
+            localStorage.setItem(this.indexKey, JSON.stringify(index));
+          }
+        }
+
+        removeFromIndex(sessionId) {
+          const index = this.getIndex();
+          index.sessions = index.sessions.filter((id) => id !== sessionId);
+          index.lastUpdated = Date.now();
+          localStorage.setItem(this.indexKey, JSON.stringify(index));
+        }
+
+        getIndex() {
+          const data = localStorage.getItem(this.indexKey);
+          return data
+            ? JSON.parse(data)
+            : { sessions: [], lastUpdated: Date.now() };
+        }
+
+        cleanupOrphaned() {
+          const sessions = this.getAllSessions();
+          let removed = 0;
+
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(this.prefix) && key !== this.indexKey) {
+              const sessionId = key.replace(this.prefix, "");
+              if (!sessions.includes(sessionId)) {
+                localStorage.removeItem(key);
+                removed++;
+              }
+            }
+          }
+
+          return removed;
+        }
+
+        getStorageSize() {
+          let total = 0;
+          for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+              total += localStorage[key].length + key.length;
+            }
+          }
+          return total;
+        }
+      }
+
+      // Initialize test storage
+      const testStorage = new TestSessionStorage();
+      let currentTestSessionId = null;
+
+      // Test functions
+      window.refreshStatus = function () {
+        const sessions = testStorage.getAllSessions();
+        const storageSize = testStorage.getStorageSize();
+
+        document.getElementById("storage-status").innerHTML = `
                 <div class="status info">
                     📈 Storage Status: ${sessions.length} sessions, ${Math.round(storageSize / 1024)}KB used
                 </div>
-                <pre>${JSON.stringify(sessions.map(id => ({
-                    id: id.substring(0, 8) + '...',
-                    hasData: !!testStorage.loadSession(id)
-                })), null, 2)}</pre>
+                <pre>${JSON.stringify(
+                  sessions.map((id) => ({
+                    id: id.substring(0, 8) + "...",
+                    hasData: !!testStorage.loadSession(id),
+                  })),
+                  null,
+                  2,
+                )}</pre>
             `;
+      };
+
+      window.createTestSession = function () {
+        currentTestSessionId = "test_" + Date.now();
+        const testData = {
+          analysisData: {
+            complaint: "Test complaint for local storage",
+            diagnosis: [
+              {
+                name: "Test Diagnosis",
+                probability: 0.85,
+                basis: "Test basis",
+              },
+            ],
+          },
+          view: "analysis",
+          models: [{ name: "GP", active: true }],
+          language: "en",
         };
 
-        window.createTestSession = function() {
-            currentTestSessionId = 'test_' + Date.now();
-            const testData = {
-                analysisData: {
-                    complaint: 'Test complaint for local storage',
-                    diagnosis: [
-                        { name: 'Test Diagnosis', probability: 0.85, basis: 'Test basis' }
-                    ]
-                },
-                view: 'analysis',
-                models: [{ name: 'GP', active: true }],
-                language: 'en'
-            };
+        const saved = testStorage.saveSession(currentTestSessionId, testData);
 
-            const saved = testStorage.saveSession(currentTestSessionId, testData);
-            
-            document.getElementById('test-results').innerHTML = `
+        document.getElementById("test-results").innerHTML = `
                 <div class="status success">✅ Test session created: ${currentTestSessionId}</div>
                 <pre>${JSON.stringify(saved, null, 2)}</pre>
             `;
-            refreshStatus();
+        refreshStatus();
+      };
+
+      window.addMockAnalysis = function () {
+        if (!currentTestSessionId) {
+          document.getElementById("test-results").innerHTML =
+            '<div class="status error">❌ No test session. Create one first.</div>';
+          return;
+        }
+
+        const existing = testStorage.loadSession(currentTestSessionId);
+        existing.analysisData = {
+          ...existing.analysisData,
+          symptoms: [
+            { name: "Headache", severity: "moderate", duration: "2 days" },
+            { name: "Fever", severity: "mild", duration: "1 day" },
+          ],
+          treatment: [
+            { description: "Rest and hydration", effectiveness: "high" },
+            { description: "Pain medication", effectiveness: "medium" },
+          ],
         };
 
-        window.addMockAnalysis = function() {
-            if (!currentTestSessionId) {
-                document.getElementById('test-results').innerHTML = 
-                    '<div class="status error">❌ No test session. Create one first.</div>';
-                return;
-            }
+        testStorage.saveSession(currentTestSessionId, existing);
 
-            const existing = testStorage.loadSession(currentTestSessionId);
-            existing.analysisData = {
-                ...existing.analysisData,
-                symptoms: [
-                    { name: 'Headache', severity: 'moderate', duration: '2 days' },
-                    { name: 'Fever', severity: 'mild', duration: '1 day' }
-                ],
-                treatment: [
-                    { description: 'Rest and hydration', effectiveness: 'high' },
-                    { description: 'Pain medication', effectiveness: 'medium' }
-                ]
-            };
-
-            testStorage.saveSession(currentTestSessionId, existing);
-            
-            document.getElementById('test-results').innerHTML = `
+        document.getElementById("test-results").innerHTML = `
                 <div class="status success">✅ Added mock analysis data</div>
                 <pre>${JSON.stringify(existing.analysisData, null, 2)}</pre>
             `;
-        };
+      };
 
-        window.addMockTranscripts = function() {
-            if (!currentTestSessionId) {
-                document.getElementById('test-results').innerHTML = 
-                    '<div class="status error">❌ No test session. Create one first.</div>';
-                return;
-            }
+      window.addMockTranscripts = function () {
+        if (!currentTestSessionId) {
+          document.getElementById("test-results").innerHTML =
+            '<div class="status error">❌ No test session. Create one first.</div>';
+          return;
+        }
 
-            const existing = testStorage.loadSession(currentTestSessionId);
-            existing.texts = [
-                'Doctor: What brings you here today?',
-                'Patient: I have been experiencing headaches.',
-                'Doctor: How long have you had these headaches?',
-                'Patient: About 2 days now.'
-            ];
-            existing.realtimeTranscripts = [
-                { text: 'Doctor: What brings you here today?', speaker: 'doctor', is_final: true },
-                { text: 'Patient: I have been experiencing headaches.', speaker: 'patient', is_final: true }
-            ];
+        const existing = testStorage.loadSession(currentTestSessionId);
+        existing.texts = [
+          "Doctor: What brings you here today?",
+          "Patient: I have been experiencing headaches.",
+          "Doctor: How long have you had these headaches?",
+          "Patient: About 2 days now.",
+        ];
+        existing.realtimeTranscripts = [
+          {
+            text: "Doctor: What brings you here today?",
+            speaker: "doctor",
+            is_final: true,
+          },
+          {
+            text: "Patient: I have been experiencing headaches.",
+            speaker: "patient",
+            is_final: true,
+          },
+        ];
 
-            testStorage.saveSession(currentTestSessionId, existing);
-            
-            document.getElementById('test-results').innerHTML = `
+        testStorage.saveSession(currentTestSessionId, existing);
+
+        document.getElementById("test-results").innerHTML = `
                 <div class="status success">✅ Added mock transcript data</div>
                 <pre>Texts: ${existing.texts.length} entries
 Transcripts: ${existing.realtimeTranscripts.length} entries</pre>
             `;
-        };
+      };
 
-        window.forceSaveSession = function() {
-            if (!currentTestSessionId) {
-                document.getElementById('test-results').innerHTML = 
-                    '<div class="status error">❌ No test session to save.</div>';
-                return;
-            }
+      window.forceSaveSession = function () {
+        if (!currentTestSessionId) {
+          document.getElementById("test-results").innerHTML =
+            '<div class="status error">❌ No test session to save.</div>';
+          return;
+        }
 
-            const existing = testStorage.loadSession(currentTestSessionId);
-            if (existing) {
-                existing.lastUpdated = Date.now();
-                testStorage.saveSession(currentTestSessionId, existing);
-                document.getElementById('test-results').innerHTML = 
-                    '<div class="status success">✅ Session force saved with updated timestamp</div>';
-            }
-        };
+        const existing = testStorage.loadSession(currentTestSessionId);
+        if (existing) {
+          existing.lastUpdated = Date.now();
+          testStorage.saveSession(currentTestSessionId, existing);
+          document.getElementById("test-results").innerHTML =
+            '<div class="status success">✅ Session force saved with updated timestamp</div>';
+        }
+      };
 
-        window.simulatePageReload = function() {
-            // Clear runtime state but keep localStorage
-            currentTestSessionId = null;
-            document.getElementById('restoration-results').innerHTML = `
+      window.simulatePageReload = function () {
+        // Clear runtime state but keep localStorage
+        currentTestSessionId = null;
+        document.getElementById("restoration-results").innerHTML = `
                 <div class="status info">🔄 Simulated page reload - runtime state cleared</div>
                 <p>localStorage data persists. Try restoring session...</p>
             `;
-        };
+      };
 
-        window.restoreLatestSession = function() {
-            const sessions = testStorage.getAllSessions();
-            if (sessions.length === 0) {
-                document.getElementById('restoration-results').innerHTML = 
-                    '<div class="status warning">⚠️ No sessions to restore</div>';
-                return;
-            }
+      window.restoreLatestSession = function () {
+        const sessions = testStorage.getAllSessions();
+        if (sessions.length === 0) {
+          document.getElementById("restoration-results").innerHTML =
+            '<div class="status warning">⚠️ No sessions to restore</div>';
+          return;
+        }
 
-            const latestSessionId = sessions[sessions.length - 1];
-            const restoredData = testStorage.loadSession(latestSessionId);
-            
-            if (restoredData) {
-                currentTestSessionId = latestSessionId;
-                document.getElementById('restoration-results').innerHTML = `
+        const latestSessionId = sessions[sessions.length - 1];
+        const restoredData = testStorage.loadSession(latestSessionId);
+
+        if (restoredData) {
+          currentTestSessionId = latestSessionId;
+          document.getElementById("restoration-results").innerHTML = `
                     <div class="status success">✅ Session restored: ${latestSessionId}</div>
                     <pre>${JSON.stringify(restoredData, null, 2)}</pre>
                 `;
-            } else {
-                document.getElementById('restoration-results').innerHTML = 
-                    '<div class="status error">❌ Failed to restore session</div>';
-            }
+        } else {
+          document.getElementById("restoration-results").innerHTML =
+            '<div class="status error">❌ Failed to restore session</div>';
+        }
+      };
+
+      window.createExpiredSession = function () {
+        const expiredId = "expired_" + Date.now();
+        const expiredData = {
+          analysisData: { complaint: "This should be cleaned up" },
+          view: "start",
+          lastUpdated: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
         };
 
-        window.createExpiredSession = function() {
-            const expiredId = 'expired_' + Date.now();
-            const expiredData = {
-                analysisData: { complaint: 'This should be cleaned up' },
-                view: 'start',
-                lastUpdated: Date.now() - (25 * 60 * 60 * 1000) // 25 hours ago
-            };
+        // Manually store expired data
+        localStorage.setItem(
+          testStorage.prefix + expiredId,
+          JSON.stringify(expiredData),
+        );
+        testStorage.updateIndex(expiredId);
 
-            // Manually store expired data
-            localStorage.setItem(testStorage.prefix + expiredId, JSON.stringify(expiredData));
-            testStorage.updateIndex(expiredId);
-
-            document.getElementById('cleanup-results').innerHTML = `
+        document.getElementById("cleanup-results").innerHTML = `
                 <div class="status success">✅ Created expired session: ${expiredId}</div>
                 <p>This session is 25 hours old and should be cleaned up.</p>
             `;
-            refreshStatus();
-        };
+        refreshStatus();
+      };
 
-        window.createOrphanedData = function() {
-            const orphanedId = 'orphaned_' + Date.now();
-            const orphanedData = { test: 'This is orphaned data' };
+      window.createOrphanedData = function () {
+        const orphanedId = "orphaned_" + Date.now();
+        const orphanedData = { test: "This is orphaned data" };
 
-            // Store data without updating index (creates orphan)
-            localStorage.setItem(testStorage.prefix + orphanedId, JSON.stringify(orphanedData));
+        // Store data without updating index (creates orphan)
+        localStorage.setItem(
+          testStorage.prefix + orphanedId,
+          JSON.stringify(orphanedData),
+        );
 
-            document.getElementById('cleanup-results').innerHTML = `
+        document.getElementById("cleanup-results").innerHTML = `
                 <div class="status success">✅ Created orphaned data: ${orphanedId}</div>
                 <p>This data exists in localStorage but not in the session index.</p>
             `;
-        };
+      };
 
-        window.testCleanup = function() {
-            const before = testStorage.getAllSessions().length;
-            const removed = testStorage.performMaintenance();
-            const after = testStorage.getAllSessions().length;
+      window.testCleanup = function () {
+        const before = testStorage.getAllSessions().length;
+        const removed = testStorage.performMaintenance();
+        const after = testStorage.getAllSessions().length;
 
-            document.getElementById('cleanup-results').innerHTML = `
+        document.getElementById("cleanup-results").innerHTML = `
                 <div class="status success">✅ Cleanup completed</div>
                 <p>Sessions before: ${before}</p>
                 <p>Sessions after: ${after}</p>
                 <p>Expired/orphaned items removed: ${removed}</p>
             `;
-            refreshStatus();
-        };
+        refreshStatus();
+      };
 
-        window.performMaintenance = function() {
-            const removed = testStorage.performMaintenance();
-            document.getElementById('storage-status').innerHTML += `
+      window.performMaintenance = function () {
+        const removed = testStorage.performMaintenance();
+        document.getElementById("storage-status").innerHTML += `
                 <div class="status success">🧹 Maintenance complete. Removed ${removed} expired/orphaned items.</div>
             `;
-            refreshStatus();
-        };
+        refreshStatus();
+      };
 
-        window.clearAllData = function() {
-            if (confirm('Are you sure you want to clear ALL session data?')) {
-                testStorage.clearAll();
-                currentTestSessionId = null;
-                document.getElementById('storage-status').innerHTML = 
-                    '<div class="status warning">🗑️ All session data cleared</div>';
-                refreshStatus();
-            }
-        };
+      window.clearAllData = function () {
+        if (confirm("Are you sure you want to clear ALL session data?")) {
+          testStorage.clearAll();
+          currentTestSessionId = null;
+          document.getElementById("storage-status").innerHTML =
+            '<div class="status warning">🗑️ All session data cleared</div>';
+          refreshStatus();
+        }
+      };
 
-        // Update storage details periodically
-        function updateStorageDetails() {
-            const details = [];
-            const sessions = testStorage.getAllSessions();
-            
-            sessions.forEach(sessionId => {
-                const data = testStorage.loadSession(sessionId);
-                if (data) {
-                    details.push({
-                        id: sessionId.substring(0, 20) + '...',
-                        view: data.view,
-                        age: Math.round((Date.now() - data.lastUpdated) / 1000) + 's',
-                        analysisKeys: Object.keys(data.analysisData).length,
-                        transcripts: data.texts.length
-                    });
-                }
+      // Update storage details periodically
+      function updateStorageDetails() {
+        const details = [];
+        const sessions = testStorage.getAllSessions();
+
+        sessions.forEach((sessionId) => {
+          const data = testStorage.loadSession(sessionId);
+          if (data) {
+            details.push({
+              id: sessionId.substring(0, 20) + "...",
+              view: data.view,
+              age: Math.round((Date.now() - data.lastUpdated) / 1000) + "s",
+              analysisKeys: Object.keys(data.analysisData).length,
+              transcripts: data.texts.length,
             });
+          }
+        });
 
-            document.getElementById('storage-details').innerHTML = `
+        document.getElementById("storage-details").innerHTML = `
                 <h3>📊 Detailed Storage View</h3>
                 <pre>${JSON.stringify(details, null, 2)}</pre>
                 <p><small>Refresh rate: every 5 seconds</small></p>
             `;
-        }
+      }
 
-        // Initialize
-        refreshStatus();
-        updateStorageDetails();
-        setInterval(updateStorageDetails, 5000);
+      // Initialize
+      refreshStatus();
+      updateStorageDetails();
+      setInterval(updateStorageDetails, 5000);
 
-        console.log('🧪 Session Storage Test Suite Loaded');
-        console.log('Available functions:', [
-            'refreshStatus()', 'createTestSession()', 'addMockAnalysis()', 
-            'addMockTranscripts()', 'simulatePageReload()', 'restoreLatestSession()',
-            'performMaintenance()', 'clearAllData()'
-        ]);
+      console.log("🧪 Session Storage Test Suite Loaded");
+      console.log("Available functions:", [
+        "refreshStatus()",
+        "createTestSession()",
+        "addMockAnalysis()",
+        "addMockTranscripts()",
+        "simulatePageReload()",
+        "restoreLatestSession()",
+        "performMaintenance()",
+        "clearAllData()",
+      ]);
     </script>
-</body>
-</html> 
+  </body>
+</html>

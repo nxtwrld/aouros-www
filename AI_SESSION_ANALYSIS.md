@@ -16,13 +16,16 @@ The current implementation of transcription and session analysis features in Med
 ### Transcription Service (/src/routes/v1/transcribe)
 
 #### Architecture
+
 - **Provider**: Hard-coded OpenAI Whisper integration
 - **Processing**: Synchronous, single-file processing
 - **Languages**: Basic language support via instructions
 - **Real-time**: Limited support through session audio chunks
 
 #### Key Issues
+
 1. **No Provider Abstraction**
+
    ```typescript
    // Current: Direct OpenAI dependency
    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
@@ -30,6 +33,7 @@ The current implementation of transcription and session analysis features in Med
    ```
 
 2. **Multiple Disconnected Implementations**
+
    - `whisper.ts` - OpenAI Whisper
    - `assemblyai.ts` - AssemblyAI with speaker diarization
    - `googlesdk.ts` - Google Speech-to-Text (incomplete)
@@ -42,13 +46,16 @@ The current implementation of transcription and session analysis features in Med
 ### Session Analysis Service (/src/routes/v1/session)
 
 #### Architecture
+
 - **Provider**: OpenAI GPT via LangChain
 - **Processing**: Incremental analysis with SSE updates
 - **State Management**: In-memory session store with EventEmitter
 - **Analysis Pipeline**: Multi-step medical data extraction
 
 #### Strengths
+
 1. **Real-time Capabilities**
+
    - Server-Sent Events infrastructure
    - Smart content batching (100 chars or 15s)
    - Speaker change detection
@@ -59,13 +66,16 @@ The current implementation of transcription and session analysis features in Med
    - Confidence scoring for diagnoses
 
 #### Key Issues
+
 1. **Race Condition in Schema Localization**
+
    ```typescript
    // Global mutable state - dangerous!
    let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
    ```
 
 2. **Monolithic Provider Dependency**
+
    - No provider diversity
    - No cost optimization
    - No capability-based selection
@@ -79,34 +89,47 @@ The current implementation of transcription and session analysis features in Med
 
 ### Core Principles Comparison
 
-| Principle | AI_DOCUMENT_IMPORT.md | Current Implementation | Gap |
-|-----------|----------------------|------------------------|-----|
-| Provider Abstraction | ✅ Multi-provider with interface | ❌ Direct API calls | High |
-| Workflow Orchestration | ✅ LangGraph StateGraph | ❌ Linear procedural | High |
-| Real-time Progress | ✅ SSE with partial results | ⚠️ SSE but no partial results | Medium |
-| External Tool Integration | ✅ MCP for medical databases | ❌ No external validation | High |
-| Monitoring & Observability | ✅ LangSmith integration | ❌ Basic console.log | High |
+| Principle                  | AI_DOCUMENT_IMPORT.md            | Current Implementation        | Gap    |
+| -------------------------- | -------------------------------- | ----------------------------- | ------ |
+| Provider Abstraction       | ✅ Multi-provider with interface | ❌ Direct API calls           | High   |
+| Workflow Orchestration     | ✅ LangGraph StateGraph          | ❌ Linear procedural          | High   |
+| Real-time Progress         | ✅ SSE with partial results      | ⚠️ SSE but no partial results | Medium |
+| External Tool Integration  | ✅ MCP for medical databases     | ❌ No external validation     | High   |
+| Monitoring & Observability | ✅ LangSmith integration         | ❌ Basic console.log          | High   |
 
 ### Missing Architectural Patterns
 
 #### 1. Provider Abstraction Layer
+
 **Proposed Pattern:**
+
 ```typescript
 interface TranscriptionProvider {
-  transcribe(audio: File | Blob, options: TranscriptionOptions): Promise<TranscriptionResult>;
-  transcribeStream(audioStream: ReadableStream, options: StreamOptions): AsyncIterator<PartialTranscript>;
+  transcribe(
+    audio: File | Blob,
+    options: TranscriptionOptions,
+  ): Promise<TranscriptionResult>;
+  transcribeStream(
+    audioStream: ReadableStream,
+    options: StreamOptions,
+  ): AsyncIterator<PartialTranscript>;
   capabilities: TranscriptionCapabilities;
   estimateCost(duration: number): CostEstimate;
 }
 
 interface AnalysisProvider {
-  analyze(text: string, schema: Schema, context?: AnalysisContext): Promise<StructuredData>;
+  analyze(
+    text: string,
+    schema: Schema,
+    context?: AnalysisContext,
+  ): Promise<StructuredData>;
   streamAnalysis(text: string, schema: Schema): AsyncIterator<PartialAnalysis>;
   capabilities: AnalysisCapabilities;
 }
 ```
 
 #### 2. Graph-Based Workflows (Following AI_DOCUMENT_IMPORT.md Patterns)
+
 **Current:** Sequential processing
 **Proposed:** Parallel, conditional workflows using shared patterns
 
@@ -118,42 +141,44 @@ const sessionAnalysisWorkflow = new StateGraph<SessionAnalysisState>({
     transcript: { value: null },
     language: { value: "English" },
     sessionContext: { value: {} },
-    
+
     // Classification (matching document import pattern)
     isMedical: { value: false },
     conversationType: { value: null },
     urgencyLevel: { value: null },
-    
+
     // Extracted data (parallel processing like document import)
     diagnosis: { value: [] },
     treatment: { value: [] },
     medications: { value: [] },
     followUp: { value: null },
-    
+
     // Provider tracking (reused from document import)
     providerChoices: { value: [] },
     tokenUsage: { value: { total: 0 } },
-    errors: { value: [] }
-  }
+    errors: { value: [] },
+  },
 })
-// Node structure following document import pattern
-.addNode("input_validator", validateTranscriptInput)
-.addNode("medical_classifier", classifyMedicalConversation)
-.addNode("diagnosis_extractor", extractDiagnosisNode)
-.addNode("treatment_analyzer", analyzeTreatmentNode)
-.addNode("medication_extractor", extractMedicationsNode)
-.addNode("medication_validator", validateMedicationsWithMCP) // MCP integration
-.addNode("report_generator", generateSessionReport)
-.addNode("output_assembler", assembleResults)
+  // Node structure following document import pattern
+  .addNode("input_validator", validateTranscriptInput)
+  .addNode("medical_classifier", classifyMedicalConversation)
+  .addNode("diagnosis_extractor", extractDiagnosisNode)
+  .addNode("treatment_analyzer", analyzeTreatmentNode)
+  .addNode("medication_extractor", extractMedicationsNode)
+  .addNode("medication_validator", validateMedicationsWithMCP) // MCP integration
+  .addNode("report_generator", generateSessionReport)
+  .addNode("output_assembler", assembleResults)
 
-// Conditional routing (similar to document import)
-.addConditionalEdges("medical_classifier", 
-  (state) => state.isMedical ? "parallel_extraction" : "non_medical_handler"
-)
-// Parallel processing (matching document import approach)
-.addParallelEdges("parallel_extraction", 
-  ["diagnosis_extractor", "treatment_analyzer", "medication_extractor"]
-)
+  // Conditional routing (similar to document import)
+  .addConditionalEdges("medical_classifier", (state) =>
+    state.isMedical ? "parallel_extraction" : "non_medical_handler",
+  )
+  // Parallel processing (matching document import approach)
+  .addParallelEdges("parallel_extraction", [
+    "diagnosis_extractor",
+    "treatment_analyzer",
+    "medication_extractor",
+  ]);
 
 // Transcription Workflow - Following same patterns
 const transcriptionWorkflow = new StateGraph<TranscriptionState>({
@@ -161,28 +186,30 @@ const transcriptionWorkflow = new StateGraph<TranscriptionState>({
     // Similar structure to document import
     audio: { value: null },
     language: { value: "en" },
-    
+
     // Provider selection (reusing selector logic)
     selectedProvider: { value: null },
     fallbackProviders: { value: [] },
-    
+
     // Results
     transcript: { value: "" },
     confidence: { value: 0 },
-    speakers: { value: [] }
-  }
+    speakers: { value: [] },
+  },
 })
-.addNode("audio_validator", validateAudioInput)
-.addNode("provider_selector", selectOptimalTranscriptionProvider)
-.addNode("transcription_processor", processTranscription)
-.addNode("quality_checker", checkTranscriptionQuality)
-.addConditionalEdges("quality_checker",
-  (state) => state.confidence > 0.8 ? "output" : "fallback_provider"
-)
+  .addNode("audio_validator", validateAudioInput)
+  .addNode("provider_selector", selectOptimalTranscriptionProvider)
+  .addNode("transcription_processor", processTranscription)
+  .addNode("quality_checker", checkTranscriptionQuality)
+  .addConditionalEdges("quality_checker", (state) =>
+    state.confidence > 0.8 ? "output" : "fallback_provider",
+  );
 ```
 
 #### 3. Provider Selection Strategy
+
 **Missing:** Intelligent provider routing based on:
+
 - Task requirements (accuracy vs speed)
 - Language capabilities
 - Cost constraints
@@ -190,7 +217,9 @@ const transcriptionWorkflow = new StateGraph<TranscriptionState>({
 - Current provider health
 
 #### 4. Quality Assurance Framework
+
 **Missing:**
+
 - Automated accuracy evaluation
 - A/B testing between providers
 - Confidence thresholds for human review
@@ -207,7 +236,7 @@ The provider architecture should be shared across all AI operations, extending t
 interface AIProvider {
   readonly name: string;
   readonly capabilities: ProviderCapabilities;
-  
+
   processVision(images: string[], schema: Schema): Promise<ExtractedData>;
   processText(text: string, schema: Schema): Promise<StructuredData>;
   estimateCost(operation: Operation): Promise<CostEstimate>;
@@ -215,17 +244,31 @@ interface AIProvider {
 
 // Extended interfaces for transcription and session analysis
 interface TranscriptionProvider extends AIProvider {
-  transcribe(audio: File | Blob, options: TranscriptionOptions): Promise<TranscriptionResult>;
-  transcribeStream(audioStream: ReadableStream, options: StreamOptions): AsyncIterator<PartialTranscript>;
+  transcribe(
+    audio: File | Blob,
+    options: TranscriptionOptions,
+  ): Promise<TranscriptionResult>;
+  transcribeStream(
+    audioStream: ReadableStream,
+    options: StreamOptions,
+  ): AsyncIterator<PartialTranscript>;
 }
 
 interface SessionAnalysisProvider extends AIProvider {
-  analyze(transcript: string, schema: Schema, context?: AnalysisContext): Promise<StructuredData>;
-  streamAnalysis(transcript: string, schema: Schema): AsyncIterator<PartialAnalysis>;
+  analyze(
+    transcript: string,
+    schema: Schema,
+    context?: AnalysisContext,
+  ): Promise<StructuredData>;
+  streamAnalysis(
+    transcript: string,
+    schema: Schema,
+  ): AsyncIterator<PartialAnalysis>;
 }
 ```
 
 **Provider Implementations** (as per [AI_IMPORT_03_ARCHITECTURE.md](./AI_IMPORT_03_ARCHITECTURE.md) directory structure):
+
 - Location: `src/lib/workflows/providers/implementations/`
 - Files: `openai-provider.ts`, `anthropic-provider.ts`, `google-provider.ts`, `groq-provider.ts`
 
@@ -242,12 +285,13 @@ const sessionAnalysisWorkflow = new StateGraph<SessionAnalysisState>({
     language: { value: "English" },
     analysisResults: { value: {} },
     providerChoices: { value: [] },
-    errors: { value: [] }
-  }
+    errors: { value: [] },
+  },
 });
 ```
 
 **Directory Structure** (following [AI_IMPORT_03_ARCHITECTURE.md](./AI_IMPORT_03_ARCHITECTURE.md)):
+
 ```
 src/lib/workflows/
 ├── session-analysis/           # New workflow for session analysis
@@ -266,10 +310,12 @@ src/lib/workflows/
 As documented in [AI_IMPORT_05_SSE_INTEGRATION.md](./AI_IMPORT_05_SSE_INTEGRATION.md) (Section: "SSE Integration Benefits"), we should leverage the existing SSE infrastructure:
 
 **Existing Infrastructure** (referenced in [AI_IMPORT_05_SSE_INTEGRATION.md](./AI_IMPORT_05_SSE_INTEGRATION.md)):
+
 - `/src/lib/session/sse-client.ts` - Client-side SSE handling
 - `/src/routes/v1/session/[sessionId]/stream/+server.ts` - Server-side SSE
 
 **Integration Pattern**:
+
 ```typescript
 // Example progress events (from AI_IMPORT_05_SSE_INTEGRATION.md)
 {
@@ -295,7 +341,7 @@ class AIOperationError extends Error {
     public readonly provider: string,
     public readonly retryable: boolean,
     public readonly partialResult?: any,
-    public readonly fallbackProviders?: string[]
+    public readonly fallbackProviders?: string[],
   ) {
     super(message);
   }
@@ -303,8 +349,8 @@ class AIOperationError extends Error {
 
 // Provider fallback chain (as per AI_IMPORT_04_IMPLEMENTATION.md patterns)
 const providerFallbackChains = {
-  transcription: ['openai-whisper', 'assemblyai', 'google-speech'],
-  analysis: ['gpt-4', 'claude-3.5-sonnet', 'gemini-pro']
+  transcription: ["openai-whisper", "assemblyai", "google-speech"],
+  analysis: ["gpt-4", "claude-3.5-sonnet", "gemini-pro"],
 };
 ```
 
@@ -313,21 +359,23 @@ const providerFallbackChains = {
 Following the monitoring setup from [AI_IMPORT_03_ARCHITECTURE.md](./AI_IMPORT_03_ARCHITECTURE.md) (Section: "LangSmith Integration"):
 
 **Configuration** (from `src/lib/workflows/monitoring/langsmith.config.ts`):
+
 ```typescript
 export const langsmithConfig = {
   apiKey: env.LANGSMITH_API_KEY,
   projectName: env.LANGSMITH_PROJECT || "mediqom-ai-operations",
-  
+
   // Extended datasets for all workflows
   datasets: {
     medicalReports: "medical-reports-eval",
     transcriptions: "transcriptions-eval",
-    sessionAnalysis: "session-analysis-eval"
-  }
+    sessionAnalysis: "session-analysis-eval",
+  },
 };
 ```
 
 **Tracing Pattern** (using utilities from [AI_IMPORT_04_IMPLEMENTATION.md](./AI_IMPORT_04_IMPLEMENTATION.md)):
+
 - Use `traceWorkflow` for workflow-level tracing
 - Use `traceNode` for node-level tracing
 - Use `traceProviderCall` for provider API calls
@@ -335,7 +383,9 @@ export const langsmithConfig = {
 ## Modernization Roadmap (Aligned with [AI_IMPORT_07_ROADMAP.md](./AI_IMPORT_07_ROADMAP.md) Timeline)
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 1. **Fix Critical Issues**
+
    - Resolve schema localization race condition
    - Add basic error handling improvements
 
@@ -345,7 +395,9 @@ export const langsmithConfig = {
    - Register providers in shared `src/lib/workflows/providers/registry.ts`
 
 ### Phase 2: Core Infrastructure (Weeks 3-4)
+
 1. **Implement LangGraph Workflows** (Following [AI_IMPORT_03_ARCHITECTURE.md](./AI_IMPORT_03_ARCHITECTURE.md) patterns)
+
    - Create `src/lib/workflows/transcription/` directory structure
    - Create `src/lib/workflows/session-analysis/` directory structure
    - Reuse state management patterns from document import
@@ -356,7 +408,9 @@ export const langsmithConfig = {
    - Enable A/B testing using shared infrastructure
 
 ### Phase 3: Enhancement (Weeks 5-6)
+
 1. **SSE Integration** (As per [AI_IMPORT_05_SSE_INTEGRATION.md](./AI_IMPORT_05_SSE_INTEGRATION.md) Section: "SSE Integration Benefits")
+
    - Extend existing SSE infrastructure from `/src/lib/session/sse-client.ts`
    - Implement progress streaming for transcription workflow
    - Add partial result updates for session analysis
@@ -367,7 +421,9 @@ export const langsmithConfig = {
    - Implement diagnosis coding validation
 
 ### Phase 4: Observability (Weeks 7-8)
+
 1. **Monitoring Integration** (Shared with [AI_IMPORT_03_ARCHITECTURE.md](./AI_IMPORT_03_ARCHITECTURE.md))
+
    - Use existing LangSmith configuration from `src/lib/workflows/monitoring/`
    - Extend evaluation datasets for transcription and session analysis
    - Share performance metrics collection infrastructure
@@ -380,16 +436,19 @@ export const langsmithConfig = {
 ## Implementation Priorities
 
 ### Immediate Actions (Week 1)
+
 1. Fix schema localization race condition
 2. Create provider abstraction interfaces
 3. Document existing provider capabilities
 
 ### Short-term Goals (Weeks 2-4)
+
 1. Implement basic LangGraph workflow for session analysis
 2. Add provider fallback for transcription
 3. Enable partial result streaming
 
 ### Medium-term Goals (Weeks 5-8)
+
 1. Full multi-provider support with intelligent routing
 2. External medical database validation
 3. Comprehensive monitoring and quality assurance
@@ -397,21 +456,25 @@ export const langsmithConfig = {
 ## Expected Outcomes (Aligned with [AI_IMPORT_07_ROADMAP.md](./AI_IMPORT_07_ROADMAP.md) Projections)
 
 ### Performance Improvements
+
 - **Transcription**: 50% faster with parallel processing (similar to document import's 60-70% improvement)
 - **Analysis**: 60% reduction in end-to-end latency
 - **Reliability**: 99.5% uptime with provider fallbacks (matching document import target)
 
 ### Cost Optimization (Consistent with [AI_IMPORT_07_ROADMAP.md](./AI_IMPORT_07_ROADMAP.md) targets)
+
 - **Provider Selection**: 40-55% cost reduction through intelligent routing
 - **Caching**: 30% reduction in redundant API calls
 - **Batch Processing**: 25% efficiency improvement
 
 ### Quality Enhancements
+
 - **Accuracy**: Increase from 85% to 92-97% (matching document import projections)
 - **Validation**: 99% medication accuracy with MCP integration
 - **Confidence**: Clear scoring for all medical extractions
 
 ### User Experience (SSE Benefits from [AI_IMPORT_05_SSE_INTEGRATION.md](./AI_IMPORT_05_SSE_INTEGRATION.md))
+
 - **Real-time Feedback**: 80% reduction in user abandonment during processing
 - **Partial Results**: Progressive value delivery as per SSE strategy
 - **Error Transparency**: Clear failure reasons with recovery options

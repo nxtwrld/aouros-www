@@ -1,25 +1,28 @@
-import { writable } from 'svelte/store';
-import type { Writable } from 'svelte/store';
-import ui from '$lib/ui';
+import { writable } from "svelte/store";
+import type { Writable } from "svelte/store";
+import ui from "$lib/ui";
 
 export interface Focused {
-    object: string | undefined;
+  object: string | undefined;
 }
 
-
-
-
 const focused: Writable<Focused> = writable({
-    object: undefined
+  object: undefined,
 });
-
 
 // listen to viewer event and focus object if passed
-ui.listen('viewer', (object: true | false | {
-    object: string
-}) => {
-    if (typeof object == 'object') focused.set(object);
-});
-
+ui.listen(
+  "viewer",
+  (
+    object:
+      | true
+      | false
+      | {
+          object: string;
+        },
+  ) => {
+    if (typeof object == "object") focused.set(object);
+  },
+);
 
 export default focused;

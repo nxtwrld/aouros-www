@@ -127,9 +127,12 @@
       "request-access": "Žádost o přístup",
       "unlink": "Odpojit"
     },
+    "documents": {
+      "remove": "Odebrat",
+      "confirm-remove": "Opravdu chcete tento dokument odebrat?"
+    },
     "report": {
-      "anatomy": {
-      }
+      "anatomy": {}
     },
     "search": {
       "commands": {
@@ -153,6 +156,18 @@
     }
   },
   "click-here": "",
+  "nav": {
+    "home": "Domů",
+    "families": "Pro rodiny",
+    "doctors": "Pro lékaře",
+    "appconnect": "AppConnect",
+    "security": "Zabezpečení",
+    "pricing": "Ceník",
+    "about": "O nás",
+    "beta": "Začít",
+    "login": "Přihlášení",
+    "getStarted": "Začít zdarma"
+  },
   "languages": {
     "ar": "arabština",
     "cs": "čeština",
@@ -376,12 +391,59 @@
       "treatment": "Léčba"
     },
     "attachments": "Přílohy",
+    "attachments-click-to-preview": "Klikněte pro náhled {filename}",
+    "attachments-preview": "Náhled přílohy",
+    "attachments-loading": "Načítání přílohy...",
+    "attachments-load-failed": "Nepodařilo se načíst přílohu",
+    "attachments-try-again": "Zkusit znovu",
     "diagnosis": "Diagnóza",
     "performer": "Provedl",
     "recommendations": "Doporučení",
     "report": "Zpráva",
     "toggle-original-contents": "Přepnout původní obsah",
     "translated-from": "Přeloženo z {language}.",
-    "vitals-and-amp-results": "Měření a testy"
+    "vitals-and-amp-results": "Měření a testy",
+    "medications": "Léky",
+    "current-medications": "Současné léky",
+    "new-prescriptions": "Nové předpisy",
+    "medication-changes": "Změny léků",
+    "discontinued-medications": "Přerušené léky",
+    "drug-interactions": "Lékové interakce",
+    "medication-allergies": "Alergie na léky",
+    "adherence-assessment": "Hodnocení dodržování",
+    "generic-name": "Generický název",
+    "dose": "Dávka",
+    "route": "Způsob podání",
+    "frequency": "Frekvence",
+    "indication": "Indikace",
+    "adherence": "Dodržování",
+    "side-effects": "Vedlejší účinky",
+    "notes": "Poznámky",
+    "new": "Nový",
+    "strength": "Síla",
+    "dosage": "Dávkování",
+    "quantity": "Množství",
+    "administration": "Podání",
+    "special-instructions": "Speciální pokyny",
+    "previous": "Předchozí",
+    "reason": "Důvod",
+    "overall-adherence": "Celkové dodržování",
+    "barriers": "Překážky",
+    "interventions": "Intervence",
+    "no-medication-data": "Žádné údaje o lécích nejsou k dispozici",
+    "procedures": "Zákroky",
+    "performed-procedures": "Provedené zákroky",
+    "technique": "Technika",
+    "duration": "Trvání",
+    "time": "Čas",
+    "outcome": "Výsledek",
+    "findings": "Nálezy",
+    "complications": "Komplikace",
+    "surgical-team": "Chirurgický tým",
+    "location": "Místo",
+    "no-procedure-data": "Žádné údaje o zákrocích nejsou k dispozici",
+    "diagnoses-list": "Diagnózy",
+    "diagnosis-date": "Datum diagnózy",
+    "no-diagnosis-data": "Žádné údaje o diagnóze nejsou k dispozici"
   }
 }

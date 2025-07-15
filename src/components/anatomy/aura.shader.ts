@@ -1,7 +1,7 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 
 export default {
-    vertexShader: `
+  vertexShader: `
     varying vec3 vNormal;
     void main() 
     {
@@ -9,7 +9,7 @@ export default {
         gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
     }
     `,
-    fragmentShader: `
+  fragmentShader: `
 
     varying vec3 vNormal;
     void main() 
@@ -19,13 +19,13 @@ export default {
     }
     
     `,
-    uniforms: {
-        glowIntensity: { value: 1.5 },
-        glowColor: { value: new THREE.Color(0x00ff00) } // Ethereal green glow
-    },
-    extras : {
-        side: THREE.BackSide,
-        blending: THREE.AdditiveBlending,
-        transparent: true
-    }
+  uniforms: {
+    glowIntensity: { value: 1.5 },
+    glowColor: { value: new THREE.Color(0x00ff00) }, // Ethereal green glow
+  },
+  extras: {
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+  },
 };

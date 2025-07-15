@@ -1,19 +1,20 @@
-
-import type { Link , LinkType as LinkTypeEnum } from "./common.types.d";
+import type { Link, LinkType as LinkTypeEnum } from "./common.types.d";
 import { LinkType } from "./common.types.d";
-import type { Document } from '$lib/documents/types.d';
-
+import type { Document } from "$lib/documents/types.d";
 
 type Universal = Document;
 
 export type Item = {
-    type: LinkTypeEnum,
-    data: Universal
+  type: LinkTypeEnum;
+  data: Universal;
 };
 
-export async function getAllLinkedItems(item: Item, simple: boolean = true): Promise<Item[]> {
-    const allItems: Item[] = [];
-   /* 
+export async function getAllLinkedItems(
+  item: Item,
+  simple: boolean = true,
+): Promise<Item[]> {
+  const allItems: Item[] = [];
+  /* 
     allItems.push(item);
 
     if (item.data?.links && Array.isArray(item.data?.links)) {
@@ -40,21 +41,19 @@ export async function getAllLinkedItems(item: Item, simple: boolean = true): Pro
     });
 
     return result;*/
-    return allItems
+  return allItems;
 }
 
-
 export async function getItem(link: Link): Promise<Universal | undefined> {
-    switch (link.type) {
-        case LinkType.Focus:
-            return await focus.get(link.uid);
-        case LinkType.Question:
-            return await questions.get(link.uid);
-        case LinkType.Contact:
-            return await contacts.get(link.uid);
-        case LinkType.Report:
-            return await reports.get(link.uid);
-
-    }
-    return undefined;
+  switch (link.type) {
+    case LinkType.Focus:
+      return await focus.get(link.uid);
+    case LinkType.Question:
+      return await questions.get(link.uid);
+    case LinkType.Contact:
+      return await contacts.get(link.uid);
+    case LinkType.Report:
+      return await reports.get(link.uid);
+  }
+  return undefined;
 }

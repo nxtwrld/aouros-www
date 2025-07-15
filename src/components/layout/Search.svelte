@@ -72,7 +72,16 @@
     
     let results: (Profile | Command)[] = $state([]);
     let inputValue: string = $state('');
-    let inputElement: HTMLInputElement = $state();
+    let inputElement: HTMLInputElement | undefined = $state();
+    
+    // Type guards
+    function isProfile(item: Profile | Command): item is Profile {
+        return 'id' in item && 'fullName' in item;
+    }
+    
+    function isCommand(item: Profile | Command): item is Command {
+        return 'action' in item || 'path' in item || 'translation' in item || 'command' in item;
+    }
     
     let selectedResult: number = $state(-1);
     let selectedCommand: number = $state(-1);
@@ -115,12 +124,12 @@
 
     function showSearch() {
         isSearchOpen = true;
-        setTimeout(() => inputElement.focus(), 100);
+        setTimeout(() => inputElement?.focus(), 100);
 
     }   
     function hideSearch() {
         isSearchOpen = false;
-        inputElement.blur();
+        inputElement?.blur();
         inputValue = '';
         results = [];
         selectedCommand = -1;
@@ -145,56 +154,66 @@
         }
         if (e.code === 'Enter') {
             if (results[selectedResult]) {
-
-                if (results[selectedResult].hasOwnProperty('action')) {
-                    results[selectedResult].action();
-                    hideSearch();
-                    return;
+                const selectedItem = results[selectedResult];
+                
+                if (isCommand(selectedItem)) {
+                    if ('action' in selectedItem && selectedItem.action) {
+                        selectedItem.action();
+                        hideSearch();
+                        return;
+                    }
+                    if ('path' in selectedItem && selectedItem.path) {
+                        goto(selectedItem.path);
+                        hideSearch();
+                        return;
+                    }
                 }
-                if (results[selectedResult].hasOwnProperty('path')) {
-                    goto(results[selectedResult].path);
+                
+                if (isProfile(selectedItem)) {
+                    if (selectedCommand === -1) selectedCommand = 0;
+                    const command = commands[selectedCommand];
+                    if (command && command.path) {
+                        goto(command.path.replace('[UID]', selectedItem.id));
+                    }
                     hideSearch();
-                    return;
                 }
-
-                if (selectedCommand === -1) selectedCommand = 0;
-                goto(commands[selectedCommand].path.replace('[UID]', results[selectedResult].id));
-
-                hideSearch();
             }
         }
     }
 
     function pressTab () {
-        inputElement.focus()
+        if (inputElement) {
+            inputElement.focus();
             if (results[selectedResult]) {
-                if (results[selectedResult].hasOwnProperty('id')) {
-                    inputValue = results[selectedResult].fullName;
-                                    // place carrer at the end of the input
+                const selectedItem = results[selectedResult];
+                
+                if (isProfile(selectedItem)) {
+                    inputValue = selectedItem.fullName;
+                    // place caret at the end of the input
                     setTimeout(() => {
                         if (selectedCommand + 1 <= commands.length -1) selectedCommand++;
                         else selectedCommand = 0;
                         focusInput();
                     }, 10);
-                } else {
-                    inputValue = results[selectedResult].translation || results[selectedResult].command;
-                                    // place carrer at the end of the input
+                } else if (isCommand(selectedItem)) {
+                    inputValue = selectedItem.translation || selectedItem.command || '';
+                    // place caret at the end of the input
                     setTimeout(() => {
                         selectedCommand = -1;
                         focusInput();
                     }, 10);
                 }
-
-
             }
+        }
     }
 
 
     function focusInput() {
-        inputElement.focus()
-        inputElement.setSelectionRange(inputValue.length, inputValue.length);
+        if (inputElement) {
+            inputElement.focus();
+            inputElement.setSelectionRange(inputValue.length, inputValue.length);
+        }
         console.log(selectedCommand);
-
     }
 
     function blurredInput() {
@@ -249,11 +268,11 @@
     <div class="search-results">
         {#each results as result, i}
             <div class="search-result" class:-selected={i === selectedResult}>
-                {#if result.hasOwnProperty('id')}
+                {#if isProfile(result)}
                     <div class="search-result-name">{result.fullName}</div>
                     <div class="search-result-id">{result.id}</div>
-                {:else}
-                 <div class="search-result-name">{result.translation}</div>
+                {:else if isCommand(result)}
+                 <div class="search-result-name">{result.translation || result.command || ''}</div>
                 {/if}
             </div>
         {/each}

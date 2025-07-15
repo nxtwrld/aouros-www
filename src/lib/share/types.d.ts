@@ -1,15 +1,15 @@
-import type { Link } from '$lib/common.types.d';
+import type { Link } from "$lib/common.types.d";
 
 export interface ShareRecord {
-    uid: string;
-    title: string;
-    href: string;
-    url: string;
-    contact: string;
-    password: string | undefined;
-    publicKey: string | undefined;
-    created: string;
-    links: Link[];
+  uid: string;
+  title: string;
+  href: string;
+  url: string;
+  contact: string;
+  password: string | undefined;
+  publicKey: string | undefined;
+  created: string;
+  links: Link[];
 }
 
 /**
@@ -22,18 +22,17 @@ export interface ShareRecord {
  * 5. passwordHash is needed if password was set up. This is used to authenticate against the server without access to the password
  */
 export interface ShareExport {
-    items: ShareItem[];
-    salt?: string;
-    encryptionPublicKey?: string;
-    signingPublicKey?: string;
-    passwordHash?: string;
+  items: ShareItem[];
+  salt?: string;
+  encryptionPublicKey?: string;
+  signingPublicKey?: string;
+  passwordHash?: string;
 }
 
-
 export interface ShareItem {
-    uid: string;
-    type: string;
-    key: string;
-    data: string;
-    metadata: string;
+  uid: string;
+  type: string;
+  key: string;
+  data: string;
+  metadata: string;
 }

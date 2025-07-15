@@ -2,6 +2,7 @@
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { setClient, getClient } from '$lib/supabase';
+	import '../css/app.css';
 	import '../css/index.css';
 
 	let { data, children } = $props();
@@ -15,8 +16,8 @@
 		if (!currentSupabase) return;
 		
 		const authListener = currentSupabase.auth.onAuthStateChange((event, sessionData) => {
-			// Only invalidate on actual auth changes, not initial load
-			if (event !== 'INITIAL_SESSION') {
+			// Only invalidate on actual auth changes, not session refresh or token refresh
+			if (event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED') {
 				invalidate('supabase:auth');
 			}
 		});

@@ -48,6 +48,7 @@
       "en": ""
     },
     "name": "mediqom",
+    "download": "Download",
     "nav": {
       "add-profile": "Add Profile",
       "documents": "Documents",
@@ -127,9 +128,12 @@
       "request-access": "Request Access",
       "unlink": "Unlink"
     },
+    "documents": {
+      "remove": "Remove",
+      "confirm-remove": "Are you sure you want to remove this document?"
+    },
     "report": {
-      "anatomy": {
-      }
+      "anatomy": {}
     },
     "search": {
       "commands": {
@@ -153,6 +157,18 @@
     }
   },
   "click-here": "click here",
+  "nav": {
+    "home": "Home",
+    "families": "For Families",
+    "doctors": "For Doctors",
+    "appconnect": "AppConnect",
+    "security": "Security",
+    "pricing": "Pricing",
+    "about": "About",
+    "beta": "Get Started",
+    "login": "Login",
+    "getStarted": "Get Started Free"
+  },
   "languages": {
     "ar": "Arabic",
     "cs": "Czech",
@@ -376,12 +392,60 @@
       "treatment": "Treatment"
     },
     "attachments": "Attachments",
+    "attachments-click-to-preview": "Click to preview {filename}",
+    "attachments-preview": "Attachment Preview",
+    "attachments-loading": "Loading attachment...",
+    "attachments-load-failed": "Failed to load attachment",
+    "attachments-try-again": "Try Again",
+    "attachments-download": "Download",
     "diagnosis": "Diagnosis",
     "performer": "Provided by",
     "recommendations": "Recommendations",
     "report": "Report",
     "toggle-original-contents": "Toggle original contents",
     "translated-from": "Translated from {language}.",
-    "vitals-and-amp-results": "Vitals &amp; Results"
+    "vitals-and-amp-results": "Vitals &amp; Results",
+    "medications": "Medications",
+    "current-medications": "Current Medications",
+    "new-prescriptions": "New Prescriptions",
+    "medication-changes": "Medication Changes",
+    "discontinued-medications": "Discontinued Medications",
+    "drug-interactions": "Drug Interactions",
+    "medication-allergies": "Medication Allergies",
+    "adherence-assessment": "Adherence Assessment",
+    "generic-name": "Generic Name",
+    "dose": "Dose",
+    "route": "Route",
+    "frequency": "Frequency",
+    "indication": "Indication",
+    "adherence": "Adherence",
+    "side-effects": "Side Effects",
+    "notes": "Notes",
+    "new": "New",
+    "strength": "Strength",
+    "dosage": "Dosage",
+    "quantity": "Quantity",
+    "administration": "Administration",
+    "special-instructions": "Special Instructions",
+    "previous": "Previous",
+    "reason": "Reason",
+    "overall-adherence": "Overall Adherence",
+    "barriers": "Barriers",
+    "interventions": "Interventions",
+    "no-medication-data": "No medication data available",
+    "procedures": "Procedures",
+    "performed-procedures": "Performed Procedures",
+    "technique": "Technique",
+    "duration": "Duration",
+    "time": "Time",
+    "outcome": "Outcome",
+    "findings": "Findings",
+    "complications": "Complications",
+    "surgical-team": "Surgical Team",
+    "location": "Location",
+    "no-procedure-data": "No procedure data available",
+    "diagnoses-list": "Diagnoses",
+    "diagnosis-date": "Diagnosis Date",
+    "no-diagnosis-data": "No diagnosis data available"
   }
 }
