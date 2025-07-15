@@ -4,7 +4,7 @@ import {
   loadSubscription,
   updateSubscription,
 } from "$lib/user/subscriptions.server.js";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 import { sleep } from "$lib/utils";

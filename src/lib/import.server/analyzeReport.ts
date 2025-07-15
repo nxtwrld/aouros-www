@@ -23,7 +23,7 @@ import propertiesDefition from "$data/lab.properties.defaults.json";
 import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { sleep } from "$lib/utils";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 
 // Extend global interface to include our custom properties
 declare global {

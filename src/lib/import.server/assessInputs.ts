@@ -4,7 +4,7 @@ import assessSchemaImage from "$lib/configurations/import.assesments";
 import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { sleep } from "$lib/utils";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 
 const DEBUG = env.DEBUG_ASSESSER === "true";
 

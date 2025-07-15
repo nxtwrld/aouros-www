@@ -6,7 +6,7 @@ import type { Extractor } from "$lib/textract";
 //import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 //import { type RunnableConfig, RunnableWithMessageHistory } from "@langchain/core/runnables";
 //import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 import diagnosis from "./diagnosis.json";
 import gp_report from "./gp_report.json";
 // Instantiate the parser

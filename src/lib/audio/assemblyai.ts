@@ -2,7 +2,7 @@
 
 import { AssemblyAI, type TranscribeParams } from "assemblyai";
 //import { SpeechModel } from 'assemblyai/dist/types';
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 import fs from "fs/promises";
 import axios from "axios";
 

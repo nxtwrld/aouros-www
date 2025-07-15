@@ -3,7 +3,7 @@
 
 import { readFileSync } from 'fs';
 import { load as yamlLoad } from 'js-yaml';
-import { env } from '$env/dynamic/private';
+import { env } from '$env/static/private';
 import { join } from 'path';
 
 export interface ModelInfo {

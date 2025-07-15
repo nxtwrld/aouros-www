@@ -7,7 +7,7 @@ import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 import { logger } from "$lib/logging/logger";
 
 const DEBUG = env.DEBUG_CONVERASATION_REPORT === "true";

@@ -10,7 +10,7 @@ import signals from "$lib/configurations/core.signals";
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from "$lib/types.d";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 import { logger } from "$lib/logging/logger";
 
 // Select diagnosis configuration based on environment variable

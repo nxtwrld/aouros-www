@@ -1,7 +1,7 @@
 // src/routes/+page.server.ts
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 
 const getURL = (redirect: string = "/", currentUrl: URL) => {
   // Get the base URL based on environment

@@ -9,7 +9,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { AIProvider, ProviderRegistry } from "./registry";
 import type { Content, TokenUsage } from "$lib/ai/types.d";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 
 export interface AnalysisOptions {
   language?: string;

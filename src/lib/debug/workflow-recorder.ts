@@ -1,4 +1,4 @@
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import type { DocumentProcessingState } from "$lib/langgraph/state";

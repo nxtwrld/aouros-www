@@ -1,7 +1,7 @@
 import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { generateSessionId, createSession } from "$lib/session/manager";
 import OpenAI from "openai";
-import { env } from "$env/dynamic/private";
+import { env } from "$env/static/private";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
