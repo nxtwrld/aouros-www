@@ -127,6 +127,10 @@
       "request-access": "Zugriff anfordern",
       "unlink": ""
     },
+    "documents": {
+      "remove": "Entfernen",
+      "confirm-remove": "Sind Sie sicher, dass Sie dieses Dokument entfernen möchten?"
+    },
     "report": {
       "anatomy": {}
     },

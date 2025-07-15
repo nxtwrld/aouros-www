@@ -127,6 +127,10 @@
       "request-access": "Žádost o přístup",
       "unlink": "Odpojit"
     },
+    "documents": {
+      "remove": "Odebrat",
+      "confirm-remove": "Opravdu chcete tento dokument odebrat?"
+    },
     "report": {
       "anatomy": {}
     },

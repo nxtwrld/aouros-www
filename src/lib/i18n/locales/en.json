@@ -127,6 +127,10 @@
       "request-access": "Request Access",
       "unlink": "Unlink"
     },
+    "documents": {
+      "remove": "Remove",
+      "confirm-remove": "Are you sure you want to remove this document?"
+    },
     "report": {
       "anatomy": {}
     },
