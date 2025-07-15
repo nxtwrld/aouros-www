@@ -30,25 +30,44 @@
 
     async function loadAttachement(attachment: Attachment): Promise<ArrayBuffer> {
         logger.api.debug('Loading attachment:', attachment);
-        if (!('path' in attachment) || !key) return;
-        const fileResponse = await fetch('/v1/med/profiles/' + attachment.path);
+        if (!attachment.path || !key) {
+            throw new Error('Missing attachment path or decryption key');
+        }
+        // Extract profile ID from the path (format: profileId/filename)
+        const profileId = attachment.path.split('/')[0];
+        const fileResponse = await fetch(`/v1/med/profiles/${profileId}/attachments?path=${encodeURIComponent(attachment.path)}`);
         logger.api.debug('File response:', fileResponse);
-        // base64 to arraybuffer to text file
-        const file = await decrypt([await fileResponse.text()], key);
-        // base64 to blob
+        
+        if (!fileResponse.ok) {
+            throw new Error(`Failed to fetch attachment: ${fileResponse.status} ${fileResponse.statusText}`);
+        }
+        
+        // read the encrypted base64 string from storage
+        const encryptedData = await fileResponse.text();
+        // decrypt the base64 encrypted data
+        const file = await decrypt([encryptedData], key);
+        // parse the decrypted JSON and extract the file data
         logger.api.debug('Decrypted file:', file);
         const json = JSON.parse(file);
         return base64ToArrayBuffer(json.file)
     }
 
     async function downloadAttachment(attachment: Attachment): Promise<void> {
-  
-        const blob = new Blob([await loadAttachement(attachment)], { type: 'application/octet-stream' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'attachment.' + ext;
-        a.click();
+        try {
+            const blob = new Blob([await loadAttachement(attachment)], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            // Extract file extension from attachment type or use a default
+            const ext = attachment.type ? attachment.type.split('/')[1] || 'bin' : 'bin';
+            a.download = 'attachment.' + ext;
+            a.click();
+            // Clean up the blob URL to prevent memory leaks
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            logger.api.error('Failed to download attachment:', error);
+            // You might want to show a user-friendly error message here
+        }
     }
 </script>
 

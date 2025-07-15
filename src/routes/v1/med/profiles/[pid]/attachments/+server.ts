@@ -48,9 +48,8 @@ export const POST: RequestHandler = async ({
     Math.random().toString(36).substring(2, 15) +
     Math.random().toString(36).substring(2, 15);
 
-  // conver base64 to file
-  const buffer = Buffer.from(fileData, "utf-8");
-  const file = new File([buffer], filename, { type: "text/plain" });
+  // store the encrypted base64 string as text
+  const file = new File([fileData], filename, { type: "text/plain" });
 
   const { error: errorUploading } = await supabase.storage
     .from("attachments")
