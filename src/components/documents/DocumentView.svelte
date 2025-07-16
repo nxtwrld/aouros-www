@@ -198,18 +198,20 @@
 <div class="report -heading-sub">
     <!-- Pure data-driven rendering: show sections that exist in the document -->
     {#each sectionsToRender() as section}
-        {#if section.id === 'summary'}
-            <!-- Special handling for summary section to include tags -->
-            <section.component data={getSectionData(section.id)} {document} key={document.key} />
-            <div class="page -block">
-                <Tags tags={document.content.tags} />
-            </div>
-        {:else}
-            {@const data = getSectionData(section.id)}
-            {#if data}
-                <section.component {data} {document} key={document.key} />
+        <div class="document-section">
+            {#if section.id === 'summary'}
+                <!-- Special handling for summary section to include tags -->
+                <section.component data={getSectionData(section.id)} {document} key={document.key} />
+                <div class="page -block">
+                    <Tags tags={document.content.tags} />
+                </div>
+            {:else}
+                {@const data = getSectionData(section.id)}
+                {#if data}
+                    <section.component {data} {document} key={document.key} />
+                {/if}
             {/if}
-        {/if}
+        </div>
     {/each}
 </div>
 <!--pre>

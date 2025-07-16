@@ -399,6 +399,14 @@
     "attachments-try-again": "Try Again",
     "attachments-download": "Download",
     "diagnosis": "Diagnosis",
+    "diagnosis-types": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "differential": "Differential",
+      "rule_out": "Rule Out",
+      "provisional": "Provisional",
+      "confirmed": "Confirmed"
+    },
     "performer": "Provided by",
     "recommendations": "Recommendations",
     "report": "Report",
