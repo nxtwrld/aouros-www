@@ -69,6 +69,7 @@
   --background: var(--color-gray-500);
   --text: var(--color-black);
   --text-bold: 700;
+  --text-padding: 1rem;
 
   --radius-24: 2rem;
   --radius-16: 1rem;

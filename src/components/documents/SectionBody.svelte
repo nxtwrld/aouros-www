@@ -84,25 +84,16 @@
 
 
 <style>
-
-    .heading {
-        margin-bottom: 0;
+    /* SectionBody specific styles */
+    .table-list tr td {
+        width: 50%;
     }
-
-.table-list tr td {
-    width:50%;
-}
-.table-list tr td:first-child {
-    border-left: .5rem solid var(--color-urgency);
-}
-
-
-
-
-.table-list td.body-part {
-    width: auto;
-} 
-.table-list td.-actions {
-    width: auto;
-}
+    
+    .table-list td.body-part {
+        width: auto;
+    } 
+    
+    .table-list td.-actions {
+        width: auto;
+    }
 </style>

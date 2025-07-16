@@ -41,9 +41,8 @@
 {/if}
 
 <style>
+    /* SectionText uses global panel styles */
     .panel {
-        padding: 1rem;
-        background-color: var(--color-background);
-        margin-bottom: var(--gap);
+        padding: var(--text-padding);
     }
 </style>

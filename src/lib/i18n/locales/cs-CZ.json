@@ -397,6 +397,14 @@
     "attachments-load-failed": "Nepodařilo se načíst přílohu",
     "attachments-try-again": "Zkusit znovu",
     "diagnosis": "Diagnóza",
+    "diagnosis-types": {
+      "primary": "Primární",
+      "secondary": "Sekundární",
+      "differential": "Diferenciální",
+      "rule_out": "Vyloučit",
+      "provisional": "Předběžná",
+      "confirmed": "Potvrzená"
+    },
     "performer": "Provedl",
     "recommendations": "Doporučení",
     "report": "Zpráva",

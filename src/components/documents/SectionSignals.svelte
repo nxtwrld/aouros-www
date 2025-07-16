@@ -64,9 +64,5 @@
 
 
 <style>
-
-    .h3.heading {
-        /* turn of margin to accomodate the table spacing */
-        margin-bottom: 0;
-    }
+    /* SectionSignals uses global table and heading styles */
 </style>

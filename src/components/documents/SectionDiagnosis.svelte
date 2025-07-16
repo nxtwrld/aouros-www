@@ -36,15 +36,10 @@
     }
     
     function getTypeLabel(type: string): string {
-        const typeLabels: Record<string, string> = {
-            'primary': 'Primary',
-            'secondary': 'Secondary',
-            'differential': 'Differential',
-            'rule_out': 'Rule Out',
-            'provisional': 'Provisional',
-            'confirmed': 'Confirmed'
-        };
-        return typeLabels[type] || type;
+        const key = `report.diagnosis-types.${type}`;
+        const translated = $t(key);
+        // If translation exists, use it; otherwise fallback to the original type
+        return translated !== key ? translated : type;
     }
 </script>
 
@@ -59,19 +54,19 @@
                         {#if diagnosis.code}
                             <span class="diagnosis-code">{diagnosis.code}</span>
                         {/if}
-                        <h5 class="diagnosis-description">{diagnosis.description}</h5>
+                        <h5 class="item-name">{diagnosis.description}</h5>
                     </div>
                     <div class="diagnosis-badges">
                         {#if diagnosis.type}
                             <span class="type-badge {getTypeClass(diagnosis.type)}">{getTypeLabel(diagnosis.type)}</span>
                         {/if}
-                        {#if diagnosis.confidence}
+                        <!--{#if diagnosis.confidence}
                             <span class="confidence-badge {getConfidenceClass(diagnosis.confidence)}">{diagnosis.confidence}</span>
-                        {/if}
+                        {/if}-->
                     </div>
                 </div>
                 
-                <div class="diagnosis-details">
+                <div class="item-details">
                     {#if diagnosis.date}
                         <div class="detail-item">
                             <span class="label">{$t('report.diagnosis-date')}:</span>
@@ -81,7 +76,7 @@
                 </div>
                 
                 {#if diagnosis.notes}
-                    <div class="diagnosis-notes">
+                    <div class="item-notes">
                         <span class="label">{$t('report.notes')}:</span>
                         <p>{diagnosis.notes}</p>
                     </div>
@@ -97,28 +92,7 @@
 {/if}
 
 <style>
-    .section-title-sub {
-        background-color: var(--color-background);
-        padding: .5rem;
-        margin-bottom: var(--gap);
-    }
-    
-    /* List structure following SectionMedications pattern */
-    .list-items {
-        list-style: none;
-        padding: 0;
-        --indicator-width: 0.5rem;
-    }
-    
-    .list-items li {
-        padding: 1rem;
-        background-color: var(--color-background);
-        margin-bottom: var(--gap);
-    }
-
-    li.panel {
-        border-left: var(--indicator-width) solid var(--color-info);
-    }
+    /* SectionDiagnosis specific panel types */
     
     /* Panel type variations */
     .diagnosis-primary {
@@ -156,17 +130,19 @@
     
     .diagnosis-main {
         flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
     
     .diagnosis-code {
-        background-color: var(--color-primary-light);
-        color: var(--color-primary-dark);
+        background-color: var(--color-highlight);
+        color: var(--color-highlight-text);
         padding: 0.25rem 0.5rem;
         border-radius: 0.25rem;
         font-size: 0.8rem;
         font-weight: 500;
         font-family: monospace;
-        margin-right: 0.5rem;
     }
     
     .diagnosis-description {
@@ -250,42 +226,9 @@
         color: var(--color-danger-dark);
     }
     
-    .diagnosis-details {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-    }
+    /* diagnosis-details now uses global .item-details styles */
     
-    .detail-item {
-        display: flex;
-        gap: 0.5rem;
-    }
+    /* diagnosis-notes now uses global .item-notes styles */
     
-    .label {
-        font-weight: 500;
-        color: var(--color-text-secondary);
-        min-width: 80px;
-    }
-    
-    .value {
-        color: var(--color-text-primary);
-    }
-    
-    .diagnosis-notes {
-        font-size: 0.9rem;
-        color: var(--color-text-secondary);
-    }
-    
-    .diagnosis-notes p {
-        margin: 0.25rem 0 0 0;
-        line-height: 1.4;
-    }
-    
-    .no-data {
-        text-align: center;
-        color: var(--color-text-secondary);
-        font-style: italic;
-        padding: 2rem;
-    }
+    /* Uses global .no-data styles */
 </style>

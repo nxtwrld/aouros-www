@@ -29,20 +29,8 @@
 {/if}
 
 <style>
-
-    .list-items {
-        list-style: none;
-        padding: 0;
-        --indicator-width: 0.5rem;
+    /* SectionRecommendations specific styles */
+    .list-items li.panel {
+        border-left-color: var(--color-urgency);
     }
-    .list-items li {
-        padding: 1rem;
-        background-color: var(--color-background);
-        margin-bottom: var(--gap);
-    }
-
-    li.panel {
-        border-left: var(--indicator-width) solid var(--color-urgency);
-    }
-
 </style>

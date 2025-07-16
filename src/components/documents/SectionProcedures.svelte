@@ -79,13 +79,13 @@
             {#each procedures as procedure}
                 <li class="panel procedure-item">
                     <div class="procedure-header">
-                        <h5 class="procedure-name">{procedure.name}</h5>
+                        <h5 class="item-name">{procedure.name}</h5>
                         {#if procedure.cptCode}
                             <span class="cpt-code">{procedure.cptCode}</span>
                         {/if}
                     </div>
                     
-                    <div class="procedure-details">
+                    <div class="item-details">
                         {#if procedure.technique}
                             <div class="detail-item">
                                 <span class="label">{$t('report.technique')}:</span>
@@ -116,7 +116,7 @@
                     </div>
                     
                     {#if procedure.findings}
-                        <div class="procedure-findings">
+                        <div class="item-notes">
                             <span class="label">{$t('report.findings')}:</span>
                             <p>{procedure.findings}</p>
                         </div>
@@ -175,28 +175,7 @@
 {/if}
 
 <style>
-    .section-title-sub {
-        background-color: var(--color-background);
-        padding: .5rem;
-        margin-bottom: var(--gap);
-    }
-    
-    /* List structure following SectionMedications pattern */
-    .list-items {
-        list-style: none;
-        padding: 0;
-        --indicator-width: 0.5rem;
-    }
-    
-    .list-items li {
-        padding: 1rem;
-        background-color: var(--color-background);
-        margin-bottom: var(--gap);
-    }
-
-    li.panel {
-        border-left: var(--indicator-width) solid var(--color-info);
-    }
+    /* SectionProcedures specific panel types */
     
     /* Panel type variations */
     .procedure-item {
@@ -248,27 +227,7 @@
         font-family: monospace;
     }
     
-    .procedure-details {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-    }
-    
-    .detail-item {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .label {
-        font-weight: 500;
-        color: var(--color-text-secondary);
-        min-width: 80px;
-    }
-    
-    .value {
-        color: var(--color-text-primary);
-    }
+    /* procedure-details now uses global .item-details styles */
     
     .outcome-value {
         font-weight: 600;
@@ -291,14 +250,7 @@
         color: var(--color-text-secondary);
     }
     
-    .procedure-findings {
-        margin-bottom: 0.75rem;
-    }
-    
-    .procedure-findings p {
-        margin: 0.25rem 0 0 0;
-        line-height: 1.4;
-    }
+    /* procedure-findings now uses global .item-notes styles */
     
     .complications {
         margin-bottom: 0.75rem;
@@ -357,10 +309,5 @@
         color: var(--color-text-primary);
     }
     
-    .no-data {
-        text-align: center;
-        color: var(--color-text-secondary);
-        font-style: italic;
-        padding: 2rem;
-    }
+    /* Uses global .no-data styles */
 </style>

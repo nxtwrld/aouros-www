@@ -1,0 +1,284 @@
+/* Document Section Common Styles */
+
+/* Section headings */
+.document-section .h3.heading {
+  margin-bottom: 0;
+}
+
+.document-section .h3.heading.-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--color-surface, #fff);
+}
+
+/* Subsection titles */
+.document-section .section-title-sub {
+  background-color: var(--color-background);
+  padding: 0.5rem;
+  margin-bottom: var(--gap);
+}
+
+/* List structures */
+.document-section .list-items {
+  list-style: none;
+  padding: 0;
+  --indicator-width: 0.5rem;
+}
+
+.document-section .list-items li {
+  padding: 1rem;
+  background-color: var(--color-background);
+  margin-bottom: var(--gap);
+}
+
+/* Panel styling with left border indicator */
+.document-section li.panel {
+  border-left: var(--indicator-width) solid var(--color-info);
+}
+
+/* Page/block styling */
+.document-section .page.-block {
+  padding: 1rem;
+  background-color: var(--color-background);
+  margin-bottom: var(--gap);
+}
+
+/* Table list styles */
+.document-section .table-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--gap);
+}
+
+.document-section .table-list tr td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.document-section .table-list tr td:first-child {
+  border-left: 0.5rem solid var(--color-urgency, var(--color-info));
+}
+
+.document-section .table-list tr th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  background-color: var(--color-background);
+  border-bottom: 2px solid var(--color-border, #e0e0e0);
+}
+
+/* Detail items (label/value pairs) */
+.document-section .detail-item {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.document-section .label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  min-width: 80px;
+}
+
+.document-section .value {
+  color: var(--color-text-primary);
+}
+
+/* No data message */
+.document-section .no-data {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  padding: 2rem;
+}
+
+/* Urgency colors */
+.document-section .urgency-1 {
+  --color-urgency: var(--color-danger);
+}
+
+.document-section .urgency-2 {
+  --color-urgency: var(--color-warning);
+}
+
+.document-section .urgency-3 {
+  --color-urgency: var(--color-info);
+}
+
+.document-section .urgency-4 {
+  --color-urgency: var(--color-success);
+}
+
+.document-section .urgency-5 {
+  --color-urgency: var(--color-secondary);
+}
+
+/* Status colors */
+.document-section .status-active {
+  background-color: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.document-section .status-completed {
+  background-color: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.document-section .status-discontinued {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-dark);
+}
+
+.document-section .status-hold {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning-dark);
+}
+
+.document-section .status-unknown {
+  background-color: var(--color-secondary-light);
+  color: var(--color-secondary-dark);
+}
+
+/* Severity colors */
+.document-section .severity-mild {
+  border-left-color: var(--color-info);
+}
+
+.document-section .severity-moderate {
+  border-left-color: var(--color-warning);
+}
+
+.document-section .severity-major,
+.document-section .severity-severe,
+.document-section .severity-critical {
+  border-left-color: var(--color-danger);
+}
+
+/* Common badge styles */
+.document-section .badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.document-section .badge-primary {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.document-section .badge-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.document-section .badge-warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning-dark);
+}
+
+.document-section .badge-danger {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-dark);
+}
+
+.document-section .badge-info {
+  background-color: var(--color-info-light);
+  color: var(--color-info-dark);
+}
+
+.document-section .badge-secondary {
+  background-color: var(--color-secondary-light);
+  color: var(--color-secondary-dark);
+}
+
+/* Common header styles */
+.document-section .item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.document-section .item-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+/* Grid layout for details */
+.document-section .item-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Notes and additional text */
+.document-section .item-notes {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.document-section .item-notes p {
+  margin: 0.25rem 0 0 0;
+  line-height: 1.4;
+}
+
+/* Tag lists */
+.document-section .tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.document-section .tag {
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+}
+
+/* Action buttons in tables */
+.document-section .table-list .actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.document-section .table-list .actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.document-section .table-list .actions button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: var(--color-interactivity);
+}
+
+.document-section .table-list .actions button:hover svg {
+  fill: var(--color-interactivity-hover);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .document-section .item-details {
+    grid-template-columns: 1fr;
+  }
+
+  .document-section .detail-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .document-section .label {
+    min-width: auto;
+  }
+}

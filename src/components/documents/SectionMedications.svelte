@@ -108,7 +108,7 @@
                                 <span class="medication-status {getStatusClass(medication.status)}">{medication.status || 'active'}</span>
                             </div>
                             
-                            <div class="medication-details">
+                            <div class="item-details">
                                 {#if medication.genericName}
                                     <div class="detail-item">
                                         <span class="label">{$t('report.generic-name')}:</span>
@@ -164,7 +164,7 @@
                             {/if}
                             
                             {#if medication.notes}
-                                <div class="medication-notes">
+                                <div class="item-notes">
                                     <span class="label">{$t('report.notes')}:</span>
                                     <p>{medication.notes}</p>
                                 </div>
@@ -185,7 +185,7 @@
                                 <span class="prescription-badge">{$t('report.new')}</span>
                             </div>
                             
-                            <div class="medication-details">
+                            <div class="item-details">
                                 {#if prescription.strength}
                                     <div class="detail-item">
                                         <span class="label">{$t('report.strength')}:</span>
@@ -216,7 +216,7 @@
                             </div>
                             
                             {#if prescription.instructions?.administration || prescription.instructions?.specialInstructions}
-                                <div class="medication-instructions">
+                                <div class="item-notes">
                                     {#if prescription.instructions.administration}
                                         <p><strong>{$t('report.administration')}:</strong> {prescription.instructions.administration}</p>
                                     {/if}
@@ -366,28 +366,7 @@
 {/if}
 
 <style>
-    .section-title-sub {
-        background-color: var(--color-background);
-        padding: .5rem;
-        margin-bottom: var(--gap);
-    }
-    
-    /* List structure following SectionRecommendations pattern */
-    .list-items {
-        list-style: none;
-        padding: 0;
-        --indicator-width: 0.5rem;
-    }
-    
-    .list-items li {
-        padding: 1rem;
-        background-color: var(--color-background);
-        margin-bottom: var(--gap);
-    }
-
-    li.panel {
-        border-left: var(--indicator-width) solid var(--color-info);
-    }
+    /* SectionMedications specific panel types */
     
     /* Panel type variations */
     .medication-active {
@@ -487,12 +466,7 @@
         font-weight: 500;
     }
     
-    .medication-details {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 0.5rem;
-        margin-bottom: 0.75rem;
-    }
+    /* medication-details now uses global .item-details styles */
     
     .detail-item {
         display: flex;
@@ -553,15 +527,7 @@
         font-size: 0.8rem;
     }
     
-    .medication-notes, .medication-instructions {
-        font-size: 0.9rem;
-        color: var(--color-text-secondary);
-    }
-    
-    .medication-notes p, .medication-instructions p {
-        margin: 0.25rem 0 0 0;
-        line-height: 1.4;
-    }
+    /* medication-notes and medication-instructions now use global .item-notes styles */
     
     /* Medication Changes */
     .change-header {
@@ -664,10 +630,5 @@
         margin-bottom: 0.25rem;
     }
     
-    .no-data {
-        text-align: center;
-        color: var(--color-text-secondary);
-        font-style: italic;
-        padding: 2rem;
-    }
+    /* Uses global .no-data styles */
 </style>

@@ -397,6 +397,14 @@
     "attachments-load-failed": "Anhang konnte nicht geladen werden",
     "attachments-try-again": "Erneut versuchen",
     "diagnosis": "Diagnose",
+    "diagnosis-types": {
+      "primary": "Primär",
+      "secondary": "Sekundär",
+      "differential": "Differenzial",
+      "rule_out": "Ausschluss",
+      "provisional": "Vorläufig",
+      "confirmed": "Bestätigt"
+    },
     "performer": "Bereitgestellt von",
     "recommendations": "Empfehlungen",
     "report": "Bericht",
