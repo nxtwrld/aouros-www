@@ -5,6 +5,7 @@ import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { sleep } from "$lib/utils";
 import { DEBUG_ASSESSER } from "$env/static/private";
+import { type Assessment, type AssessmentDocument, type AssessmentPage } from "$lib/import/types";
 
 const DEBUG = DEBUG_ASSESSER === "true";
 
@@ -14,38 +15,8 @@ type Input = {
   //language?: string;
 };
 
-export interface Assessment {
-  pages: AssessmentPage[];
-  documents: AssessmentDocument[];
-  tokenUsage: TokenUsage;
-}
-
-export interface AssessmentDocument {
-  title: string;
-  date: string;
-  language: string; // Add missing language property
-  isMedical: boolean;
-  pages: number[];
-}
-
-export interface AssessmentPage {
-  page: number;
-  language: string;
-  text: string;
-  images: {
-    type: string;
-    position: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    };
-    data: string;
-  }[];
-  // Add missing properties that are accessed in the code
-  image?: string;
-  thumbnail?: string;
-}
+// Re-export types from shared types
+export type { Assessment, AssessmentDocument, AssessmentPage } from "$lib/import/types";
 
 export default async function assess(input: Input): Promise<Assessment> {
   const tokenUsage: TokenUsage = {

@@ -2,8 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { files } from '$lib/files';
   import { sseImportClient, processDocumentsFallback, type SSEProgressEvent } from '$lib/import/sse-client';
-  import type { Assessment } from '$lib/import.server/assessInputs';
-  import type { ReportAnalysis } from '$lib/import.server/analyzeReport';
+  import type { Assessment, ReportAnalysis } from '$lib/import/types';
   import type { DocumentNew, Document as SavedDocument } from '$lib/documents/types.d';
   import { DocumentState, DocumentType } from '$lib/documents/types.d';
   import { addDocument } from '$lib/documents';
