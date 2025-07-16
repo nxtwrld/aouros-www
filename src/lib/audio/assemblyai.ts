@@ -2,7 +2,7 @@
 
 import { AssemblyAI, type TranscribeParams } from "assemblyai";
 //import { SpeechModel } from 'assemblyai/dist/types';
-import { env } from "$env/static/private";
+import { ASSEMBLYAI_API_KEY } from "$env/static/private";
 import fs from "fs/promises";
 import axios from "axios";
 
@@ -16,7 +16,7 @@ function getClient() {
     return client;
   }
   return (client = new AssemblyAI({
-    apiKey: env.ASSEMBLYAI_API_KEY,
+    apiKey: ASSEMBLYAI_API_KEY,
   }));
 }
 
@@ -24,7 +24,7 @@ export async function uploadAudio(audioData: Uint8Array) {
   const baseUrl = "https://api.assemblyai.com/v2";
 
   const headers = {
-    authorization: env.ASSEMBLYAI_API_KEY,
+    authorization: ASSEMBLYAI_API_KEY,
   };
   const uploadResponse = await axios.post(`${baseUrl}/upload`, audioData, {
     headers,

@@ -1,8 +1,8 @@
 import OpenAI from "openai";
-import { env } from "$env/static/private";
+import { OPENAI_API_KEY } from "$env/static/private";
 
 const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
+  apiKey: OPENAI_API_KEY,
 });
 
 export async function transcribeAudio(

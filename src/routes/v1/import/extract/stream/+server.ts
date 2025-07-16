@@ -4,7 +4,7 @@ import {
   loadSubscription,
   updateSubscription,
 } from "$lib/user/subscriptions.server.js";
-import { env } from "$env/static/private";
+import { DEBUG_EXTRACTOR } from "$env/static/private";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 import { sleep } from "$lib/utils";
@@ -86,7 +86,7 @@ export const POST: RequestHandler = async ({
         });
 
         // Handle debug/testing mode for extraction
-        const DEBUG_EXTRACTOR = env.DEBUG_EXTRACTOR;
+
         let result;
 
         if (DEBUG_EXTRACTOR && DEBUG_EXTRACTOR !== "false") {

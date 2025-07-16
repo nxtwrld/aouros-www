@@ -23,7 +23,7 @@ import propertiesDefition from "$data/lab.properties.defaults.json";
 import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { sleep } from "$lib/utils";
-import { env } from "$env/static/private";
+import { DEBUG_ANALYZER } from "$env/static/private";
 
 // Extend global interface to include our custom properties
 declare global {
@@ -37,7 +37,7 @@ declare global {
  * - gtp-4o (7k) vs gpt-4o-mini (40k)
  */
 
-const DEBUG = env.DEBUG_ANALYZER == "true";
+const DEBUG = DEBUG_ANALYZER == "true";
 
 export enum Types {
   featureDetection = "featureDetection",

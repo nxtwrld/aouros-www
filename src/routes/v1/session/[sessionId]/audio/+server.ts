@@ -8,12 +8,12 @@ import {
 import { transcribeAudioChunk } from "$lib/session/realtime-transcription";
 import type { PartialTranscript } from "$lib/session/manager";
 import OpenAI from "openai";
-import { env } from "$env/static/private";
+import { OPENAI_API_KEY, OPENAI_MEDICAL_ASSISTANT_ID } from "$env/static/private";
 import { getFeedbackForAI } from "$lib/ai/feedback.js";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
+  apiKey: OPENAI_API_KEY,
 });
 
 export const POST: RequestHandler = async ({
@@ -317,7 +317,7 @@ async function runChatGPTAnalysis(
     });
 
     // Check if we have a valid assistant ID
-    const assistantId = env.OPENAI_MEDICAL_ASSISTANT_ID;
+    const assistantId = OPENAI_MEDICAL_ASSISTANT_ID;
     if (!assistantId || assistantId === "asst_default") {
       console.log(
         "⚠️ No valid ChatGPT assistant configured, falling back to traditional analysis",
