@@ -1,4 +1,4 @@
-import { env } from "$env/dynamic/private";
+import { DEBUG_ANALYSIS, DEBUG_EXTRACTOR, DEBUG_ANALYSIS_REPLAY_DELAY} from "$env/static/private";
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import type { DocumentProcessingState } from "$lib/langgraph/state";
@@ -95,7 +95,7 @@ export class WorkflowRecorder {
 
   private initializeFromEnvironment() {
     // Check for DEBUG_ANALYSIS environment variable
-    const debugAnalysis = env.DEBUG_ANALYSIS;
+    const debugAnalysis = DEBUG_ANALYSIS;
     
     console.log("WorkflowRecorder: Initializing from environment");
     console.log("WorkflowRecorder: DEBUG_ANALYSIS =", debugAnalysis);
@@ -115,7 +115,7 @@ export class WorkflowRecorder {
     }
 
     // Also check legacy DEBUG_EXTRACTOR for backwards compatibility
-    const debugExtractor = env.DEBUG_EXTRACTOR;
+    const debugExtractor = DEBUG_EXTRACTOR;
     if (debugExtractor === "true" && !this.recordingEnabled) {
       this.recordingEnabled = true;
       log.analysis.info("Debug recording enabled via DEBUG_EXTRACTOR");
@@ -126,7 +126,7 @@ export class WorkflowRecorder {
    * Get the configured replay delay in milliseconds
    */
   getReplayDelay(): number {
-    const delayEnv = env.DEBUG_ANALYSIS_REPLAY_DELAY;
+    const delayEnv = DEBUG_ANALYSIS_REPLAY_DELAY;
     const delay = delayEnv ? parseInt(delayEnv, 10) : 500;
     
     // Ensure delay is within reasonable bounds (50ms to 5000ms)

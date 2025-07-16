@@ -1,11 +1,11 @@
 import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { generateSessionId, createSession } from "$lib/session/manager";
 import OpenAI from "openai";
-import { env } from "$env/dynamic/private";
+import { OPENAI_API_KEY } from "$env/static/private";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
+  apiKey: OPENAI_API_KEY,
 });
 
 export const POST: RequestHandler = async ({

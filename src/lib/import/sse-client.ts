@@ -1,5 +1,4 @@
-import type { Assessment } from "$lib/import.server/assessInputs";
-import type { ReportAnalysis } from "$lib/import.server/analyzeReport";
+import type { Assessment, ReportAnalysis } from "$lib/import/types";
 import { resizeImage } from "$lib/images";
 import { PROCESS_SIZE } from "$lib/files/CONFIG";
 
@@ -330,21 +329,18 @@ export class SSEImportClient {
 }
 
 // Fallback function for non-SSE processing
+// This function should make API calls to the server endpoints instead of importing server modules
 export async function processDocumentsFallback(
   files: File[],
   options: { language?: string } = {},
 ): Promise<{ assessments: Assessment[]; analyses: ReportAnalysis[] }> {
-  // Use existing non-SSE methods as fallback
-  const { processImages } = await import("$lib/files/image");
-  const { analyze } = await import("$lib/import.server/analyzeReport");
-
   const assessments: Assessment[] = [];
   const analyses: ReportAnalysis[] = [];
 
-  // Process each file using existing methods
+  // Process each file using API endpoints
   for (const file of files) {
     if (file.type.startsWith("image/")) {
-      // Use existing image processing
+      // Convert file to base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -353,20 +349,49 @@ export async function processDocumentsFallback(
       });
 
       const resized = await resizeImage(base64, PROCESS_SIZE);
-      const assessment = await processImages([resized]);
+
+      // Call extract endpoint for assessment
+      const extractResponse = await fetch("/v1/import/extract", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          images: [resized],
+        }),
+      });
+
+      if (!extractResponse.ok) {
+        throw new Error(`Extraction failed: ${extractResponse.statusText}`);
+      }
+
+      const assessment: Assessment = await extractResponse.json();
       assessments.push(assessment);
 
       // Analyze each document
       for (const document of assessment.documents) {
         const documentText = assessment.pages
-          .filter((page: any) => document.pages.includes(page.page))
-          .map((page: any) => page.text)
+          .filter((page) => document.pages.includes(page.page))
+          .map((page) => page.text)
           .join("\n");
 
-        const analysisResult = await analyze({
-          text: documentText,
-          language: options.language || "English",
+        // Call analyze endpoint
+        const analyzeResponse = await fetch("/v1/import/report", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            text: documentText,
+            language: options.language || "English",
+          }),
         });
+
+        if (!analyzeResponse.ok) {
+          throw new Error(`Analysis failed: ${analyzeResponse.statusText}`);
+        }
+
+        const analysisResult: ReportAnalysis = await analyzeResponse.json();
         analyses.push(analysisResult);
       }
     }

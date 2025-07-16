@@ -23,7 +23,8 @@ import propertiesDefition from "$data/lab.properties.defaults.json";
 import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { sleep } from "$lib/utils";
-import { env } from "$env/dynamic/private";
+import { DEBUG_ANALYZER } from "$env/static/private";
+import { Types, type ReportAnalysis } from "$lib/import/types";
 
 // Extend global interface to include our custom properties
 declare global {
@@ -37,51 +38,13 @@ declare global {
  * - gtp-4o (7k) vs gpt-4o-mini (40k)
  */
 
-const DEBUG = env.DEBUG_ANALYZER == "true";
+const DEBUG = DEBUG_ANALYZER == "true";
 
-export enum Types {
-  featureDetection = "featureDetection",
-  //text = 'text',
-  report = "report",
-  laboratory = "laboratory",
-  dental = "dental",
-  imaging = "imaging",
-  prescription = "prescription",
-  immunization = "immunization",
-  dicom = "dicom",
-  fhir = "fhir",
-}
+// Re-export Types from shared types
+export { Types } from "$lib/import/types";
 
-export interface ReportAnalysis {
-  type: Types;
-  fhirType: string;
-  fhir: any;
-  cagegory: string;
-  isMedical: boolean;
-  tags: string[];
-  hasPrescription: boolean;
-  hasImmunization: boolean;
-  hasLabOrVitals: boolean;
-  content?: string;
-  report?: any;
-  //lab?: any;
-  signals?: any;
-  text: string;
-  imaging?: any;
-  prescriptions?: any;
-  immunizations?: any;
-  results?: {
-    test: string;
-    value: string;
-    unit: string;
-    reference: string;
-  }[];
-  recommendations?: string[];
-  tokenUsage: TokenUsage;
-  // Add missing properties that are being accessed in the code
-  title?: string;
-  summary?: string;
-}
+// Re-export ReportAnalysis from shared types
+export type { ReportAnalysis } from "$lib/import/types";
 
 type Input = {
   images?: string[];

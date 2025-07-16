@@ -9,7 +9,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { AIProvider, ProviderRegistry } from "./registry";
 import type { Content, TokenUsage } from "$lib/ai/types.d";
-import { env } from "$env/dynamic/private";
+import { OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY } from "$env/static/private";
 
 export interface AnalysisOptions {
   language?: string;
@@ -53,30 +53,30 @@ export class AIProviderAbstraction {
    */
   private initializeProviders() {
     // OpenAI GPT providers
-    if (env.OPENAI_API_KEY) {
+    if (OPENAI_API_KEY) {
       this.providers.set(AIProvider.OPENAI_GPT4, {
         modelId: "gpt-4",
-        apiKey: env.OPENAI_API_KEY,
+        apiKey: OPENAI_API_KEY,
       });
       this.providers.set(AIProvider.OPENAI_GPT4_TURBO, {
         modelId: "gpt-4-turbo-preview",
-        apiKey: env.OPENAI_API_KEY,
+        apiKey: OPENAI_API_KEY,
       });
     }
 
     // Google Gemini
-    if (env.GOOGLE_API_KEY) {
+    if (GOOGLE_API_KEY) {
       this.providers.set(AIProvider.GOOGLE_GEMINI, {
         modelId: "gemini-pro-vision",
-        apiKey: env.GOOGLE_API_KEY,
+        apiKey: GOOGLE_API_KEY,
       });
     }
 
     // Anthropic Claude
-    if (env.ANTHROPIC_API_KEY) {
+    if (ANTHROPIC_API_KEY) {
       this.providers.set(AIProvider.ANTHROPIC_CLAUDE, {
         modelId: "claude-3-opus-20240229",
-        apiKey: env.ANTHROPIC_API_KEY,
+        apiKey: ANTHROPIC_API_KEY,
       });
     }
   }

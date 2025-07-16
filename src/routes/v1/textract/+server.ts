@@ -6,7 +6,7 @@ import type { Extractor } from "$lib/textract";
 //import { ChatPromptTemplate, MessagesPlaceholder } from "@langchain/core/prompts";
 //import { type RunnableConfig, RunnableWithMessageHistory } from "@langchain/core/runnables";
 //import { ChatMessageHistory } from "@langchain/community/stores/message/in_memory";
-import { env } from "$env/dynamic/private";
+import { OPENAI_API_KEY } from "$env/static/private";
 import diagnosis from "./diagnosis.json";
 import gp_report from "./gp_report.json";
 // Instantiate the parser
@@ -74,7 +74,7 @@ export const POST: RequestHandler = async ({ request }) => {
   // Instantiate the ChatOpenAI class
   const model = new ChatOpenAI({
     model: "gpt-4o",
-    apiKey: env.OPENAI_API_KEY,
+    apiKey: OPENAI_API_KEY,
     callbacks: [
       {
         handleLLMEnd(output, runId, parentRunId, tags) {

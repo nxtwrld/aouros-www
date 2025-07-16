@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from 'svelte';
+    import { onMount } from 'svelte';
 
     interface Props {
         imageData: ArrayBuffer;
@@ -8,11 +8,9 @@
 
     let { imageData, mimeType }: Props = $props();
 
-    const dispatch = createEventDispatcher();
-
-    let imageSrc = '';
-    let imageLoaded = false;
-    let imageError = false;
+    let imageSrc = $state('');
+    let imageLoaded = $state(false);
+    let imageError = $state(false);
 
     onMount(() => {
         try {
@@ -21,7 +19,6 @@
         } catch (error) {
             console.error('Failed to create image blob:', error);
             imageError = true;
-            dispatch('error', { message: 'Failed to load image' });
         }
 
         return () => {
@@ -33,12 +30,10 @@
 
     function handleImageLoad() {
         imageLoaded = true;
-        dispatch('loaded');
     }
 
     function handleImageError() {
         imageError = true;
-        dispatch('error', { message: 'Failed to load image' });
     }
 </script>
 
@@ -106,8 +101,8 @@
                 alt="Attachment preview"
                 class="image"
                 class:hidden={!imageLoaded}
-                on:load={handleImageLoad}
-                on:error={handleImageError}
+                onload={handleImageLoad}
+                onerror={handleImageError}
             />
             {#if imageLoaded}
                 <div class="image-info">

@@ -10,7 +10,7 @@ import signals from "$lib/configurations/core.signals";
 import { updateLanguage } from "$lib/ai/schema";
 import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from "$lib/types.d";
-import { env } from "$env/dynamic/private";
+import { DEBUG_CONVERSATION } from "$env/static/private";
 import { logger } from "$lib/logging/logger";
 
 // Select diagnosis configuration based on environment variable
@@ -21,7 +21,7 @@ const diagnosis =
 
 logger.analysis.info(`Using ${PROMPT_CONFIG} prompt configuration`);
 
-const DEBUG = env.DEBUG_CONVERSATION === "true";
+const DEBUG = DEBUG_CONVERSATION === "true";
 /**
  * TODO:
  * - gtp-4o (7k) vs gpt-4o-mini (40k) -
