@@ -52,8 +52,11 @@
 }
 
 .document-section .table-list tr td {
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--color-border, #e0e0e0);
+
+  border: var(--gap) solid var(--color-border, #e0e0e0);
+}
+.document-section .table-list tr:last-child td {
+  border-bottom: 0;
 }
 
 .document-section .table-list tr td:first-child {
@@ -248,7 +251,7 @@
 }
 
 .document-section .table-list .actions button {
-  background: none;
+  
   border: none;
   cursor: pointer;
   padding: 0.25rem;
@@ -260,11 +263,26 @@
 .document-section .table-list .actions button svg {
   width: 1.25rem;
   height: 1.25rem;
-  fill: var(--color-interactivity);
+  background: var(--color-interactivity);
 }
 
 .document-section .table-list .actions button:hover svg {
   fill: var(--color-interactivity-hover);
+}
+
+
+.document-section .table-list tr .actions button {
+  background: var(--color-interactivity);
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.document-section .table-list tr .actions button svg {
+  fill: var(--color-interactivity-text);
 }
 
 /* Responsive utilities */
