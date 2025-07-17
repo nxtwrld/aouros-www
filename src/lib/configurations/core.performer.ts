@@ -2,25 +2,26 @@ import type { FunctionDefinition } from "@langchain/core/language_models/base";
 
 /**
  * Core Performer Schema with Multi-Language Support
- * 
+ *
  * Uses predefined role enums that can be easily translated via translation files.
  * Role keys map to translation keys like: performer.role.primary_physician
  */
 export default {
-  type: "object", 
-  description: "Medical professional or healthcare provider information with standardized roles for multi-language support",
+  type: "object",
+  description:
+    "Medical professional or healthcare provider information with standardized roles for multi-language support",
   properties: {
     role: {
       type: "string",
       enum: [
         // Primary roles
         "primary_physician",
-        "attending_physician", 
+        "attending_physician",
         "resident_physician",
         "fellow",
         "nurse_practitioner",
         "physician_assistant",
-        
+
         // Specialist roles
         "cardiologist",
         "cardiologist_interventional",
@@ -55,16 +56,16 @@ export default {
         "hematologist",
         "infectologist",
         "geneticist",
-        
+
         // Technical roles
         "echo_technician",
-        "ultrasound_technician", 
+        "ultrasound_technician",
         "radiology_technician",
         "lab_technician",
         "phlebotomist",
         "pharmacist",
         "pharmacy_technician",
-        
+
         // Administrative/Support roles
         "care_coordinator",
         "case_manager",
@@ -73,21 +74,22 @@ export default {
         "physical_therapist",
         "occupational_therapist",
         "respiratory_therapist",
-        
+
         // Other
         "consultant",
         "second_opinion",
         "medical_student",
         "other_specialist",
       ],
-      description: "Role of the medical professional (translation key: performer.role.{value})",
+      description:
+        "Role of the medical professional (translation key: performer.role.{value})",
     },
     name: {
       type: "string",
       description: "Full name of the medical professional",
     },
     title: {
-      type: "string", 
+      type: "string",
       description: "Professional title (Dr., Prof., etc.)",
     },
     specialty: {
@@ -114,7 +116,7 @@ export default {
           description: "Institution address",
         },
         phone: {
-          type: "string", 
+          type: "string",
           description: "Contact phone number",
         },
         email: {

@@ -2,21 +2,23 @@ import type { FunctionDefinition } from "@langchain/core/language_models/base";
 
 /**
  * Social History Schema
- * 
+ *
  * Extracts social history and lifestyle factors.
  * Focuses on medically relevant social determinants of health.
  */
 export default {
   name: "extract_social_history",
-  description: "Extract comprehensive social history and lifestyle factors that impact health including substance use, occupational exposures, social determinants, and behavioral risk factors.",
+  description:
+    "Extract comprehensive social history and lifestyle factors that impact health including substance use, occupational exposures, social determinants, and behavioral risk factors.",
   parameters: {
     type: "object",
     properties: {
       hasSocialHistory: {
         type: "boolean",
-        description: "Does this document contain social history or lifestyle information?",
+        description:
+          "Does this document contain social history or lifestyle information?",
       },
-      
+
       smokingHistory: {
         type: "object",
         description: "Smoking and tobacco use history",
@@ -43,7 +45,15 @@ export default {
             description: "Types of tobacco used",
             items: {
               type: "string",
-              enum: ["cigarettes", "cigars", "pipe", "chewing_tobacco", "snuff", "e_cigarettes", "other"],
+              enum: [
+                "cigarettes",
+                "cigars",
+                "pipe",
+                "chewing_tobacco",
+                "snuff",
+                "e_cigarettes",
+                "other",
+              ],
             },
           },
           currentAmount: {
@@ -56,7 +66,7 @@ export default {
           },
         },
       },
-      
+
       alcoholUse: {
         type: "object",
         description: "Alcohol consumption history",
@@ -99,7 +109,7 @@ export default {
           },
         },
       },
-      
+
       substanceUse: {
         type: "array",
         description: "Other substance use history",
@@ -108,7 +118,8 @@ export default {
           properties: {
             substance: {
               type: "string",
-              description: "Substance name or type",
+              description:
+                "Substance name or type. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             status: {
               type: "string",
@@ -126,7 +137,8 @@ export default {
             },
             startAge: {
               type: "string",
-              description: "Age started using",
+              description:
+                "Age started using. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             lastUse: {
               type: "string",
@@ -140,7 +152,7 @@ export default {
           required: ["substance", "status"],
         },
       },
-      
+
       occupationalHistory: {
         type: "array",
         description: "Occupational history and exposures",
@@ -149,15 +161,18 @@ export default {
           properties: {
             jobTitle: {
               type: "string",
-              description: "Job title or occupation",
+              description:
+                "Job title or occupation. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             employer: {
               type: "string",
-              description: "Employer name",
+              description:
+                "Employer name. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             industry: {
               type: "string",
-              description: "Industry type",
+              description:
+                "Industry type. Use standardized terminology from the [LANGUAGE] localization set.",
             },
             duration: {
               type: "string",
@@ -171,7 +186,8 @@ export default {
                 properties: {
                   agent: {
                     type: "string",
-                    description: "Exposure agent (asbestos, chemicals, radiation, etc.)",
+                    description:
+                      "Exposure agent (asbestos, chemicals, radiation, etc.). Translate result to the [LANGUAGE] language if the source is in a different language.",
                   },
                   duration: {
                     type: "string",
@@ -196,7 +212,7 @@ export default {
           },
         },
       },
-      
+
       environmentalExposures: {
         type: "array",
         description: "Environmental and residential exposures",
@@ -205,35 +221,41 @@ export default {
           properties: {
             exposure: {
               type: "string",
-              description: "Type of environmental exposure",
+              description:
+                "Type of environmental exposure. Use standardized terminology from the [LANGUAGE] localization set.",
             },
             source: {
               type: "string",
-              description: "Source of exposure",
+              description:
+                "Source of exposure. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             duration: {
               type: "string",
-              description: "Duration of exposure",
+              description:
+                "Duration of exposure. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             location: {
               type: "string",
-              description: "Geographic location of exposure",
+              description:
+                "Geographic location of exposure. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
         },
       },
-      
+
       livingConditions: {
         type: "object",
         description: "Living conditions and housing",
         properties: {
           housingType: {
             type: "string",
-            description: "Type of housing",
+            description:
+              "Type of housing. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
           householdComposition: {
             type: "string",
-            description: "Household composition",
+            description:
+              "Household composition. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
           dependents: {
             type: "string",
@@ -256,7 +278,7 @@ export default {
           },
         },
       },
-      
+
       socioeconomicFactors: {
         type: "object",
         description: "Socioeconomic determinants of health",
@@ -267,7 +289,14 @@ export default {
           },
           employmentStatus: {
             type: "string",
-            enum: ["employed", "unemployed", "retired", "disabled", "student", "homemaker"],
+            enum: [
+              "employed",
+              "unemployed",
+              "retired",
+              "disabled",
+              "student",
+              "homemaker",
+            ],
             description: "Current employment status",
           },
           income: {
@@ -287,7 +316,13 @@ export default {
                 description: "Types of insurance",
                 items: {
                   type: "string",
-                  enum: ["private", "medicare", "medicaid", "military", "other"],
+                  enum: [
+                    "private",
+                    "medicare",
+                    "medicaid",
+                    "military",
+                    "other",
+                  ],
                 },
               },
             },
@@ -310,19 +345,27 @@ export default {
           },
         },
       },
-      
+
       socialSupport: {
         type: "object",
         description: "Social support systems",
         properties: {
           maritalStatus: {
             type: "string",
-            enum: ["single", "married", "divorced", "widowed", "separated", "domestic_partner"],
+            enum: [
+              "single",
+              "married",
+              "divorced",
+              "widowed",
+              "separated",
+              "domestic_partner",
+            ],
             description: "Marital status",
           },
           supportSystem: {
             type: "string",
-            description: "Description of social support system",
+            description:
+              "Description of social support system. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
           caregivers: {
             type: "array",
@@ -347,14 +390,15 @@ export default {
           },
         },
       },
-      
+
       lifestyleFactors: {
         type: "object",
         description: "Lifestyle and behavioral factors",
         properties: {
           diet: {
             type: "string",
-            description: "Dietary patterns and restrictions",
+            description:
+              "Dietary patterns and restrictions. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
           physicalActivity: {
             type: "object",
@@ -408,7 +452,8 @@ export default {
               },
               sources: {
                 type: "array",
-                description: "Sources of stress",
+                description:
+                  "Sources of stress. Use standardized terminology from the [LANGUAGE] localization set.",
                 items: {
                   type: "string",
                 },
@@ -424,14 +469,15 @@ export default {
           },
         },
       },
-      
+
       culturalFactors: {
         type: "object",
         description: "Cultural and religious factors",
         properties: {
           ethnicity: {
             type: "string",
-            description: "Ethnic background",
+            description:
+              "Ethnic background. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
           primaryLanguage: {
             type: "string",
@@ -443,18 +489,20 @@ export default {
           },
           religiousAffiliation: {
             type: "string",
-            description: "Religious affiliation if relevant to care",
+            description:
+              "Religious affiliation if relevant to care. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
           culturalPractices: {
             type: "array",
-            description: "Cultural practices affecting health care",
+            description:
+              "Cultural practices affecting health care. Translate result to the [LANGUAGE] language if the source is in a different language.",
             items: {
               type: "string",
             },
           },
         },
       },
-      
+
       riskFactors: {
         type: "array",
         description: "Identified social risk factors",
@@ -463,7 +511,8 @@ export default {
           properties: {
             factor: {
               type: "string",
-              description: "Risk factor",
+              description:
+                "Risk factor. Use standardized terminology from the [LANGUAGE] localization set.",
             },
             impact: {
               type: "string",
@@ -472,12 +521,13 @@ export default {
             },
             intervention: {
               type: "string",
-              description: "Recommended intervention",
+              description:
+                "Recommended intervention. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
         },
       },
-      
+
       confidence: {
         type: "number",
         minimum: 0,

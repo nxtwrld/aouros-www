@@ -214,6 +214,349 @@
       "mg/dL": "mg/dL",
       "mmHg": "mmHg",
       "years": "years"
+    },
+    "enums": {
+      "allergy_reactions": {
+        "rash": "Rash",
+        "hives": "Hives",
+        "swelling": "Swelling",
+        "itching": "Itching",
+        "sneezing": "Sneezing",
+        "runny_nose": "Runny nose",
+        "watery_eyes": "Watery eyes",
+        "coughing": "Coughing",
+        "wheezing": "Wheezing",
+        "shortness_of_breath": "Shortness of breath",
+        "nausea": "Nausea",
+        "headache": "Headache",
+        "fatigue": "Fatigue",
+        "anaphylaxis": "Anaphylaxis",
+        "breathing_difficulty": "Breathing Difficulty",
+        "other": "Other"
+      },
+      "discontinuation_reasons": {
+        "adverse_effects": "Adverse Effects",
+        "ineffective": "Ineffective",
+        "patient_preference": "Patient Preference",
+        "cost": "Cost",
+        "drug_interaction": "Drug Interaction",
+        "completed_course": "Completed Course"
+      },
+      "medication_change_reasons": {
+        "dose_adjustment": "Dose Adjustment",
+        "side_effects": "Side Effects",
+        "ineffective": "Ineffective",
+        "drug_interaction": "Drug Interaction",
+        "cost": "Cost",
+        "availability": "Availability"
+      },
+      "adherence_barriers": {
+        "cost": "Cost",
+        "side_effects": "Side Effects",
+        "complexity": "Complexity",
+        "forgetfulness": "Forgetfulness",
+        "lifestyle": "Lifestyle",
+        "access": "Access"
+      },
+      "discharge_dispositions": {
+        "home": "Home",
+        "skilled_nursing": "Skilled Nursing",
+        "rehabilitation": "Rehabilitation",
+        "hospice": "Hospice",
+        "transferred": "Transferred",
+        "left_ama": "Left AMA"
+      },
+      "anesthesia_techniques": {
+        "general": "General",
+        "spinal": "Spinal",
+        "epidural": "Epidural",
+        "local": "Local",
+        "regional": "Regional",
+        "sedation": "Sedation"
+      },
+      "crystalloid_types": {
+        "normal_saline": "Normal Saline",
+        "lactated_ringers": "Lactated Ringers",
+        "dextrose": "Dextrose",
+        "plasmalyte": "Plasmalyte"
+      },
+      "colloid_types": {
+        "albumin": "Albumin",
+        "hetastarch": "Hetastarch",
+        "dextran": "Dextran",
+        "gelatin": "Gelatin"
+      },
+      "consistency_types": {
+        "soft": "Soft",
+        "firm": "Firm",
+        "hard": "Hard",
+        "cystic": "Cystic",
+        "necrotic": "Necrotic",
+        "hemorrhagic": "Hemorrhagic"
+      },
+      "section_purposes": {
+        "diagnostic": "Diagnostic",
+        "margin_assessment": "Margin Assessment",
+        "staging": "Staging",
+        "research": "Research",
+        "quality_control": "Quality Control"
+      },
+      "procedure_outcomes": {
+        "successful": "Successful",
+        "partially_successful": "Partially Successful",
+        "complicated": "Complicated",
+        "incomplete": "Incomplete",
+        "failed": "Failed"
+      },
+      "professional_roles": {
+        "surgeon": "Surgeon",
+        "assistant": "Assistant",
+        "anesthesiologist": "Anesthesiologist",
+        "nurse": "Nurse",
+        "technician": "Technician",
+        "consultant": "Consultant"
+      },
+      "substance_types": {
+        "tobacco": "Tobacco",
+        "alcohol": "Alcohol",
+        "marijuana": "Marijuana",
+        "cocaine": "Cocaine",
+        "opioids": "Opioids",
+        "other_drugs": "Other Drugs"
+      },
+      "industry_classifications": {
+        "healthcare": "Healthcare",
+        "construction": "Construction",
+        "manufacturing": "Manufacturing",
+        "agriculture": "Agriculture",
+        "education": "Education",
+        "technology": "Technology",
+        "other": "Other"
+      },
+      "exposure_agents": {
+        "asbestos": "Asbestos",
+        "lead": "Lead",
+        "chemicals": "Chemicals",
+        "radiation": "Radiation",
+        "biological": "Biological",
+        "noise": "Noise",
+        "ergonomic": "Ergonomic"
+      },
+      "exposure_types": {
+        "occupational": "Occupational",
+        "environmental": "Environmental",
+        "recreational": "Recreational",
+        "domestic": "Domestic",
+        "medical": "Medical"
+      },
+      "housing_types": {
+        "single_family": "Single Family",
+        "apartment": "Apartment",
+        "assisted_living": "Assisted Living",
+        "nursing_home": "Nursing Home",
+        "homeless": "Homeless",
+        "other": "Other"
+      },
+      "stress_sources": {
+        "work": "Work",
+        "family": "Family",
+        "financial": "Financial",
+        "health": "Health",
+        "relationship": "Relationship",
+        "legal": "Legal",
+        "other": "Other"
+      },
+      "arrival_modes": {
+        "ambulance": "Ambulance",
+        "walk_in": "Walk In",
+        "helicopter": "Helicopter",
+        "police": "Police",
+        "private_vehicle": "Private Vehicle",
+        "public_transport": "Public Transport"
+      },
+      "treatment_regimens": {
+        "adjuvant": "Adjuvant",
+        "neoadjuvant": "Neoadjuvant",
+        "palliative": "Palliative",
+        "curative": "Curative",
+        "maintenance": "Maintenance",
+        "salvage": "Salvage"
+      },
+      "radiation_techniques": {
+        "external_beam": "External Beam",
+        "brachytherapy": "Brachytherapy",
+        "stereotactic": "Stereotactic",
+        "intensity_modulated": "Intensity Modulated",
+        "proton": "Proton"
+      },
+      "molecular_targets": {
+        "her2": "HER2",
+        "egfr": "EGFR",
+        "pd1": "PD1",
+        "pdl1": "PDL1",
+        "vegf": "VEGF",
+        "kras": "KRAS",
+        "braf": "BRAF",
+        "other": "Other"
+      },
+      "contraindications": {
+        "allergy": "Allergy",
+        "pregnancy": "Pregnancy",
+        "renal_failure": "Renal Failure",
+        "liver_failure": "Liver Failure",
+        "drug_interaction": "Drug Interaction",
+        "age": "Age",
+        "other": "Other"
+      },
+      "treatment_barriers": {
+        "cost": "Cost",
+        "access": "Access",
+        "compliance": "Compliance",
+        "side_effects": "Side Effects",
+        "transportation": "Transportation",
+        "insurance": "Insurance"
+      },
+      "alert_priorities": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "allergy_categories": {
+        "medication": "Medication",
+        "food": "Food",
+        "environmental": "Environmental",
+        "latex": "Latex",
+        "contrast": "Contrast",
+        "other_chemical": "Other Chemical",
+        "biological": "Biological",
+        "unknown": "Unknown"
+      },
+      "allergy_severity": {
+        "mild": "Mild",
+        "moderate": "Moderate",
+        "severe": "Severe",
+        "life_threatening": "Life Threatening",
+        "fatal": "Fatal",
+        "unknown": "Unknown"
+      },
+      "allergy_status": {
+        "active": "Active",
+        "resolved": "Resolved",
+        "inactive": "Inactive",
+        "entered_in_error": "Entered in Error"
+      },
+      "body_systems": {
+        "dermatologic": "Dermatologic",
+        "respiratory": "Respiratory",
+        "cardiovascular": "Cardiovascular",
+        "gastrointestinal": "Gastrointestinal",
+        "neurologic": "Neurologic",
+        "systemic": "Systemic",
+        "other": "Other"
+      },
+      "certainty_levels": {
+        "confirmed": "Confirmed",
+        "probable": "Probable",
+        "possible": "Possible",
+        "unlikely": "Unlikely",
+        "refuted": "Refuted"
+      },
+      "reaction_types": {
+        "allergic_reaction": "Allergic Reaction",
+        "anaphylaxis": "Anaphylaxis",
+        "intolerance": "Intolerance",
+        "side_effect": "Side Effect",
+        "toxicity": "Toxicity",
+        "unknown": "Unknown",
+        "pseudoallergy": "Pseudoallergy"
+      },
+      "administration_routes": {
+        "IV": "Intravenous",
+        "IM": "Intramuscular",
+        "inhalation": "Inhalation",
+        "epidural": "Epidural",
+        "spinal": "Spinal",
+        "local": "Local",
+        "other": "Other"
+      },
+      "airway_methods": {
+        "mask": "Mask",
+        "LMA": "LMA",
+        "endotracheal_tube": "Endotracheal Tube",
+        "nasal_cannula": "Nasal Cannula",
+        "face_mask": "Face Mask",
+        "other": "Other"
+      },
+      "anesthesia_types": {
+        "general": "General",
+        "regional": "Regional",
+        "spinal": "Spinal",
+        "epidural": "Epidural",
+        "local": "Local",
+        "sedation": "Sedation",
+        "MAC": "MAC",
+        "combined": "Combined",
+        "other": "Other"
+      },
+      "blood_products": {
+        "PRBC": "Packed Red Blood Cells",
+        "FFP": "Fresh Frozen Plasma",
+        "platelets": "Platelets",
+        "cryoprecipitate": "Cryoprecipitate",
+        "whole_blood": "Whole Blood"
+      },
+      "disposition_types": {
+        "PACU": "PACU",
+        "ICU": "ICU",
+        "floor": "Floor",
+        "home": "Home",
+        "other": "Other"
+      },
+      "intubation_difficulty": {
+        "easy": "Easy",
+        "moderate": "Moderate",
+        "difficult": "Difficult",
+        "failed": "Failed"
+      },
+      "adherence_levels": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "fair": "Fair",
+        "poor": "Poor",
+        "unknown": "Unknown"
+      },
+      "interaction_severity": {
+        "mild": "Mild",
+        "moderate": "Moderate",
+        "major": "Major",
+        "severe": "Severe",
+        "life_threatening": "Life Threatening",
+        "contraindicated": "Contraindicated"
+      },
+      "medication_change_types": {
+        "dose_increase": "Dose Increase",
+        "dose_decrease": "Dose Decrease",
+        "frequency_change": "Frequency Change",
+        "discontinued": "Discontinued",
+        "switched": "Switched",
+        "added": "Added"
+      },
+      "medication_status": {
+        "active": "Active",
+        "completed": "Completed",
+        "discontinued": "Discontinued",
+        "on_hold": "On Hold",
+        "unknown": "Unknown"
+      },
+      "mode_of_arrival": {
+        "ambulance": "Ambulance",
+        "walk_in": "Walk In",
+        "helicopter": "Helicopter",
+        "police": "Police",
+        "private_vehicle": "Private Vehicle",
+        "public_transport": "Public Transport"
+      }
     }
   },
   "profile": {

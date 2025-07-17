@@ -15,12 +15,12 @@ export default {
       status: {
         type: "string",
         description:
-          "Observed status of the body part. Translate result to the [LANGUAGE] langauge if the source is in a different language. Leave is empty if the status is not available in the original report.",
+          "Observed status of the body part. Translate result to the [LANGUAGE] language if the source is in a different language. Leave is empty if the status is not available in the original report.",
       },
       treatment: {
         type: "string",
         description:
-          "Performed or suggested treatment of the body part. Translate result to the [LANGUAGE] langauge if the source is in a different language. Leave empty if the treatment is not available.",
+          "Performed or suggested treatment of the body part. Translate result to the [LANGUAGE] language if the source is in a different language. Leave empty if the treatment is not available.",
       },
       urgency: {
         type: "number",

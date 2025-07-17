@@ -213,6 +213,349 @@
       "mg/dL": "mg/dl",
       "mmHg": "mmHg",
       "years": "let"
+    },
+    "enums": {
+      "allergy_reactions": {
+        "rash": "Vyrážka",
+        "hives": "Kopřivka",
+        "swelling": "Otok",
+        "itching": "Svědění",
+        "sneezing": "Kýchání",
+        "runny_nose": "Rýma",
+        "watery_eyes": "Slzení očí",
+        "coughing": "Kašel",
+        "wheezing": "Sípání",
+        "shortness_of_breath": "Dušnost",
+        "nausea": "Nevolnost",
+        "headache": "Bolest hlavy",
+        "fatigue": "Únava",
+        "anaphylaxis": "Anafylaxe",
+        "breathing_difficulty": "Dýchací obtíže",
+        "other": "Jiné"
+      },
+      "discontinuation_reasons": {
+        "adverse_effects": "Nežádoucí účinky",
+        "ineffective": "Neúčinný",
+        "patient_preference": "Preference pacienta",
+        "cost": "Náklady",
+        "drug_interaction": "Lékové interakce",
+        "completed_course": "Dokončený kurz"
+      },
+      "medication_change_reasons": {
+        "dose_adjustment": "Úprava dávky",
+        "side_effects": "Vedlejší účinky",
+        "ineffective": "Neúčinný",
+        "drug_interaction": "Lékové interakce",
+        "cost": "Náklady",
+        "availability": "Dostupnost"
+      },
+      "adherence_barriers": {
+        "cost": "Náklady",
+        "side_effects": "Vedlejší účinky",
+        "complexity": "Složitost",
+        "forgetfulness": "Zapomínání",
+        "lifestyle": "Životní styl",
+        "access": "Přístup"
+      },
+      "discharge_dispositions": {
+        "home": "Domov",
+        "skilled_nursing": "Odborná ošetřovatelská péče",
+        "rehabilitation": "Rehabilitace",
+        "hospice": "Hospic",
+        "transferred": "Převeden",
+        "left_ama": "Opuštěn AMA"
+      },
+      "anesthesia_techniques": {
+        "general": "Celková",
+        "spinal": "Spinální",
+        "epidural": "Epidurální",
+        "local": "Lokální",
+        "regional": "Regionální",
+        "sedation": "Sedace"
+      },
+      "crystalloid_types": {
+        "normal_saline": "Fyziologický roztok",
+        "lactated_ringers": "Lactated Ringers",
+        "dextrose": "Dextróza",
+        "plasmalyte": "Plasmalyte"
+      },
+      "colloid_types": {
+        "albumin": "Albumin",
+        "hetastarch": "Hetastarch",
+        "dextran": "Dextran",
+        "gelatin": "Želatina"
+      },
+      "consistency_types": {
+        "soft": "Měkký",
+        "firm": "Pevný",
+        "hard": "Tvrdý",
+        "cystic": "Cystický",
+        "necrotic": "Nekrotický",
+        "hemorrhagic": "Hemoragický"
+      },
+      "section_purposes": {
+        "diagnostic": "Diagnostický",
+        "margin_assessment": "Hodnocení okrajů",
+        "staging": "Staging",
+        "research": "Výzkum",
+        "quality_control": "Kontrola kvality"
+      },
+      "procedure_outcomes": {
+        "successful": "Úspěšný",
+        "partially_successful": "Částečně úspěšný",
+        "complicated": "Komplikovaný",
+        "incomplete": "Neúplný",
+        "failed": "Neúspěšný"
+      },
+      "professional_roles": {
+        "surgeon": "Chirurg",
+        "assistant": "Asistent",
+        "anesthesiologist": "Anesteziolog",
+        "nurse": "Zdravotní sestra",
+        "technician": "Technik",
+        "consultant": "Konzultant"
+      },
+      "substance_types": {
+        "tobacco": "Tabák",
+        "alcohol": "Alkohol",
+        "marijuana": "Marihuana",
+        "cocaine": "Kokain",
+        "opioids": "Opioidy",
+        "other_drugs": "Jiné drogy"
+      },
+      "industry_classifications": {
+        "healthcare": "Zdravotnictví",
+        "construction": "Stavebnictví",
+        "manufacturing": "Výroba",
+        "agriculture": "Zemědělství",
+        "education": "Vzdělávání",
+        "technology": "Technologie",
+        "other": "Jiné"
+      },
+      "exposure_agents": {
+        "asbestos": "Azbest",
+        "lead": "Olovo",
+        "chemicals": "Chemikálie",
+        "radiation": "Radiace",
+        "biological": "Biologické",
+        "noise": "Hluk",
+        "ergonomic": "Ergonomické"
+      },
+      "exposure_types": {
+        "occupational": "Profesní",
+        "environmental": "Environmentální",
+        "recreational": "Rekreační",
+        "domestic": "Domácí",
+        "medical": "Lékařský"
+      },
+      "housing_types": {
+        "single_family": "Rodinný dům",
+        "apartment": "Byt",
+        "assisted_living": "Asistované bydlení",
+        "nursing_home": "Domov pro seniory",
+        "homeless": "Bezdomovec",
+        "other": "Jiné"
+      },
+      "stress_sources": {
+        "work": "Práce",
+        "family": "Rodina",
+        "financial": "Finanční",
+        "health": "Zdraví",
+        "relationship": "Vztah",
+        "legal": "Právní",
+        "other": "Jiné"
+      },
+      "arrival_modes": {
+        "ambulance": "Sanitka",
+        "walk_in": "Pěšky",
+        "helicopter": "Vrtulník",
+        "police": "Policie",
+        "private_vehicle": "Soukromé vozidlo",
+        "public_transport": "Veřejná doprava"
+      },
+      "treatment_regimens": {
+        "adjuvant": "Adjuvantní",
+        "neoadjuvant": "Neoadjuvantní",
+        "palliative": "Paliativní",
+        "curative": "Kurativní",
+        "maintenance": "Udržovací",
+        "salvage": "Záchranný"
+      },
+      "radiation_techniques": {
+        "external_beam": "Externí paprsek",
+        "brachytherapy": "Brachyterapie",
+        "stereotactic": "Stereotaktické",
+        "intensity_modulated": "Intenzitně modulované",
+        "proton": "Proton"
+      },
+      "molecular_targets": {
+        "her2": "HER2",
+        "egfr": "EGFR",
+        "pd1": "PD1",
+        "pdl1": "PDL1",
+        "vegf": "VEGF",
+        "kras": "KRAS",
+        "braf": "BRAF",
+        "other": "Jiné"
+      },
+      "contraindications": {
+        "allergy": "Alergie",
+        "pregnancy": "Těhotenství",
+        "renal_failure": "Renální selhání",
+        "liver_failure": "Jaterní selhání",
+        "drug_interaction": "Lékové interakce",
+        "age": "Věk",
+        "other": "Jiné"
+      },
+      "treatment_barriers": {
+        "cost": "Náklady",
+        "access": "Přístup",
+        "compliance": "Dodržování",
+        "side_effects": "Vedlejší účinky",
+        "transportation": "Doprava",
+        "insurance": "Pojištění"
+      },
+      "alert_priorities": {
+        "low": "Nízká",
+        "medium": "Střední",
+        "high": "Vysoká",
+        "critical": "Kritická"
+      },
+      "allergy_categories": {
+        "medication": "Léky",
+        "food": "Potraviny",
+        "environmental": "Prostředí",
+        "latex": "Latex",
+        "contrast": "Kontrastní látka",
+        "other_chemical": "Jiná chemikálie",
+        "biological": "Biologická",
+        "unknown": "Neznámá"
+      },
+      "allergy_severity": {
+        "mild": "Mírná",
+        "moderate": "Střední",
+        "severe": "Závažná",
+        "life_threatening": "Ohrožující život",
+        "fatal": "Smrtelná",
+        "unknown": "Neznámá"
+      },
+      "allergy_status": {
+        "active": "Aktivní",
+        "resolved": "Vyřešená",
+        "inactive": "Neaktivní",
+        "entered_in_error": "Chybně zadána"
+      },
+      "body_systems": {
+        "dermatologic": "Dermatologický",
+        "respiratory": "Respirační",
+        "cardiovascular": "Kardiovaskulární",
+        "gastrointestinal": "Gastrointestinální",
+        "neurologic": "Neurologický",
+        "systemic": "Systémový",
+        "other": "Jiný"
+      },
+      "certainty_levels": {
+        "confirmed": "Potvrzené",
+        "probable": "Pravděpodobné",
+        "possible": "Možné",
+        "unlikely": "Nepravděpodobné",
+        "refuted": "Vyvrácené"
+      },
+      "reaction_types": {
+        "allergic_reaction": "Alergická reakce",
+        "anaphylaxis": "Anafylaxe",
+        "intolerance": "Nesnášenlivost",
+        "side_effect": "Vedlejší účinek",
+        "toxicity": "Toxicita",
+        "unknown": "Neznámá",
+        "pseudoallergy": "Pseudoalergie"
+      },
+      "administration_routes": {
+        "IV": "Intravenózně",
+        "IM": "Intramuskulárně",
+        "inhalation": "Inhalace",
+        "epidural": "Epidurálně",
+        "spinal": "Spinálně",
+        "local": "Místně",
+        "other": "Jinak"
+      },
+      "airway_methods": {
+        "mask": "Maska",
+        "LMA": "LMA",
+        "endotracheal_tube": "Endotracheální trubice",
+        "nasal_cannula": "Nosní kanyla",
+        "face_mask": "Obličejová maska",
+        "other": "Jiný"
+      },
+      "anesthesia_types": {
+        "general": "Celková",
+        "regional": "Regionální",
+        "spinal": "Spinální",
+        "epidural": "Epidurální",
+        "local": "Místní",
+        "sedation": "Sedace",
+        "MAC": "MAC",
+        "combined": "Kombinovaná",
+        "other": "Jiná"
+      },
+      "blood_products": {
+        "PRBC": "Koncentrát erytrocytů",
+        "FFP": "Čerstvě zmrazená plazma",
+        "platelets": "Trombocyty",
+        "cryoprecipitate": "Kryoprecipitát",
+        "whole_blood": "Plná krev"
+      },
+      "disposition_types": {
+        "PACU": "Pooperační jednotka",
+        "ICU": "Jednotka intenzivní péče",
+        "floor": "Standardní oddělení",
+        "home": "Domů",
+        "other": "Jiný"
+      },
+      "intubation_difficulty": {
+        "easy": "Snadná",
+        "moderate": "Střední",
+        "difficult": "Obtížná",
+        "failed": "Neúspěšná"
+      },
+      "adherence_levels": {
+        "excellent": "Vynikající",
+        "good": "Dobrá",
+        "fair": "Přijatelná",
+        "poor": "Špatná",
+        "unknown": "Neznámá"
+      },
+      "interaction_severity": {
+        "mild": "Mírná",
+        "moderate": "Střední",
+        "major": "Závažná",
+        "severe": "Vážná",
+        "life_threatening": "Ohrožující život",
+        "contraindicated": "Kontraindikovaná"
+      },
+      "medication_change_types": {
+        "dose_increase": "Zvýšení dávky",
+        "dose_decrease": "Snížení dávky",
+        "frequency_change": "Změna frekvence",
+        "discontinued": "Ukončeno",
+        "switched": "Změněno",
+        "added": "Přidáno"
+      },
+      "medication_status": {
+        "active": "Aktivní",
+        "completed": "Dokončeno",
+        "discontinued": "Ukončeno",
+        "on_hold": "Pozastaveno",
+        "unknown": "Neznámý"
+      },
+      "mode_of_arrival": {
+        "ambulance": "Sanitka",
+        "walk_in": "Pěšky",
+        "helicopter": "Vrtulník",
+        "police": "Policie",
+        "private_vehicle": "Soukromé vozidlo",
+        "public_transport": "Veřejná doprava"
+      }
     }
   },
   "profile": {

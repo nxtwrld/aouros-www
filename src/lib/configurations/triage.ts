@@ -14,7 +14,7 @@ export default {
       chiefComplaint: {
         type: "string",
         description:
-          "Primary reason for emergency department visit as stated by patient",
+          "Primary reason for emergency department visit as stated by patient. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
       triageLevel: {
         type: "number",
@@ -27,8 +27,15 @@ export default {
       },
       modeOfArrival: {
         type: "string",
-        description:
-          "How patient arrived (ambulance, walk-in, private vehicle, etc.)",
+        enum: [
+          "ambulance",
+          "walk_in",
+          "helicopter",
+          "police",
+          "private_vehicle",
+          "public_transport",
+        ],
+        description: "How patient arrived",
       },
       urgencyClassification: {
         type: "string",
@@ -64,7 +71,8 @@ export default {
       },
       triageNotes: {
         type: "string",
-        description: "Additional triage assessment notes",
+        description:
+          "Additional triage assessment notes. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
     },
     required: ["hasTriage"],

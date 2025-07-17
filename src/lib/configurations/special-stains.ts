@@ -3,21 +3,23 @@ import corePerformer from "./core.performer";
 
 /**
  * Special Stains Schema
- * 
+ *
  * Extracts special stains and immunohistochemistry results.
  * Reuses core components for consistency.
  */
 export default {
   name: "extract_special_stains",
-  description: "Extract comprehensive special stains and immunohistochemistry results including staining patterns, interpretations, and diagnostic significance.",
+  description:
+    "Extract comprehensive special stains and immunohistochemistry results including staining patterns, interpretations, and diagnostic significance.",
   parameters: {
     type: "object",
     properties: {
       hasSpecialStains: {
         type: "boolean",
-        description: "Does this document contain special stains or immunohistochemistry results?",
+        description:
+          "Does this document contain special stains or immunohistochemistry results?",
       },
-      
+
       immunohistochemistry: {
         type: "array",
         description: "Immunohistochemistry stains performed",
@@ -34,7 +36,14 @@ export default {
             },
             result: {
               type: "string",
-              enum: ["positive", "negative", "focal_positive", "weakly_positive", "strongly_positive", "equivocal"],
+              enum: [
+                "positive",
+                "negative",
+                "focal_positive",
+                "weakly_positive",
+                "strongly_positive",
+                "equivocal",
+              ],
               description: "Overall staining result",
             },
             pattern: {
@@ -42,7 +51,17 @@ export default {
               properties: {
                 distribution: {
                   type: "string",
-                  enum: ["diffuse", "focal", "patchy", "circumferential", "basal", "apical", "membranous", "cytoplasmic", "nuclear"],
+                  enum: [
+                    "diffuse",
+                    "focal",
+                    "patchy",
+                    "circumferential",
+                    "basal",
+                    "apical",
+                    "membranous",
+                    "cytoplasmic",
+                    "nuclear",
+                  ],
                   description: "Staining distribution pattern",
                 },
                 intensity: {
@@ -52,11 +71,17 @@ export default {
                 },
                 percentage: {
                   type: "string",
-                  description: "Percentage of cells staining (e.g., '80%', '10-20%')",
+                  description:
+                    "Percentage of cells staining (e.g., '80%', '10-20%')",
                 },
                 subcellularLocation: {
                   type: "string",
-                  enum: ["nuclear", "cytoplasmic", "membranous", "nuclear_and_cytoplasmic"],
+                  enum: [
+                    "nuclear",
+                    "cytoplasmic",
+                    "membranous",
+                    "nuclear_and_cytoplasmic",
+                  ],
                   description: "Subcellular staining location",
                 },
               },
@@ -109,7 +134,7 @@ export default {
           required: ["antibody", "result"],
         },
       },
-      
+
       histochemicalStains: {
         type: "array",
         description: "Histochemical stains performed",
@@ -122,7 +147,8 @@ export default {
             },
             purpose: {
               type: "string",
-              description: "Purpose of staining (collagen, mucin, amyloid, etc.)",
+              description:
+                "Purpose of staining (collagen, mucin, amyloid, etc.)",
             },
             result: {
               type: "string",
@@ -156,7 +182,7 @@ export default {
           required: ["stainName", "result"],
         },
       },
-      
+
       molecularStains: {
         type: "array",
         description: "Molecular/in-situ hybridization studies",
@@ -178,12 +204,19 @@ export default {
             },
             interpretation: {
               type: "string",
-              enum: ["positive", "negative", "amplified", "non_amplified", "equivocal"],
+              enum: [
+                "positive",
+                "negative",
+                "amplified",
+                "non_amplified",
+                "equivocal",
+              ],
               description: "Interpretation",
             },
             ratio: {
               type: "string",
-              description: "Signal ratio if applicable (e.g., HER2/CEP17 ratio)",
+              description:
+                "Signal ratio if applicable (e.g., HER2/CEP17 ratio)",
             },
             copyNumber: {
               type: "string",
@@ -201,7 +234,7 @@ export default {
           required: ["target", "method", "interpretation"],
         },
       },
-      
+
       proliferationMarkers: {
         type: "array",
         description: "Proliferation markers (Ki-67, MIB-1, etc.)",
@@ -223,7 +256,8 @@ export default {
             },
             countingMethod: {
               type: "string",
-              description: "Method used for counting (manual, digital image analysis)",
+              description:
+                "Method used for counting (manual, digital image analysis)",
             },
             hotspots: {
               type: "boolean",
@@ -233,7 +267,7 @@ export default {
           required: ["marker", "percentage"],
         },
       },
-      
+
       panelInterpretation: {
         type: "object",
         description: "Overall interpretation of staining panel",
@@ -258,7 +292,7 @@ export default {
           },
         },
       },
-      
+
       qualityAssessment: {
         type: "object",
         properties: {
@@ -284,7 +318,7 @@ export default {
           },
         },
       },
-      
+
       technicalDetails: {
         type: "object",
         properties: {
@@ -309,11 +343,11 @@ export default {
           },
         },
       },
-      
+
       // Additional performers (primary performer extracted by medical-analysis node)
       // Expected roles: pathologist, pathologist_molecular, lab_technician
       interpretingPathologist: corePerformer,
-      
+
       confidence: {
         type: "number",
         minimum: 0,

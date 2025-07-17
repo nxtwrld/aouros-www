@@ -43,7 +43,7 @@ export default {
                 "contrast",
                 "other_chemical",
                 "biological",
-                "unknown"
+                "unknown",
               ],
               description: "Category of allergen",
             },
@@ -78,7 +78,7 @@ export default {
                 "side_effect",
                 "toxicity",
                 "unknown",
-                "pseudoallergy"
+                "pseudoallergy",
               ],
               description: "Type of adverse reaction",
             },
@@ -90,7 +90,7 @@ export default {
                 "severe",
                 "life_threatening",
                 "fatal",
-                "unknown"
+                "unknown",
               ],
               description: "Severity of allergic reaction",
             },
@@ -113,7 +113,7 @@ export default {
                       "gastrointestinal",
                       "neurologic",
                       "systemic",
-                      "other"
+                      "other",
                     ],
                     description: "Body system affected",
                   },
@@ -130,7 +130,8 @@ export default {
             },
             onsetDate: {
               type: "string",
-              description: "Date when allergy was first identified (ISO format)",
+              description:
+                "Date when allergy was first identified (ISO format)",
             },
             lastReactionDate: {
               type: "string",
@@ -143,37 +144,23 @@ export default {
                 "probable",
                 "possible",
                 "unlikely",
-                "refuted"
+                "refuted",
               ],
               description: "Certainty level of the allergy",
             },
             status: {
               type: "string",
-              enum: [
-                "active",
-                "resolved",
-                "inactive",
-                "entered_in_error"
-              ],
+              enum: ["active", "resolved", "inactive", "entered_in_error"],
               description: "Current status of the allergy",
             },
             clinicalStatus: {
               type: "string",
-              enum: [
-                "active",
-                "inactive",
-                "resolved"
-              ],
+              enum: ["active", "inactive", "resolved"],
               description: "Clinical status as per FHIR standards",
             },
             verificationStatus: {
               type: "string",
-              enum: [
-                "unconfirmed",
-                "confirmed",
-                "refuted",
-                "entered_in_error"
-              ],
+              enum: ["unconfirmed", "confirmed", "refuted", "entered_in_error"],
               description: "Verification status as per FHIR standards",
             },
             exposureRoute: {
@@ -190,7 +177,7 @@ export default {
                   "inhalation",
                   "ingestion",
                   "contact",
-                  "unknown"
+                  "unknown",
                 ],
               },
             },
@@ -203,14 +190,16 @@ export default {
             },
             avoidanceInstructions: {
               type: "string",
-              description: "Specific avoidance instructions for patient",
+              description:
+                "Specific avoidance instructions for patient. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             emergencyTreatment: {
               type: "object",
               properties: {
                 required: {
                   type: "boolean",
-                  description: "Does this allergy require emergency treatment plan?",
+                  description:
+                    "Does this allergy require emergency treatment plan?",
                 },
                 epipenPrescribed: {
                   type: "boolean",
@@ -225,13 +214,15 @@ export default {
                 },
                 emergencyInstructions: {
                   type: "string",
-                  description: "Emergency treatment instructions",
+                  description:
+                    "Emergency treatment instructions. Translate result to the [LANGUAGE] language if the source is in a different language.",
                 },
               },
             },
             alternativeTreatments: {
               type: "array",
-              description: "Alternative medications or treatments that can be safely used",
+              description:
+                "Alternative medications or treatments that can be safely used",
               items: {
                 type: "string",
               },
@@ -252,7 +243,7 @@ export default {
                     "blood_test",
                     "challenge_test",
                     "elimination_diet",
-                    "other"
+                    "other",
                   ],
                   description: "Type of allergy test",
                 },
@@ -277,13 +268,14 @@ export default {
                 "family_member",
                 "healthcare_provider",
                 "previous_records",
-                "other"
+                "other",
               ],
               description: "Who reported this allergy",
             },
             notes: {
               type: "string",
-              description: "Additional notes about the allergy",
+              description:
+                "Additional notes about the allergy. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             // Directly embed core.performer for documenting provider
             documentingProvider: corePerformer,
@@ -306,7 +298,8 @@ export default {
             },
             notes: {
               type: "string",
-              description: "Additional notes about intolerance",
+              description:
+                "Additional notes about intolerance. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
         },
@@ -323,6 +316,24 @@ export default {
             },
             reaction: {
               type: "string",
+              enum: [
+                "rash",
+                "hives",
+                "swelling",
+                "itching",
+                "sneezing",
+                "runny_nose",
+                "watery_eyes",
+                "coughing",
+                "wheezing",
+                "shortness_of_breath",
+                "nausea",
+                "headache",
+                "fatigue",
+                "anaphylaxis",
+                "breathing_difficulty",
+                "other",
+              ],
               description: "Reaction to trigger",
             },
             severity: {
@@ -357,6 +368,24 @@ export default {
             },
             reaction: {
               type: "string",
+              enum: [
+                "rash",
+                "hives",
+                "swelling",
+                "itching",
+                "sneezing",
+                "runny_nose",
+                "watery_eyes",
+                "coughing",
+                "wheezing",
+                "shortness_of_breath",
+                "nausea",
+                "headache",
+                "fatigue",
+                "anaphylaxis",
+                "breathing_difficulty",
+                "other",
+              ],
               description: "Type of reaction",
             },
           },
@@ -370,7 +399,8 @@ export default {
           properties: {
             alert: {
               type: "string",
-              description: "Alert message",
+              description:
+                "Alert message. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             priority: {
               type: "string",
@@ -379,7 +409,8 @@ export default {
             },
             instructions: {
               type: "string",
-              description: "Special instructions related to alert",
+              description:
+                "Special instructions related to alert. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
         },

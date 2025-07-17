@@ -40,7 +40,7 @@ export default {
           "fluoroscopy",
           "angiography",
           "interventional",
-          "other"
+          "other",
         ],
         description: "Type of imaging study performed",
       },
@@ -68,7 +68,14 @@ export default {
           },
           route: {
             type: "string",
-            enum: ["intravenous", "oral", "rectal", "intra_articular", "intrathecal", "other"],
+            enum: [
+              "intravenous",
+              "oral",
+              "rectal",
+              "intra_articular",
+              "intrathecal",
+              "other",
+            ],
             description: "Route of contrast administration",
           },
           volume: {
@@ -86,7 +93,14 @@ export default {
         properties: {
           quality: {
             type: "string",
-            enum: ["excellent", "good", "adequate", "suboptimal", "poor", "non_diagnostic"],
+            enum: [
+              "excellent",
+              "good",
+              "adequate",
+              "suboptimal",
+              "poor",
+              "non_diagnostic",
+            ],
             description: "Overall technical quality of study",
           },
           limitations: {
@@ -108,7 +122,7 @@ export default {
                 "susceptibility_artifact",
                 "partial_volume",
                 "breathing_artifact",
-                "other"
+                "other",
               ],
             },
           },
@@ -116,7 +130,8 @@ export default {
       },
       findings: {
         type: "array",
-        description: "Detailed imaging findings organized by anatomical system or region",
+        description:
+          "Detailed imaging findings organized by anatomical system or region",
         items: {
           type: "object",
           properties: {
@@ -165,7 +180,13 @@ export default {
                 },
                 margins: {
                   type: "string",
-                  enum: ["well_defined", "ill_defined", "irregular", "smooth", "lobulated"],
+                  enum: [
+                    "well_defined",
+                    "ill_defined",
+                    "irregular",
+                    "smooth",
+                    "lobulated",
+                  ],
                   description: "Margin characteristics",
                 },
               },
@@ -197,12 +218,25 @@ export default {
             },
             significance: {
               type: "string",
-              enum: ["normal", "incidental", "clinically_significant", "urgent", "critical"],
+              enum: [
+                "normal",
+                "incidental",
+                "clinically_significant",
+                "urgent",
+                "critical",
+              ],
               description: "Clinical significance of finding",
             },
             changeFromPrior: {
               type: "string",
-              enum: ["new", "stable", "improved", "worse", "resolved", "not_compared"],
+              enum: [
+                "new",
+                "stable",
+                "improved",
+                "worse",
+                "resolved",
+                "not_compared",
+              ],
               description: "Change compared to prior imaging",
             },
             likelyDifferential: {
@@ -279,7 +313,8 @@ export default {
       },
       emergentFindings: {
         type: "array",
-        description: "Urgent or emergent findings requiring immediate attention",
+        description:
+          "Urgent or emergent findings requiring immediate attention",
         items: {
           type: "object",
           properties: {
@@ -332,7 +367,8 @@ export default {
       },
       impression: {
         type: "string",
-        description: "Overall radiological impression/summary. Translate to [LANGUAGE] if needed.",
+        description:
+          "Overall radiological impression/summary. Translate to [LANGUAGE] if needed.",
       },
       clinicalIndication: {
         type: "string",

@@ -9,7 +9,7 @@ export default {
       title: {
         type: "string",
         description:
-          "Title of the observation. Respect the original report language. Generate a title based on the contents of the image. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+          "Title of the observation. Respect the original report language. Generate a title based on the contents of the image. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
       bodyParts: {
         type: "array",
@@ -26,17 +26,17 @@ export default {
             status: {
               type: "string",
               description:
-                "Observed status of the body part. Leave is empty if the status is not available in the original report. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+                "Observed status of the body part. Leave is empty if the status is not available in the original report. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             diagnosis: {
               type: "string",
               description:
-                "Diagnosis of the body part. Leave empty if the diagnosis is not available. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+                "Diagnosis of the body part. Leave empty if the diagnosis is not available. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             treatment: {
               type: "string",
               description:
-                "Performed or suggested treatment of the body part. Leave empty if the treatment is not available. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+                "Performed or suggested treatment of the body part. Leave empty if the treatment is not available. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
           required: ["identification", "status", "diagnosis", "treatment"],

@@ -39,6 +39,14 @@ export default {
         properties: {
           technique: {
             type: "string",
+            enum: [
+              "general",
+              "spinal",
+              "epidural",
+              "local",
+              "regional",
+              "sedation",
+            ],
             description: "Specific anesthesia technique used",
           },
           inductionTime: {
@@ -134,8 +142,13 @@ export default {
             properties: {
               type: {
                 type: "string",
-                description:
-                  "Type of crystalloid (e.g., Normal Saline, Lactated Ringer's)",
+                enum: [
+                  "normal_saline",
+                  "lactated_ringers",
+                  "dextrose",
+                  "plasmalyte",
+                ],
+                description: "Type of crystalloid",
               },
               volume: {
                 type: "string",
@@ -148,6 +161,7 @@ export default {
             properties: {
               type: {
                 type: "string",
+                enum: ["albumin", "hetastarch", "dextran", "gelatin"],
                 description: "Type of colloid",
               },
               volume: {
@@ -198,7 +212,8 @@ export default {
           properties: {
             complication: {
               type: "string",
-              description: "Description of complication",
+              description:
+                "Description of complication. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             time: {
               type: "string",

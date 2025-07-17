@@ -29,16 +29,25 @@ export default {
       },
       dischargeDisposition: {
         type: "string",
-        description:
-          "Where the patient was discharged to (home, rehabilitation facility, nursing home, etc.)",
+        enum: [
+          "home",
+          "skilled_nursing",
+          "rehabilitation",
+          "hospice",
+          "transferred",
+          "left_ama",
+        ],
+        description: "Where the patient was discharged to",
       },
       admissionReason: {
         type: "string",
-        description: "Primary reason for hospital admission",
+        description:
+          "Primary reason for hospital admission. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
       dischargeSummary: {
         type: "string",
-        description: "Summary of hospital stay and treatment provided",
+        description:
+          "Summary of hospital stay and treatment provided. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
     },
     required: ["hasAdmission"],

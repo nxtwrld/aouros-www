@@ -97,7 +97,7 @@ export default {
             notes: {
               type: "string",
               description:
-                "Additional notes and instructions about the medication. If no relevant information is available, leave empty. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+                "Additional notes and instructions about the medication. If no relevant information is available, leave empty. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
           required: [

@@ -33,7 +33,7 @@ export default {
           "3d_echo",
           "dobutamine_stress",
           "exercise_stress",
-          "other"
+          "other",
         ],
         description: "Type of echocardiographic study",
       },
@@ -48,7 +48,7 @@ export default {
                 description: "Left ventricular end-diastolic diameter (mm)",
               },
               lvesd: {
-                type: "number", 
+                type: "number",
                 description: "Left ventricular end-systolic diameter (mm)",
               },
               lvpwt: {
@@ -83,7 +83,13 @@ export default {
               },
               wallMotion: {
                 type: "string",
-                enum: ["normal", "hypokinetic", "akinetic", "dyskinetic", "aneurysmal"],
+                enum: [
+                  "normal",
+                  "hypokinetic",
+                  "akinetic",
+                  "dyskinetic",
+                  "aneurysmal",
+                ],
                 description: "Overall wall motion assessment",
               },
               wallMotionAbnormalities: {
@@ -111,7 +117,13 @@ export default {
             properties: {
               grade: {
                 type: "string",
-                enum: ["normal", "grade_1", "grade_2", "grade_3", "indeterminate"],
+                enum: [
+                  "normal",
+                  "grade_1",
+                  "grade_2",
+                  "grade_3",
+                  "indeterminate",
+                ],
                 description: "Diastolic dysfunction grade",
               },
               eVelocity: {
@@ -147,12 +159,22 @@ export default {
         properties: {
           size: {
             type: "string",
-            enum: ["normal", "mildly_dilated", "moderately_dilated", "severely_dilated"],
+            enum: [
+              "normal",
+              "mildly_dilated",
+              "moderately_dilated",
+              "severely_dilated",
+            ],
             description: "Right ventricular size",
           },
           function: {
             type: "string",
-            enum: ["normal", "mildly_reduced", "moderately_reduced", "severely_reduced"],
+            enum: [
+              "normal",
+              "mildly_reduced",
+              "moderately_reduced",
+              "severely_reduced",
+            ],
             description: "Right ventricular systolic function",
           },
           tapse: {
@@ -170,7 +192,12 @@ export default {
         properties: {
           size: {
             type: "string",
-            enum: ["normal", "mildly_dilated", "moderately_dilated", "severely_dilated"],
+            enum: [
+              "normal",
+              "mildly_dilated",
+              "moderately_dilated",
+              "severely_dilated",
+            ],
             description: "Left atrial size",
           },
           volume: {
@@ -188,7 +215,12 @@ export default {
         properties: {
           size: {
             type: "string",
-            enum: ["normal", "mildly_dilated", "moderately_dilated", "severely_dilated"],
+            enum: [
+              "normal",
+              "mildly_dilated",
+              "moderately_dilated",
+              "severely_dilated",
+            ],
             description: "Right atrial size",
           },
         },
@@ -334,7 +366,13 @@ export default {
             },
             significance: {
               type: "string",
-              enum: ["normal_variant", "mild", "moderate", "severe", "clinical_correlation"],
+              enum: [
+                "normal_variant",
+                "mild",
+                "moderate",
+                "severe",
+                "clinical_correlation",
+              ],
               description: "Clinical significance",
             },
           },
@@ -342,14 +380,14 @@ export default {
       },
       // Embed core.signals for associated vital signs (measurements only)
       associatedVitalSigns: coreSignals,
-      
+
       // Additional performers (primary performer extracted by medical-analysis node)
       // Expected roles: cardiologist, cardiologist_interventional, cardiologist_electrophysiology
       interpretingCardiologist: corePerformer,
-      
+
       // Expected roles: echo_technician, ultrasound_technician
       echoTechnician: corePerformer,
-      
+
       clinicalContext: {
         type: "string",
         description: "Clinical context for this echocardiogram study",
@@ -407,7 +445,8 @@ export default {
       },
       summary: {
         type: "string",
-        description: "Overall echocardiographic summary. Translate to [LANGUAGE] if needed.",
+        description:
+          "Overall echocardiographic summary. Translate to [LANGUAGE] if needed.",
       },
       recommendedFollowUp: {
         type: "array",

@@ -3,7 +3,7 @@ import corePerformer from "./core.performer";
 
 /**
  * Performer Extraction Schema
- * 
+ *
  * Focused node for extracting healthcare provider information from medical documents.
  */
 export default {
@@ -14,16 +14,17 @@ export default {
     type: "object",
     properties: {
       performer: corePerformer,
-      
+
       // Processing metadata
       processingConfidence: {
         type: "number",
         description: "Overall confidence in performer extraction (0.0 to 1.0)",
       },
-      
+
       processingNotes: {
         type: "string",
-        description: "Any notes about the performer extraction process or ambiguities encountered",
+        description:
+          "Any notes about the performer extraction process or ambiguities encountered",
       },
     },
     required: ["performer", "processingConfidence"],

@@ -5,19 +5,21 @@ import corePerformer from "./core.performer";
 
 /**
  * Tumor Characteristics Schema
- * 
+ *
  * Extracts tumor staging, grading, and cancer characteristics.
  * Reuses core components for consistency.
  */
 export default {
   name: "extract_tumor_characteristics",
-  description: "Extract comprehensive tumor staging, grading, and cancer characteristics from oncology reports and pathology documents.",
+  description:
+    "Extract comprehensive tumor staging, grading, and cancer characteristics from oncology reports and pathology documents.",
   parameters: {
     type: "object",
     properties: {
       hasTumorCharacteristics: {
         type: "boolean",
-        description: "Does this document contain tumor staging, grading, or cancer characteristics?",
+        description:
+          "Does this document contain tumor staging, grading, or cancer characteristics?",
       },
       primaryTumor: {
         type: "object",
@@ -47,7 +49,8 @@ export default {
             properties: {
               type: {
                 type: "string",
-                description: "Histological type (e.g., adenocarcinoma, squamous cell)",
+                description:
+                  "Histological type (e.g., adenocarcinoma, squamous cell)",
               },
               grade: {
                 type: "string",
@@ -56,7 +59,12 @@ export default {
               },
               differentiation: {
                 type: "string",
-                enum: ["well_differentiated", "moderately_differentiated", "poorly_differentiated", "undifferentiated"],
+                enum: [
+                  "well_differentiated",
+                  "moderately_differentiated",
+                  "poorly_differentiated",
+                  "undifferentiated",
+                ],
                 description: "Tumor differentiation",
               },
             },
@@ -76,7 +84,7 @@ export default {
                 description: "T stage (primary tumor)",
               },
               n: {
-                type: "string", 
+                type: "string",
                 description: "N stage (lymph nodes)",
               },
               m: {
@@ -85,7 +93,22 @@ export default {
               },
               stage: {
                 type: "string",
-                enum: ["0", "I", "IA", "IB", "II", "IIA", "IIB", "III", "IIIA", "IIIB", "IIIC", "IV", "IVA", "IVB"],
+                enum: [
+                  "0",
+                  "I",
+                  "IA",
+                  "IB",
+                  "II",
+                  "IIA",
+                  "IIB",
+                  "III",
+                  "IIIA",
+                  "IIIB",
+                  "IIIC",
+                  "IV",
+                  "IVA",
+                  "IVB",
+                ],
                 description: "Overall stage group",
               },
             },
@@ -188,7 +211,7 @@ export default {
       // Additional performers (primary performer extracted by medical-analysis node)
       // Expected roles: pathologist, pathologist_molecular, pathologist_forensic
       reportingPathologist: corePerformer,
-      
+
       // Expected roles: oncologist, oncologist_medical, oncologist_radiation, oncologist_surgical
       consultingOncologist: corePerformer,
       confidence: {

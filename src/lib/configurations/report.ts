@@ -6,7 +6,7 @@ import corePatient from "./core.patient";
 
 /**
  * Core Medical Report Schema
- * 
+ *
  * Main medical analysis schema that extracts core medical information
  * from any medical document. Reuses core components to avoid duplication.
  */
@@ -39,12 +39,12 @@ export default {
       title: {
         type: "string",
         description:
-          "Title of the observation.  Provide specific context from the report to clearly identify the issues and topic of the report and ideally the most affected boty part or specialization. Use concise and clear language to describe the report subject. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+          "Title of the observation.  Provide specific context from the report to clearly identify the issues and topic of the report and ideally the most affected boty part or specialization. Use concise and clear language to describe the report subject. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
       summary: {
         type: "string",
         description:
-          "Summary and findings of the observation in natural language.  Enhance comprehension by providing a clear and concise summary. Expand all abbreviations and acronyms. Highlight abnormal findings. Leave out patient personal information - leave just summary of the diagnosis and treatment. Use markdown format to empahises important findings. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+          "Summary and findings of the observation in natural language.  Enhance comprehension by providing a clear and concise summary. Expand all abbreviations and acronyms. Highlight abnormal findings. Leave out patient personal information - leave just summary of the diagnosis and treatment. Use markdown format to empahises important findings. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
       content: {
         type: "string",
@@ -60,7 +60,7 @@ export default {
       recommendations: {
         type: "array",
         description:
-          "Recommendation contained within the the report spit into individual logical points (if none leave blank array). Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+          "Recommendation contained within the the report spit into individual logical points (if none leave blank array). Translate result to the [LANGUAGE] language if the source is in a different language.",
         items: {
           type: "object",
           properties: {
@@ -72,7 +72,7 @@ export default {
             description: {
               type: "string",
               description:
-                "A record for each individual recommendation contained within the the report. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+                "A record for each individual recommendation contained within the the report. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
           required: ["urgency", "description"],
@@ -83,19 +83,19 @@ export default {
         description:
           "Date of the report. Format: YYYY-MM-DD HH:MM:SS or just YYYY-MM-DD if no specific time is available. Leave empty if the date is not available.",
       },
-      
+
       // Core medical components - reuse shared schemas
       diagnosis: coreDiagnosis,
-      bodyParts: coreBodyParts, 
+      bodyParts: coreBodyParts,
       performer: corePerformer,
       patient: corePatient,
-      
+
       // Core medical flags for other nodes
       isMedical: {
         type: "boolean",
         description: "Is this a medical document?",
       },
-      
+
       confidence: {
         type: "number",
         minimum: 0,
@@ -105,7 +105,7 @@ export default {
     },
     required: [
       "category",
-      "title", 
+      "title",
       "summary",
       "content",
       "date",

@@ -105,7 +105,7 @@
                         <li class="panel medication-active">
                             <div class="medication-header">
                                 <h5 class="medication-name">{medication.medicationName}</h5>
-                                <span class="medication-status {getStatusClass(medication.status)}">{medication.status || 'active'}</span>
+                                <span class="medication-status {getStatusClass(medication.status)}">{$t(`medical.enums.medication_status.${medication.status || 'active'}`)}</span>
                             </div>
                             
                             <div class="item-details">
@@ -147,7 +147,7 @@
                                 {#if medication.adherence}
                                     <div class="detail-item">
                                         <span class="label">{$t('report.adherence')}:</span>
-                                        <span class="value {getAdherenceClass(medication.adherence)}">{medication.adherence}</span>
+                                        <span class="value {getAdherenceClass(medication.adherence)}">{$t(`medical.enums.adherence_levels.${medication.adherence}`)}</span>
                                     </div>
                                 {/if}
                             </div>
@@ -238,7 +238,7 @@
                         <li class="panel {getChangeTypeClass(change.changeType)}">
                             <div class="change-header">
                                 <span class="medication-name">{change.medicationName}</span>
-                                <span class="change-type">{change.changeType.replace('_', ' ')}</span>
+                                <span class="change-type">{$t(`medical.enums.medication_change_types.${change.changeType}`)}</span>
                             </div>
                             
                             {#if change.previousDose || change.newDose}
@@ -256,7 +256,7 @@
                             {#if change.reason}
                                 <div class="change-reason">
                                     <span class="label">{$t('report.reason')}:</span>
-                                    <span class="value">{change.reason}</span>
+                                    <span class="value">{$t(`medical.enums.medication_change_reasons.${change.reason}`)}</span>
                                 </div>
                             {/if}
                         </li>
@@ -275,7 +275,7 @@
                                 <span class="date-discontinued">{discontinued.dateDiscontinued}</span>
                             {/if}
                             {#if discontinued.reasonDiscontinued}
-                                <span class="reason">({discontinued.reasonDiscontinued})</span>
+                                <span class="reason">({$t(`medical.enums.discontinuation_reasons.${discontinued.reasonDiscontinued}`)})</span>
                             {/if}
                         </li>
                     {/each}
@@ -294,7 +294,7 @@
                                 <span class="drug2">{interaction.drug2}</span>
                             </div>
                             <div class="interaction-details">
-                                <span class="severity {getSeverityClass(interaction.severity)}">{interaction.severity}</span>
+                                <span class="severity {getSeverityClass(interaction.severity)}">{$t(`medical.enums.interaction_severity.${interaction.severity}`)}</span>
                                 {#if interaction.effect}
                                     <span class="effect">{interaction.effect}</span>
                                 {/if}
@@ -313,7 +313,7 @@
                             <span class="medication">{allergy.medication}</span>
                             <span class="reaction">{allergy.reaction}</span>
                             {#if allergy.severity}
-                                <span class="severity {getSeverityClass(allergy.severity)}">{allergy.severity}</span>
+                                <span class="severity {getSeverityClass(allergy.severity)}">{$t(`medical.enums.allergy_severity.${allergy.severity}`)}</span>
                             {/if}
                         </li>
                     {/each}
@@ -329,7 +329,7 @@
                         {#if adherenceAssessment.overallAdherence}
                             <div class="overall-adherence">
                                 <span class="label">{$t('report.overall-adherence')}:</span>
-                                <span class="value {getAdherenceClass(adherenceAssessment.overallAdherence)}">{adherenceAssessment.overallAdherence}</span>
+                                <span class="value {getAdherenceClass(adherenceAssessment.overallAdherence)}">{$t(`medical.enums.adherence_levels.${adherenceAssessment.overallAdherence}`)}</span>
                             </div>
                         {/if}
                         
@@ -338,7 +338,7 @@
                                 <span class="label">{$t('report.barriers')}:</span>
                                 <ul>
                                     {#each adherenceAssessment.barriers as barrier}
-                                        <li>{barrier}</li>
+                                        <li>{$t(`medical.enums.adherence_barriers.${barrier}`)}</li>
                                     {/each}
                                 </ul>
                             </div>

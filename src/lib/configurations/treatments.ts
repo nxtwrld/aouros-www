@@ -5,21 +5,23 @@ import corePerformer from "./core.performer";
 
 /**
  * Treatments Schema
- * 
+ *
  * Extracts treatment protocols and therapeutic interventions.
  * Reuses core components for consistency.
  */
 export default {
   name: "extract_treatments",
-  description: "Extract comprehensive treatment protocols and therapeutic interventions including current treatments, past treatments, and treatment responses.",
+  description:
+    "Extract comprehensive treatment protocols and therapeutic interventions including current treatments, past treatments, and treatment responses.",
   parameters: {
     type: "object",
     properties: {
       hasTreatments: {
         type: "boolean",
-        description: "Does this document contain treatment protocols or therapeutic interventions?",
+        description:
+          "Does this document contain treatment protocols or therapeutic interventions?",
       },
-      
+
       currentTreatments: {
         type: "array",
         description: "Currently active treatments",
@@ -28,13 +30,14 @@ export default {
           properties: {
             treatmentName: {
               type: "string",
-              description: "Name or description of treatment",
+              description:
+                "Name or description of treatment. Use standardized terminology from the [LANGUAGE] localization set.",
             },
             category: {
               type: "string",
               enum: [
                 "medication",
-                "chemotherapy", 
+                "chemotherapy",
                 "radiation_therapy",
                 "immunotherapy",
                 "surgery",
@@ -44,7 +47,7 @@ export default {
                 "diet_therapy",
                 "oxygen_therapy",
                 "dialysis",
-                "other"
+                "other",
               ],
               description: "Treatment category",
             },
@@ -52,7 +55,7 @@ export default {
             indication: coreDiagnosis,
             // Reuse core.bodyParts for target areas
             targetAreas: coreBodyParts,
-            
+
             medications: {
               type: "array",
               description: "Medications involved in treatment",
@@ -73,7 +76,16 @@ export default {
                   },
                   route: {
                     type: "string",
-                    enum: ["oral", "IV", "IM", "SC", "topical", "inhalation", "rectal", "other"],
+                    enum: [
+                      "oral",
+                      "IV",
+                      "IM",
+                      "SC",
+                      "topical",
+                      "inhalation",
+                      "rectal",
+                      "other",
+                    ],
                     description: "Route of administration",
                   },
                   duration: {
@@ -84,7 +96,7 @@ export default {
                 required: ["name"],
               },
             },
-            
+
             procedures: {
               type: "array",
               description: "Procedures involved in treatment",
@@ -106,7 +118,7 @@ export default {
                 },
               },
             },
-            
+
             startDate: {
               type: "string",
               description: "Treatment start date (ISO format)",
@@ -117,19 +129,32 @@ export default {
             },
             status: {
               type: "string",
-              enum: ["active", "completed", "discontinued", "on_hold", "planned"],
+              enum: [
+                "active",
+                "completed",
+                "discontinued",
+                "on_hold",
+                "planned",
+              ],
               description: "Treatment status",
             },
-            
+
             // Expected roles: oncologist, surgeon, anesthesiologist, cardiologist, other_specialist
             treatingProvider: corePerformer,
-            
+
             response: {
               type: "object",
               properties: {
                 effectiveness: {
                   type: "string",
-                  enum: ["excellent", "good", "partial", "poor", "no_response", "too_early"],
+                  enum: [
+                    "excellent",
+                    "good",
+                    "partial",
+                    "poor",
+                    "no_response",
+                    "too_early",
+                  ],
                   description: "Treatment effectiveness",
                 },
                 sideEffects: {
@@ -140,7 +165,8 @@ export default {
                     properties: {
                       effect: {
                         type: "string",
-                        description: "Side effect description",
+                        description:
+                          "Side effect description. Translate result to the [LANGUAGE] language if the source is in a different language.",
                       },
                       severity: {
                         type: "string",
@@ -165,7 +191,7 @@ export default {
                 },
               },
             },
-            
+
             modifications: {
               type: "array",
               description: "Treatment modifications made",
@@ -178,7 +204,8 @@ export default {
                   },
                   change: {
                     type: "string",
-                    description: "Description of change made",
+                    description:
+                      "Description of change made. Translate result to the [LANGUAGE] language if the source is in a different language.",
                   },
                   reason: {
                     type: "string",
@@ -191,7 +218,7 @@ export default {
           required: ["treatmentName", "category", "status"],
         },
       },
-      
+
       pastTreatments: {
         type: "array",
         description: "Previously completed or discontinued treatments",
@@ -200,13 +227,14 @@ export default {
           properties: {
             treatmentName: {
               type: "string",
-              description: "Name or description of treatment",
+              description:
+                "Name or description of treatment. Use standardized terminology from the [LANGUAGE] localization set.",
             },
             category: {
               type: "string",
               enum: [
                 "medication",
-                "chemotherapy", 
+                "chemotherapy",
                 "radiation_therapy",
                 "immunotherapy",
                 "surgery",
@@ -216,13 +244,13 @@ export default {
                 "diet_therapy",
                 "oxygen_therapy",
                 "dialysis",
-                "other"
+                "other",
               ],
               description: "Treatment category",
             },
             // Reuse core.diagnosis for indication
             indication: coreDiagnosis,
-            
+
             startDate: {
               type: "string",
               description: "Treatment start date (ISO format)",
@@ -235,7 +263,7 @@ export default {
               type: "string",
               description: "Actual treatment duration",
             },
-            
+
             outcome: {
               type: "object",
               properties: {
@@ -246,7 +274,8 @@ export default {
                 },
                 reasonForDiscontinuation: {
                   type: "string",
-                  description: "Reason treatment was stopped",
+                  description:
+                    "Reason treatment was stopped. Use standardized terminology from the [LANGUAGE] localization set.",
                 },
                 complications: {
                   type: "array",
@@ -257,14 +286,14 @@ export default {
                 },
               },
             },
-            
+
             // Expected roles: oncologist, surgeon, anesthesiologist, cardiologist, other_specialist
             treatingProvider: corePerformer,
           },
           required: ["treatmentName", "category"],
         },
       },
-      
+
       plannedTreatments: {
         type: "array",
         description: "Future planned treatments",
@@ -279,7 +308,7 @@ export default {
               type: "string",
               enum: [
                 "medication",
-                "chemotherapy", 
+                "chemotherapy",
                 "radiation_therapy",
                 "immunotherapy",
                 "surgery",
@@ -289,13 +318,13 @@ export default {
                 "diet_therapy",
                 "oxygen_therapy",
                 "dialysis",
-                "other"
+                "other",
               ],
               description: "Treatment category",
             },
             // Reuse core.diagnosis for indication
             indication: coreDiagnosis,
-            
+
             plannedStartDate: {
               type: "string",
               description: "Planned start date (ISO format)",
@@ -316,14 +345,14 @@ export default {
                 type: "string",
               },
             },
-            
+
             // Expected roles: oncologist, surgeon, anesthesiologist, cardiologist, other_specialist
             plannedProvider: corePerformer,
           },
           required: ["treatmentName", "category"],
         },
       },
-      
+
       treatmentGoals: {
         type: "array",
         description: "Overall treatment goals",
@@ -332,11 +361,18 @@ export default {
           properties: {
             goal: {
               type: "string",
-              description: "Treatment goal description",
+              description:
+                "Treatment goal description. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             category: {
               type: "string",
-              enum: ["curative", "palliative", "symptomatic", "preventive", "rehabilitative"],
+              enum: [
+                "curative",
+                "palliative",
+                "symptomatic",
+                "preventive",
+                "rehabilitative",
+              ],
               description: "Goal category",
             },
             timeline: {
@@ -350,7 +386,7 @@ export default {
           },
         },
       },
-      
+
       treatmentBarriers: {
         type: "array",
         description: "Barriers to treatment",
@@ -359,11 +395,19 @@ export default {
           properties: {
             barrier: {
               type: "string",
-              description: "Description of barrier",
+              description:
+                "Description of barrier. Use standardized terminology from the [LANGUAGE] localization set.",
             },
             type: {
               type: "string",
-              enum: ["financial", "access", "compliance", "medical", "social", "psychological"],
+              enum: [
+                "financial",
+                "access",
+                "compliance",
+                "medical",
+                "social",
+                "psychological",
+              ],
               description: "Type of barrier",
             },
             impact: {
@@ -373,12 +417,13 @@ export default {
             },
             intervention: {
               type: "string",
-              description: "Intervention to address barrier",
+              description:
+                "Intervention to address barrier. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
         },
       },
-      
+
       coordinationOfCare: {
         type: "object",
         description: "Care coordination information",
@@ -418,7 +463,7 @@ export default {
           },
         },
       },
-      
+
       confidence: {
         type: "number",
         minimum: 0,

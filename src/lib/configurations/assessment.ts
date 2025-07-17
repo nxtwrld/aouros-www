@@ -7,38 +7,41 @@ import coreSignals from "./core.signals";
 
 /**
  * Assessment Schema
- * 
+ *
  * Extracts clinical assessment and specialist evaluation.
  * Reuses core components for consistency.
  */
 export default {
   name: "extract_assessment",
-  description: "Extract comprehensive clinical assessment and specialist evaluation including clinical impressions, differential diagnoses, and professional assessments.",
+  description:
+    "Extract comprehensive clinical assessment and specialist evaluation including clinical impressions, differential diagnoses, and professional assessments.",
   parameters: {
     type: "object",
     properties: {
       hasAssessment: {
         type: "boolean",
-        description: "Does this document contain clinical assessment or specialist evaluation?",
+        description:
+          "Does this document contain clinical assessment or specialist evaluation?",
       },
-      
+
       clinicalImpression: {
         type: "object",
         description: "Primary clinical impression",
         properties: {
           primaryImpression: {
             type: "string",
-            description: "Primary clinical impression or working diagnosis",
+            description:
+              "Primary clinical impression or working diagnosis. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
           // Reuse core.diagnosis for structured diagnosis
           primaryDiagnosis: coreDiagnosis,
-          
+
           confidence: {
             type: "string",
             enum: ["high", "moderate", "low", "uncertain"],
             description: "Clinician confidence in primary impression",
           },
-          
+
           supportingEvidence: {
             type: "array",
             description: "Evidence supporting the primary impression",
@@ -46,17 +49,18 @@ export default {
               type: "string",
             },
           },
-          
+
           contradictingEvidence: {
             type: "array",
-            description: "Evidence that contradicts or complicates the impression",
+            description:
+              "Evidence that contradicts or complicates the impression",
             items: {
               type: "string",
             },
           },
         },
       },
-      
+
       differentialDiagnoses: {
         type: "array",
         description: "Differential diagnosis considerations",
@@ -95,7 +99,7 @@ export default {
           required: ["diagnosis", "likelihood"],
         },
       },
-      
+
       systemsAssessment: {
         type: "array",
         description: "Assessment by body system",
@@ -106,7 +110,8 @@ export default {
             system: coreBodyParts,
             assessment: {
               type: "string",
-              description: "Assessment of this system",
+              description:
+                "Assessment of this system. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             abnormalities: {
               type: "array",
@@ -123,7 +128,7 @@ export default {
           },
         },
       },
-      
+
       riskAssessment: {
         type: "object",
         description: "Clinical risk assessment",
@@ -141,7 +146,8 @@ export default {
               properties: {
                 risk: {
                   type: "string",
-                  description: "Risk description",
+                  description:
+                    "Risk description. Translate result to the [LANGUAGE] language if the source is in a different language.",
                 },
                 probability: {
                   type: "string",
@@ -155,7 +161,8 @@ export default {
                 },
                 timeframe: {
                   type: "string",
-                  description: "Timeframe for potential risk",
+                  description:
+                    "Timeframe for potential risk. Translate result to the [LANGUAGE] language if the source is in a different language.",
                 },
                 mitigationStrategies: {
                   type: "array",
@@ -169,11 +176,12 @@ export default {
           },
           comorbidityImpact: {
             type: "string",
-            description: "Impact of existing comorbidities on assessment",
+            description:
+              "Impact of existing comorbidities on assessment. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
         },
       },
-      
+
       prognosticAssessment: {
         type: "object",
         description: "Prognosis and outlook",
@@ -196,7 +204,8 @@ export default {
               properties: {
                 factor: {
                   type: "string",
-                  description: "Prognostic factor",
+                  description:
+                    "Prognostic factor. Translate result to the [LANGUAGE] language if the source is in a different language.",
                 },
                 impact: {
                   type: "string",
@@ -208,7 +217,8 @@ export default {
           },
           expectedCourse: {
             type: "string",
-            description: "Expected clinical course",
+            description:
+              "Expected clinical course. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
           potentialComplications: {
             type: "array",
@@ -219,7 +229,7 @@ export default {
           },
         },
       },
-      
+
       functionalAssessment: {
         type: "object",
         description: "Functional status assessment",
@@ -268,7 +278,12 @@ export default {
             properties: {
               status: {
                 type: "string",
-                enum: ["normal", "mild_impairment", "moderate_impairment", "severe_impairment"],
+                enum: [
+                  "normal",
+                  "mild_impairment",
+                  "moderate_impairment",
+                  "severe_impairment",
+                ],
                 description: "Cognitive function status",
               },
               specificDeficits: {
@@ -282,7 +297,7 @@ export default {
           },
         },
       },
-      
+
       specialistConsultation: {
         type: "object",
         description: "Specialist consultation details",
@@ -293,12 +308,13 @@ export default {
           },
           // Expected roles: oncologist, cardiologist, neurologist, psychiatrist, other_specialist
           consultant: corePerformer,
-          
+
           consultationReason: {
             type: "string",
-            description: "Reason for specialist consultation",
+            description:
+              "Reason for specialist consultation. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
-          
+
           questionToConsultant: {
             type: "array",
             description: "Specific questions posed to consultant",
@@ -306,53 +322,73 @@ export default {
               type: "string",
             },
           },
-          
+
           consultantOpinion: {
             type: "string",
-            description: "Consultant's professional opinion",
+            description:
+              "Consultant's professional opinion. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
-          
+
           agreementWithReferring: {
             type: "string",
-            enum: ["full_agreement", "partial_agreement", "disagreement", "alternative_opinion"],
+            enum: [
+              "full_agreement",
+              "partial_agreement",
+              "disagreement",
+              "alternative_opinion",
+            ],
             description: "Level of agreement with referring provider",
           },
         },
       },
-      
+
       // Reuse core.signals for assessment-related measurements
       assessmentMeasures: coreSignals,
-      
+
       // Reuse core.recommendations for assessment-based recommendations
       recommendations: coreRecommendations,
-      
+
       // Additional performers (primary performer extracted by medical-analysis node)
       // Expected roles: attending_physician, resident_physician, fellow, consultant, other_specialist
       assessingPhysician: corePerformer,
-      
+
       assessmentDate: {
         type: "string",
         description: "Date of assessment (ISO format)",
       },
-      
+
       levelOfCare: {
         type: "string",
-        enum: ["outpatient", "observation", "inpatient", "ICU", "step_down", "long_term_care"],
+        enum: [
+          "outpatient",
+          "observation",
+          "inpatient",
+          "ICU",
+          "step_down",
+          "long_term_care",
+        ],
         description: "Recommended level of care",
       },
-      
+
       disposition: {
         type: "string",
-        enum: ["discharge_home", "transfer", "admission", "observation", "follow_up", "urgent_referral"],
+        enum: [
+          "discharge_home",
+          "transfer",
+          "admission",
+          "observation",
+          "follow_up",
+          "urgent_referral",
+        ],
         description: "Patient disposition based on assessment",
       },
-      
+
       urgency: {
         type: "string",
         enum: ["routine", "urgent", "stat", "emergent"],
         description: "Clinical urgency of situation",
       },
-      
+
       qualityOfAssessment: {
         type: "object",
         properties: {
@@ -377,7 +413,7 @@ export default {
           },
         },
       },
-      
+
       confidence: {
         type: "number",
         minimum: 0,

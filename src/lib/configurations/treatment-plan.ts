@@ -6,13 +6,14 @@ import coreBodyParts from "./core.bodyParts";
 
 /**
  * Treatment Plan Schema
- * 
+ *
  * Extracts structured treatment plans including chemotherapy, radiation, surgery.
  * Reuses core components for consistency.
  */
 export default {
   name: "extract_treatment_plan",
-  description: "Extract comprehensive structured treatment plans including chemotherapy protocols, radiation therapy, surgical plans, and multimodal treatment approaches.",
+  description:
+    "Extract comprehensive structured treatment plans including chemotherapy protocols, radiation therapy, surgical plans, and multimodal treatment approaches.",
   parameters: {
     type: "object",
     properties: {
@@ -22,12 +23,19 @@ export default {
       },
       treatmentIntent: {
         type: "string",
-        enum: ["curative", "palliative", "adjuvant", "neoadjuvant", "maintenance", "supportive"],
+        enum: [
+          "curative",
+          "palliative",
+          "adjuvant",
+          "neoadjuvant",
+          "maintenance",
+          "supportive",
+        ],
         description: "Overall intent of treatment",
       },
       // Reuse core.diagnosis for target diagnosis
       targetDiagnosis: coreDiagnosis,
-      
+
       chemotherapy: {
         type: "object",
         description: "Chemotherapy treatment plan",
@@ -38,7 +46,8 @@ export default {
           },
           regimen: {
             type: "string",
-            description: "Chemotherapy regimen name (e.g., FOLFOX, AC-T)",
+            description:
+              "Chemotherapy regimen name. Use standardized terminology from the [LANGUAGE] localization set.",
           },
           agents: {
             type: "array",
@@ -94,7 +103,7 @@ export default {
           },
         },
       },
-      
+
       radiationTherapy: {
         type: "object",
         description: "Radiation therapy plan",
@@ -105,7 +114,8 @@ export default {
           },
           technique: {
             type: "string",
-            description: "Radiation technique (e.g., IMRT, VMAT, stereotactic)",
+            description:
+              "Radiation technique. Use standardized terminology from the [LANGUAGE] localization set.",
           },
           // Reuse core.bodyParts for treatment sites
           treatmentSites: coreBodyParts,
@@ -136,7 +146,7 @@ export default {
           },
         },
       },
-      
+
       surgery: {
         type: "object",
         description: "Surgical treatment plan",
@@ -153,11 +163,18 @@ export default {
               properties: {
                 name: {
                   type: "string",
-                  description: "Procedure name",
+                  description:
+                    "Procedure name. Use standardized terminology from the [LANGUAGE] localization set.",
                 },
                 approach: {
                   type: "string",
-                  enum: ["open", "laparoscopic", "robotic", "endoscopic", "minimally_invasive"],
+                  enum: [
+                    "open",
+                    "laparoscopic",
+                    "robotic",
+                    "endoscopic",
+                    "minimally_invasive",
+                  ],
                   description: "Surgical approach",
                 },
                 // Reuse core.bodyParts for surgical sites
@@ -179,7 +196,7 @@ export default {
           surgeon: corePerformer,
         },
       },
-      
+
       targetedTherapy: {
         type: "object",
         description: "Targeted/immunotherapy plan",
@@ -200,11 +217,13 @@ export default {
                 },
                 target: {
                   type: "string",
-                  description: "Molecular target",
+                  description:
+                    "Molecular target. Use standardized terminology from the [LANGUAGE] localization set.",
                 },
                 biomarkerRequired: {
                   type: "string",
-                  description: "Required biomarker for treatment",
+                  description:
+                    "Required biomarker for treatment. Use standardized terminology from the [LANGUAGE] localization set.",
                 },
                 schedule: {
                   type: "string",
@@ -216,7 +235,7 @@ export default {
           },
         },
       },
-      
+
       supportiveCare: {
         type: "array",
         description: "Supportive care measures",
@@ -225,11 +244,13 @@ export default {
           properties: {
             intervention: {
               type: "string",
-              description: "Supportive care intervention",
+              description:
+                "Supportive care intervention. Use standardized terminology from the [LANGUAGE] localization set.",
             },
             indication: {
               type: "string",
-              description: "Indication for intervention",
+              description:
+                "Indication for intervention. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             schedule: {
               type: "string",
@@ -238,7 +259,7 @@ export default {
           },
         },
       },
-      
+
       treatmentTimeline: {
         type: "array",
         description: "Treatment sequence and timeline",
@@ -267,32 +288,34 @@ export default {
           },
         },
       },
-      
+
       // Reuse core.recommendations for treatment recommendations
       treatmentRecommendations: coreRecommendations,
-      
+
       // Additional performers (primary performer extracted by medical-analysis node)
       // Expected roles: oncologist, oncologist_medical, oncologist_radiation, oncologist_surgical
       treatingOncologist: corePerformer,
-      
+
       treatmentGoals: {
         type: "array",
         description: "Specific treatment goals",
         items: {
           type: "string",
-          description: "Treatment goal",
+          description:
+            "Treatment goal. Translate result to the [LANGUAGE] language if the source is in a different language.",
         },
       },
-      
+
       contraindications: {
         type: "array",
         description: "Treatment contraindications or limitations",
         items: {
           type: "string",
-          description: "Contraindication",
+          description:
+            "Contraindication. Use standardized terminology from the [LANGUAGE] localization set.",
         },
       },
-      
+
       confidence: {
         type: "number",
         minimum: 0,
