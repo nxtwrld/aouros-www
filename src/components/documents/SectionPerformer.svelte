@@ -33,18 +33,76 @@
     }
 
     let { data }: Props = $props();
-    logger.api.debug('Performer data:', data)
+    logger.api.debug('Performer data:', $state.snapshot(data))
+
+    // Generic function to check if a value is valid (not undefined, null, empty string, or "undefined" string)
+    function isValidValue(value: any): boolean {
+        return value !== 'undefined' && value !== undefined && value !== null && value !== '';
+    }
+
+    // Generic function to filter array properties
+    function filterArrayProperty(arr: any[] | undefined): any[] | undefined {
+        if (!arr || !Array.isArray(arr)) return arr;
+        
+        const filtered = arr.filter(item => {
+            if (typeof item === 'object' && item !== null) {
+                // For objects like { value: "email@example.com" }, check the value property
+                return isValidValue(item.value);
+            }
+            return isValidValue(item);
+        });
+        
+        return filtered.length > 0 ? filtered : undefined;
+    }
+
+    // Generic function to filter object properties
+    function filterObjectProperty(obj: any): any {
+        if (!obj || typeof obj !== 'object') return obj;
+        
+        const filtered = { ...obj };
+        let hasValidData = false;
+        
+        for (const [key, value] of Object.entries(filtered)) {
+            if (isValidValue(value)) {
+                hasValidData = true;
+            } else {
+                filtered[key] = undefined;
+            }
+        }
+        
+        return hasValidData ? filtered : undefined;
+    }
+
+    // Clean performer data using generic functions
+    function cleanPerformerData(performer: Performer): Performer {
+        const cleaned = { ...performer };
+        
+        // Filter array properties
+        cleaned.email = filterArrayProperty(cleaned.email);
+        cleaned.tel = filterArrayProperty(cleaned.tel);
+        cleaned.url = filterArrayProperty(cleaned.url);
+        cleaned.adr = filterArrayProperty(cleaned.adr);
+        
+        // Filter institution object
+        if (cleaned.institution) {
+            cleaned.institution = filterObjectProperty(cleaned.institution);
+        }
+        
+        return cleaned;
+    }
 
     // Normalize data to always be an array and sort by isPrimary
     const performers = $derived(
         (() => {
             const normalized = Array.isArray(data) ? data : (data ? [data] : []);
-            // Sort so primary performers come first (create a copy to avoid mutation)
-            return [...normalized].sort((a, b) => {
-                if (a.isPrimary && !b.isPrimary) return -1;
-                if (!a.isPrimary && b.isPrimary) return 1;
-                return 0;
-            });
+            // Clean the data and sort so primary performers come first (create a copy to avoid mutation)
+            return [...normalized]
+                .map(cleanPerformerData)
+                .sort((a, b) => {
+                    if (a.isPrimary && !b.isPrimary) return -1;
+                    if (!a.isPrimary && b.isPrimary) return 1;
+                    return 0;
+                });
         })()
     );
 
