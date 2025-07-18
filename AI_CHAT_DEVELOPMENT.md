@@ -186,6 +186,32 @@ The AI Chat feature will provide users with an intelligent medical assistant tha
 - ✅ If NO: Document is ignored and conversation continues
 - ✅ System message confirms user's choice
 - ✅ Multi-language support for all prompts and messages
+- ✅ Document content (diagnosis, medications, vitals) passed to AI for analysis
+
+#### Story 1.11: Profile Context Switching with User Control ✅ COMPLETED
+**As a** healthcare provider switching between patient profiles  
+**I want** to control whether to reset or maintain my conversation context  
+**So that** I can choose the most appropriate workflow for my needs  
+
+**Acceptance Criteria:**
+- ✅ When switching profiles, system shows prompt: "You switched to [Name]'s profile. Do you want to reset the chat context?"
+- ✅ "Reset Context" button - Clears conversation and starts fresh
+- ✅ "Keep Current Context" button - Maintains conversation but acknowledges new profile
+- ✅ Each profile maintains separate conversation history
+- ✅ Visual indicator shows current active profile name in chat header
+- ✅ Smooth transition without losing unsaved conversations
+
+#### Story 1.12: Unified Context Prompt Interface ✅ COMPLETED
+**As a** developer maintaining the chat system  
+**I want** a single reusable component for all context prompts  
+**So that** the UI remains consistent and maintainable  
+
+**Acceptance Criteria:**
+- ✅ Common ContextPrompt component handles both document and profile prompts
+- ✅ Centralized prompt logic in ChatManager with embedded callbacks
+- ✅ Consistent styling for all prompt types (document/profile)
+- ✅ Type-safe prompt definitions with TypeScript
+- ✅ Easy to extend for future prompt types
 
 ### Implementation Details
 
@@ -217,6 +243,10 @@ export const chatStore = writable<ChatState>({
   isLoading: false,
   anatomyModelOpen: false,
   focusedBodyPart: null,
+  conversationHistory: new Map<string, ChatMessage[]>(),
+  currentConversationId: null,
+  syncStatus: 'synced',
+  lastSyncTime: null,
 });
 
 // src/lib/chat/anatomy-integration.ts
@@ -231,6 +261,25 @@ interface BodyPartReference {
   text: string; // Original text mentioning body part
   bodyPartId: string; // Mapped to tags enum
   confidence: number;
+}
+
+// src/lib/chat/types.d.ts
+interface ContextPrompt {
+  type: 'document' | 'profile';
+  id: string;
+  title: string;
+  message: string;
+  acceptLabel: string;
+  declineLabel: string;
+  data: any;
+  timestamp: Date;
+  onAccept: () => void;
+  onDecline: () => void;
+}
+
+// src/components/chat/ContextPrompt.svelte
+interface ContextPromptProps {
+  prompt: ContextPrompt;
 }
 
 // src/lib/chat/conversation-storage.ts
@@ -305,22 +354,34 @@ interface EncryptedMessage {
 
 ## Next Steps & Current TODO
 
+### Completed Features (Phase 1)
+All Phase 1 user stories have been successfully implemented:
+- ✅ Core chat functionality with persistent sidebar
+- ✅ Dual-mode support (patient vs clinical)
+- ✅ 3D anatomy model integration
+- ✅ Multi-language support (English, Czech, German)
+- ✅ Conversation history with profile isolation
+- ✅ Context-aware document integration with consent
+- ✅ Profile context switching with user control
+- ✅ Unified prompt interface for consistency
+- ✅ Chat header showing active profile name
+- ✅ Chat persistence across all medical routes
+
 ### Remaining Tasks
-Based on our current progress, the following items remain to be implemented:
 
 #### High Priority
 1. **Backend Encrypted Storage** - Implement persistent conversation history with encryption in Supabase
-2. **Enhanced CSS Styling** - Update remaining color variables to use core.css system
-3. **Search & Export** - Add conversation search and export capabilities
+2. **Search & Export** - Add conversation search and export capabilities
 
 #### Medium Priority
-4. **Document Context Integration** - Implement context-aware document references
-5. **Performance Optimization** - Add lazy loading and bundle optimization
-6. **Mobile Responsive Improvements** - Enhanced mobile experience
+3. **Performance Optimization** - Add lazy loading and bundle optimization
+4. **Mobile Responsive Improvements** - Enhanced mobile experience
+5. **Advanced Document Analysis** - Deeper integration with medical document content
 
 #### Low Priority
-7. **Advanced Analytics** - Conversation insights and usage tracking
-8. **Voice Integration** - Speech-to-text for hands-free operation
+6. **Advanced Analytics** - Conversation insights and usage tracking
+7. **Voice Integration** - Speech-to-text for hands-free operation
+8. **Collaborative Features** - Share conversations with providers
 
 ### Current Status Summary
 - **Phase 1**: ✅ **COMPLETED** - Core chat functionality with anatomy integration
