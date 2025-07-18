@@ -250,7 +250,7 @@
           <div class="message-content">
             <div class="message-text">
               {#if message.metadata?.translationKey}
-                {$t(message.metadata.translationKey, message.metadata.translationParams)}
+                {$t(message.metadata.translationKey, { values: message.metadata.translationParams })}
               {:else}
                 {message.content}
               {/if}
