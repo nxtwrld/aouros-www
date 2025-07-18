@@ -197,6 +197,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **localisation library**: Using $t() key translation from `src/lib/i18n`
 
+## UI event
+
+- ** global event emitter**: we are using `src/lib/ui.ts` to trigger namespace events globally
+
 ## Database & API Patterns
 
 ### Supabase Integration
