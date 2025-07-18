@@ -249,7 +249,11 @@
         <div class="message {message.role}">
           <div class="message-content">
             <div class="message-text">
-              {message.content}
+              {#if message.metadata?.translationKey}
+                {$t(message.metadata.translationKey, message.metadata.translationParams)}
+              {:else}
+                {message.content}
+              {/if}
             </div>
             
             <!-- Anatomy Focus Buttons -->
@@ -387,8 +391,8 @@
     top: var(--heading-height);
     right: 0;
     bottom: 0;
-    background: var(--color-background);
-    border-left: 1px solid var(--color-border);
+    background: var(--color-white);
+    border-left: 1px solid var(--color-gray-400);
     display: flex;
     flex-direction: column;
     z-index: 999;
@@ -407,7 +411,7 @@
   }
 
   .resize-handle:hover {
-    background: var(--color-primary);
+    background: var(--color-blue);
   }
 
   .chat-header {
@@ -415,14 +419,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-gray-400);
+    background: var(--color-gray-300);
   }
 
   .chat-title h3 {
     margin: 0 0 4px 0;
     font-size: 16px;
-    color: var(--color-text-primary);
+    color: var(--color-black);
   }
 
   .chat-subtitle {
@@ -440,8 +444,8 @@
 
   .chat-mode {
     font-size: 12px;
-    color: var(--color-text-secondary);
-    background: var(--color-bg-tertiary);
+    color: var(--color-gray-800);
+    background: var(--color-gray-400);
     padding: 2px 8px;
     border-radius: 12px;
   }
@@ -456,7 +460,7 @@
     height: 32px;
     border: none;
     background: transparent;
-    color: var(--color-text-secondary);
+    color: var(--color-gray-800);
     cursor: pointer;
     border-radius: 4px;
     display: flex;
@@ -465,8 +469,8 @@
   }
 
   .chat-action-btn:hover {
-    background: var(--color-bg-tertiary);
-    color: var(--color-text-primary);
+    background: var(--color-gray-400);
+    color: var(--color-black);
   }
 
   .chat-action-btn svg {
@@ -477,10 +481,12 @@
   .messages-container {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 1rem;
+    background: var(--color-background);
+    padding-bottom: 2rem;
   }
 
   .message {
@@ -502,29 +508,60 @@
 
   .message-content {
     max-width: 80%;
-    background: var(--color-bg-secondary);
+    background: var(--color-gray-300);
     padding: 12px;
-    border-radius: 12px;
+    border-radius: var(--radius-8);
     position: relative;
+    font-weight: 400;
   }
 
   .message.user .message-content {
-    background: var(--color-primary);
-    color: white;
+    background: var(--color-blue);
+    color: var(--color-white);
     border-bottom-right-radius: 4px;
+    font-weight: 500;
+  }
+
+  /* Add chat bubble tail for user messages */
+  .message.user .message-content::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-top: 10px solid var(--color-blue);
+    border-right: 10px solid transparent;
+    border-left: 10px solid transparent;
+    bottom: -10px;
+    right: 10px;
   }
 
   .message.assistant .message-content {
-    background: var(--color-bg-tertiary);
+    background: var(--color-gray-500);
+    color: var(--color-black);
     border-bottom-left-radius: 4px;
+    font-weight: 300;
+  }
+
+  /* Add chat bubble tail for assistant messages */
+  .message.assistant .message-content::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-top: 10px solid var(--color-gray-500);
+    border-right: 10px solid transparent;
+    border-left: 10px solid transparent;
+    bottom: -10px;
+    left: 10px;
   }
 
   .message.system .message-content {
-    background: var(--color-bg-quaternary);
-    color: var(--color-text-secondary);
+    background: var(--color-info);
+    color: var(--color-info-text);
     font-size: 12px;
     max-width: 100%;
     text-align: center;
+    font-weight: 500;
   }
 
   .message-text {
@@ -535,7 +572,7 @@
 
   .message-time {
     font-size: 11px;
-    color: var(--color-text-tertiary);
+    color: var(--color-gray-800);
     text-align: right;
   }
 
@@ -547,8 +584,8 @@
   }
 
   .anatomy-btn {
-    background: var(--color-accent);
-    color: white;
+    background: var(--color-highlight);
+    color: var(--color-highlight-text);
     border: none;
     padding: 4px 8px;
     border-radius: 16px;
@@ -558,7 +595,7 @@
   }
 
   .anatomy-btn:hover {
-    background: var(--color-accent-dark);
+    background: var(--color-purple);
   }
 
   .document-prompt {
@@ -598,7 +635,7 @@
   }
 
   .document-btn.accept:hover {
-    background: var(--color-green);
+    background: var(--color-positive);
   }
 
   .document-btn.decline {
@@ -620,7 +657,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--color-text-secondary);
+    background: var(--color-gray-800);
     animation: typing 1.4s infinite;
   }
 
@@ -644,9 +681,9 @@
   }
 
   .input-area {
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-gray-400);
     padding: 16px;
-    background: var(--color-bg-primary);
+    background: var(--color-gray-300);
   }
 
   .input-container {
@@ -657,20 +694,20 @@
 
   .input-container textarea {
     flex: 1;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border: 1px solid var(--color-gray-400);
+    border-radius: var(--radius-8);
     padding: 12px;
     resize: none;
     font-family: inherit;
     font-size: 14px;
     line-height: 1.4;
-    background: var(--color-bg-secondary);
-    color: var(--color-text-primary);
+    background: var(--color-white);
+    color: var(--color-black);
   }
 
   .input-container textarea:focus {
     outline: none;
-    border-color: var(--color-primary);
+    border-color: var(--color-blue);
   }
 
   .input-container textarea:disabled {
@@ -681,10 +718,10 @@
   .send-btn {
     width: 40px;
     height: 40px;
-    background: var(--color-primary);
-    color: white;
+    background: var(--color-blue);
+    color: var(--color-white);
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-8);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -693,7 +730,7 @@
   }
 
   .send-btn:hover:not(:disabled) {
-    background: var(--color-primary-dark);
+    background: var(--color-interactivity);
   }
 
   .send-btn:disabled {

@@ -96,6 +96,10 @@
                        (data.medications && data.medications.length > 0);
             
             case 'signals':
+                // Handle both array format (direct signals) and object format
+                if (Array.isArray(data)) {
+                    return data.length > 0;
+                }
                 return (data.signals && data.signals.length > 0) ||
                        (data.laboratory && data.laboratory.length > 0) ||
                        (data.vitals && data.vitals.length > 0);

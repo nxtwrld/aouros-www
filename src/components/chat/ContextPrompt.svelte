@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ContextPrompt } from '$lib/chat/types.d';
+  import { t } from '$lib/i18n';
   
   interface Props {
     prompt: ContextPrompt;
@@ -10,20 +11,20 @@
 
 <div class="context-prompt {prompt.type}">
   <p class="context-prompt-text">
-    {prompt.message}
+    {$t(prompt.messageKey, { values: prompt.messageParams })}
   </p>
   <div class="context-actions">
     <button 
       class="context-btn accept"
       onclick={prompt.onAccept}
     >
-      {prompt.acceptLabel}
+      {$t(prompt.acceptLabelKey)}
     </button>
     <button 
       class="context-btn decline"
       onclick={prompt.onDecline}
     >
-      {prompt.declineLabel}
+      {$t(prompt.declineLabelKey)}
     </button>
   </div>
 </div>

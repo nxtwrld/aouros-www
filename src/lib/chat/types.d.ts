@@ -6,9 +6,10 @@ export interface ContextPrompt {
   type: 'document' | 'profile';
   id: string;
   title: string;
-  message: string;
-  acceptLabel: string;
-  declineLabel: string;
+  messageKey: string;
+  messageParams?: any;
+  acceptLabelKey: string;
+  declineLabelKey: string;
   data: any;
   timestamp: Date;
   onAccept: () => void;
@@ -26,6 +27,8 @@ export interface ChatMessage {
     toolsUsed?: string[];
     contextReferences?: string[];
     contextPrompt?: ContextPrompt;
+    translationKey?: string;
+    translationParams?: any;
     // Keep legacy support temporarily
     documentPrompt?: {
       documentId: string;

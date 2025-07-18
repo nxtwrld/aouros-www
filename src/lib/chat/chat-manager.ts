@@ -96,6 +96,44 @@ export class ChatManager {
   }
 
   /**
+   * Get cached context for chat initialization
+   */
+  private getCachedContext(profileId: string, profileName: string, isOwnProfile: boolean, language: string): ChatContext {
+    // Get latest events from UI emitter
+    const profileEvent = ui.getLatest('aicontext:profile') || ui.getLatest('chat:profile_switch');
+    const documentEvent = ui.getLatest('aicontext:document');
+    const navigationEvent = ui.getLatest('chat:navigation');
+    
+    // Use cached profile data if available and matches current profile
+    const profileData = profileEvent?.data && profileEvent.data.profileId === profileId 
+      ? profileEvent.data 
+      : null;
+    
+    // Use cached document data if available
+    const documentData = documentEvent?.data;
+    
+    return {
+      mode: isOwnProfile ? 'patient' : 'clinical',
+      currentProfileId: profileId,
+      conversationThreadId: generateId(),
+      language: language,
+      isOwnProfile: isOwnProfile,
+      pageContext: {
+        route: navigationEvent?.data?.route || '/',
+        profileName: profileData?.profileName || profileName,
+        availableData: {
+          documents: documentData ? [documentData.documentId] : [],
+          conditions: [],
+          medications: [],
+          vitals: [],
+        },
+        // Include document content if available
+        documentsContent: documentData ? new Map([[documentData.documentId, documentData.content]]) : undefined,
+      },
+    };
+  }
+
+  /**
    * Handle navigation events
    */
   private handleNavigation(data: {
@@ -135,25 +173,10 @@ export class ChatManager {
     const state = get(chatStore);
     
     // If we don't have a context yet, initialize with this profile
+    // Check cache for any existing context first
     if (!state.context) {
-      const context: ChatContext = {
-        mode: data.isOwnProfile ? 'patient' : 'clinical',
-        currentProfileId: data.profileId,
-        conversationThreadId: generateId(),
-        language: data.language,
-        isOwnProfile: data.isOwnProfile,
-        pageContext: {
-          route: '/', // Will be updated by navigation events
-          profileName: data.profileName,
-          availableData: {
-            documents: [],
-            conditions: [],
-            medications: [],
-            vitals: [],
-          },
-        },
-      };
-      this.initializeChat(context);
+      const cachedContext = this.getCachedContext(data.profileId, data.profileName, data.isOwnProfile, data.language);
+      this.initializeChat(cachedContext);
       return;
     }
     
@@ -227,9 +250,10 @@ export class ChatManager {
       type: 'document' as const,
       id: data.documentId,
       title: data.title,
-      message: `Do you want to add "${data.title}" to our chat?`,
-      acceptLabel: 'Yes',
-      declineLabel: 'No',
+      messageKey: 'app.chat.document.add-prompt',
+      messageParams: { title: data.title },
+      acceptLabelKey: 'app.chat.document.add-yes',
+      declineLabelKey: 'app.chat.document.add-no',
       data: data.content,
       timestamp: data.timestamp,
       onAccept: () => this.acceptDocumentContext(data.documentId, data.title, data.content),
@@ -265,7 +289,11 @@ export class ChatManager {
       // Add system message about document access
       const contextMsg = createMessage(
         'system',
-        `Document "${documentName}" added to conversation context`
+        '', // Empty content - translation will be handled in the component
+        {
+          translationKey: 'app.chat.document.added',
+          translationParams: { title: documentName }
+        }
       );
       chatActions.addMessage(contextMsg);
     }
@@ -304,7 +332,10 @@ export class ChatManager {
     // Add system message about declining
     const declineMsg = createMessage(
       'system',
-      `Document "${documentName}" not added to conversation`
+      '', // Empty content - translation will be handled in the component
+      {
+        translationKey: 'app.chat.document.declined'
+      }
     );
     chatActions.addMessage(declineMsg);
     console.log(`Document ${documentId} declined by user`);
@@ -334,9 +365,10 @@ export class ChatManager {
       type: 'profile' as const,
       id: data.profileId,
       title: data.profileName,
-      message: `You switched to ${data.profileName}'s profile. Do you want to reset the chat context?`,
-      acceptLabel: 'Reset Context',
-      declineLabel: 'Keep Current Context',
+      messageKey: 'app.chat.profile.switch-prompt',
+      messageParams: { profileName: data.profileName },
+      acceptLabelKey: 'app.chat.profile.switch-yes',
+      declineLabelKey: 'app.chat.profile.switch-no',
       data: data.profileData,
       timestamp: data.timestamp,
       onAccept: () => this.acceptProfileContext(data.profileId, data.profileName, data.profileData),
@@ -355,7 +387,7 @@ export class ChatManager {
   /**
    * Handle user accepting profile context reset
    */
-  acceptProfileContext(profileId: string, profileName: string, profileData: any): void {
+  acceptProfileContext(profileId: string, profileName: string, _profileData: any): void {
     const state = get(chatStore);
     
     // Save current conversation to history before switching
@@ -393,7 +425,11 @@ export class ChatManager {
     // Add system message about context reset
     const resetMsg = createMessage(
       'system',
-      `Chat context reset for ${profileName}`
+      '', // Empty content - translation will be handled in the component
+      {
+        translationKey: 'app.chat.profile.context-reset',
+        translationParams: { profileName }
+      }
     );
     chatActions.addMessage(resetMsg);
     console.log(`Profile context reset accepted for ${profileId}`);
@@ -418,7 +454,11 @@ export class ChatManager {
     // Add system message about keeping context
     const keepMsg = createMessage(
       'system',
-      `Chat context kept, now discussing ${profileName}`
+      '', // Empty content - translation will be handled in the component
+      {
+        translationKey: 'app.chat.profile.context-kept',
+        translationParams: { profileName }
+      }
     );
     chatActions.addMessage(keepMsg);
     console.log(`Profile context reset declined for ${profileId}`);
