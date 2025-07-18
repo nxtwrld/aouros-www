@@ -4,6 +4,141 @@
 
 This document outlines strategies to improve patient profile matching in the Mediqom medical records system. The current implementation in `src/lib/profiles/tools.ts:findInProfiles` uses basic string matching and insurance number comparison, which can result in false positives and missed matches. This enhancement proposes a **hybrid privacy-preserving approach** that combines AI-powered matching with advanced cryptographic techniques to achieve high accuracy while maintaining strong privacy guarantees and preventing dangerous false matches.
 
+## User Personas
+
+### Primary Users
+
+**Dr. Sarah Chen - General Practitioner**
+- **Role**: Primary care physician using Mediqom for patient consultations
+- **Pain Points**: Frequently encounters duplicate patient profiles, wastes time manually verifying patient identities
+- **Goals**: Quickly and accurately identify returning patients, maintain comprehensive medical histories
+- **Technical Skill**: Medium - comfortable with medical software but not technical systems
+
+**Maria Rodriguez - Medical Assistant**
+- **Role**: Handles patient intake and document processing
+- **Pain Points**: Struggles with patient name variations, insurance number inconsistencies
+- **Goals**: Efficiently process patient documents, avoid creating duplicate profiles
+- **Technical Skill**: Low - needs intuitive, error-resistant interfaces
+
+**Dr. James Wilson - Hospital Administrator**
+- **Role**: Oversees medical record management and compliance
+- **Pain Points**: Concerned about patient safety, data privacy, and regulatory compliance
+- **Goals**: Ensure accurate patient identification, maintain audit trails, meet GDPR/HIPAA requirements
+- **Technical Skill**: High - understands both medical and technical requirements
+
+### Secondary Users
+
+**Elena Novak - Data Privacy Officer**
+- **Role**: Ensures compliance with privacy regulations
+- **Pain Points**: Current system lacks proper audit trails and privacy guarantees
+- **Goals**: Implement privacy-by-design solutions, maintain regulatory compliance
+- **Technical Skill**: High - expert in privacy regulations and technical implementations
+
+**Tom Anderson - IT Administrator**
+- **Role**: Manages technical infrastructure and system maintenance
+- **Pain Points**: Complex system integration, performance optimization challenges
+- **Goals**: Maintain system reliability, optimize performance, ensure security
+- **Technical Skill**: Expert - deep technical knowledge of system architecture
+
+## User Stories
+
+### Epic 1: Intelligent Profile Matching
+
+**US-1.1: As a medical assistant, I want the system to automatically suggest matching profiles when I import patient documents, so I can quickly identify returning patients without creating duplicates.**
+
+**US-1.2: As a doctor, I want to see confidence scores for profile matches, so I can make informed decisions about patient identity.**
+
+**US-1.3: As a medical assistant, I want the system to explain why profiles were matched or not matched, so I can understand and trust the system's decisions.**
+
+**US-1.4: As a hospital administrator, I want the system to flag potentially dangerous false matches, so we can prevent medical errors.**
+
+### Epic 2: Privacy-Preserving Operations
+
+**US-2.1: As a data privacy officer, I want all profile matching to use encrypted comparisons, so patient data remains protected during processing.**
+
+**US-2.2: As a hospital administrator, I want complete audit trails of all matching decisions, so we can demonstrate compliance during inspections.**
+
+**US-2.3: As a doctor, I want to know what privacy guarantees are in place for profile matching, so I can assure patients their data is protected.**
+
+**US-2.4: As a data privacy officer, I want zero-knowledge proofs for sensitive matching operations, so we can prove compliance without exposing patient data.**
+
+### Epic 3: Advanced Matching Capabilities
+
+**US-3.1: As a medical assistant, I want the system to handle name variations (nicknames, cultural variations, typos), so I don't miss matches due to data entry differences.**
+
+**US-3.2: As a doctor, I want the system to consider multiple factors (name, insurance, birth date, biological sex), so matching is more accurate than simple name matching.**
+
+**US-3.3: As a medical assistant, I want the system to detect and prevent conflicting information (different birth dates, biological sex), so we maintain data integrity.**
+
+**US-3.4: As a hospital administrator, I want automated detection of temporal inconsistencies, so we can identify potential data quality issues.**
+
+### Epic 4: User Interface and Experience
+
+**US-4.1: As a medical assistant, I want a visual confidence indicator for profile matches, so I can quickly assess match quality.**
+
+**US-4.2: As a doctor, I want a side-by-side comparison view for similar profiles, so I can easily distinguish between different patients.**
+
+**US-4.3: As a medical assistant, I want a review queue for flagged matches, so I can efficiently handle uncertain cases.**
+
+**US-4.4: As a hospital administrator, I want an analytics dashboard showing matching performance metrics, so I can monitor system effectiveness.**
+
+## Implementation Strategy
+
+### Feature Prioritization (MoSCoW)
+
+#### Must Have (Sprint 1-2)
+- **M1**: Basic hash-based privacy-preserving matching
+- **M2**: Multi-tier confidence scoring system
+- **M3**: Integration with existing LangGraph workflow
+- **M4**: Visual confidence indicators in UI
+- **M5**: Automatic exclusion criteria for conflicting data
+- **M6**: Audit trail generation for compliance
+
+#### Should Have (Sprint 3-4)
+- **S1**: Advanced cryptographic matching (homomorphic encryption)
+- **S2**: Fuzzy matching with name variation detection
+- **S3**: Review queue for uncertain matches
+- **S4**: Side-by-side profile comparison interface
+- **S5**: Performance optimization with indexing
+- **S6**: Comprehensive error handling and recovery
+
+#### Could Have (Sprint 5-6)
+- **C1**: Zero-knowledge proof generation
+- **C2**: Secure multi-party computation
+- **C3**: Analytics dashboard for administrators
+- **C4**: Advanced AI semantic matching
+- **C5**: Cultural name variation databases
+- **C6**: Automated duplicate detection and merging
+
+#### Won't Have (Future Releases)
+- **W1**: Machine learning model training interface
+- **W2**: Real-time collaboration features
+- **W3**: Advanced biometric matching
+- **W4**: Blockchain-based audit trails
+- **W5**: Multi-tenant architecture support
+
+### Acceptance Criteria
+
+#### User Story US-1.1: Automatic Profile Suggestions
+
+**AC-1.1.1**: GIVEN a patient document is imported, WHEN the system detects patient information, THEN it displays up to 5 matching profile suggestions ranked by confidence
+
+**AC-1.1.2**: GIVEN multiple profile matches exist, WHEN confidence scores are equal, THEN profiles are ranked by most recent activity
+
+**AC-1.1.3**: GIVEN no confident matches exist, WHEN the system suggests creating a new profile, THEN it provides clear indication of the decision reasoning
+
+**AC-1.1.4**: GIVEN a profile suggestion is selected, WHEN the user confirms the match, THEN the system updates the existing profile with new information
+
+#### User Story US-2.1: Encrypted Comparisons
+
+**AC-2.1.1**: GIVEN profile matching operations, WHEN processing patient data, THEN all comparisons use encrypted or hashed data only
+
+**AC-2.1.2**: GIVEN Phase 1 matching, WHEN high confidence matches are found, THEN processing uses hash-based comparison only
+
+**AC-2.1.3**: GIVEN Phase 2 matching, WHEN complex cases require advanced matching, THEN homomorphic encryption is applied
+
+**AC-2.1.4**: GIVEN any matching operation, WHEN audit logs are generated, THEN they contain privacy guarantee attestations
+
 ## Current Implementation Analysis
 
 ### Current Schema (`src/lib/configurations/core.patient.ts`)
@@ -211,7 +346,7 @@ interface FuzzyMatchingConfig {
 - **Transposition Errors**: "Smtih" → "Smith"
 - **Phonetic Matching**: Similar sounding names
 
-### 5. LangGraph Workflow Integration
+### 7. LangGraph Workflow Integration
 
 #### Integration Strategy
 Based on the existing architecture analysis, the enhanced patient profile matching can be integrated directly into the LangGraph workflow as part of the `patient-processing` node. This allows for AI-powered matching during the document processing phase rather than as a separate client-side step.
@@ -412,11 +547,11 @@ export async function enhancedPatientValidation(
   const { patient } = aiResult;
   
   // Perform profile matching if context is available
-  if (state.profilesContext?.matchingEnabled && state.profilesContext.existingProfiles) {
+  if (state.profilesContext?.matchingEnabled && state.profilesContext.hashedProfiles) {
     const matchingService = new ProfileMatchingService();
     const matchingResults = await matchingService.findMatches(
       patient,
-      state.profilesContext.existingProfiles,
+      state.profilesContext.hashedProfiles,
       {
         confidenceThreshold: state.profilesContext.confidenceThreshold,
         documentContext: {
@@ -443,12 +578,14 @@ export async function enhancedPatientValidation(
     // Store matching results in state for later use
     state.profileMatchingResults = {
       detectedProfile: patient,
-      matchedProfile: matchingResults.bestMatch?.profile,
+      matchedProfileHash: matchingResults.bestMatch?.profileHash,
       confidence: matchingResults.bestMatch?.confidence || 0,
       method: matchingResults.bestMatch?.method || "none",
-      candidateProfiles: matchingResults.alternatives || [],
+      candidateHashes: matchingResults.alternatives?.map(alt => alt.profileHash) || [],
       riskFlags: matchingResults.riskFlags || [],
       requiresReview: matchingResults.requiresReview || false,
+      privacyGuarantees: ['hash_based_matching', 'no_plaintext_exposure'],
+      requiresAdvancedMatching: matchingResults.requiresAdvancedMatching || false,
     };
     
     return {
@@ -578,21 +715,20 @@ export class ProfileMatchingService {
   private fuzzyMatcher: FuzzyMatchingService;
   private validationService: ValidationService;
   
-  async findMatches(detected: DetectedProfileData): Promise<MatchResult[]> {
-    const candidates = await this.getCandidateProfiles(detected);
-    const exactMatches = this.findExactMatches(detected, candidates);
-    const fuzzyMatches = this.findFuzzyMatches(detected, candidates);
-    const aiMatches = await this.aiMatcher.findMatches(detected, candidates);
+  async findMatches(detected: DetectedProfileData, hashedProfiles: HashedProfile[]): Promise<MatchResult[]> {
+    const exactMatches = this.findExactMatches(detected, hashedProfiles);
+    const fuzzyMatches = this.findFuzzyMatches(detected, hashedProfiles);
+    const aiMatches = await this.aiMatcher.findMatches(detected, hashedProfiles);
     
     return this.consolidateResults(exactMatches, fuzzyMatches, aiMatches);
   }
 
   // Integration with LangGraph workflow
   async processWithWorkflow(
-    state: EnhancedDocumentProcessingState
+    state: DocumentProcessingState
   ): Promise<PatientWithMatching> {
-    const profiles = state.profilesContext.existingProfiles;
-    const matchingResults = await this.findMatches(state.extractedPatient);
+    const hashedProfiles = state.profilesContext?.hashedProfiles || [];
+    const matchingResults = await this.findMatches(state.extractedPatient, hashedProfiles);
     
     return {
       patient: state.extractedPatient,
@@ -632,7 +768,7 @@ function calculateConfidence(match: MatchCandidate): number {
 }
 ```
 
-### 6. User Interface Enhancements
+### 8. User Interface Enhancements
 
 #### Match Presentation
 - **Confidence Indicators**: Visual confidence bars and risk warnings
@@ -645,7 +781,7 @@ function calculateConfidence(match: MatchCandidate): number {
 - **Risk Assessment**: Highlight potential false positive indicators
 - **Historical Context**: Show previous matching decisions for learning
 
-### 7. Privacy and Security Considerations
+### 9. Privacy and Security Considerations
 
 #### Data Protection
 - **Encrypted Comparisons**: All matching operations on encrypted data
@@ -658,7 +794,7 @@ function calculateConfidence(match: MatchCandidate): number {
 - **Right to Rectification**: Ability to correct false matches
 - **Data Retention**: Automatic cleanup of temporary matching data
 
-### 8. Performance Optimization
+### 10. Performance Optimization
 
 #### Indexing Strategy
 ```typescript
@@ -675,7 +811,7 @@ interface MatchingIndex {
 - **AI Results**: Cache AI matching results for similar queries
 - **Preprocessing**: Cache normalized and indexed data
 
-### 9. Testing and Validation
+### 11. Testing and Validation
 
 #### Test Data Sets
 - **Synthetic Profiles**: Generate test profiles with known relationships
@@ -689,7 +825,7 @@ interface MatchingIndex {
 - **F1-Score**: Harmonic mean of precision and recall
 - **Processing Time**: Average matching time per profile
 
-### 10. Implementation Roadmap
+### 12. Implementation Roadmap
 
 #### Phase 1: Basic Privacy-Preserving LangGraph Integration (Weeks 1-2)
 - **Hash Generation**: Implement `generateHashedProfiles()` function for privacy-preserving profile data
@@ -804,7 +940,7 @@ User Decision                      UI Components → User Decision
    - All operations logged with privacy guarantees
    - Zero-knowledge proofs for regulatory compliance
 
-### 11. Success Metrics
+### 13. Success Metrics
 
 #### Quantitative KPIs
 - **Match Accuracy**: >95% precision, >90% recall
@@ -818,7 +954,7 @@ User Decision                      UI Components → User Decision
 - **Better Patient Safety**: Eliminate dangerous false matches
 - **Streamlined Workflow**: Faster patient record import process
 
-### 12. Risk Mitigation
+### 14. Risk Mitigation
 
 #### Technical Risks
 - **AI Hallucination**: Implement multiple validation layers
