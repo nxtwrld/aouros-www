@@ -114,6 +114,22 @@ flows:
     fallback_models: ["gpt4_turbo", "gpt3_5"]
     # Alternative: provider: "anthropic", model: "claude_opus"
 
+  # AI Chat - Patient support mode
+  ai_chat_patient:
+    provider: "openai"  # Using OpenAI for development
+    model: "gpt4"
+    description: "Patient support chat with empathetic responses"
+    fallback_models: ["gpt4_turbo", "gpt3_5"]
+    # Alternative: provider: "anthropic", model: "claude_opus"
+
+  # AI Chat - Clinical consultation mode
+  ai_chat_clinical:
+    provider: "openai"  # Using OpenAI for development
+    model: "gpt4"
+    description: "Clinical consultation chat with professional insights"
+    fallback_models: ["gpt4_turbo", "gpt3_5"]
+    # Alternative: provider: "google", model: "gemini_pro"
+
 # Performance settings
 performance:
   max_retries: 3
@@ -137,6 +153,8 @@ cost_optimization:
     - "medical_analysis"
     - "signal_processing"
     - "quality_validation"
+    - "ai_chat_patient"
+    - "ai_chat_clinical"
 
 # Monitoring and logging
 monitoring:

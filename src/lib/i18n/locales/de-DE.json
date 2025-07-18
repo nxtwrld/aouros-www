@@ -57,6 +57,43 @@
       "new-session": "Neue Sitzung",
       "profiles": "Profile"
     },
+    "chat": {
+      "title": "KI-Medizinassistent",
+      "mode": {
+        "patient": "Patientenunterstützung",
+        "clinical": "Klinische Analyse"
+      },
+      "actions": {
+        "clear": "Unterhaltung löschen",
+        "close": "Chat schließen",
+        "open": "KI-Chat öffnen",
+        "send": "Nachricht senden"
+      },
+      "placeholders": {
+        "ask": "Fragen Sie mich nach medizinischen Informationen..."
+      },
+      "anatomy": {
+        "view": "{bodyPart} anzeigen",
+        "view-aria": "{bodyPart} im Anatomiemodell anzeigen"
+      },
+      "sidebar": {
+        "resize": "Chat-Seitenleiste vergrößern"
+      },
+      "document": {
+        "add-prompt": "Möchten Sie \"{title}\" zu unserem Chat hinzufügen?",
+        "add-yes": "Ja",
+        "add-no": "Nein",
+        "added": "Dokument \"{title}\" zum Gesprächskontext hinzugefügt",
+        "declined": "Dokument nicht zum Gespräch hinzugefügt"
+      },
+      "profile": {
+        "switch-prompt": "Sie haben zu {profileName}s Profil gewechselt. Möchten Sie den Chat-Kontext zurücksetzen?",
+        "switch-yes": "Kontext zurücksetzen",
+        "switch-no": "Aktuellen Kontext behalten",
+        "context-reset": "Chat-Kontext für {profileName} zurückgesetzt",
+        "context-kept": "Chat-Kontext behalten, diskutieren jetzt über {profileName}"
+      }
+    },
     "onboarding": {
       "basic-profile": "",
       "click-here": "",

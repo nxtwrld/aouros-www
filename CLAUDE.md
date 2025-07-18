@@ -183,9 +183,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Form Components
 - **Unified Input component**: Single `Input.svelte` handles multiple input types
+- **Common UI components**: Placed in the `src/components/ui`
 - **Validation patterns**: Client-side validation with visual feedback
 - **Accessibility**: Proper ARIA labels and keyboard navigation
 - **File handling**: Specialized components for file upload and preview
+
+### Styling
+
+- **common styles**: All common styles are loaded from  `src/css`
+- **css varaibles**: The common css variables are loaded from `src/css/core.css`
+
+### Localisation
+
+- **localisation library**: Using $t() key translation from `src/lib/i18n`
 
 ## Database & API Patterns
 

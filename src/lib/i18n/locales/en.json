@@ -58,6 +58,43 @@
       "new-session": "New Session",
       "profiles": "Profiles"
     },
+    "chat": {
+      "title": "AI Medical Assistant",
+      "mode": {
+        "patient": "Patient Support",
+        "clinical": "Clinical Analysis"
+      },
+      "actions": {
+        "clear": "Clear conversation",
+        "close": "Close chat",
+        "open": "Open AI Chat",
+        "send": "Send message"
+      },
+      "placeholders": {
+        "ask": "Ask me about medical information..."
+      },
+      "anatomy": {
+        "view": "View {bodyPart}",
+        "view-aria": "View {bodyPart} in anatomy model"
+      },
+      "sidebar": {
+        "resize": "Resize chat sidebar"
+      },
+      "document": {
+        "add-prompt": "Do you want to add \"{title}\" to our chat?",
+        "add-yes": "Yes",
+        "add-no": "No",
+        "added": "Document \"{title}\" added to conversation context",
+        "declined": "Document not added to conversation"
+      },
+      "profile": {
+        "switch-prompt": "You switched to {profileName}'s profile. Do you want to reset the chat context?",
+        "switch-yes": "Reset Context",
+        "switch-no": "Keep Current Context",
+        "context-reset": "Chat context reset for {profileName}",
+        "context-kept": "Chat context kept, now discussing {profileName}"
+      }
+    },
     "onboarding": {
       "basic-profile": "Basic Profile",
       "click-here": "click here.",

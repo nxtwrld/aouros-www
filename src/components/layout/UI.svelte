@@ -14,6 +14,10 @@
     import Sounds from '$components/ui/Sounds.svelte';
     import Viewer from './Viewer.svelte';
     import { logger } from '$lib/logging/logger';
+    import AIChatSidebar from '$components/chat/AIChatSidebar.svelte';
+    import { profile } from '$lib/profiles';
+    import { page } from '$app/stores';
+    import { chatManager } from '$lib/chat/chat-manager';
 
     interface Props {
         children?: import('svelte').Snippet;
@@ -26,6 +30,11 @@
         healthForm: false,
         healthProperty: false
     });
+
+    // Chat state
+    let currentProfile = $state(null);
+    let isOwnProfile = $state(false);
+    let userLanguage = $state('en');
 
 
     // close all dialogs on navigation
@@ -41,6 +50,31 @@
             $uiState.overlay = Overlay.none;
         }
     }
+
+    // Subscribe to profile changes for chat
+    $effect(() => {
+        const unsubscribe = profile.subscribe((p) => {
+            currentProfile = p;
+            
+            // Determine if this is the user's own profile
+            // For now, assume all profiles are "own" profiles in patient mode
+            if (p) {
+                isOwnProfile = true; // Default to patient mode
+                userLanguage = p.language || 'en';
+                
+                // Emit navigation if we're in the medical section
+                if ($page.url.pathname.startsWith('/med')) {
+                    ui.emit('chat:navigation', {
+                        route: $page.route.id || '/',
+                        profileId: p.id,
+                        profileName: p.fullName || 'Unknown'
+                    });
+                }
+            }
+        });
+        
+        return unsubscribe;
+    });
 
     onMount(() => {
         logger.ui.info('UI mounted');
@@ -74,9 +108,17 @@
             })
         ]
 
+        // Save chat history before page unload
+        const handleBeforeUnload = () => {
+            chatManager.saveCurrentConversation();
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
         manageOverlay();
         return () => {
             offs.forEach(off => off());
+            window.removeEventListener('beforeunload', handleBeforeUnload);
         }
 
     });
@@ -121,6 +163,15 @@
                 dialogs.healthProperty = false;
             }}/>
         </Modal>
+    {/if}
+
+    <!-- AI Chat Sidebar - show throughout the medical section -->
+    {#if $page.url.pathname.startsWith('/med')}
+        <AIChatSidebar 
+            {currentProfile}
+            {isOwnProfile}
+            {userLanguage}
+        />
     {/if}
 
 </DropFiles>

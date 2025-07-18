@@ -57,6 +57,43 @@
       "new-session": "Nové sezení",
       "profiles": "Profily"
     },
+    "chat": {
+      "title": "AI Lékařský asistent",
+      "mode": {
+        "patient": "Podpora pacienta",
+        "clinical": "Klinická analýza"
+      },
+      "actions": {
+        "clear": "Vymazat konverzaci",
+        "close": "Zavřít chat",
+        "open": "Otevřít AI Chat",
+        "send": "Odeslat zprávu"
+      },
+      "placeholders": {
+        "ask": "Zeptejte se na lékařské informace..."
+      },
+      "anatomy": {
+        "view": "Zobrazit {bodyPart}",
+        "view-aria": "Zobrazit {bodyPart} v anatomickém modelu"
+      },
+      "sidebar": {
+        "resize": "Změnit velikost chat panelu"
+      },
+      "document": {
+        "add-prompt": "Chcete přidat \"{title}\" do našeho chatu?",
+        "add-yes": "Ano",
+        "add-no": "Ne",
+        "added": "Dokument \"{title}\" přidán do kontextu konverzace",
+        "declined": "Dokument nebyl přidán do konverzace"
+      },
+      "profile": {
+        "switch-prompt": "Přepnuli jste na profil {profileName}. Chcete resetovat kontext chatu?",
+        "switch-yes": "Resetovat kontext",
+        "switch-no": "Zachovat současný kontext",
+        "context-reset": "Kontext chatu resetován pro {profileName}",
+        "context-kept": "Kontext chatu zachován, nyní diskutujeme o {profileName}"
+      }
+    },
     "onboarding": {
       "basic-profile": "",
       "click-here": "",
