@@ -2,11 +2,12 @@ import type { ChatMessage, ChatContext, ChatResponse } from './types.d';
 import { generateId } from '$lib/utils/id';
 
 export interface ChatStreamEvent {
-  type: 'status' | 'progress' | 'response' | 'error';
+  type: 'status' | 'progress' | 'response' | 'error' | 'chunk' | 'metadata' | 'complete';
   message?: string;
   stage?: string;
   progress?: number;
   data?: any;
+  content?: string;
 }
 
 export class ChatClientService {

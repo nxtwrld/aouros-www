@@ -522,8 +522,10 @@ export class ChatManager {
       const userMsg = createMessage('user', userMessage);
       chatActions.addMessage(userMsg);
 
-      // Create temporary status message for real-time updates
-      let statusMessageId: string | null = null;
+      // Create a message that will be updated as chunks arrive
+      let streamingMessageId: string | null = null;
+      let accumulatedContent = '';
+      let messageMetadata: any = {};
 
       // Send message via SSE
       await this.clientService.sendMessage(
@@ -532,46 +534,44 @@ export class ChatManager {
         state.messages,
         (event) => {
           switch (event.type) {
-            case 'status':
-            case 'progress':
-              // Update or create status message
-              if (statusMessageId) {
-                // Update existing status message
+            case 'chunk':
+              // Handle streaming chunks
+              accumulatedContent += event.content || '';
+              
+              if (!streamingMessageId) {
+                // Create initial streaming message
+                const streamingMsg = createMessage('assistant', accumulatedContent);
+                streamingMessageId = streamingMsg.id;
+                chatActions.addMessage(streamingMsg);
+              } else {
+                // Update existing message with new content
                 const currentState = get(chatStore);
                 const updatedMessages = currentState.messages.map(msg => 
-                  msg.id === statusMessageId 
-                    ? { ...msg, content: event.message || 'Processing...' }
+                  msg.id === streamingMessageId 
+                    ? { ...msg, content: accumulatedContent }
                     : msg
                 );
                 chatActions.setMessages(updatedMessages);
-              } else {
-                // Create new status message
-                const statusMsg = createMessage('system', event.message || 'Processing...');
-                statusMessageId = statusMsg.id;
-                chatActions.addMessage(statusMsg);
               }
               break;
 
-            case 'response':
-              // Remove status message
-              if (statusMessageId) {
-                const currentState = get(chatStore);
-                const filteredMessages = currentState.messages.filter(msg => msg.id !== statusMessageId);
-                chatActions.setMessages(filteredMessages);
-                statusMessageId = null;
-              }
-
-              // Add AI response
-              const aiMsg = createMessage('assistant', event.data.message, {
+            case 'metadata':
+              // Store metadata for later use
+              messageMetadata = {
                 anatomyFocus: event.data.anatomyReferences,
                 documentsReferenced: event.data.documentReferences,
                 toolsUsed: [],
-              });
-              chatActions.addMessage(aiMsg);
-
-              // Handle anatomy suggestions
-              if (event.data.suggestions && event.data.suggestions.length > 0) {
-                this.handleAnatomySuggestions(event.data.suggestions);
+              };
+              
+              // Update the message with metadata
+              if (streamingMessageId) {
+                const currentState = get(chatStore);
+                const updatedMessages = currentState.messages.map(msg => 
+                  msg.id === streamingMessageId 
+                    ? { ...msg, metadata: messageMetadata }
+                    : msg
+                );
+                chatActions.setMessages(updatedMessages);
               }
 
               // Handle consent requests
@@ -580,15 +580,12 @@ export class ChatManager {
               }
               break;
 
-            case 'error':
-              // Remove status message
-              if (statusMessageId) {
-                const currentState = get(chatStore);
-                const filteredMessages = currentState.messages.filter(msg => msg.id !== statusMessageId);
-                chatActions.setMessages(filteredMessages);
-                statusMessageId = null;
-              }
+            case 'complete':
+              // Streaming is complete
+              console.log('Streaming complete');
+              break;
 
+            case 'error':
               // Add error message
               const errorMsg = createMessage(
                 'assistant',
@@ -636,15 +633,21 @@ export class ChatManager {
    */
   async focusAnatomy(bodyPartId: string): Promise<void> {
     try {
-      await AnatomyIntegration.openAndFocus(bodyPartId);
+      console.log('Focusing anatomy on:', bodyPartId);
       
-      // Add system message about anatomy focus
-      const focusMsg = createMessage(
-        'system',
-        `Anatomy model focused on: ${bodyPartId}`,
-        { anatomyFocus: [bodyPartId] }
-      );
-      chatActions.addMessage(focusMsg);
+      // Validate if this is a valid body part
+      if (!AnatomyIntegration.isValidBodyPart(bodyPartId)) {
+        console.error(`Invalid body part ID: ${bodyPartId}`);
+        const errorMsg = createMessage(
+          'system',
+          `Unable to focus on "${bodyPartId}" - not found in anatomy model`,
+          {}
+        );
+        chatActions.addMessage(errorMsg);
+        return;
+      }
+      
+      await AnatomyIntegration.openAndFocus(bodyPartId);
     } catch (error) {
       console.error('Error focusing anatomy:', error);
     }

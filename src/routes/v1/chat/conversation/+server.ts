@@ -2,6 +2,10 @@ import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { enhancedAIProvider } from '$lib/ai/providers/enhanced-abstraction';
 import type { Content } from '$lib/ai/types.d';
 import { generateId } from '$lib/utils/id';
+import anatomyObjects from '$components/anatomy/objects.json';
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { modelConfig } from '$lib/config/model-config';
 
 export const POST: RequestHandler = async ({ request, locals: { safeGetSession } }) => {
   // Check authentication
@@ -30,11 +34,6 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession }
       start(controller) {
         const encoder = new TextEncoder();
         
-        // Send initial status
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: 'status', message: 'Processing...' })}\n\n`)
-        );
-
         // Process AI request
         processAIRequest(
           message,
@@ -90,76 +89,86 @@ async function processAIRequest(
     // Build system prompt based on mode
     const systemPrompt = buildSystemPrompt(mode, language, pageContext);
     
-    // Create content array for AI processing
+    // Phase 1: Stream the text response
+    const streamingModel = new ChatOpenAI({
+      model: 'gpt-4o-2024-08-06',
+      apiKey: modelConfig.getProviderApiKey('openai'),
+      temperature: 0.7,
+      streaming: true,
+    });
+
+    const messages = [
+      new SystemMessage(systemPrompt),
+      // Add conversation history
+      ...conversationHistory.slice(-10).flatMap(msg => {
+        if (msg.role === 'user') return [new HumanMessage(msg.content)];
+        if (msg.role === 'assistant') return [new SystemMessage(msg.content)];
+        return [];
+      }),
+      new HumanMessage(userMessage)
+    ];
+
+    // Start streaming the response
+    let fullResponse = '';
+    const stream = await streamingModel.stream(messages);
+    
+    for await (const chunk of stream) {
+      const text = chunk.content.toString();
+      fullResponse += text;
+      
+      // Send chunk to client
+      controller.enqueue(
+        encoder.encode(`data: ${JSON.stringify({ 
+          type: 'chunk',
+          content: text 
+        })}\n\n`)
+      );
+    }
+
+    // Phase 2: Get structured data using the full response
     const content: Content[] = [
       { type: 'text', text: systemPrompt },
-      // Add conversation history (last 10 messages)
       ...conversationHistory.slice(-10).map(msg => ({
         type: 'text' as const,
         text: `${msg.role}: ${msg.content}`
       })),
-      { type: 'text', text: `user: ${userMessage}` }
+      { type: 'text', text: `user: ${userMessage}` },
+      { type: 'text', text: `assistant: ${fullResponse}` }
     ];
 
-    // Create response schema
     const schema = createResponseSchema(mode);
-
-    // Send progress update
-    controller.enqueue(
-      encoder.encode(`data: ${JSON.stringify({ 
-        type: 'progress', 
-        message: 'Analyzing with AI...' 
-      })}\n\n`)
-    );
-
-    // Get AI response
-    const flowType = mode === 'patient' ? 'medical_analysis' : 'medical_analysis';
-    const aiResponse = await enhancedAIProvider.analyzeDocument(
+    
+    // Get structured data (anatomy references, etc.)
+    const structuredData = await enhancedAIProvider.analyzeDocument(
       content,
       schema,
       tokenUsage,
       {
         language: getLanguageName(language),
-        temperature: 0.7,
-        flowType,
-        progressCallback: (stage, progress, message) => {
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ 
-              type: 'progress', 
-              stage, 
-              progress, 
-              message 
-            })}\n\n`)
-          );
-        }
+        temperature: 0,
+        flowType: mode === 'patient' ? 'medical_analysis' : 'medical_analysis'
       }
     );
 
-    // Detect body parts in the message
-    const bodyPartReferences = detectBodyParts(userMessage);
-
-    // Send final response
-    const response = {
-      type: 'response',
+    // Send the structured data as metadata
+    const metadata = {
+      type: 'metadata',
       data: {
-        message: aiResponse.response || aiResponse.message || 'I apologize, but I encountered an issue processing your message.',
-        anatomyReferences: bodyPartReferences,
-        suggestions: bodyPartReferences.length > 0 ? [
-          {
-            bodyParts: bodyPartReferences,
-            suggestion: `I can show you the ${bodyPartReferences[0]} on our 3D anatomy model to help you understand better.`,
-            actionText: `Show ${bodyPartReferences[0]} on 3D model`
-          }
-        ] : [],
-        documentReferences: aiResponse.documentReferences || [],
-        consentRequests: aiResponse.consentRequests || [],
+        anatomyReferences: structuredData.anatomyReferences || [],
+        documentReferences: structuredData.documentReferences || [],
+        consentRequests: structuredData.consentRequests || [],
         tokenUsage: tokenUsage.total,
         mode
       }
     };
 
     controller.enqueue(
-      encoder.encode(`data: ${JSON.stringify(response)}\n\n`)
+      encoder.encode(`data: ${JSON.stringify(metadata)}\n\n`)
+    );
+
+    // Send completion signal
+    controller.enqueue(
+      encoder.encode(`data: ${JSON.stringify({ type: 'complete' })}\n\n`)
     );
 
     // Close the stream
@@ -178,7 +187,7 @@ async function processAIRequest(
 }
 
 function buildSystemPrompt(mode: 'patient' | 'clinical', language: string, pageContext: any): string {
-  const basePrompt = `You are an AI medical assistant integrated with a 3D anatomy model. You can suggest anatomy visualizations when discussing body parts.`;
+  const basePrompt = `You are an AI medical assistant integrated with a 3D anatomy model. IMPORTANT: Never include technical IDs, anatomy references, or mention "AnatomyReferences" in your text responses. These are handled automatically by the system.`;
   
   // Extract document content if available
   let documentContext = '';
@@ -224,8 +233,11 @@ PATIENT SUPPORT MODE:
 - Use language appropriate for: ${language}
 - Patient name: ${pageContext?.profileName || 'Patient'}
 
-When discussing body parts, suggest using the 3D anatomy model for better understanding.
-Available anatomy systems: skeletal, muscular, vascular, nervous, respiratory, digestive, urogenital.
+When discussing body parts, include relevant anatomy references in the anatomyReferences field using EXACT IDs from the enum list.
+Examples of valid IDs: "heart", "lungs", "brain", "stomach", "L_patella", "R_femur", "lumbar_spine", "liver_left", etc.
+DO NOT translate these IDs - use them exactly as they appear in the enum.
+DO NOT mention the 3D model in your text response - anatomy buttons will be automatically added by the UI.
+NEVER include AnatomyReferences or any technical IDs in your text response - these are only for the structured data field.
 
 ${documentContext}
 
@@ -246,8 +258,11 @@ CLINICAL CONSULTATION MODE:
 - Use language appropriate for: ${language}
 - Patient profile: ${pageContext?.profileName || 'Patient'}
 
-When discussing anatomical structures, suggest using the 3D model for visualization.
-Available anatomy systems: skeletal, muscular, vascular, nervous, respiratory, digestive, urogenital.
+When discussing anatomical structures, include relevant anatomy references in the anatomyReferences field using EXACT IDs from the enum list.
+Examples of valid IDs: "heart", "lungs", "brain", "stomach", "L_patella", "R_femur", "lumbar_spine", "liver_left", etc.
+DO NOT translate these IDs - use them exactly as they appear in the enum.
+DO NOT mention the 3D model in your text response - anatomy buttons will be automatically added by the UI.
+NEVER include AnatomyReferences or any technical IDs in your text response - these are only for the structured data field.
 
 ${documentContext}
 
@@ -260,6 +275,12 @@ CLINICAL FOCUS:
 }
 
 function createResponseSchema(mode: 'patient' | 'clinical') {
+  // Get all valid anatomy object IDs from the configuration
+  const allAnatomyObjects: string[] = [];
+  Object.values(anatomyObjects).forEach(system => {
+    allAnatomyObjects.push(...system.objects);
+  });
+
   const baseSchema = {
     name: 'chat_response',
     description: 'AI medical chat response',
@@ -272,8 +293,11 @@ function createResponseSchema(mode: 'patient' | 'clinical') {
         },
         anatomyReferences: {
           type: 'array',
-          items: { type: 'string' },
-          description: 'Body parts mentioned that could be visualized',
+          items: { 
+            type: 'string',
+            enum: allAnatomyObjects
+          },
+          description: 'Body parts mentioned that could be visualized. MUST use exact IDs from the enum list (e.g., "heart", "lungs", "L_patella", "R_femur"). DO NOT translate these IDs. DO NOT mention the 3D model in your text response.',
         },
         documentReferences: {
           type: 'array',
@@ -333,27 +357,3 @@ function getLanguageName(languageCode: string): string {
   return languages[languageCode] || 'English';
 }
 
-function detectBodyParts(text: string): string[] {
-  const bodyPartMappings = {
-    'knee': ['L_patella', 'R_patella'],
-    'back': ['lumbar_spine', 'thoracic_spine'],
-    'shoulder': ['L_scapula', 'R_scapula'],
-    'heart': ['heart'],
-    'lungs': ['lungs'],
-    'liver': ['liver_left', 'liver_right'],
-    'brain': ['brain'],
-    'stomach': ['stomach'],
-    'kidney': ['kidneys'],
-  };
-
-  const lowercaseText = text.toLowerCase();
-  const detected: string[] = [];
-
-  for (const [commonName, anatomyIds] of Object.entries(bodyPartMappings)) {
-    if (lowercaseText.includes(commonName)) {
-      detected.push(anatomyIds[0]);
-    }
-  }
-
-  return detected;
-}

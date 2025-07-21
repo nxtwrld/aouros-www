@@ -264,8 +264,13 @@
                     class="anatomy-btn"
                     onclick={() => focusAnatomy(bodyPart)}
                     aria-label={$t('app.chat.anatomy.view-aria', { bodyPart })}
+                    title={$t('app.chat.anatomy.view', { bodyPart })}
                   >
-                    🔍 {$t('app.chat.anatomy.view', { bodyPart })}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                      <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+                      <path d="M8 12h8M12 8v8"/>
+                    </svg>
                   </button>
                 {/each}
               </div>
@@ -587,11 +592,20 @@
     background: var(--color-highlight);
     color: var(--color-highlight-text);
     border: none;
-    padding: 4px 8px;
-    border-radius: 16px;
-    font-size: 12px;
+    padding: 6px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
     cursor: pointer;
     transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .anatomy-btn svg {
+    width: 18px;
+    height: 18px;
   }
 
   .anatomy-btn:hover {

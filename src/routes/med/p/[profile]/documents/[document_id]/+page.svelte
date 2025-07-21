@@ -26,7 +26,7 @@
             ui.emit('aicontext:document', {
                 documentId: document.id,
                 title: document.content?.title || document.metadata?.title || 'Untitled Document',
-                content: document,
+                content: document.content,
                 timestamp: new Date()
             });
         }
