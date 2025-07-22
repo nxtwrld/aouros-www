@@ -92,6 +92,10 @@
         "switch-no": "Zachovat současný kontext",
         "context-reset": "Kontext chatu resetován pro {profileName}",
         "context-kept": "Kontext chatu zachován, nyní diskutujeme o {profileName}"
+      },
+      "greetings": {
+        "patient": "Ahoj! Jsem tu, abych vám pomohl porozumět vašim lékařským informacím a podpořil vás na vaší cestě zdravotní péče. Neváhejte se mě zeptat na vaše zdravotní záznamy, příznaky nebo jakékoli otázky týkající se vaší péče.",
+        "clinical": "Ahoj! Jsem tu, abych asistoval s klinickou analýzou lékařského profilu {profileName}. Mohu pomoci analyzovat vzory, navrhnout diferenciální úvahy a poskytnout poznatky založené na dostupných lékařských datech."
       }
     },
     "onboarding": {

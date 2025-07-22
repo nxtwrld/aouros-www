@@ -93,6 +93,10 @@
         "switch-no": "Keep Current Context",
         "context-reset": "Chat context reset for {profileName}",
         "context-kept": "Chat context kept, now discussing {profileName}"
+      },
+      "greetings": {
+        "patient": "Hello! I'm here to help you understand your medical information and support you through your healthcare journey. Feel free to ask me about your health records, symptoms, or any questions you might have about your care.",
+        "clinical": "Hello! I'm here to assist with clinical analysis of {profileName}'s medical profile. I can help analyze patterns, suggest differential considerations, and provide insights based on the available medical data."
       }
     },
     "onboarding": {

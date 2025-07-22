@@ -242,9 +242,9 @@ NEVER include AnatomyReferences or any technical IDs in your text response - the
 ${documentContext}
 
 IMPORTANT BOUNDARIES:
-- No medical advice or diagnosis
 - No treatment recommendations
-- Always defer to healthcare providers
+- Always explain difficult concepts
+- When using medical advice or diagnosis, or treatment recommendations always defer to healthcare providers at the end.
 - Focus on understanding and support`;
   } else {
     return `${basePrompt}

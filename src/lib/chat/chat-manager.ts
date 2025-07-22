@@ -5,6 +5,7 @@ import AnatomyIntegration from './anatomy-integration';
 import type { ChatMessage, ChatContext, ChatResponse } from './types.d';
 import { generateId } from '$lib/utils/id';
 import ui from '$lib/ui';
+import { t } from '$lib/i18n';
 
 export class ChatManager {
   private clientService: ChatClientService;
@@ -718,47 +719,12 @@ export class ChatManager {
    */
   private getInitialGreeting(context: ChatContext): string {
     const profileName = context.pageContext.profileName;
-    const language = context.language;
     
     if (context.mode === 'patient') {
-      return this.getLocalizedGreeting(language, 'patient', profileName);
+      return get(t)('app.chat.greetings.patient');
     } else {
-      return this.getLocalizedGreeting(language, 'clinical', profileName);
+      return get(t)('app.chat.greetings.clinical', { values: { profileName } });
     }
-  }
-
-  /**
-   * Get localized greeting messages
-   */
-  private getLocalizedGreeting(language: string, mode: 'patient' | 'clinical', profileName: string): string {
-    const greetings: Record<string, Record<string, string>> = {
-      'en': {
-        patient: `Hello! I'm here to help you understand your medical information and support you through your healthcare journey. Feel free to ask me about your health records, symptoms, or any questions you might have about your care.
-
-I can also show you relevant anatomy using our 3D model when discussing specific body parts. What would you like to know about?`,
-        clinical: `Hello! I'm here to assist with clinical analysis of ${profileName}'s medical profile. I can help analyze patterns, suggest differential considerations, and provide insights based on the available medical data.
-
-I can also integrate with the 3D anatomy model for visualization when discussing anatomical structures. How can I assist with this patient's care?`
-      },
-      'cs': {
-        patient: `Ahoj! Jsem tu, abych vám pomohl porozumět vašim lékařským informacím a podpořil vás na vaší cestě zdravotní péče. Neváhejte se mě zeptat na vaše zdravotní záznamy, příznaky nebo jakékoli otázky týkající se vaší péče.
-
-Mohu vám také ukázat relevantní anatomii pomocí našeho 3D modelu při diskusi o konkrétních částech těla. O čem byste se chtěli dozvědět?`,
-        clinical: `Ahoj! Jsem tu, abych asistoval s klinickou analýzou lékařského profilu ${profileName}. Mohu pomoci analyzovat vzory, navrhnout diferenciální úvahy a poskytnout poznatky založené na dostupných lékařských datech.
-
-Mohu se také integrovat s 3D anatomickým modelem pro vizualizaci při diskusi o anatomických strukturách. Jak mohu pomoci s péčí o tohoto pacienta?`
-      },
-      'de': {
-        patient: `Hallo! Ich bin hier, um Ihnen zu helfen, Ihre medizinischen Informationen zu verstehen und Sie auf Ihrem Gesundheitsweg zu unterstützen. Fragen Sie mich gerne nach Ihren Gesundheitsakten, Symptomen oder allen Fragen zu Ihrer Pflege.
-
-Ich kann Ihnen auch relevante Anatomie mit unserem 3D-Modell zeigen, wenn wir über bestimmte Körperteile sprechen. Was möchten Sie wissen?`,
-        clinical: `Hallo! Ich bin hier, um bei der klinischen Analyse des medizinischen Profils von ${profileName} zu helfen. Ich kann bei der Analyse von Mustern helfen, Differentialüberlegungen vorschlagen und Erkenntnisse basierend auf verfügbaren medizinischen Daten liefern.
-
-Ich kann mich auch mit dem 3D-Anatomiemodell für die Visualisierung bei der Diskussion anatomischer Strukturen integrieren. Wie kann ich bei der Betreuung dieses Patienten helfen?`
-      }
-    };
-
-    return greetings[language]?.[mode] || greetings['en'][mode];
   }
 
   /**
