@@ -21,6 +21,13 @@
   let sidebarWidth = $state(400);
   let isResizing = $state(false);
   
+  // Update CSS variable when sidebar width changes
+  $effect(() => {
+    if (chatIsOpen) {
+      document.documentElement.style.setProperty('--chat-sidebar-width', `${sidebarWidth}px`);
+    }
+  });
+  
   // Reactive state
   let chatMessages = $state<ChatMessage[]>([]);
   let chatIsLoading = $state(false);

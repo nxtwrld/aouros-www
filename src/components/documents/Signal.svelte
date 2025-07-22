@@ -293,6 +293,24 @@
         text-align: right;
         vertical-align: middle;
     }
+    
+    /* Make table cells responsive to container size */
+    .title {
+        font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+        word-break: break-word;
+    }
+    
+    @container (max-width: 600px) {
+        .title {
+            font-size: 0.9rem;
+        }
+    }
+    
+    @container (max-width: 400px) {
+        .title {
+            font-size: 0.8rem;
+        }
+    }
 /*
     .details {
         max-height: 0;
@@ -309,9 +327,9 @@
         */
     .status {
         margin-right: 1rem;
-        min-width: 4rem;
+        min-width: min(4rem, 25%);
         border-radius: var(--border-radius);
-        padding: 0  1.5rem 0 1rem;
+        padding: 0 min(1.5rem, 4%) 0 min(1rem, 3%);
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -324,6 +342,34 @@
         transition: background-color .1s ease-in-out;
         background-color: var(--background-color);
         color: var(--text-color);
+    }
+    
+    /* Container-responsive adjustments for Signal */
+    @container (max-width: 500px) {
+        .status {
+            min-width: 3rem;
+            padding: 0 0.75rem 0 0.5rem;
+            margin-right: 0.5rem;
+        }
+        
+        .status strong {
+            font-size: 1.2rem;
+        }
+        
+        .actions {
+            scale: 0.8;
+        }
+    }
+    
+    @container (max-width: 400px) {
+        .status strong {
+            font-size: 1rem;
+            margin-right: 0.25rem;
+        }
+        
+        .unit {
+            font-size: 0.8rem;
+        }
     }
 
     .status-ok {
