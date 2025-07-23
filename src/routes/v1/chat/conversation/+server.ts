@@ -2,10 +2,8 @@ import { json, error, type RequestHandler } from '@sveltejs/kit';
 import { enhancedAIProvider } from '$lib/ai/providers/enhanced-abstraction';
 import type { Content } from '$lib/ai/types.d';
 import { generateId } from '$lib/utils/id';
-import anatomyObjects from '$components/anatomy/objects.json';
-import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { modelConfig } from '$lib/config/model-config';
+import { chatConfigManager } from '$lib/config/chat-config';
 
 export const POST: RequestHandler = async ({ request, locals: { safeGetSession } }) => {
   // Check authentication
@@ -21,7 +19,8 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession }
       profileId, 
       conversationHistory, 
       language = 'en',
-      pageContext 
+      pageContext,
+      provider // Optional provider override
     } = await request.json();
 
     // Validate required fields
@@ -42,6 +41,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession }
           conversationHistory || [],
           language,
           pageContext,
+          provider,
           controller,
           encoder
         ).catch((err) => {
@@ -80,29 +80,30 @@ async function processAIRequest(
   conversationHistory: any[],
   language: string,
   pageContext: any,
+  provider: string | undefined,
   controller: ReadableStreamDefaultController,
   encoder: TextEncoder
 ) {
   const tokenUsage = { total: 0 };
 
   try {
-    // Build system prompt based on mode
-    const systemPrompt = buildSystemPrompt(mode, language, pageContext);
+    // Build system prompt based on mode using configuration
+    const systemPrompt = chatConfigManager.buildSystemPrompt(mode, language, pageContext);
     
-    // Phase 1: Stream the text response
-    const streamingModel = new ChatOpenAI({
-      model: 'gpt-4o-2024-08-06',
-      apiKey: modelConfig.getProviderApiKey('openai'),
-      temperature: 0.7,
-      streaming: true,
-    });
+    // Phase 1: Stream the text response using configured model
+    const streamingModel = chatConfigManager.createStreamingModel(provider);
 
+    // Get conversation configuration
+    const conversationConfig = chatConfigManager.getConversationConfig();
+    
     const messages = [
       new SystemMessage(systemPrompt),
-      // Add conversation history
-      ...conversationHistory.slice(-10).flatMap(msg => {
+      // Add conversation history based on configuration
+      ...conversationHistory.slice(-conversationConfig.maxMessages).flatMap(msg => {
         if (msg.role === 'user') return [new HumanMessage(msg.content)];
-        if (msg.role === 'assistant') return [new SystemMessage(msg.content)];
+        if (msg.role === 'assistant' && conversationConfig.includeSystemMessages) {
+          return [new SystemMessage(msg.content)];
+        }
         return [];
       }),
       new HumanMessage(userMessage)
@@ -128,7 +129,7 @@ async function processAIRequest(
     // Phase 2: Get structured data using the full response
     const content: Content[] = [
       { type: 'text', text: systemPrompt },
-      ...conversationHistory.slice(-10).map(msg => ({
+      ...conversationHistory.slice(-conversationConfig.maxMessages).map(msg => ({
         type: 'text' as const,
         text: `${msg.role}: ${msg.content}`
       })),
@@ -136,7 +137,7 @@ async function processAIRequest(
       { type: 'text', text: `assistant: ${fullResponse}` }
     ];
 
-    const schema = createResponseSchema(mode);
+    const schema = chatConfigManager.createResponseSchema(mode);
     
     // Get structured data (anatomy references, etc.)
     const structuredData = await enhancedAIProvider.analyzeDocument(
@@ -144,7 +145,7 @@ async function processAIRequest(
       schema,
       tokenUsage,
       {
-        language: getLanguageName(language),
+        language: chatConfigManager.getLanguageName(language),
         temperature: 0,
         flowType: mode === 'patient' ? 'medical_analysis' : 'medical_analysis'
       }
@@ -186,174 +187,6 @@ async function processAIRequest(
   }
 }
 
-function buildSystemPrompt(mode: 'patient' | 'clinical', language: string, pageContext: any): string {
-  const basePrompt = `You are an AI medical assistant integrated with a 3D anatomy model. IMPORTANT: Never include technical IDs, anatomy references, or mention "AnatomyReferences" in your text responses. These are handled automatically by the system.`;
-  
-  // Extract document content if available
-  let documentContext = '';
-  if (pageContext?.documentsContent && Array.isArray(pageContext.documentsContent)) {
-    const documents = pageContext.documentsContent;
-    if (documents.length > 0) {
-      documentContext = '\n\nAVAILABLE MEDICAL DOCUMENTS:\n';
-      documents.forEach(([docId, doc]) => {
-        if (doc?.content) {
-          documentContext += `\nDocument: ${doc.content.title || doc.metadata?.title || 'Untitled'}\n`;
-          // Include key medical information from the document
-          if (doc.content.diagnosis) {
-            documentContext += `- Diagnosis: ${JSON.stringify(doc.content.diagnosis)}\n`;
-          }
-          if (doc.content.medications) {
-            documentContext += `- Medications: ${JSON.stringify(doc.content.medications)}\n`;
-          }
-          if (doc.content.vitals) {
-            documentContext += `- Vitals: ${JSON.stringify(doc.content.vitals)}\n`;
-          }
-          if (doc.content.recommendations) {
-            documentContext += `- Recommendations: ${JSON.stringify(doc.content.recommendations)}\n`;
-          }
-          // Include any other relevant content
-          const { title, diagnosis, medications, vitals, recommendations, ...otherContent } = doc.content;
-          if (Object.keys(otherContent).length > 0) {
-            documentContext += `- Additional Information: ${JSON.stringify(otherContent)}\n`;
-          }
-        }
-      });
-    }
-  }
-  
-  if (mode === 'patient') {
-    return `${basePrompt}
-
-PATIENT SUPPORT MODE:
-- Use empathetic, supportive language
-- Focus on education and understanding
-- Provide emotional support and coping strategies
-- Never provide medical advice or diagnosis
-- Always recommend consulting healthcare providers
-- Use language appropriate for: ${language}
-- Patient name: ${pageContext?.profileName || 'Patient'}
-
-When discussing body parts, include relevant anatomy references in the anatomyReferences field using EXACT IDs from the enum list.
-Examples of valid IDs: "heart", "lungs", "brain", "stomach", "L_patella", "R_femur", "lumbar_spine", "liver_left", etc.
-DO NOT translate these IDs - use them exactly as they appear in the enum.
-DO NOT mention the 3D model in your text response - anatomy buttons will be automatically added by the UI.
-NEVER include AnatomyReferences or any technical IDs in your text response - these are only for the structured data field.
-
-${documentContext}
-
-IMPORTANT BOUNDARIES:
-- No treatment recommendations
-- Always explain difficult concepts
-- When using medical advice or diagnosis, or treatment recommendations always defer to healthcare providers at the end.
-- Focus on understanding and support`;
-  } else {
-    return `${basePrompt}
-
-CLINICAL CONSULTATION MODE:
-- Use professional, analytical language
-- Provide clinical insights and perspectives
-- Suggest diagnostic considerations
-- Analyze patterns and correlations
-- Reference medical literature when appropriate
-- Use language appropriate for: ${language}
-- Patient profile: ${pageContext?.profileName || 'Patient'}
-
-When discussing anatomical structures, include relevant anatomy references in the anatomyReferences field using EXACT IDs from the enum list.
-Examples of valid IDs: "heart", "lungs", "brain", "stomach", "L_patella", "R_femur", "lumbar_spine", "liver_left", etc.
-DO NOT translate these IDs - use them exactly as they appear in the enum.
-DO NOT mention the 3D model in your text response - anatomy buttons will be automatically added by the UI.
-NEVER include AnatomyReferences or any technical IDs in your text response - these are only for the structured data field.
-
-${documentContext}
-
-CLINICAL FOCUS:
-- Pattern analysis across patient history
-- Differential diagnostic considerations
-- Evidence-based insights
-- Professional medical terminology`;
-  }
-}
-
-function createResponseSchema(mode: 'patient' | 'clinical') {
-  // Get all valid anatomy object IDs from the configuration
-  const allAnatomyObjects: string[] = [];
-  Object.values(anatomyObjects).forEach(system => {
-    allAnatomyObjects.push(...system.objects);
-  });
-
-  const baseSchema = {
-    name: 'chat_response',
-    description: 'AI medical chat response',
-    parameters: {
-      type: 'object',
-      properties: {
-        response: {
-          type: 'string',
-          description: 'Main response to user message',
-        },
-        anatomyReferences: {
-          type: 'array',
-          items: { 
-            type: 'string',
-            enum: allAnatomyObjects
-          },
-          description: 'Body parts mentioned that could be visualized. MUST use exact IDs from the enum list (e.g., "heart", "lungs", "L_patella", "R_femur"). DO NOT translate these IDs. DO NOT mention the 3D model in your text response.',
-        },
-        documentReferences: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Document IDs referenced in response',
-        },
-        consentRequests: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              type: { type: 'string', enum: ['document_access', 'anatomy_integration'] },
-              message: { type: 'string' },
-              reason: { type: 'string' },
-            },
-          },
-          description: 'Consent requests for accessing documents or using anatomy model',
-        },
-      },
-      required: ['response'],
-    },
-  };
-
-  if (mode === 'patient') {
-    baseSchema.parameters.properties.supportType = {
-      type: 'string',
-      enum: ['educational', 'emotional', 'preparatory'],
-      description: 'Type of support provided',
-    };
-    baseSchema.parameters.properties.copingStrategies = {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Coping strategies suggested',
-    };
-  } else {
-    baseSchema.parameters.properties.clinicalInsights = {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Clinical insights provided',
-    };
-    baseSchema.parameters.properties.differentialConsiderations = {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Differential diagnostic considerations',
-    };
-  }
-
-  return baseSchema;
-}
-
-function getLanguageName(languageCode: string): string {
-  const languages = {
-    'en': 'English',
-    'cs': 'Czech',
-    'de': 'German',
-  };
-  return languages[languageCode] || 'English';
-}
+// All prompt building, schema creation, and utility functions are now handled by chatConfigManager
+// Configuration is loaded from config/chat.json and managed by src/lib/config/chat-config.ts
 
