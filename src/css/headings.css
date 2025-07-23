@@ -84,6 +84,10 @@
   padding-left: 0;
 }
 
+.heading.-heading-main {
+  z-index: 100;
+}
+
 @media screen and (max-width: 768px) {
   .heading:has(.h1),
   .h1.heading {
@@ -95,6 +99,27 @@
 
   .heading .heading-icon svg {
     padding: 0.5rem;
+  }
+  
+  /* Make main headings much smaller on mobile */
+  .heading .heading-icon + .h1,
+  .heading .heading-icon + .h2,
+  .heading .heading-icon + .h3,
+  .heading .heading-icon + .h4 {
+    font-size: 1rem !important;
+    line-height: 1.2;
+  }
+  
+  /* Also target headings without icons */
+  .heading > .h1,
+  .heading > .h2 {
+    font-size: 1rem !important;
+    line-height: 1.2;
+  }
+  
+  /* Make date labels smaller on mobile */
+  .heading .-date {
+    font-size: 0.8rem !important;
   }
 
   .heading .-date {

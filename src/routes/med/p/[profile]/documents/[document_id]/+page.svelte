@@ -7,6 +7,7 @@
     import DocumentHeading from '$components/documents/DocumentHeading.svelte';
     import DocumentToolbar from '$components/documents/DocumentToolbar.svelte';
     import AppConnect from '$components/apps/AppConnect.svelte';
+    import ui from '$lib/ui';
 
     interface Props {
         data: {
@@ -19,6 +20,16 @@
     let document: Document | null = $state(null);
     onMount(async () => {
         document = await getDocument(data.document_id) || null;
+        
+        // Emit document context event for AI chat
+        if (document) {
+            ui.emit('aicontext:document', {
+                documentId: document.id,
+                title: document.content?.title || document.metadata?.title || 'Untitled Document',
+                content: document.content,
+                timestamp: new Date()
+            });
+        }
     });
 
     

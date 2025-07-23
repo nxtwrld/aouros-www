@@ -13,6 +13,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
     import { t } from "$lib/i18n";
     import ProfileImage from "$components/profile/ProfileImage.svelte";
     import type { Profile } from "$lib/types.d";
+    import { isOpen as chatIsOpen } from '$lib/chat/store';
 
     function isActive(path: string, currentPath: string) {
         if ($uiState.overlay !== Overlay.none) return false;
@@ -125,6 +126,13 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
             </ul>
         </div>
         {/if}
+        {#if $profile?.id}
+        <button on:click={() => ui.emit('chat:toggle')} class="icon" class:-active={$chatIsOpen} aria-label={$chatIsOpen ? $t('app.chat.actions.close') : $t('app.chat.actions.open')} title={$chatIsOpen ? $t('app.chat.actions.close') : $t('app.chat.actions.open')}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+        </button>
+        {/if}
         <button on:click={() => emit('find')} class="icon" aria-label="Search"><svg >
             <use href="/icons.svg#search"></use>
         </svg></button>
@@ -160,6 +168,12 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
         height: 100%;
         fill: currentColor;
         color: var(--color-black);
+    }
+    
+    .icon.-active {
+        background-color: var(--color-interactivity);
+        color: var(--color-white);
+        fill: currentColor;
     }
     .icon img {
         position: relative;

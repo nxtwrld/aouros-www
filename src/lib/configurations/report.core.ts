@@ -2,7 +2,7 @@ import type { FunctionDefinition } from "@langchain/core/language_models/base";
 
 /**
  * Core Medical Report Schema - Simplified
- * 
+ *
  * Focused on basic report information without embedded core schemas.
  * Core schemas (diagnosis, performer, patient, bodyParts) are handled by separate nodes.
  */
@@ -78,13 +78,13 @@ export default {
         description:
           "Date of the report. Format: YYYY-MM-DD HH:MM:SS or just YYYY-MM-DD if no specific time is available. Leave empty if the date is not available.",
       },
-      
+
       // Core medical flags for other nodes
       isMedical: {
         type: "boolean",
         description: "Is this a medical document?",
       },
-      
+
       confidence: {
         type: "number",
         description: "Overall confidence in the extraction (0.0 to 1.0)",
@@ -92,7 +92,7 @@ export default {
     },
     required: [
       "category",
-      "title", 
+      "title",
       "summary",
       "content",
       "localizedContent",

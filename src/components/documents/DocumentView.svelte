@@ -11,6 +11,9 @@
     import SectionAttachments from './SectionAttachments.svelte';
     import SectionMedications from './SectionMedications.svelte';
     import SectionProcedures from './SectionProcedures.svelte';
+    import SectionAllergies from './SectionAllergies.svelte';
+    import SectionTriage from './SectionTriage.svelte';
+    import SectionAnesthesia from './SectionAnesthesia.svelte';
     
     import type { Document } from '$lib/documents/types.d';
 
@@ -29,6 +32,9 @@
         { id: 'recommendations', component: SectionRecommendations, name: 'Recommendations' },
         { id: 'medications', component: SectionMedications, name: 'Medications' },
         { id: 'procedures', component: SectionProcedures, name: 'Procedures' },
+        { id: 'allergies', component: SectionAllergies, name: 'Allergies' },
+        { id: 'triage', component: SectionTriage, name: 'Triage' },
+        { id: 'anesthesia', component: SectionAnesthesia, name: 'Anesthesia' },
         { id: 'signals', component: SectionSignals, name: 'Signals & Lab Results' },
         { id: 'text', component: SectionText, name: 'Text Content' },
                 // { id: 'imaging', component: SectionImaging, name: 'Imaging Studies' },
@@ -70,7 +76,30 @@
                 return data.hasProcedures || 
                        (data.procedures && data.procedures.length > 0);
             
+            case 'allergies':
+                return data.hasAllergies || 
+                       (data.allergies && data.allergies.length > 0) ||
+                       (data.drugIntolerances && data.drugIntolerances.length > 0) ||
+                       (data.environmentalSensitivities && data.environmentalSensitivities.length > 0) ||
+                       data.noKnownAllergies;
+            
+            case 'triage':
+                return data.hasTriage || 
+                       data.chiefComplaint ||
+                       data.triageLevel ||
+                       data.arrivalTime;
+            
+            case 'anesthesia':
+                return data.hasAnesthesia || 
+                       data.anesthesiaType ||
+                       data.anesthesiaDetails ||
+                       (data.medications && data.medications.length > 0);
+            
             case 'signals':
+                // Handle both array format (direct signals) and object format
+                if (Array.isArray(data)) {
+                    return data.length > 0;
+                }
                 return (data.signals && data.signals.length > 0) ||
                        (data.laboratory && data.laboratory.length > 0) ||
                        (data.vitals && data.vitals.length > 0);

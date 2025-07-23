@@ -5,21 +5,23 @@ import corePerformer from "./core.performer";
 
 /**
  * Gross Findings Schema
- * 
+ *
  * Extracts gross pathological examination findings.
  * Reuses core components for consistency.
  */
 export default {
   name: "extract_gross_findings",
-  description: "Extract comprehensive gross pathological examination findings including specimen descriptions, measurements, and macroscopic observations.",
+  description:
+    "Extract comprehensive gross pathological examination findings including specimen descriptions, measurements, and macroscopic observations.",
   parameters: {
     type: "object",
     properties: {
       hasGrossFindings: {
         type: "boolean",
-        description: "Does this document contain gross pathological examination findings?",
+        description:
+          "Does this document contain gross pathological examination findings?",
       },
-      
+
       specimens: {
         type: "array",
         description: "Specimens examined",
@@ -38,7 +40,8 @@ export default {
             sourceBodyPart: coreBodyParts,
             procedure: {
               type: "string",
-              description: "Procedure used to obtain specimen (biopsy, resection, etc.)",
+              description:
+                "Procedure used to obtain specimen (biopsy, resection, etc.)",
             },
             receivedDate: {
               type: "string",
@@ -49,7 +52,8 @@ export default {
               properties: {
                 overall: {
                   type: "string",
-                  description: "Overall specimen dimensions (e.g., '12.5 x 8.0 x 3.2 cm')",
+                  description:
+                    "Overall specimen dimensions (e.g., '12.5 x 8.0 x 3.2 cm')",
                 },
                 weight: {
                   type: "string",
@@ -86,7 +90,7 @@ export default {
           required: ["specimenId", "description"],
         },
       },
-      
+
       macroscopicFindings: {
         type: "array",
         description: "Detailed macroscopic findings",
@@ -95,7 +99,8 @@ export default {
           properties: {
             structure: {
               type: "string",
-              description: "Anatomical structure examined",
+              description:
+                "Anatomical structure examined. Use standardized terminology from the [LANGUAGE] localization set.",
             },
             appearance: {
               type: "object",
@@ -106,7 +111,8 @@ export default {
                 },
                 texture: {
                   type: "string",
-                  description: "Texture description (smooth, rough, granular, etc.)",
+                  description:
+                    "Texture description (smooth, rough, granular, etc.)",
                 },
                 consistency: {
                   type: "string",
@@ -142,7 +148,8 @@ export default {
                   },
                   consistency: {
                     type: "string",
-                    description: "Lesion consistency",
+                    description:
+                      "Lesion consistency. Use standardized terminology from the [LANGUAGE] localization set.",
                   },
                   margins: {
                     type: "string",
@@ -150,7 +157,8 @@ export default {
                   },
                   relationship: {
                     type: "string",
-                    description: "Relationship to surrounding structures",
+                    description:
+                      "Relationship to surrounding structures. Translate result to the [LANGUAGE] language if the source is in a different language.",
                   },
                 },
                 required: ["type", "size"],
@@ -166,7 +174,8 @@ export default {
                 },
                 anterior: {
                   type: "string",
-                  description: "Anterior margin distance",
+                  description:
+                    "Anterior margin distance. Translate result to the [LANGUAGE] language if the source is in a different language.",
                 },
                 posterior: {
                   type: "string",
@@ -197,7 +206,7 @@ export default {
           },
         },
       },
-      
+
       lymphNodes: {
         type: "object",
         description: "Lymph node examination",
@@ -232,11 +241,12 @@ export default {
           },
           appearance: {
             type: "string",
-            description: "Gross appearance of lymph nodes",
+            description:
+              "Gross appearance of lymph nodes. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
         },
       },
-      
+
       sectioning: {
         type: "object",
         description: "Sectioning and sampling information",
@@ -257,11 +267,13 @@ export default {
                 },
                 source: {
                   type: "string",
-                  description: "Source within specimen",
+                  description:
+                    "Source within specimen. Translate result to the [LANGUAGE] language if the source is in a different language.",
                 },
                 purpose: {
                   type: "string",
-                  description: "Purpose of section (tumor, margin, lymph node, etc.)",
+                  description:
+                    "Purpose of section. Use standardized terminology from the [LANGUAGE] localization set.",
                 },
                 staining: {
                   type: "array",
@@ -275,32 +287,34 @@ export default {
           },
           representativeSections: {
             type: "string",
-            description: "Description of representative sections taken",
+            description:
+              "Description of representative sections taken. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
         },
       },
-      
+
       additionalObservations: {
         type: "array",
         description: "Additional gross observations",
         items: {
           type: "string",
-          description: "Additional observation",
+          description:
+            "Additional observation. Translate result to the [LANGUAGE] language if the source is in a different language.",
         },
       },
-      
+
       // Reuse core.diagnosis for preliminary gross diagnosis
       preliminaryDiagnosis: coreDiagnosis,
-      
+
       // Additional performers (primary performer extracted by medical-analysis node)
       // Expected roles: pathologist, pathologist_forensic, resident_physician, fellow
       examiningPathologist: corePerformer,
-      
+
       examinationDate: {
         type: "string",
         description: "Date of gross examination (ISO format)",
       },
-      
+
       photographicDocumentation: {
         type: "object",
         properties: {
@@ -317,7 +331,7 @@ export default {
           },
         },
       },
-      
+
       confidence: {
         type: "number",
         minimum: 0,

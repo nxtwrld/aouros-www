@@ -181,7 +181,8 @@ export default {
       },
       overallMicroscopicImpression: {
         type: "string",
-        description: "Overall microscopic impression or summary",
+        description:
+          "Overall microscopic impression or summary. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
       // Directly embed core.diagnosis schema
       microscopicDiagnosis: coreDiagnosis,
@@ -194,7 +195,7 @@ export default {
       correlationWithClinical: {
         type: "string",
         description:
-          "Correlation between microscopic findings and clinical history",
+          "Correlation between microscopic findings and clinical history. Translate result to the [LANGUAGE] language if the source is in a different language.",
       },
       additionalStudiesRecommended: {
         type: "array",

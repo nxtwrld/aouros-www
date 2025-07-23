@@ -44,5 +44,6 @@
     /* SectionText uses global panel styles */
     .panel {
         padding: var(--text-padding);
+        background-color: var(--color-background);
     }
 </style>

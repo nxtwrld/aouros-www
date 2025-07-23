@@ -6,32 +6,35 @@ import coreBodyParts from "./core.bodyParts";
 
 /**
  * Treatment Response Schema
- * 
+ *
  * Extracts treatment response assessment including RECIST criteria.
  * Reuses core components for consistency.
  */
 export default {
   name: "extract_treatment_response",
-  description: "Extract comprehensive treatment response assessment including RECIST criteria, tumor measurements, and clinical response evaluation.",
+  description:
+    "Extract comprehensive treatment response assessment including RECIST criteria, tumor measurements, and clinical response evaluation.",
   parameters: {
     type: "object",
     properties: {
       hasTreatmentResponse: {
         type: "boolean",
-        description: "Does this document contain treatment response assessment?",
+        description:
+          "Does this document contain treatment response assessment?",
       },
-      
+
       assessmentDate: {
         type: "string",
         description: "Date of response assessment (ISO format)",
       },
-      
+
       // Reuse core.diagnosis for treated diagnosis
       treatedDiagnosis: coreDiagnosis,
-      
+
       recistAssessment: {
         type: "object",
-        description: "RECIST (Response Evaluation Criteria in Solid Tumors) assessment",
+        description:
+          "RECIST (Response Evaluation Criteria in Solid Tumors) assessment",
         properties: {
           version: {
             type: "string",
@@ -41,7 +44,8 @@ export default {
           overallResponse: {
             type: "string",
             enum: ["CR", "PR", "SD", "PD", "NE"],
-            description: "Overall response: Complete Response, Partial Response, Stable Disease, Progressive Disease, Not Evaluable",
+            description:
+              "Overall response: Complete Response, Partial Response, Stable Disease, Progressive Disease, Not Evaluable",
           },
           targetLesions: {
             type: "array",
@@ -87,7 +91,13 @@ export default {
                 },
                 response: {
                   type: "string",
-                  enum: ["disappeared", "decreased", "stable", "increased", "new"],
+                  enum: [
+                    "disappeared",
+                    "decreased",
+                    "stable",
+                    "increased",
+                    "new",
+                  ],
                   description: "Individual lesion response",
                 },
               },
@@ -135,7 +145,7 @@ export default {
           },
         },
       },
-      
+
       clinicalResponse: {
         type: "object",
         description: "Clinical response assessment",
@@ -159,7 +169,12 @@ export default {
               },
               improvement: {
                 type: "string",
-                enum: ["significant_improvement", "improvement", "stable", "worsening"],
+                enum: [
+                  "significant_improvement",
+                  "improvement",
+                  "stable",
+                  "worsening",
+                ],
                 description: "Symptom improvement assessment",
               },
             },
@@ -210,7 +225,7 @@ export default {
           },
         },
       },
-      
+
       // Reuse core.signals for lab values and biomarkers
       biomarkerResponse: {
         type: "object",
@@ -224,7 +239,7 @@ export default {
           },
         },
       },
-      
+
       radiologicResponse: {
         type: "object",
         description: "Radiologic response details",
@@ -246,7 +261,7 @@ export default {
           },
         },
       },
-      
+
       treatmentToxicity: {
         type: "array",
         description: "Treatment-related toxicities",
@@ -264,37 +279,44 @@ export default {
             },
             attribution: {
               type: "string",
-              enum: ["definite", "probable", "possible", "unlikely", "unrelated"],
+              enum: [
+                "definite",
+                "probable",
+                "possible",
+                "unlikely",
+                "unrelated",
+              ],
               description: "Attribution to treatment",
             },
             action: {
               type: "string",
-              description: "Action taken (dose reduction, delay, discontinuation)",
+              description:
+                "Action taken (dose reduction, delay, discontinuation)",
             },
           },
         },
       },
-      
+
       responseDate: {
         type: "string",
         description: "Date response was achieved (ISO format)",
       },
-      
+
       durationOfResponse: {
         type: "string",
         description: "Duration of response if applicable",
       },
-      
+
       progressionDate: {
         type: "string",
         description: "Date of progression if applicable (ISO format)",
       },
-      
+
       timeToProgression: {
         type: "string",
         description: "Time to progression if applicable",
       },
-      
+
       nextAssessment: {
         type: "object",
         properties: {
@@ -308,11 +330,11 @@ export default {
           },
         },
       },
-      
+
       // Additional performers (primary performer extracted by medical-analysis node)
       // Expected roles: oncologist, oncologist_medical, oncologist_radiation, radiologist
       assessingOncologist: corePerformer,
-      
+
       clinicalTrialContext: {
         type: "object",
         description: "Clinical trial context if applicable",
@@ -327,7 +349,7 @@ export default {
           },
         },
       },
-      
+
       confidence: {
         type: "number",
         minimum: 0,

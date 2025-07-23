@@ -110,7 +110,7 @@ export default {
             notes: {
               type: "string",
               description:
-                "Additional notes about the immunization. Leave empty if no notes are available. Translate result to the [LANGUAGE] langauge if the source is in a different language.",
+                "Additional notes about the immunization. Leave empty if no notes are available. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
           required: ["isImmunization", "name", "date", "category"],

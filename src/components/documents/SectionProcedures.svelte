@@ -110,7 +110,7 @@
                         {#if procedure.outcome}
                             <div class="detail-item">
                                 <span class="label">{$t('report.outcome')}:</span>
-                                <span class="value outcome-value {getOutcomeClass(procedure.outcome)}">{procedure.outcome}</span>
+                                <span class="value outcome-value {getOutcomeClass(procedure.outcome)}">{$t(`medical.enums.procedure_outcomes.${procedure.outcome}`)}</span>
                             </div>
                         {/if}
                     </div>
@@ -145,7 +145,7 @@
                 <li class="panel team-member {getRoleClass(member.role)}">
                     <div class="member-header">
                         <span class="member-name">{member.name}</span>
-                        <span class="member-role">{member.role}</span>
+                        <span class="member-role">{$t(`medical.enums.professional_roles.${member.role}`)}</span>
                     </div>
                     {#if member.credentials}
                         <div class="member-credentials">

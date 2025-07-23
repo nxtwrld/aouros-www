@@ -57,6 +57,47 @@
       "new-session": "Neue Sitzung",
       "profiles": "Profile"
     },
+    "chat": {
+      "title": "KI-Medizinassistent",
+      "mode": {
+        "patient": "Patientenunterstützung",
+        "clinical": "Klinische Analyse"
+      },
+      "actions": {
+        "clear": "Unterhaltung löschen",
+        "close": "Chat schließen",
+        "open": "KI-Chat öffnen",
+        "send": "Nachricht senden"
+      },
+      "placeholders": {
+        "ask": "Fragen Sie mich nach medizinischen Informationen..."
+      },
+      "anatomy": {
+        "view": "{bodyPart} anzeigen",
+        "view-aria": "{bodyPart} im Anatomiemodell anzeigen"
+      },
+      "sidebar": {
+        "resize": "Chat-Seitenleiste vergrößern"
+      },
+      "document": {
+        "add-prompt": "Möchten Sie \"{title}\" zu unserem Chat hinzufügen?",
+        "add-yes": "Ja",
+        "add-no": "Nein",
+        "added": "Dokument \"{title}\" zum Gesprächskontext hinzugefügt",
+        "declined": "Dokument nicht zum Gespräch hinzugefügt"
+      },
+      "profile": {
+        "switch-prompt": "Sie haben zu {profileName}s Profil gewechselt. Möchten Sie den Chat-Kontext zurücksetzen?",
+        "switch-yes": "Kontext zurücksetzen",
+        "switch-no": "Aktuellen Kontext behalten",
+        "context-reset": "Chat-Kontext für {profileName} zurückgesetzt",
+        "context-kept": "Chat-Kontext behalten, diskutieren jetzt über {profileName}"
+      },
+      "greetings": {
+        "patient": "Hallo! Ich bin hier, um Ihnen zu helfen, Ihre medizinischen Informationen zu verstehen und Sie auf Ihrem Gesundheitsweg zu unterstützen. Fragen Sie mich gerne nach Ihren Gesundheitsakten, Symptomen oder allen Fragen zu Ihrer Pflege.",
+        "clinical": "Hallo! Ich bin hier, um bei der klinischen Analyse des medizinischen Profils von {profileName} zu helfen. Ich kann bei der Analyse von Mustern helfen, Differentialüberlegungen vorschlagen und Erkenntnisse basierend auf verfügbaren medizinischen Daten liefern."
+      }
+    },
     "onboarding": {
       "basic-profile": "",
       "click-here": "",
@@ -213,6 +254,349 @@
       "mg/dL": "mg/dL",
       "mmHg": "mmHg",
       "years": "Jahre"
+    },
+    "enums": {
+      "allergy_reactions": {
+        "rash": "Ausschlag",
+        "hives": "Nesselsucht",
+        "swelling": "Schwellung",
+        "itching": "Juckreiz",
+        "sneezing": "Niesen",
+        "runny_nose": "Laufende Nase",
+        "watery_eyes": "Tränende Augen",
+        "coughing": "Husten",
+        "wheezing": "Keuchen",
+        "shortness_of_breath": "Atemnot",
+        "nausea": "Übelkeit",
+        "headache": "Kopfschmerzen",
+        "fatigue": "Müdigkeit",
+        "anaphylaxis": "Anaphylaxie",
+        "breathing_difficulty": "Atembeschwerden",
+        "other": "Andere"
+      },
+      "discontinuation_reasons": {
+        "adverse_effects": "Nebenwirkungen",
+        "ineffective": "Unwirksam",
+        "patient_preference": "Patientenpräferenz",
+        "cost": "Kosten",
+        "drug_interaction": "Arzneimittelinteraktion",
+        "completed_course": "Abgeschlossener Kurs"
+      },
+      "medication_change_reasons": {
+        "dose_adjustment": "Dosisanpassung",
+        "side_effects": "Nebenwirkungen",
+        "ineffective": "Unwirksam",
+        "drug_interaction": "Arzneimittelinteraktion",
+        "cost": "Kosten",
+        "availability": "Verfügbarkeit"
+      },
+      "adherence_barriers": {
+        "cost": "Kosten",
+        "side_effects": "Nebenwirkungen",
+        "complexity": "Komplexität",
+        "forgetfulness": "Vergesslichkeit",
+        "lifestyle": "Lebensstil",
+        "access": "Zugang"
+      },
+      "discharge_dispositions": {
+        "home": "Zuhause",
+        "skilled_nursing": "Fachpflege",
+        "rehabilitation": "Rehabilitation",
+        "hospice": "Hospiz",
+        "transferred": "Verlegt",
+        "left_ama": "Verlassen AMA"
+      },
+      "anesthesia_techniques": {
+        "general": "Allgemein",
+        "spinal": "Spinal",
+        "epidural": "Epidural",
+        "local": "Lokal",
+        "regional": "Regional",
+        "sedation": "Sedierung"
+      },
+      "crystalloid_types": {
+        "normal_saline": "Normale Kochsalzlösung",
+        "lactated_ringers": "Lactated Ringers",
+        "dextrose": "Dextrose",
+        "plasmalyte": "Plasmalyte"
+      },
+      "colloid_types": {
+        "albumin": "Albumin",
+        "hetastarch": "Hetastarch",
+        "dextran": "Dextran",
+        "gelatin": "Gelatine"
+      },
+      "consistency_types": {
+        "soft": "Weich",
+        "firm": "Fest",
+        "hard": "Hart",
+        "cystic": "Zystisch",
+        "necrotic": "Nekrotisch",
+        "hemorrhagic": "Hämorrhagisch"
+      },
+      "section_purposes": {
+        "diagnostic": "Diagnostisch",
+        "margin_assessment": "Randbewertung",
+        "staging": "Staging",
+        "research": "Forschung",
+        "quality_control": "Qualitätskontrolle"
+      },
+      "procedure_outcomes": {
+        "successful": "Erfolgreich",
+        "partially_successful": "Teilweise erfolgreich",
+        "complicated": "Kompliziert",
+        "incomplete": "Unvollständig",
+        "failed": "Fehlgeschlagen"
+      },
+      "professional_roles": {
+        "surgeon": "Chirurg",
+        "assistant": "Assistent",
+        "anesthesiologist": "Anästhesist",
+        "nurse": "Krankenschwester",
+        "technician": "Techniker",
+        "consultant": "Berater"
+      },
+      "substance_types": {
+        "tobacco": "Tabak",
+        "alcohol": "Alkohol",
+        "marijuana": "Marihuana",
+        "cocaine": "Kokain",
+        "opioids": "Opioide",
+        "other_drugs": "Andere Drogen"
+      },
+      "industry_classifications": {
+        "healthcare": "Gesundheitswesen",
+        "construction": "Bauwesen",
+        "manufacturing": "Fertigung",
+        "agriculture": "Landwirtschaft",
+        "education": "Bildung",
+        "technology": "Technologie",
+        "other": "Andere"
+      },
+      "exposure_agents": {
+        "asbestos": "Asbest",
+        "lead": "Blei",
+        "chemicals": "Chemikalien",
+        "radiation": "Strahlung",
+        "biological": "Biologisch",
+        "noise": "Lärm",
+        "ergonomic": "Ergonomisch"
+      },
+      "exposure_types": {
+        "occupational": "Beruflich",
+        "environmental": "Umwelt",
+        "recreational": "Freizeit",
+        "domestic": "Häuslich",
+        "medical": "Medizinisch"
+      },
+      "housing_types": {
+        "single_family": "Einfamilienhaus",
+        "apartment": "Wohnung",
+        "assisted_living": "Betreutes Wohnen",
+        "nursing_home": "Pflegeheim",
+        "homeless": "Obdachlos",
+        "other": "Andere"
+      },
+      "stress_sources": {
+        "work": "Arbeit",
+        "family": "Familie",
+        "financial": "Finanziell",
+        "health": "Gesundheit",
+        "relationship": "Beziehung",
+        "legal": "Rechtlich",
+        "other": "Andere"
+      },
+      "arrival_modes": {
+        "ambulance": "Krankenwagen",
+        "walk_in": "Zu Fuß",
+        "helicopter": "Hubschrauber",
+        "police": "Polizei",
+        "private_vehicle": "Privatfahrzeug",
+        "public_transport": "Öffentlicher Verkehr"
+      },
+      "treatment_regimens": {
+        "adjuvant": "Adjuvant",
+        "neoadjuvant": "Neoadjuvant",
+        "palliative": "Palliativ",
+        "curative": "Kurativ",
+        "maintenance": "Erhaltung",
+        "salvage": "Rettung"
+      },
+      "radiation_techniques": {
+        "external_beam": "Externer Strahl",
+        "brachytherapy": "Brachytherapie",
+        "stereotactic": "Stereotaktisch",
+        "intensity_modulated": "Intensitätsmoduliert",
+        "proton": "Proton"
+      },
+      "molecular_targets": {
+        "her2": "HER2",
+        "egfr": "EGFR",
+        "pd1": "PD1",
+        "pdl1": "PDL1",
+        "vegf": "VEGF",
+        "kras": "KRAS",
+        "braf": "BRAF",
+        "other": "Andere"
+      },
+      "contraindications": {
+        "allergy": "Allergie",
+        "pregnancy": "Schwangerschaft",
+        "renal_failure": "Nierenversagen",
+        "liver_failure": "Leberversagen",
+        "drug_interaction": "Arzneimittelinteraktion",
+        "age": "Alter",
+        "other": "Andere"
+      },
+      "treatment_barriers": {
+        "cost": "Kosten",
+        "access": "Zugang",
+        "compliance": "Einhaltung",
+        "side_effects": "Nebenwirkungen",
+        "transportation": "Transport",
+        "insurance": "Versicherung"
+      },
+      "alert_priorities": {
+        "low": "Niedrig",
+        "medium": "Mittel",
+        "high": "Hoch",
+        "critical": "Kritisch"
+      },
+      "allergy_categories": {
+        "medication": "Medikament",
+        "food": "Nahrungsmittel",
+        "environmental": "Umwelt",
+        "latex": "Latex",
+        "contrast": "Kontrastmittel",
+        "other_chemical": "Andere Chemikalie",
+        "biological": "Biologisch",
+        "unknown": "Unbekannt"
+      },
+      "allergy_severity": {
+        "mild": "Mild",
+        "moderate": "Mäßig",
+        "severe": "Schwer",
+        "life_threatening": "Lebensbedrohlich",
+        "fatal": "Tödlich",
+        "unknown": "Unbekannt"
+      },
+      "allergy_status": {
+        "active": "Aktiv",
+        "resolved": "Aufgelöst",
+        "inactive": "Inaktiv",
+        "entered_in_error": "Fehlerhaft eingegeben"
+      },
+      "body_systems": {
+        "dermatologic": "Dermatologisch",
+        "respiratory": "Atemwege",
+        "cardiovascular": "Herz-Kreislauf",
+        "gastrointestinal": "Magen-Darm",
+        "neurologic": "Neurologisch",
+        "systemic": "Systemisch",
+        "other": "Andere"
+      },
+      "certainty_levels": {
+        "confirmed": "Bestätigt",
+        "probable": "Wahrscheinlich",
+        "possible": "Möglich",
+        "unlikely": "Unwahrscheinlich",
+        "refuted": "Widerlegt"
+      },
+      "reaction_types": {
+        "allergic_reaction": "Allergische Reaktion",
+        "anaphylaxis": "Anaphylaxie",
+        "intolerance": "Unverträglichkeit",
+        "side_effect": "Nebenwirkung",
+        "toxicity": "Toxizität",
+        "unknown": "Unbekannt",
+        "pseudoallergy": "Pseudoallergie"
+      },
+      "administration_routes": {
+        "IV": "Intravenös",
+        "IM": "Intramuskulär",
+        "inhalation": "Inhalation",
+        "epidural": "Epidural",
+        "spinal": "Spinal",
+        "local": "Lokal",
+        "other": "Andere"
+      },
+      "airway_methods": {
+        "mask": "Maske",
+        "LMA": "LMA",
+        "endotracheal_tube": "Endotrachealtubus",
+        "nasal_cannula": "Nasenkanüle",
+        "face_mask": "Gesichtsmaske",
+        "other": "Andere"
+      },
+      "anesthesia_types": {
+        "general": "Allgemein",
+        "regional": "Regional",
+        "spinal": "Spinal",
+        "epidural": "Epidural",
+        "local": "Lokal",
+        "sedation": "Sedierung",
+        "MAC": "MAC",
+        "combined": "Kombiniert",
+        "other": "Andere"
+      },
+      "blood_products": {
+        "PRBC": "Erythrozytenkonzentrat",
+        "FFP": "Gefrorenes Frischplasma",
+        "platelets": "Thrombozyten",
+        "cryoprecipitate": "Kryopräzipitat",
+        "whole_blood": "Vollblut"
+      },
+      "disposition_types": {
+        "PACU": "Aufwachraum",
+        "ICU": "Intensivstation",
+        "floor": "Normalstation",
+        "home": "Nach Hause",
+        "other": "Andere"
+      },
+      "intubation_difficulty": {
+        "easy": "Einfach",
+        "moderate": "Mäßig",
+        "difficult": "Schwierig",
+        "failed": "Fehlgeschlagen"
+      },
+      "adherence_levels": {
+        "excellent": "Ausgezeichnet",
+        "good": "Gut",
+        "fair": "Angemessen",
+        "poor": "Schlecht",
+        "unknown": "Unbekannt"
+      },
+      "interaction_severity": {
+        "mild": "Mild",
+        "moderate": "Mäßig",
+        "major": "Schwer",
+        "severe": "Schwerwiegend",
+        "life_threatening": "Lebensbedrohlich",
+        "contraindicated": "Kontraindiziert"
+      },
+      "medication_change_types": {
+        "dose_increase": "Dosiserhöhung",
+        "dose_decrease": "Dosisreduktion",
+        "frequency_change": "Häufigkeitsänderung",
+        "discontinued": "Abgesetzt",
+        "switched": "Gewechselt",
+        "added": "Hinzugefügt"
+      },
+      "medication_status": {
+        "active": "Aktiv",
+        "completed": "Abgeschlossen",
+        "discontinued": "Abgesetzt",
+        "on_hold": "Pausiert",
+        "unknown": "Unbekannt"
+      },
+      "mode_of_arrival": {
+        "ambulance": "Krankenwagen",
+        "walk_in": "Zu Fuß",
+        "helicopter": "Hubschrauber",
+        "police": "Polizei",
+        "private_vehicle": "Privates Fahrzeug",
+        "public_transport": "Öffentliche Verkehrsmittel"
+      }
     }
   },
   "profile": {

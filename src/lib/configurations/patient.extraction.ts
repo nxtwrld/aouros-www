@@ -3,7 +3,7 @@ import corePatient from "./core.patient";
 
 /**
  * Patient Extraction Schema
- * 
+ *
  * Focused node for extracting patient information from medical documents.
  */
 export default {
@@ -14,16 +14,17 @@ export default {
     type: "object",
     properties: {
       patient: corePatient,
-      
+
       // Processing metadata
       processingConfidence: {
         type: "number",
         description: "Overall confidence in patient extraction (0.0 to 1.0)",
       },
-      
+
       processingNotes: {
         type: "string",
-        description: "Any notes about the patient extraction process or privacy considerations",
+        description:
+          "Any notes about the patient extraction process or privacy considerations",
       },
     },
     required: ["patient", "processingConfidence"],

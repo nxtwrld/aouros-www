@@ -58,7 +58,7 @@ export default {
       optional: true,
       type: "array",
       description:
-        "To specify the electronic mail address for communication with the object the jCard represents. Set undefined if no email address is available.",
+        "To specify the electronic mail address for communication with the object the jCard represents. Omit this field entirely if no email address is available.",
       items: {
         type: "object",
         properties: {
@@ -170,7 +170,7 @@ export default {
       optional: true,
       type: "array",
       description:
-        "To specify the telephone number for telephony communication with the object the jCard represents. Set undefined if no phone number is available.",
+        "To specify the telephone number for telephony communication with the object the jCard represents. Omit this field entirely if no phone number is available.",
       items: {
         type: "object",
         properties: {

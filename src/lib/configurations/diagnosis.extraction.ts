@@ -3,7 +3,7 @@ import coreDiagnosis from "./core.diagnosis";
 
 /**
  * Diagnosis Extraction Schema
- * 
+ *
  * Focused node for extracting diagnosis information from medical documents.
  */
 export default {
@@ -14,16 +14,17 @@ export default {
     type: "object",
     properties: {
       diagnosis: coreDiagnosis,
-      
+
       // Processing metadata
       processingConfidence: {
         type: "number",
         description: "Overall confidence in diagnosis extraction (0.0 to 1.0)",
       },
-      
+
       processingNotes: {
         type: "string",
-        description: "Any notes about the diagnosis extraction process or ambiguities encountered",
+        description:
+          "Any notes about the diagnosis extraction process or ambiguities encountered",
       },
     },
     required: ["diagnosis", "processingConfidence"],

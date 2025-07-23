@@ -42,7 +42,8 @@ export default {
             },
             findings: {
               type: "string",
-              description: "Key findings during the procedure",
+              description:
+                "Key findings during the procedure. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             complications: {
               type: "array",
@@ -51,6 +52,13 @@ export default {
             },
             outcome: {
               type: "string",
+              enum: [
+                "successful",
+                "partially_successful",
+                "complicated",
+                "incomplete",
+                "failed",
+              ],
               description: "Overall outcome of the procedure",
             },
           },
@@ -65,6 +73,14 @@ export default {
             name: { type: "string" },
             role: {
               type: "string",
+              enum: [
+                "surgeon",
+                "assistant",
+                "anesthesiologist",
+                "nurse",
+                "technician",
+                "consultant",
+              ],
               description: "Role (surgeon, assistant, anesthesiologist, etc.)",
             },
             credentials: { type: "string" },

@@ -1,15 +1,75 @@
 /* Document Section Common Styles */
 
-/* Section headings */
+/* Section headings - container responsive */
 .document-section .h3.heading {
   margin-bottom: 0;
+  font-size: clamp(0.8rem, 3vw, 1.5rem);
 }
 
 .document-section .h3.heading.-sticky {
   position: sticky;
-  top: 0;
+  top: var(--sticky-top);
   z-index: 10;
   background-color: var(--color-surface, #fff);
+}
+
+/* Target all heading elements within document sections */
+.document-section .heading > h1,
+.document-section .heading > h2,
+.document-section .heading > h3 {
+  font-size: clamp(0.8rem, 3vw, 1.5rem);
+  line-height: 1.2;
+  padding: 0 0.5rem;
+}
+
+/* Container-specific heading adjustments with named container */
+@container document-section (max-width: 600px) {
+  .document-section .h3.heading,
+  .document-section .heading > h1,
+  .document-section .heading > h2,
+  .document-section .heading > h3 {
+    font-size: 1rem;
+    line-height: 1.1;
+  }
+}
+
+@container document-section (max-width: 500px) {
+  .document-section .h3.heading,
+  .document-section .heading > h1,
+  .document-section .heading > h2,
+  .document-section .heading > h3 {
+    font-size: 0.9rem;
+    padding: 0 0.25rem;
+  }
+}
+
+@container document-section (max-width: 400px) {
+  .document-section .h3.heading,
+  .document-section .heading > h1,
+  .document-section .heading > h2,
+  .document-section .heading > h3 {
+    font-size: 0.8rem;
+    line-height: 1;
+  }
+  
+  /* Reduce heading height constraints in narrow containers */
+  .document-section .heading {
+    min-height: calc(0.8 * var(--heading-height));
+  }
+}
+
+@container document-section (max-width: 300px) {
+  .document-section .h3.heading,
+  .document-section .heading > h1,
+  .document-section .heading > h2,
+  .document-section .heading > h3 {
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+  
+  .document-section .heading {
+    min-height: calc(0.7 * var(--heading-height));
+  }
 }
 
 /* Subsection titles */
@@ -44,16 +104,42 @@
   margin-bottom: var(--gap);
 }
 
-/* Table list styles */
+/* Table list styles - container responsive */
 .document-section .table-list {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: var(--gap);
+  font-size: clamp(0.8rem, 2vw, 1rem);
+}
+
+/* Container queries for table responsiveness */
+@container (max-width: 600px) {
+  .document-section .table-list {
+    font-size: 0.85rem;
+  }
+  
+  .document-section .table-list tr td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .document-section .table-list .actions {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+@container (max-width: 400px) {
+  .document-section .table-list {
+    font-size: 0.8rem;
+  }
 }
 
 .document-section .table-list tr td {
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--color-border, #e0e0e0);
+
+  border: var(--gap) solid var(--color-border, #e0e0e0);
+}
+.document-section .table-list tr:last-child td {
+  border-bottom: 0;
 }
 
 .document-section .table-list tr td:first-child {
@@ -68,7 +154,7 @@
   border-bottom: 2px solid var(--color-border, #e0e0e0);
 }
 
-/* Detail items (label/value pairs) */
+/* Detail items (label/value pairs) - container responsive */
 .document-section .detail-item {
   display: flex;
   gap: 0.5rem;
@@ -77,11 +163,25 @@
 .document-section .label {
   font-weight: 500;
   color: var(--color-text-secondary);
-  min-width: 80px;
+  min-width: min(80px, 30%);
+  flex-shrink: 0;
 }
 
 .document-section .value {
   color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+/* Stack label/value pairs in very narrow containers */
+@container (max-width: 300px) {
+  .document-section .detail-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .document-section .label {
+    min-width: auto;
+  }
 }
 
 /* No data message */
@@ -193,12 +293,21 @@
   color: var(--color-secondary-dark);
 }
 
-/* Common header styles */
+/* Common header styles - container responsive */
 .document-section .item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@container (max-width: 400px) {
+  .document-section .item-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .document-section .item-name {
@@ -208,12 +317,19 @@
   color: var(--color-text-primary);
 }
 
-/* Grid layout for details */
+/* Grid layout for details - container responsive */
 .document-section .item-details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+}
+
+/* For very narrow containers, use single column */
+@container (max-width: 400px) {
+  .document-section .item-details {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Notes and additional text */
@@ -227,12 +343,22 @@
   line-height: 1.4;
 }
 
-/* Tag lists */
+/* Tag lists - container responsive */
 .document-section .tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
   margin-top: 0.25rem;
+}
+
+@container (max-width: 500px) {
+  .document-section .tag-list {
+    gap: 0.125rem;
+  }
+  
+  .document-section .tag {
+    font-size: 0.7rem;
+  }
 }
 
 .document-section .tag {
@@ -248,7 +374,7 @@
 }
 
 .document-section .table-list .actions button {
-  background: none;
+  
   border: none;
   cursor: pointer;
   padding: 0.25rem;
@@ -260,14 +386,88 @@
 .document-section .table-list .actions button svg {
   width: 1.25rem;
   height: 1.25rem;
-  fill: var(--color-interactivity);
+  background: var(--color-interactivity);
 }
 
 .document-section .table-list .actions button:hover svg {
   fill: var(--color-interactivity-hover);
 }
 
-/* Responsive utilities */
+
+.document-section .table-list tr .actions button {
+  background: var(--color-interactivity);
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.document-section .table-list tr .actions button svg {
+  fill: var(--color-interactivity-text);
+}
+
+/* Add container query support to document sections */
+.document-section {
+  container-type: inline-size;
+  container-name: document-section;
+}
+
+/* Enhanced responsive utilities using container queries */
+@container (max-width: 768px) {
+  .document-section .item-details {
+    grid-template-columns: 1fr;
+  }
+}
+
+@container (max-width: 600px) {
+  .document-section .detail-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .document-section .label {
+    min-width: auto;
+  }
+  
+  /* Reduce padding for compact layout */
+  .document-section .page.-block,
+  .document-section .list-items li {
+    padding: 0.75rem;
+  }
+}
+
+@container (max-width: 400px) {
+  .document-section .page.-block,
+  .document-section .list-items li {
+    padding: 0.5rem;
+  }
+  
+  .document-section .item-name {
+    font-size: 1rem;
+  }
+}
+
+/* Handle table overflow in very narrow containers */
+@container (max-width: 350px) {
+  .document-section .table-list {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .document-section .table-list tr {
+    display: table-row;
+  }
+  
+  .document-section .table-list td {
+    padding: 0.25rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Legacy media queries for fallback */
 @media (max-width: 768px) {
   .document-section .item-details {
     grid-template-columns: 1fr;

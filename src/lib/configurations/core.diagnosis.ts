@@ -16,8 +16,16 @@ export default {
       },
       type: {
         type: "string",
-        enum: ["primary", "secondary", "differential", "rule_out", "provisional", "confirmed"],
-        description: "Type of diagnosis - primary (main condition), secondary (comorbid condition), differential (possible diagnosis), rule_out (to be excluded), provisional (tentative), or confirmed (definitive)",
+        enum: [
+          "primary",
+          "secondary",
+          "differential",
+          "rule_out",
+          "provisional",
+          "confirmed",
+        ],
+        description:
+          "Type of diagnosis - primary (main condition), secondary (comorbid condition), differential (possible diagnosis), rule_out (to be excluded), provisional (tentative), or confirmed (definitive)",
       },
       confidence: {
         type: "string",

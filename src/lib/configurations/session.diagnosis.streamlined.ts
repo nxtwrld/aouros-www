@@ -161,7 +161,7 @@ const STREAMLINED_SCHEMA = {
                 "lifestyle",
                 "diagnostic_tests",
                 "treatment_response",
-                "follow_up"
+                "follow_up",
               ],
               description: "The category of this question",
             },
@@ -191,12 +191,7 @@ const STREAMLINED_SCHEMA = {
         },
       },
     },
-    required: [
-      "diagnosis",
-      "treatment",
-      "followUp",
-      "clarifyingQuestions",
-    ],
+    required: ["diagnosis", "treatment", "followUp", "clarifyingQuestions"],
   },
 };
 
@@ -204,7 +199,7 @@ const STREAMLINED_SCHEMA = {
 export const DIAGNOSIS_CONFIGS = {
   // Streamlined version focused on diagnosis only
   streamlined: STREAMLINED_SCHEMA,
-  
+
   // Even simpler version for quick analysis
   simple: {
     name: "simple_diagnosis_analyzer",
@@ -214,8 +209,7 @@ export const DIAGNOSIS_CONFIGS = {
       type: "object",
       properties: {
         diagnosis: {
-          description:
-            "A list of possible diagnoses with confidence scores",
+          description: "A list of possible diagnoses with confidence scores",
           type: "array",
           items: {
             type: "object",

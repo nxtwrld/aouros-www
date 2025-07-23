@@ -10,6 +10,7 @@
     import Documents from '$components/documents/Index.svelte';
     import { t } from '$lib/i18n';
     import { ConstitutionalPrinciple } from 'langchain/chains';
+    import { onMount } from 'svelte';
     
     interface Property {
         signal: string;
@@ -113,6 +114,34 @@
         
         ui.emit('modal.healthProperty', property);
     }
+
+    // Emit profile context when profile loads
+    onMount(() => {
+        if ($profile) {
+            // Emit profile context event for AI chat
+            ui.emit('aicontext:profile', {
+                profileId: $profile.id,
+                profileName: $profile.fullName || 'Unknown Profile',
+                profileData: {
+                    basicInfo: {
+                        fullName: $profile.fullName,
+                        dateOfBirth: $profile.health?.birthDate,
+                        bloodType: $profile.health?.bloodType,
+                        biologicalSex: $profile.health?.biologicalSex,
+                    },
+                    health: {
+                        signals: $profile.health?.signals || {},
+                        conditions: $profile.health?.conditions || [],
+                        medications: $profile.health?.medications || [],
+                        allergies: $profile.health?.allergies || [],
+                    },
+                    insurance: $profile.insurance,
+                    contact: $profile.vcard,
+                },
+                timestamp: new Date()
+            });
+        }
+    });
 
 </script>
 

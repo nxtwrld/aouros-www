@@ -1,0 +1,202 @@
+{
+  "providers": {
+    "openai": {
+      "enabled": true,
+      "models": {
+        "streaming": {
+          "name": "gpt-4o-2024-08-06",
+          "temperature": 0.7,
+          "maxTokens": 4096
+        },
+        "structured": {
+          "name": "gpt-4o-2024-08-06",
+          "temperature": 0.0,
+          "maxTokens": 2048
+        }
+      }
+    },
+    "gemini": {
+      "enabled": true,
+      "models": {
+        "streaming": {
+          "name": "gemini-1.5-pro",
+          "temperature": 0.7,
+          "maxTokens": 4096
+        },
+        "structured": {
+          "name": "gemini-1.5-pro",
+          "temperature": 0.0,
+          "maxTokens": 2048
+        }
+      }
+    },
+    "anthropic": {
+      "enabled": false,
+      "models": {
+        "streaming": {
+          "name": "claude-3-5-sonnet-20241022",
+          "temperature": 0.7,
+          "maxTokens": 4096
+        },
+        "structured": {
+          "name": "claude-3-5-sonnet-20241022",
+          "temperature": 0.0,
+          "maxTokens": 2048
+        }
+      }
+    }
+  },
+  "defaultProvider": "openai",
+  "fallbackProvider": "gemini",
+  "conversationHistory": {
+    "maxMessages": 10,
+    "includeSystemMessages": true
+  },
+  "prompts": {
+    "base": {
+      "instruction": "You are an AI medical assistant integrated with a 3D anatomy model. IMPORTANT: Never include technical IDs, anatomy references, or mention \"AnatomyReferences\" in your text responses. These are handled automatically by the system."
+    },
+    "patient": {
+      "systemPrompt": {
+        "title": "PATIENT SUPPORT MODE",
+        "guidelines": [
+          "Use empathetic, supportive language",
+          "Focus on education and understanding. We are providing further feedback on patient overall health", 
+          "When given specific context document let the patient have any follow up questions and explain the condition thoroughly",
+          "Provide emotional support and coping strategies",
+          "Provide medical advice or diagnosis  but always recommend consulting healthcare providers",
+          "Use language appropriate for: {language}",
+          "Patient name: {profileName}"
+        ],
+        "anatomyInstructions": [
+          "When discussing body parts, include relevant anatomy references in the anatomyReferences field using EXACT IDs from the enum list.",
+          "Examples of valid IDs: \"heart\", \"lungs\", \"brain\", \"stomach\", \"L_patella\", \"R_femur\", \"lumbar_spine\", \"liver_left\", etc.",
+          "DO NOT translate these IDs - use them exactly as they appear in the enum.",
+          "DO NOT mention the 3D model in your text response - anatomy buttons will be automatically added by the UI.",
+          "NEVER include AnatomyReferences or any technical IDs in your text response - these are only for the structured data field."
+        ],
+        "boundaries": [
+          "No treatment recommendations",
+          "Always explain difficult concepts",
+          "When using medical advice or diagnosis, or treatment recommendations always defer to healthcare providers at the end.",
+          "Focus on understanding and support"
+        ]
+      },
+      "responseSchema": {
+        "additionalProperties": {
+          "supportType": {
+            "type": "string",
+            "enum": ["educational", "emotional", "preparatory"],
+            "description": "Type of support provided"
+          },
+          "copingStrategies": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Coping strategies suggested"
+          }
+        }
+      }
+    },
+    "clinical": {
+      "systemPrompt": {
+        "title": "CLINICAL CONSULTATION MODE",
+        "guidelines": [
+          "Use professional, analytical language",
+          "Provide clinical insights and perspectives",
+          "Suggest diagnostic considerations",
+          "Analyze patterns and correlations", 
+          "Reference medical literature when appropriate",
+          "Use language appropriate for: {language}",
+          "Patient profile: {profileName}"
+        ],
+        "anatomyInstructions": [
+          "When discussing anatomical structures, include relevant anatomy references in the anatomyReferences field using EXACT IDs from the enum list.",
+          "Examples of valid IDs: \"heart\", \"lungs\", \"brain\", \"stomach\", \"L_patella\", \"R_femur\", \"lumbar_spine\", \"liver_left\", etc.",
+          "DO NOT translate these IDs - use them exactly as they appear in the enum.",
+          "DO NOT mention the 3D model in your text response - anatomy buttons will be automatically added by the UI.",
+          "NEVER include AnatomyReferences or any technical IDs in your text response - these are only for the structured data field."
+        ],
+        "focus": [
+          "Pattern analysis across patient history",
+          "Differential diagnostic considerations",
+          "Evidence-based insights",
+          "Professional medical terminology"
+        ]
+      },
+      "responseSchema": {
+        "additionalProperties": {
+          "clinicalInsights": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Clinical insights provided"
+          },
+          "differentialConsiderations": {
+            "type": "array", 
+            "items": { "type": "string" },
+            "description": "Differential diagnostic considerations"
+          }
+        }
+      }
+    }
+  },
+  "documentContext": {
+    "enabled": true,
+    "includeFields": [
+      "diagnosis",
+      "medications", 
+      "vitals",
+      "recommendations"
+    ],
+    "includeAdditionalContent": true,
+    "maxDocuments": 5
+  },
+  "responseSchema": {
+    "base": {
+      "name": "chat_response",
+      "description": "AI medical chat response",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "type": "string",
+            "description": "Main response to user message"
+          },
+          "anatomyReferences": {
+            "type": "array",
+            "items": { 
+              "type": "string",
+              "enum": []
+            },
+            "description": "Body parts mentioned that could be visualized. MUST use exact IDs from the enum list (e.g., \"heart\", \"lungs\", \"L_patella\", \"R_femur\"). DO NOT translate these IDs. DO NOT mention the 3D model in your text response."
+          },
+          "documentReferences": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Document IDs referenced in response"
+          },
+          "consentRequests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { 
+                  "type": "string", 
+                  "enum": ["document_access", "anatomy_integration"] 
+                },
+                "message": { "type": "string" },
+                "reason": { "type": "string" }
+              }
+            },
+            "description": "Consent requests for accessing documents or using anatomy model"
+          }
+        },
+        "required": ["response"]
+      }
+    }
+  },
+  "languages": {
+    "en": "English",
+    "cs": "Czech", 
+    "de": "German"
+  }
+}

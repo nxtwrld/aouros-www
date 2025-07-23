@@ -22,7 +22,7 @@ export default {
           "medication_list",
           "medication_reconciliation",
           "discharge_medications",
-          "both"
+          "both",
         ],
         description: "Type of medication document being processed",
       },
@@ -39,7 +39,8 @@ export default {
           properties: {
             medicationName: {
               type: "string",
-              description: "Complete medication name including strength if specified",
+              description:
+                "Complete medication name including strength if specified",
             },
             genericName: {
               type: "string",
@@ -51,11 +52,13 @@ export default {
             },
             strength: {
               type: "string",
-              description: "Medication strength (e.g., '500 mg', '10 units/mL')",
+              description:
+                "Medication strength (e.g., '500 mg', '10 units/mL')",
             },
             dosage: {
               type: "string",
-              description: "Individual dose amount with units (tablet, mg, ml, etc.)",
+              description:
+                "Individual dose amount with units (tablet, mg, ml, etc.)",
             },
             route: {
               type: "string",
@@ -73,7 +76,7 @@ export default {
                 "ophthalmic",
                 "otic",
                 "vaginal",
-                "buccal"
+                "buccal",
               ],
               description: "Route of administration",
             },
@@ -94,7 +97,7 @@ export default {
                 "ointment",
                 "gel",
                 "drops",
-                "powder"
+                "powder",
               ],
               description: "Medication formulation/dosage form",
             },
@@ -109,7 +112,15 @@ export default {
                   type: "array",
                   items: {
                     type: "string",
-                    enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                    enum: [
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                      "Sunday",
+                    ],
                   },
                   description: "Specific days of the week if applicable",
                 },
@@ -118,11 +129,13 @@ export default {
                   items: {
                     type: "string",
                   },
-                  description: "Specific times (HH:MM format) or 'anytime' if not specified",
+                  description:
+                    "Specific times (HH:MM format) or 'anytime' if not specified",
                 },
                 schedule: {
                   type: "string",
-                  description: "Human-readable frequency (e.g., 'twice daily', 'every 6 hours')",
+                  description:
+                    "Human-readable frequency (e.g., 'twice daily', 'every 6 hours')",
                 },
               },
             },
@@ -131,7 +144,8 @@ export default {
               properties: {
                 days: {
                   type: "number",
-                  description: "Number of days (0 = until finished, -1 = not specified)",
+                  description:
+                    "Number of days (0 = until finished, -1 = not specified)",
                 },
                 quantity: {
                   type: "string",
@@ -152,11 +166,13 @@ export default {
               properties: {
                 administration: {
                   type: "string",
-                  description: "Administration instructions (e.g., 'with food', 'on empty stomach')",
+                  description:
+                    "Administration instructions (e.g., 'with food', 'on empty stomach'). Translate result to the [LANGUAGE] language if the source is in a different language.",
                 },
                 specialInstructions: {
                   type: "string",
-                  description: "Special instructions or precautions",
+                  description:
+                    "Special instructions or precautions. Translate result to the [LANGUAGE] language if the source is in a different language.",
                 },
                 asNeeded: {
                   type: "boolean",
@@ -168,7 +184,8 @@ export default {
                 },
                 notes: {
                   type: "string",
-                  description: "Additional notes. Translate to [LANGUAGE] if needed.",
+                  description:
+                    "Additional notes. Translate to [LANGUAGE] if needed.",
                 },
               },
             },
@@ -176,7 +193,8 @@ export default {
             prescriber: corePerformer,
             indication: {
               type: "string",
-              description: "Medical indication for prescription",
+              description:
+                "Medical indication for prescription. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             prescriptionDate: {
               type: "string",
@@ -227,11 +245,18 @@ export default {
             },
             indication: {
               type: "string",
-              description: "Why patient is taking this medication",
+              description:
+                "Why patient is taking this medication. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
             status: {
               type: "string",
-              enum: ["active", "completed", "discontinued", "on_hold", "unknown"],
+              enum: [
+                "active",
+                "completed",
+                "discontinued",
+                "on_hold",
+                "unknown",
+              ],
               description: "Current status",
             },
             startDate: {
@@ -283,6 +308,14 @@ export default {
             },
             reasonDiscontinued: {
               type: "string",
+              enum: [
+                "adverse_effects",
+                "ineffective",
+                "patient_preference",
+                "cost",
+                "drug_interaction",
+                "completed_course",
+              ],
               description: "Reason for discontinuation",
             },
             prescriber: {
@@ -305,7 +338,14 @@ export default {
             },
             changeType: {
               type: "string",
-              enum: ["dose_increase", "dose_decrease", "frequency_change", "discontinued", "switched", "added"],
+              enum: [
+                "dose_increase",
+                "dose_decrease",
+                "frequency_change",
+                "discontinued",
+                "switched",
+                "added",
+              ],
               description: "Type of change",
             },
             previousDose: {
@@ -318,6 +358,14 @@ export default {
             },
             reason: {
               type: "string",
+              enum: [
+                "dose_adjustment",
+                "side_effects",
+                "ineffective",
+                "drug_interaction",
+                "cost",
+                "availability",
+              ],
               description: "Reason for change",
             },
             effectiveDate: {
@@ -372,13 +420,18 @@ export default {
               "clinic_notes",
               "hospital_records",
               "pharmacy_records",
-              "patient_reported"
+              "patient_reported",
             ],
             description: "Source of medication information",
           },
           reliability: {
             type: "string",
-            enum: ["verified", "patient_reported", "family_reported", "unverified"],
+            enum: [
+              "verified",
+              "patient_reported",
+              "family_reported",
+              "unverified",
+            ],
             description: "Reliability of information",
           },
           lastUpdated: {
@@ -437,7 +490,8 @@ export default {
             },
             effect: {
               type: "string",
-              description: "Description of interaction",
+              description:
+                "Description of interaction. Translate result to the [LANGUAGE] language if the source is in a different language.",
             },
           },
         },
@@ -454,6 +508,14 @@ export default {
             type: "array",
             items: {
               type: "string",
+              enum: [
+                "cost",
+                "side_effects",
+                "complexity",
+                "forgetfulness",
+                "lifestyle",
+                "access",
+              ],
             },
             description: "Barriers to adherence",
           },
@@ -462,7 +524,8 @@ export default {
             items: {
               type: "string",
             },
-            description: "Interventions recommended",
+            description:
+              "Interventions recommended. Translate result to the [LANGUAGE] language if the source is in a different language.",
           },
         },
       },

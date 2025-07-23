@@ -4,38 +4,54 @@ import coreDiagnosis from "./core.diagnosis";
 
 /**
  * Molecular Schema
- * 
+ *
  * Extracts molecular, genetic, and biomarker analysis.
  * Reuses core components for consistency.
  */
 export default {
   name: "extract_molecular",
-  description: "Extract comprehensive molecular, genetic, and biomarker analysis including genomic testing, tumor molecular profiling, and hereditary genetic testing.",
+  description:
+    "Extract comprehensive molecular, genetic, and biomarker analysis including genomic testing, tumor molecular profiling, and hereditary genetic testing.",
   parameters: {
     type: "object",
     properties: {
       hasMolecular: {
         type: "boolean",
-        description: "Does this document contain molecular, genetic, or biomarker analysis?",
+        description:
+          "Does this document contain molecular, genetic, or biomarker analysis?",
       },
-      
+
       testingType: {
         type: "string",
-        enum: ["tumor_profiling", "hereditary_testing", "pharmacogenomics", "liquid_biopsy", "companion_diagnostics", "research"],
+        enum: [
+          "tumor_profiling",
+          "hereditary_testing",
+          "pharmacogenomics",
+          "liquid_biopsy",
+          "companion_diagnostics",
+          "research",
+        ],
         description: "Type of molecular testing performed",
       },
-      
+
       genomicTesting: {
         type: "object",
         description: "Genomic sequencing and mutation analysis",
         properties: {
           platform: {
             type: "string",
-            description: "Sequencing platform used (Foundation One, Guardant360, etc.)",
+            description:
+              "Sequencing platform used (Foundation One, Guardant360, etc.)",
           },
           methodology: {
             type: "string",
-            enum: ["whole_genome", "whole_exome", "targeted_panel", "single_gene", "RNA_seq"],
+            enum: [
+              "whole_genome",
+              "whole_exome",
+              "targeted_panel",
+              "single_gene",
+              "RNA_seq",
+            ],
             description: "Sequencing methodology",
           },
           coverage: {
@@ -61,7 +77,7 @@ export default {
           },
         },
       },
-      
+
       geneticVariants: {
         type: "array",
         description: "Identified genetic variants",
@@ -83,7 +99,13 @@ export default {
             },
             classification: {
               type: "string",
-              enum: ["pathogenic", "likely_pathogenic", "VUS", "likely_benign", "benign"],
+              enum: [
+                "pathogenic",
+                "likely_pathogenic",
+                "VUS",
+                "likely_benign",
+                "benign",
+              ],
               description: "Variant classification",
             },
             alleleFrequency: {
@@ -110,12 +132,24 @@ export default {
                   },
                   relationship: {
                     type: "string",
-                    enum: ["sensitive", "resistant", "response", "toxicity", "dosing"],
+                    enum: [
+                      "sensitive",
+                      "resistant",
+                      "response",
+                      "toxicity",
+                      "dosing",
+                    ],
                     description: "Relationship to therapy",
                   },
                   evidenceLevel: {
                     type: "string",
-                    enum: ["FDA_approved", "guideline", "clinical_trial", "preclinical", "case_study"],
+                    enum: [
+                      "FDA_approved",
+                      "guideline",
+                      "clinical_trial",
+                      "preclinical",
+                      "case_study",
+                    ],
                     description: "Level of evidence",
                   },
                 },
@@ -125,7 +159,7 @@ export default {
           required: ["gene", "variant"],
         },
       },
-      
+
       copyNumberVariations: {
         type: "array",
         description: "Copy number variations detected",
@@ -152,7 +186,7 @@ export default {
           },
         },
       },
-      
+
       geneFusions: {
         type: "array",
         description: "Gene fusions detected",
@@ -185,7 +219,7 @@ export default {
           },
         },
       },
-      
+
       biomarkers: {
         type: "array",
         description: "Molecular biomarkers analyzed",
@@ -225,7 +259,7 @@ export default {
           required: ["biomarker", "result"],
         },
       },
-      
+
       microsatelliteInstability: {
         type: "object",
         description: "Microsatellite instability analysis",
@@ -253,7 +287,7 @@ export default {
           },
         },
       },
-      
+
       homologousRecombination: {
         type: "object",
         description: "Homologous recombination deficiency analysis",
@@ -286,7 +320,7 @@ export default {
           },
         },
       },
-      
+
       hereditaryTesting: {
         type: "object",
         description: "Hereditary cancer or genetic testing",
@@ -349,7 +383,7 @@ export default {
           },
         },
       },
-      
+
       pharmacogenomics: {
         type: "array",
         description: "Pharmacogenomic testing results",
@@ -388,7 +422,7 @@ export default {
           },
         },
       },
-      
+
       liquidBiopsy: {
         type: "object",
         description: "Circulating tumor DNA analysis",
@@ -424,7 +458,7 @@ export default {
           },
         },
       },
-      
+
       laboratoryDetails: {
         type: "object",
         properties: {
@@ -441,7 +475,14 @@ export default {
           },
           sampleType: {
             type: "string",
-            enum: ["FFPE_tissue", "fresh_tissue", "blood", "bone_marrow", "cerebrospinal_fluid", "other"],
+            enum: [
+              "FFPE_tissue",
+              "fresh_tissue",
+              "blood",
+              "bone_marrow",
+              "cerebrospinal_fluid",
+              "other",
+            ],
             description: "Sample type analyzed",
           },
           collectionDate: {
@@ -454,14 +495,14 @@ export default {
           },
         },
       },
-      
+
       // Reuse core.diagnosis for associated diagnosis
       associatedDiagnosis: coreDiagnosis,
-      
+
       // Additional performers (primary performer extracted by medical-analysis node)
       // Expected roles: pathologist_molecular, geneticist, oncologist, other_specialist
       interpretingSpecialist: corePerformer,
-      
+
       clinicalTrialEligibility: {
         type: "array",
         description: "Clinical trials for which patient may be eligible",
@@ -487,7 +528,7 @@ export default {
           },
         },
       },
-      
+
       limitations: {
         type: "array",
         description: "Technical or analytical limitations",
@@ -495,7 +536,7 @@ export default {
           type: "string",
         },
       },
-      
+
       confidence: {
         type: "number",
         minimum: 0,
