@@ -12,6 +12,7 @@ import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from "$lib/types.d";
 import { DEBUG_CONVERSATION } from "$env/static/private";
 import { logger } from "$lib/logging/logger";
+import { getSessionAnalysisContext } from './manager';
 
 // Select diagnosis configuration based on environment variable
 const PROMPT_CONFIG = "enhanced"; // or 'fast' or 'enhanced'
@@ -102,6 +103,7 @@ type Input = {
   type: Types;
   language?: string;
   previousAnalysis?: Partial<Analysis>; // Add previous context for gradual refinement
+  sessionId?: string; // Add session ID for context assembly
 };
 
 // Extended interface for schema objects that includes the properties we need
@@ -153,16 +155,58 @@ export async function analyze(input: Input): Promise<Analysis> {
     currentLanguage: currentLanguage,
     type: input.type,
     hasPreviousAnalysis: !!input.previousAnalysis,
+    hasSessionId: !!input.sessionId,
   });
+  
+  // Get medical context if session ID is provided
+  let medicalContext: {
+    medicalHistory: any[];
+    relevantDocuments: any[];
+    contextSummary: string;
+  } | null = null;
+  
+  if (input.sessionId && input.type === Types.diagnosis) {
+    try {
+      medicalContext = await getSessionAnalysisContext(
+        input.sessionId,
+        'diagnosis'
+      );
+      
+      if (medicalContext && medicalContext.medicalHistory.length > 0) {
+        logger.analysis.info('Medical context retrieved for analysis', {
+          sessionId: input.sessionId,
+          historyItems: medicalContext.medicalHistory.length,
+          relevantDocs: medicalContext.relevantDocuments.length
+        });
+      }
+    } catch (error) {
+      logger.analysis.warn('Failed to get medical context for analysis', {
+        sessionId: input.sessionId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
 
-  // Create enhanced content with previous context
+  // Create enhanced content with previous context and medical history
   let analysisText = input.text || "";
+  
+  // Add previous analysis context
   if (input.previousAnalysis && input.type === Types.diagnosis) {
     const contextSummary = createPreviousContextSummary(input.previousAnalysis);
     analysisText = contextSummary + analysisText;
     logger.analysis.debug(
       "Added previous context to analysis:",
       contextSummary.substring(0, 200) + "...",
+    );
+  }
+  
+  // Add medical history context from session
+  if (medicalContext && medicalContext.medicalHistory.length > 0) {
+    const medicalHistoryContext = createMedicalHistoryContext(medicalContext);
+    analysisText = medicalHistoryContext + analysisText;
+    logger.analysis.debug(
+      "Added medical history context to analysis:",
+      medicalHistoryContext.substring(0, 200) + "...",
     );
   }
 
@@ -575,6 +619,48 @@ function createPreviousContextSummary(
   return summaryParts.length > 0
     ? `\n\nPREVIOUS ANALYSIS CONTEXT:\n${summaryParts.join("\n")}\n\nINSTRUCTIONS: Build upon the previous analysis rather than starting fresh. Refine confidence scores and add details based on new evidence. Only suggest new items if they are genuinely different from what was previously identified. Maintain continuity for better user experience.\n\n`
     : "";
+}
+
+// Utility function to create medical history context for analysis
+function createMedicalHistoryContext(
+  medicalContext: {
+    medicalHistory: any[];
+    relevantDocuments: any[];
+    contextSummary: string;
+  }
+): string {
+  const contextParts: string[] = [];
+  
+  contextParts.push('\n\nRELEVANT MEDICAL HISTORY:');
+  contextParts.push(medicalContext.contextSummary);
+  
+  if (medicalContext.medicalHistory.length > 0) {
+    const historyItems = medicalContext.medicalHistory
+      .slice(0, 10) // Limit to top 10 items
+      .map(item => {
+        if (typeof item === 'string') return `- ${item}`;
+        if (item.text) return `- ${item.date || 'Unknown date'}: ${item.text} (${item.type || 'medical'})`;
+        return `- ${JSON.stringify(item).substring(0, 100)}...`;
+      })
+      .join('\n');
+    
+    contextParts.push('\nKey Medical History Points:');
+    contextParts.push(historyItems);
+  }
+  
+  if (medicalContext.relevantDocuments.length > 0) {
+    const docSummary = medicalContext.relevantDocuments
+      .slice(0, 5)
+      .map(doc => `- ${doc.date || 'Unknown date'}: ${doc.type} - ${doc.excerpt || 'Medical document'}`)
+      .join('\n');
+      
+    contextParts.push('\nRelevant Medical Documents:');
+    contextParts.push(docSummary);
+  }
+  
+  contextParts.push('\nINSTRUCTIONS: Consider the above medical history when analyzing the current consultation. Build upon existing conditions, medications, and treatments. Cross-reference symptoms with patient\'s medical background.\n\n');
+  
+  return contextParts.join('\n');
 }
 
 // Utility function to merge two analysis objects

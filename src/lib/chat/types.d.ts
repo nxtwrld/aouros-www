@@ -29,6 +29,12 @@ export interface ChatMessage {
     contextPrompt?: ContextPrompt;
     translationKey?: string;
     translationParams?: any;
+    // Context assembly metadata
+    contextAvailable?: boolean;
+    documentCount?: number;
+    contextConfidence?: number;
+    availableTools?: string[];
+    shouldEnhanceGreeting?: boolean;
     // Keep legacy support temporarily
     documentPrompt?: {
       documentId: string;
@@ -53,6 +59,10 @@ export interface ChatContext {
   pageContext: PageContext;
   anatomyContext?: AnatomyContext;
   isOwnProfile: boolean;
+  // Context assembly integration
+  assembledContext?: any; // AssembledContext from context assembly system
+  availableTools?: string[];
+  mcpTools?: any; // MCP tools for AI to access medical data
 }
 
 export interface PageContext {

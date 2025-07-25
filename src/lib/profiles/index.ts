@@ -8,6 +8,7 @@ import user from "$lib/user";
 import { prepareKeys } from "$lib/encryption/rsa";
 import { createHash } from "$lib/encryption/hash";
 import { generatePassphrase } from "$lib/encryption/passphrase";
+import { profileContextManager } from "$lib/context/integration/profile-context";
 
 export { profiles, profile };
 
@@ -84,7 +85,24 @@ export async function loadProfiles(
           const roots = await importDocuments(rootsEncrypted);
 
           // map profile data
-          return mapProfileData(d, roots);
+          const profileData = mapProfileData(d, roots);
+          
+          // NEW: Initialize context for this profile
+          try {
+            await profileContextManager.initializeProfileContext(
+              d.profiles.id,
+              {
+                generateMissingEmbeddings: true,
+                onProgress: (status, progress) => {
+                  console.log(`Context init for ${d.profiles.id}: ${status} ${progress ? `(${progress}%)` : ''}`);
+                }
+              }
+            );
+          } catch (error) {
+            console.warn(`Failed to initialize context for profile ${d.profiles.id}:`, error);
+          }
+          
+          return profileData;
         } catch (e) {
           return {
             ...d.profiles,

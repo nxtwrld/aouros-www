@@ -1,4 +1,4 @@
-import { transcribeAudio as whisperTranscribe } from "$lib/audio/whisper";
+import { transcriptionProvider } from "$lib/ai/providers/transcription-abstraction";
 import { transcribeAudio as assemblyTranscribe } from "$lib/audio/assemblyai";
 import { logger } from "$lib/logging/logger";
 
@@ -19,8 +19,9 @@ export async function transcribeAudioChunk(
       type: "audio/mp3",
     });
 
-    // Use Whisper for real-time transcription (faster than AssemblyAI for small chunks)
-    const result = await whisperTranscribe(audioFile, { lang: language });
+    // Use configured transcription provider for real-time transcription
+    await transcriptionProvider.initialize();
+    const result = await transcriptionProvider.transcribeAudioCompatible(audioFile, { lang: language });
 
     if (result.text && result.text.trim().length > 0) {
       return {

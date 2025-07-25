@@ -1,6 +1,12 @@
 {
   "permissions": {
-    "allow": ["Bash(npm install:*)", "Bash(mkdir:*)", "Bash(grep:*)"],
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(npm run build:*)"
+    ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": true
 }

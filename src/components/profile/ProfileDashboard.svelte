@@ -115,9 +115,17 @@
         ui.emit('modal.healthProperty', property);
     }
 
-    // Emit profile context when profile loads
-    onMount(() => {
-        if ($profile) {
+    // Track previous profile to only emit when actually changing
+    let previousProfileId: string | null = null;
+
+    // Emit profile context when profile changes (not just on mount)
+    $effect(() => {
+        if ($profile && $profile.id !== previousProfileId) {
+            console.log('Profile changed in dashboard, emitting profile context event:', {
+                profileId: $profile.id,
+                previousProfileId
+            });
+            
             // Emit profile context event for AI chat
             ui.emit('aicontext:profile', {
                 profileId: $profile.id,
@@ -140,6 +148,11 @@
                 },
                 timestamp: new Date()
             });
+            
+            // Update previous profile ID
+            previousProfileId = $profile.id;
+        } else if ($profile) {
+            console.log('Profile unchanged in dashboard, skipping profile context event');
         }
     });
 

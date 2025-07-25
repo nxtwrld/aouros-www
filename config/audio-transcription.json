@@ -1,0 +1,88 @@
+{
+  "providers": {
+    "openai": {
+      "enabled": true,
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "models": {
+        "whisper": {
+          "name": "whisper-1",
+          "description": "OpenAI Whisper ASR model",
+          "supportedFormats": ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"],
+          "maxFileSize": "25MB",
+          "languages": ["en", "cs", "de", "es", "fr", "it", "ja", "ko", "pt", "ru", "zh"],
+          "responseFormats": ["json", "text", "srt", "verbose_json", "vtt"],
+          "temperature": 0,
+          "timestampGranularities": ["segment", "word"]
+        }
+      }
+    },
+    "azure": {
+      "enabled": false,
+      "apiKeyEnv": "AZURE_SPEECH_KEY",
+      "models": {
+        "speech_to_text": {
+          "name": "whisper",
+          "description": "Azure Speech Services",
+          "supportedFormats": ["wav", "mp3", "ogg"],
+          "maxFileSize": "100MB",
+          "languages": ["en-US", "cs-CZ", "de-DE"],
+          "responseFormats": ["simple", "detailed"]
+        }
+      }
+    },
+    "google": {
+      "enabled": false,
+      "apiKeyEnv": "GOOGLE_CLOUD_API_KEY",
+      "models": {
+        "speech_to_text": {
+          "name": "latest_long",
+          "description": "Google Cloud Speech-to-Text",
+          "supportedFormats": ["wav", "flac", "mp3"],
+          "maxFileSize": "1GB",
+          "languages": ["en-US", "cs-CZ", "de-DE"],
+          "responseFormats": ["basic", "enhanced"]
+        }
+      }
+    }
+  },
+  "defaultProvider": "openai",
+  "defaultModel": "whisper",
+  "transcriptionSettings": {
+    "defaultLanguage": "en",
+    "responseFormat": "text",
+    "includeTimestamps": false,
+    "medicalContext": {
+      "enabled": true,
+      "prompt": "The transcript is a part of a doctor patient session conversation. The doctor is asking the patient about their symptoms and the patient is responding. A nurse or multiple doctors may be part of the conversation.",
+      "medicalTermsBoost": true,
+      "speakerIdentification": false
+    }
+  },
+  "performance": {
+    "maxRetries": 3,
+    "timeoutMs": 30000,
+    "batchProcessing": {
+      "enabled": false,
+      "maxBatchSize": 10,
+      "batchTimeoutMs": 60000
+    }
+  },
+  "fallback": {
+    "enableFallback": true,
+    "fallbackProviders": ["openai"],
+    "fallbackOnError": true,
+    "fallbackOnTimeout": true
+  },
+  "quality": {
+    "confidenceThreshold": 0.7,
+    "enableQualityFiltering": false,
+    "profanityFilter": false,
+    "medicalTermsValidation": true
+  },
+  "monitoring": {
+    "logTranscriptions": false,
+    "trackTokenUsage": true,
+    "performanceMetrics": true,
+    "errorTracking": true
+  }
+}

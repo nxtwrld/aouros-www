@@ -1,5 +1,5 @@
 import { error, json, type RequestHandler } from "@sveltejs/kit";
-import { transcribeAudio } from "$lib/audio/whisper";
+import { transcriptionProvider } from "$lib/ai/providers/transcription-abstraction";
 
 export const POST: RequestHandler = async ({ request }) => {
   //const str = url.searchParams.get('drug');
@@ -33,7 +33,9 @@ export const POST: RequestHandler = async ({ request }) => {
     error(400, { message: "Invalid file type" });
   }
 
-  const result = await transcribeAudio(uploadedFile, instructions);
+  // Initialize transcription provider and transcribe
+  await transcriptionProvider.initialize();
+  const result = await transcriptionProvider.transcribeAudioCompatible(uploadedFile, instructions);
 
   /*const bytes = new Uint8Array(await uploadedFile.arrayBuffer());
 

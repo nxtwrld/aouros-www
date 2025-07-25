@@ -28,6 +28,8 @@ import { providerSelectionNode } from "../nodes/provider-selection";
 import { externalValidationNode } from "../nodes/external-validation";
 import { qualityGateNode } from "../nodes/quality-gate";
 import { documentTypeRouterNode } from "../nodes/document-type-router";
+import { embeddingGenerationNode } from "../nodes/embedding-generation";
+import { embeddingStorageNode } from "../nodes/embedding-storage";
 
 // Import unified multi-node processing
 import { executeMultiNodeProcessing } from "./multi-node-orchestrator";
@@ -89,44 +91,48 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
     };
   };
 
-  // Create state graph with simplified channels
-  const workflow = new StateGraph({
+  // Create state graph with state interface
+  const workflow = new StateGraph<DocumentProcessingState>({
     channels: {
-      // Input
-      images: null,
-      text: null,
-      language: null,
-      metadata: null,
-      content: null,
+      // Input channels
+      images: { reducer: (current: any, update: any) => update ?? current },
+      text: { reducer: (current: any, update: any) => update ?? current },
+      language: { reducer: (current: any, update: any) => update ?? current },
+      metadata: { reducer: (current: any, update: any) => update ?? current },
+      content: { reducer: (current: any, update: any) => update ?? current },
       
-      // Core processing
-      tokenUsage: null,
-      featureDetection: null,
-      featureDetectionResults: null,
+      // Core processing channels
+      tokenUsage: { reducer: (current: any, update: any) => update ?? current },
+      featureDetection: { reducer: (current: any, update: any) => update ?? current },
+      featureDetectionResults: { reducer: (current: any, update: any) => update ?? current },
       
-      // Multi-node results (replaces individual medical analysis, signals, etc.)
-      medicalAnalysis: null,
-      signals: null,
-      imaging: null,
-      medications: null,
-      procedures: null,
-      multiNodeResults: null,
-      report: null, // Add report channel
+      // Multi-node results channels
+      medicalAnalysis: { reducer: (current: any, update: any) => update ?? current },
+      signals: { reducer: (current: any, update: any) => update ?? current },
+      imaging: { reducer: (current: any, update: any) => update ?? current },
+      medications: { reducer: (current: any, update: any) => update ?? current },
+      procedures: { reducer: (current: any, update: any) => update ?? current },
+      multiNodeResults: { reducer: (current: any, update: any) => update ?? current },
+      report: { reducer: (current: any, update: any) => update ?? current },
       
-      // Workflow control
-      documentTypeAnalysis: null,
-      selectedProvider: null,
-      providerMetadata: null,
-      validationResults: null,
-      confidence: null,
-      errors: null,
+      // Embedding processing channels
+      embeddingGeneration: { reducer: (current: any, update: any) => update ?? current },
+      embeddingStorage: { reducer: (current: any, update: any) => update ?? current },
       
-      // Progress tracking
-      progressCallback: null,
-      currentStage: null,
-      emitProgress: null,
-      emitComplete: null,
-      emitError: null,
+      // Workflow control channels
+      documentTypeAnalysis: { reducer: (current: any, update: any) => update ?? current },
+      selectedProvider: { reducer: (current: any, update: any) => update ?? current },
+      providerMetadata: { reducer: (current: any, update: any) => update ?? current },
+      validationResults: { reducer: (current: any, update: any) => update ?? current },
+      confidence: { reducer: (current: any, update: any) => update ?? current },
+      errors: { reducer: (current: any, update: any) => update ?? current },
+      
+      // Progress tracking channels
+      progressCallback: { reducer: (current: any, update: any) => update ?? current },
+      currentStage: { reducer: (current: any, update: any) => update ?? current },
+      emitProgress: { reducer: (current: any, update: any) => update ?? current },
+      emitComplete: { reducer: (current: any, update: any) => update ?? current },
+      emitError: { reducer: (current: any, update: any) => update ?? current },
     },
   });
 
@@ -135,7 +141,9 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
   workflow.addNode("document_type_router", createNodeWrapper(documentTypeRouterNode, { start: 40, end: 50 }));
   workflow.addNode("provider_selection", createNodeWrapper(providerSelectionNode, { start: 50, end: 60 }));
   workflow.addNode("feature_detection", createNodeWrapper(featureDetectionNode, { start: 60, end: 70 }));
-  workflow.addNode("multi_node_processing", createNodeWrapper(executeMultiNodeProcessing, { start: 70, end: 95 }));
+  workflow.addNode("multi_node_processing", createNodeWrapper(executeMultiNodeProcessing, { start: 70, end: 85 }));
+  workflow.addNode("embedding_generation", createNodeWrapper(embeddingGenerationNode, { start: 85, end: 90 }));
+  workflow.addNode("embedding_storage", createNodeWrapper(embeddingStorageNode, { start: 90, end: 95 }));
   workflow.addNode("external_validation", createNodeWrapper(externalValidationNode, { start: 95, end: 98 }));
   workflow.addNode("quality_gate", createNodeWrapper(qualityGateNode, { start: 98, end: 100 }));
 
@@ -150,8 +158,12 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
     error: END,
   });
 
+  // Add embedding generation after multi-node processing
+  workflow.addEdge("multi_node_processing", "embedding_generation");
+  workflow.addEdge("embedding_generation", "embedding_storage");
+
   // External validation (optional)
-  workflow.addConditionalEdges("multi_node_processing", shouldValidateExternally, {
+  workflow.addConditionalEdges("embedding_storage", shouldValidateExternally, {
     validate: "external_validation",
     skip: "quality_gate",
   });

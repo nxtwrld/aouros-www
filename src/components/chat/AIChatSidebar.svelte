@@ -180,22 +180,45 @@
     chatActions.toggle();
   }
 
+  // Track previous profile to only emit when actually changing
+  let previousProfileId = $state<string | null>(null);
+  let previousLanguage = $state<string | null>(null);
+  let previousIsOwnProfile = $state<boolean | null>(null);
+
   // Watch for profile changes
   $effect(() => {
     if (currentProfile && userLanguage) {
-      console.log('Profile or language changed, emitting profile switch event:', {
-        profileId: currentProfile.id,
-        language: userLanguage,
-        isOwnProfile
-      });
+      const currentProfileId = currentProfile.id;
       
-      // Emit profile switch event
-      ui.emit('chat:profile_switch', {
-        profileId: currentProfile.id,
-        profileName: currentProfile.fullName || 'Unknown',
-        isOwnProfile,
-        language: userLanguage
-      });
+      // Only emit if this is actually a change
+      if (previousProfileId !== currentProfileId || 
+          previousLanguage !== userLanguage || 
+          previousIsOwnProfile !== isOwnProfile) {
+        
+        console.log('Profile or language changed, emitting profile switch event:', {
+          profileId: currentProfileId,
+          language: userLanguage,
+          isOwnProfile,
+          previousProfileId,
+          previousLanguage,
+          previousIsOwnProfile
+        });
+        
+        // Emit profile switch event
+        ui.emit('chat:profile_switch', {
+          profileId: currentProfileId,
+          profileName: currentProfile.fullName || 'Unknown',
+          isOwnProfile,
+          language: userLanguage
+        });
+        
+        // Update previous values
+        previousProfileId = currentProfileId;
+        previousLanguage = userLanguage;
+        previousIsOwnProfile = isOwnProfile;
+      } else {
+        console.log('Profile/language unchanged, skipping profile switch event');
+      }
     }
   });
 </script>

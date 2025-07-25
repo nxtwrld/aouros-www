@@ -3,6 +3,7 @@ import type { ChatMessage, ChatContext, ChatResponse, ChatMode } from './types.d
 import type { Content } from '$lib/ai/types.d';
 import AnatomyIntegration from './anatomy-integration';
 import { generateId } from '$lib/utils/id';
+import { chatContextService } from '$lib/context/integration/chat-service';
 
 export class ChatAIService {
   private tokenUsage = { total: 0 };
@@ -62,7 +63,7 @@ export class ChatAIService {
   }
 
   /**
-   * Build content array for AI processing
+   * Build content array for AI processing with context assembly
    */
   private buildContent(
     userMessage: string,
@@ -71,11 +72,27 @@ export class ChatAIService {
   ): Content[] {
     const content: Content[] = [];
 
-    // Add system context
+    // Add enhanced system context with assembled medical context
     content.push({
       type: 'text',
-      text: this.buildSystemPrompt(context),
+      text: this.buildEnhancedSystemPrompt(context),
     });
+
+    // Add assembled medical context if available
+    if (context.assembledContext) {
+      content.push({
+        type: 'text',
+        text: this.formatAssembledContext(context.assembledContext),
+      });
+    }
+
+    // Add available MCP tools information
+    if (context.availableTools && context.availableTools.length > 0) {
+      content.push({
+        type: 'text',
+        text: this.formatAvailableTools(context.availableTools),
+      });
+    }
 
     // Add conversation history (last 10 messages)
     const recentHistory = conversationHistory.slice(-10);
@@ -93,6 +110,26 @@ export class ChatAIService {
     });
 
     return content;
+  }
+
+  /**
+   * Build enhanced system prompt with context assembly integration
+   */
+  private buildEnhancedSystemPrompt(context: ChatContext): string {
+    const basePrompt = chatContextService.createContextAwareSystemPrompt(
+      this.buildSystemPrompt(context),
+      {
+        assembledContext: context.assembledContext,
+        availableTools: context.availableTools || [],
+        contextSummary: context.assembledContext ? 'Medical context available' : 'No medical context available',
+        documentCount: context.assembledContext?.relevantDocuments?.length || 0,
+        confidence: context.assembledContext?.confidence || 0,
+        tokenUsage: context.assembledContext?.tokenCount || 0
+      },
+      context.mode === 'patient' ? 'patient' : 'clinical'
+    );
+    
+    return basePrompt;
   }
 
   /**
@@ -213,10 +250,73 @@ CLINICAL FOCUS:
   }
 
   /**
+   * Format assembled context for AI prompt
+   */
+  private formatAssembledContext(assembledContext: any): string {
+    if (!assembledContext) {
+      return 'No medical context available for this conversation.';
+    }
+    
+    const sections = [];
+    
+    // Summary
+    if (assembledContext.summary) {
+      sections.push(`**Medical Context Summary:**\n${assembledContext.summary}`);
+    }
+    
+    // Key points
+    if (assembledContext.keyPoints && assembledContext.keyPoints.length > 0) {
+      const keyPointsList = assembledContext.keyPoints
+        .slice(0, 5) // Limit to top 5 points
+        .map((point: any) => `- ${point.text} (${point.type}, ${point.date || 'unknown date'})`)
+        .join('\n');
+      sections.push(`**Key Medical Points:**\n${keyPointsList}`);
+    }
+    
+    // Recent changes
+    if (assembledContext.medicalContext?.recentChanges?.length) {
+      const recentList = assembledContext.medicalContext.recentChanges
+        .slice(0, 3)
+        .map((change: any) => `- ${change.date}: ${change.description}`)
+        .join('\n');
+      sections.push(`**Recent Medical Changes:**\n${recentList}`);
+    }
+    
+    // Metadata
+    const metadata = `**Context Statistics:**\n- Documents: ${assembledContext.relevantDocuments?.length || 0}\n- Key Points: ${assembledContext.keyPoints?.length || 0}\n- Confidence: ${((assembledContext.confidence || 0) * 100).toFixed(1)}%\n- Token Usage: ${assembledContext.tokenCount || 0}`;
+    sections.push(metadata);
+    
+    return sections.join('\n\n');
+  }
+  
+  /**
+   * Format available MCP tools for AI prompt
+   */
+  private formatAvailableTools(availableTools: string[]): string {
+    if (!availableTools || availableTools.length === 0) {
+      return 'No medical data access tools are currently available.';
+    }
+    
+    const toolDescriptions: Record<string, string> = {
+      searchDocuments: 'Search patient documents using semantic similarity',
+      getAssembledContext: 'Get comprehensive assembled medical context',
+      getProfileData: 'Access patient profile and basic health information',
+      queryMedicalHistory: 'Query specific medical history (medications, conditions, procedures, allergies)',
+      getDocumentById: 'Retrieve specific document by ID'
+    };
+    
+    const toolsList = availableTools
+      .map(tool => `- **${tool}**: ${toolDescriptions[tool] || 'Medical data access tool'}`)
+      .join('\n');
+    
+    return `**Available Medical Data Tools:**\n\n${toolsList}\n\nUse these tools when you need specific medical information about the patient. Always explain what information you're looking for and why it's relevant to the conversation.`;
+  }
+  
+  /**
    * Get language name for AI prompt
    */
   private getLanguageName(languageCode: string): string {
-    const languages = {
+    const languages: Record<string, string> = {
       'en': 'English',
       'cs': 'Czech',
       'de': 'German',

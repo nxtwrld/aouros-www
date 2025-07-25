@@ -40,6 +40,14 @@ export interface DocumentEncrypted {
   keys: { key: string; owner_id: string }[];
   author_id?: string;
   owner_id: string;
+  
+  // Embedding fields for context system
+  embedding_summary?: string;        // Plain text summary for embedding
+  embedding_vector?: string;         // Encrypted embedding vector
+  embedding_provider?: string;       // Provider used ('openai', 'local', etc.)
+  embedding_model?: string;          // Model version
+  embedding_timestamp?: string;      // When embedding was generated
+  created_at?: string;              // Document creation timestamp
 }
 
 export interface Document {
@@ -60,6 +68,14 @@ export interface Document {
   attachments: Attachment[];
   author_id?: string;
   owner_id: string;
+  
+  // Embedding fields for context system
+  embedding_summary?: string;        // Plain text summary for embedding
+  embedding_vector?: string;         // Encrypted embedding vector
+  embedding_provider?: string;       // Provider used ('openai', 'local', etc.)
+  embedding_model?: string;          // Model version
+  embedding_timestamp?: string;      // When embedding was generated
+  created_at?: string;              // Document creation timestamp
 }
 
 export interface DocumentNew {

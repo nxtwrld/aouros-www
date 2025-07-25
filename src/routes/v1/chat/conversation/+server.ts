@@ -4,6 +4,8 @@ import type { Content } from '$lib/ai/types.d';
 import { generateId } from '$lib/utils/id';
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { chatConfigManager } from '$lib/config/chat-config';
+import { chatContextService } from '$lib/context/integration/chat-service';
+import type { ChatContextResult } from '$lib/context/integration/chat-service';
 
 export const POST: RequestHandler = async ({ request, locals: { safeGetSession } }) => {
   // Check authentication
@@ -20,7 +22,9 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession }
       conversationHistory, 
       language = 'en',
       pageContext,
-      provider // Optional provider override
+      provider, // Optional provider override
+      assembledContext, // Context from ChatManager
+      availableTools // MCP tools from ChatManager
     } = await request.json();
 
     // Validate required fields
@@ -33,7 +37,7 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession }
       start(controller) {
         const encoder = new TextEncoder();
         
-        // Process AI request
+        // Process AI request with context
         processAIRequest(
           message,
           mode,
@@ -43,7 +47,9 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession }
           pageContext,
           provider,
           controller,
-          encoder
+          encoder,
+          assembledContext,
+          availableTools
         ).catch((err) => {
           console.error('AI processing error:', err);
           controller.enqueue(
@@ -82,13 +88,63 @@ async function processAIRequest(
   pageContext: any,
   provider: string | undefined,
   controller: ReadableStreamDefaultController,
-  encoder: TextEncoder
+  encoder: TextEncoder,
+  assembledContext?: any,
+  availableTools?: string[]
 ) {
   const tokenUsage = { total: 0 };
 
   try {
-    // Build system prompt based on mode using configuration
-    const systemPrompt = chatConfigManager.buildSystemPrompt(mode, language, pageContext);
+    // Prepare context if not provided by ChatManager
+    let contextResult: ChatContextResult | null = null;
+    if (!assembledContext && profileId) {
+      try {
+        // Get conversation context from recent history
+        const conversationContext = conversationHistory
+          .slice(-3) // Last 3 messages for context
+          .map((msg: any) => `${msg.role}: ${msg.content}`)
+          .join('\n\n') + `\n\nuser: ${userMessage}`;
+        
+        contextResult = await chatContextService.prepareContextForChat(
+          conversationContext,
+          {
+            profileId,
+            maxTokens: 2000, // Smaller limit for API route
+            includeDocuments: true,
+            contextThreshold: 0.7
+          }
+        );
+        
+        console.log(`API context prepared: ${contextResult.documentCount} documents, confidence: ${contextResult.confidence}`);
+      } catch (error) {
+        console.warn('Failed to prepare context in API route:', error);
+        contextResult = null;
+      }
+    }
+    
+    // Use provided context or fallback to prepared context
+    const finalContext = assembledContext || contextResult?.assembledContext;
+    const finalTools = availableTools || contextResult?.availableTools || [];
+    
+    // Build enhanced system prompt with context
+    let systemPrompt = chatConfigManager.buildSystemPrompt(mode, language, pageContext);
+    
+    // Enhance system prompt with assembled context if available
+    if (finalContext || finalTools.length > 0) {
+      const contextEnhancement = chatContextService.createContextAwareSystemPrompt(
+        systemPrompt,
+        {
+          assembledContext: finalContext,
+          availableTools: finalTools,
+          contextSummary: contextResult?.contextSummary || 'Medical context available',
+          documentCount: contextResult?.documentCount || 0,
+          confidence: contextResult?.confidence || 0,
+          tokenUsage: contextResult?.tokenUsage || 0
+        },
+        mode === 'patient' ? 'patient' : 'clinical'
+      );
+      systemPrompt = contextEnhancement;
+    }
     
     // Phase 1: Stream the text response using configured model
     const streamingModel = chatConfigManager.createStreamingModel(provider);
@@ -151,7 +207,7 @@ async function processAIRequest(
       }
     );
 
-    // Send the structured data as metadata
+    // Send the structured data as metadata with context information
     const metadata = {
       type: 'metadata',
       data: {
@@ -159,7 +215,12 @@ async function processAIRequest(
         documentReferences: structuredData.documentReferences || [],
         consentRequests: structuredData.consentRequests || [],
         tokenUsage: tokenUsage.total,
-        mode
+        mode,
+        // Include context metadata
+        contextAvailable: !!(finalContext || contextResult),
+        documentCount: contextResult?.documentCount || 0,
+        contextConfidence: contextResult?.confidence || 0,
+        availableTools: finalTools
       }
     };
 

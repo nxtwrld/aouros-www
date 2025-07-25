@@ -211,6 +211,42 @@ export interface DocumentProcessingState {
     message?: string;
   };
 
+  // Embedding generation results
+  embeddingGeneration?: {
+    success?: boolean;
+    error?: string;
+    skipped?: boolean;
+    reason?: string;
+    summary?: string;
+    provider?: string;
+    model?: string;
+    dimensions?: number;
+    timestamp: string;
+    embeddingData?: {
+      vector: number[];
+      summary: string;
+      metadata: {
+        provider: string;
+        model: string;
+        dimensions: number;
+        language: string;
+        documentType: string;
+        processingDate: string;
+      };
+    };
+  };
+
+  // Embedding storage results
+  embeddingStorage?: {
+    success?: boolean;
+    error?: string;
+    skipped?: boolean;
+    reason?: string;
+    metadata?: any;
+    embeddingVector?: number[];
+    timestamp: string;
+  };
+
   // Progress tracking methods
   emitProgress?: (
     stage: string,

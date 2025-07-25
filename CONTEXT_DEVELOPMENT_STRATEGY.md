@@ -265,6 +265,43 @@ src/lib/context/
 └── index.ts               # Main context system API
 ```
 
+### Profile Loading Integration
+
+**Integrate with Existing Profile Loading Workflow:**
+```typescript
+// Enhanced loadProfiles function in src/lib/profiles/index.ts
+export async function loadProfiles(fetch = undefined, force = false) {
+  // ... existing profile loading logic ...
+  
+  const profilesExtended = await Promise.all(
+    profilesLoaded.map(async (d) => {
+      // ... existing document loading ...
+      const roots = await importDocuments(rootsEncrypted);
+      
+      // NEW: Initialize context for this profile
+      await profileContextManager.initializeProfileContext(
+        d.profiles.id,
+        {
+          generateMissingEmbeddings: true,
+          onProgress: (status, progress) => {
+            console.log(`Context init for ${d.profiles.id}: ${status} (${progress}%)`);
+          }
+        }
+      );
+      
+      return mapProfileData(d, roots);
+    })
+  );
+}
+```
+
+**Context Initialization Process:**
+1. **Document Loading** - Load all profile documents (leverages existing loadDocuments)
+2. **Embedding Generation** - Generate embeddings for suitable documents
+3. **Encryption** - Encrypt embedding vectors with document's AES keys
+4. **Context Database** - Build in-memory context database for fast search
+5. **Real-time Ready** - Context available immediately for chat/search
+
 ### Document Processing Pipeline Integration
 
 **Extend Existing LangGraph Workflow:**
@@ -284,7 +321,7 @@ src/lib/context/
 2. **Multi-Provider Generation** - Create embeddings using selected provider
 3. **Encryption** - Encrypt embedding vector with document's AES key
 4. **Storage** - Store encrypted embedding with document metadata
-5. **Real-time Update** - Notify active sessions of new context availability
+5. **Context Update** - Update existing context databases for active profiles
 
 ### Retrieval System Design
 
@@ -901,6 +938,452 @@ USER QUESTION: ${query}
 - Transparent document sourcing with specific IDs
 - Ability to dive deeper into medical history as needed
 
+## Medical Expert MCP Tools Extension
+
+### Enhanced MCP Tools for Medical AI Analysis
+
+The context system is extended with specialized MCP tools designed specifically for medical AI expert analysis, particularly for integration with the Mixture of Experts (MoE) system. These tools provide structured access to medical data beyond basic document retrieval.
+
+**Medical Expert MCP Tools Interface:**
+```typescript
+interface MedicalExpertMCPTools extends MediqomMCPTools {
+  // Tool 5: Get structured medical timeline with clinical significance
+  get_medical_timeline: {
+    name: "get_medical_timeline";
+    description: "Retrieve chronological medical timeline with clinical significance scoring and event correlation";
+    parameters: {
+      patientId: string;
+      timeRange?: { start: string; end: string };
+      medicalDomain?: 'cardiovascular' | 'respiratory' | 'endocrine' | 'neurological' | 'all';
+      includeCategories?: ('diagnosis' | 'treatment' | 'medication' | 'procedure' | 'test_result')[];
+      significanceThreshold?: number; // 0-1 scale for clinical significance
+    };
+    handler: (params: MedicalTimelineParams) => Promise<MedicalTimeline>;
+  };
+
+  // Tool 6: Search for medical patterns and correlations
+  search_medical_patterns: {
+    name: "search_medical_patterns";
+    description: "Identify patterns, correlations, and trends across patient's medical history using temporal analysis";
+    parameters: {
+      patientId: string;
+      patternType: 'symptom_progression' | 'treatment_response' | 'diagnostic_correlation' | 'risk_factors' | 'medication_adherence';
+      lookbackPeriod?: string; // e.g., "6 months", "2 years", "lifetime"
+      correlationThreshold?: number; // Minimum correlation strength
+      includeContext?: boolean; // Include surrounding medical context
+    };
+    handler: (params: MedicalPatternsParams) => Promise<MedicalPatterns>;
+  };
+
+  // Tool 7: Get comprehensive risk stratification
+  get_risk_stratification: {
+    name: "get_risk_stratification";
+    description: "Calculate comprehensive risk factors including demographic, clinical, and behavioral risks";
+    parameters: {
+      patientId: string;
+      riskCategories?: ('demographic' | 'clinical' | 'behavioral' | 'genetic' | 'social' | 'environmental')[];
+      riskConditions?: string[]; // Specific conditions to assess risk for
+      timeHorizon?: '1_month' | '6_months' | '1_year' | '5_years' | '10_years';
+      includeRecommendations?: boolean;
+    };
+    handler: (params: RiskStratificationParams) => Promise<RiskAssessment>;
+  };
+
+  // Tool 8: Check drug interactions and medication safety
+  check_drug_interactions: {
+    name: "check_drug_interactions";
+    description: "Analyze current and proposed medications for interactions, contraindications, and safety concerns";
+    parameters: {
+      patientId: string;
+      currentMedications?: string[]; // Current medication list
+      proposedMedications?: string[]; // Medications being considered
+      includeAllergies?: boolean;
+      includeMedicalConditions?: boolean;
+      severityLevels?: ('contraindicated' | 'major' | 'moderate' | 'minor')[];
+    };
+    handler: (params: DrugInteractionParams) => Promise<DrugInteractionAnalysis>;
+  };
+
+  // Tool 9: Get structured medical data objects
+  get_structured_medical_data: {
+    name: "get_structured_medical_data";
+    description: "Access structured meta-patient objects for specific medical data types";
+    parameters: {
+      patientId: string;
+      dataTypes: ('medication_history' | 'allergies_reactions' | 'vital_signs' | 'lab_results' | 'family_history' | 'clinical_signals' | 'treatment_responses')[];
+      timeRange?: { start: string; end: string };
+      aggregationLevel?: 'raw' | 'summary' | 'trends';
+    };
+    handler: (params: StructuredDataParams) => Promise<StructuredMedicalData>;
+  };
+
+  // Tool 10: Analyze treatment history and effectiveness
+  analyze_treatment_history: {
+    name: "analyze_treatment_history";
+    description: "Comprehensive analysis of treatment effectiveness, patient compliance, and outcomes";
+    parameters: {
+      patientId: string;
+      treatmentCategories?: ('medication' | 'procedure' | 'therapy' | 'lifestyle' | 'surgical')[];
+      conditions?: string[]; // Specific conditions to analyze treatments for
+      effectivenessMetrics?: ('symptom_improvement' | 'lab_values' | 'patient_reported' | 'clinical_assessment')[];
+      includeCompliance?: boolean;
+      comparativeAnalysis?: boolean; // Compare different treatment approaches
+    };
+    handler: (params: TreatmentAnalysisParams) => Promise<TreatmentEffectivenessAnalysis>;
+  };
+
+  // Tool 11: Get family and genetic history insights
+  get_family_genetic_history: {
+    name: "get_family_genetic_history";
+    description: "Access family medical history and genetic predispositions with relevance scoring";
+    parameters: {
+      patientId: string;
+      relationshipLevels?: ('immediate' | 'extended' | 'all')[];
+      conditionCategories?: ('cardiovascular' | 'cancer' | 'metabolic' | 'neurological' | 'psychiatric' | 'autoimmune')[];
+      inheritancePatterns?: ('dominant' | 'recessive' | 'x_linked' | 'multifactorial')[];
+      relevanceToCurrentSymptoms?: boolean;
+    };
+    handler: (params: FamilyHistoryParams) => Promise<FamilyGeneticInsights>;
+  };
+
+  // Tool 12: Search similar patient cases (if available)
+  search_similar_cases: {
+    name: "search_similar_cases";
+    description: "Find similar patient presentations based on symptoms, demographics, and medical history";
+    parameters: {
+      referencePatientId: string;
+      similarityFactors?: ('demographics' | 'symptoms' | 'medical_history' | 'risk_factors' | 'treatment_response')[];
+      minSimilarityScore?: number; // 0-1 threshold
+      maxResults?: number;
+      anonymizeResults?: boolean;
+      includeOutcomes?: boolean;
+    };
+    handler: (params: SimilarCasesParams) => Promise<SimilarPatientCases>;
+  };
+}
+```
+
+### Medical Expert MCP Tool Handlers Implementation
+
+**Enhanced MCP Handler for Medical Expert Analysis:**
+```typescript
+class MedicalExpertMCPHandler extends MediqomMCPHandler {
+  constructor(
+    contextDatabase: ClientContextDatabase,
+    documentsStore: DocumentStore,
+    encryptionService: EncryptionService,
+    private metaPatientStore: MetaPatientStore
+  ) {
+    super(contextDatabase, documentsStore, encryptionService);
+  }
+
+  async handleGetMedicalTimeline(params: MedicalTimelineParams): Promise<MedicalTimeline> {
+    // 1. Verify patient access permissions
+    await this.verifyPatientAccess(params.patientId);
+
+    // 2. Retrieve structured medical events from meta-patient store
+    const medicalEvents = await this.metaPatientStore.getMedicalEvents(
+      params.patientId,
+      params.timeRange
+    );
+
+    // 3. Apply domain and category filters
+    const filteredEvents = this.filterMedicalEvents(
+      medicalEvents,
+      params.medicalDomain,
+      params.includeCategories
+    );
+
+    // 4. Score clinical significance and correlate events
+    const scoredEvents = await this.scoreClinicalSignificance(
+      filteredEvents,
+      params.significanceThreshold || 0.5
+    );
+
+    // 5. Build temporal correlations
+    const correlatedTimeline = this.buildEventCorrelations(scoredEvents);
+
+    return {
+      patientId: params.patientId,
+      timeRange: params.timeRange,
+      events: correlatedTimeline,
+      clinicalInsights: this.extractTimelineInsights(correlatedTimeline),
+      significanceDistribution: this.calculateSignificanceDistribution(scoredEvents)
+    };
+  }
+
+  async handleSearchMedicalPatterns(params: MedicalPatternsParams): Promise<MedicalPatterns> {
+    // 1. Verify patient access
+    await this.verifyPatientAccess(params.patientId);
+
+    // 2. Retrieve relevant medical data based on pattern type
+    const medicalData = await this.metaPatientStore.getPatternAnalysisData(
+      params.patientId,
+      params.patternType,
+      params.lookbackPeriod
+    );
+
+    // 3. Apply pattern recognition algorithms
+    const identifiedPatterns = await this.analyzePatterns(
+      medicalData,
+      params.patternType,
+      params.correlationThreshold || 0.6
+    );
+
+    // 4. Include contextual information if requested
+    const contextualPatterns = params.includeContext
+      ? await this.enrichPatternsWithContext(identifiedPatterns)
+      : identifiedPatterns;
+
+    return {
+      patientId: params.patientId,
+      patternType: params.patternType,
+      patterns: contextualPatterns,
+      analysisMetadata: {
+        lookbackPeriod: params.lookbackPeriod,
+        correlationThreshold: params.correlationThreshold,
+        dataPointsAnalyzed: medicalData.length,
+        patternsFound: contextualPatterns.length
+      }
+    };
+  }
+
+  async handleGetRiskStratification(params: RiskStratificationParams): Promise<RiskAssessment> {
+    // 1. Verify patient access
+    await this.verifyPatientAccess(params.patientId);
+
+    // 2. Gather comprehensive patient data for risk assessment
+    const patientData = await this.metaPatientStore.getComprehensivePatientData(
+      params.patientId
+    );
+
+    // 3. Calculate risks by category
+    const riskAssessment = {
+      patientId: params.patientId,
+      assessmentDate: new Date().toISOString(),
+      timeHorizon: params.timeHorizon || '1_year',
+      riskCategories: {}
+    };
+
+    for (const category of params.riskCategories || ['demographic', 'clinical', 'behavioral']) {
+      riskAssessment.riskCategories[category] = await this.calculateCategoryRisk(
+        patientData,
+        category,
+        params.riskConditions,
+        params.timeHorizon
+      );
+    }
+
+    // 4. Generate recommendations if requested
+    if (params.includeRecommendations) {
+      riskAssessment.recommendations = await this.generateRiskMitigationRecommendations(
+        riskAssessment.riskCategories
+      );
+    }
+
+    return riskAssessment;
+  }
+
+  async handleCheckDrugInteractions(params: DrugInteractionParams): Promise<DrugInteractionAnalysis> {
+    // 1. Verify patient access
+    await this.verifyPatientAccess(params.patientId);
+
+    // 2. Get current medications from patient record
+    const currentMeds = params.currentMedications || 
+      await this.metaPatientStore.getCurrentMedications(params.patientId);
+
+    // 3. Get allergies and medical conditions if requested
+    const allergies = params.includeAllergies
+      ? await this.metaPatientStore.getAllergies(params.patientId)
+      : [];
+
+    const conditions = params.includeMedicalConditions
+      ? await this.metaPatientStore.getMedicalConditions(params.patientId)
+      : [];
+
+    // 4. Analyze interactions
+    const interactionAnalysis = await this.drugInteractionService.analyzeInteractions({
+      currentMedications: currentMeds,
+      proposedMedications: params.proposedMedications || [],
+      patientAllergies: allergies,
+      medicalConditions: conditions,
+      severityLevels: params.severityLevels
+    });
+
+    return {
+      patientId: params.patientId,
+      analysisDate: new Date().toISOString(),
+      currentMedications: currentMeds,
+      proposedMedications: params.proposedMedications || [],
+      interactions: interactionAnalysis.interactions,
+      contraindications: interactionAnalysis.contraindications,
+      warnings: interactionAnalysis.warnings,
+      recommendations: interactionAnalysis.recommendations
+    };
+  }
+
+  async handleGetStructuredMedicalData(params: StructuredDataParams): Promise<StructuredMedicalData> {
+    // 1. Verify patient access
+    await this.verifyPatientAccess(params.patientId);
+
+    // 2. Retrieve requested data types from meta-patient store
+    const structuredData = {};
+
+    for (const dataType of params.dataTypes) {
+      const rawData = await this.metaPatientStore.getStructuredData(
+        params.patientId,
+        dataType,
+        params.timeRange
+      );
+
+      // 3. Apply aggregation level
+      switch (params.aggregationLevel || 'summary') {
+        case 'raw':
+          structuredData[dataType] = rawData;
+          break;
+        case 'summary':
+          structuredData[dataType] = this.summarizeData(rawData, dataType);
+          break;
+        case 'trends':
+          structuredData[dataType] = this.calculateTrends(rawData, dataType);
+          break;
+      }
+    }
+
+    return {
+      patientId: params.patientId,
+      dataTypes: params.dataTypes,
+      timeRange: params.timeRange,
+      aggregationLevel: params.aggregationLevel || 'summary',
+      data: structuredData,
+      lastUpdated: new Date().toISOString()
+    };
+  }
+
+  // Private helper methods for pattern analysis and risk calculation
+  private async analyzePatterns(
+    data: MedicalDataPoint[],
+    patternType: string,
+    threshold: number
+  ): Promise<IdentifiedPattern[]> {
+    // Implement pattern recognition algorithms based on pattern type
+    switch (patternType) {
+      case 'symptom_progression':
+        return this.analyzeSymptomProgression(data, threshold);
+      case 'treatment_response':
+        return this.analyzeTreatmentResponse(data, threshold);
+      case 'diagnostic_correlation':
+        return this.analyzeDiagnosticCorrelation(data, threshold);
+      case 'risk_factors':
+        return this.analyzeRiskFactorPatterns(data, threshold);
+      case 'medication_adherence':
+        return this.analyzeMedicationAdherence(data, threshold);
+      default:
+        throw new Error(`Unsupported pattern type: ${patternType}`);
+    }
+  }
+
+  private async calculateCategoryRisk(
+    patientData: ComprehensivePatientData,
+    category: string,
+    conditions?: string[],
+    timeHorizon?: string
+  ): Promise<CategoryRiskAssessment> {
+    // Implement risk calculation algorithms for different categories
+    // This would integrate with medical risk databases and calculation engines
+    return this.riskCalculationService.calculateRisk({
+      patientData,
+      category,
+      conditions,
+      timeHorizon
+    });
+  }
+}
+```
+
+### Integration with MoE Expert System
+
+**MoE Expert Context Adapter:**
+```typescript
+class MoEContextAdapter {
+  constructor(
+    private medicalMCPHandler: MedicalExpertMCPHandler,
+    private contextDatabase: ClientContextDatabase
+  ) {}
+
+  async getContextForExpert(
+    expertType: string,
+    patientId: string,
+    currentContext: ExpertContext
+  ): Promise<EnhancedExpertContext> {
+    const enhancedContext = { ...currentContext };
+
+    // Customize context retrieval based on expert type
+    switch (expertType) {
+      case 'medical_history_integration':
+        enhancedContext.medicalTimeline = await this.medicalMCPHandler.handleGetMedicalTimeline({
+          patientId,
+          significanceThreshold: 0.7,
+          includeCategories: ['diagnosis', 'treatment', 'medication', 'test_result']
+        });
+        enhancedContext.medicalPatterns = await this.medicalMCPHandler.handleSearchMedicalPatterns({
+          patientId,
+          patternType: 'diagnostic_correlation',
+          lookbackPeriod: 'lifetime'
+        });
+        break;
+
+      case 'safety_monitor':
+        enhancedContext.drugInteractions = await this.medicalMCPHandler.handleCheckDrugInteractions({
+          patientId,
+          includeAllergies: true,
+          includeMedicalConditions: true,
+          severityLevels: ['contraindicated', 'major', 'moderate']
+        });
+        enhancedContext.riskAssessment = await this.medicalMCPHandler.handleGetRiskStratification({
+          patientId,
+          riskCategories: ['clinical', 'demographic'],
+          timeHorizon: '1_month'
+        });
+        break;
+
+      case 'treatment_planner':
+        enhancedContext.treatmentHistory = await this.medicalMCPHandler.handleAnalyzeTreatmentHistory({
+          patientId,
+          treatmentCategories: ['medication', 'procedure', 'therapy'],
+          includeCompliance: true,
+          comparativeAnalysis: true
+        });
+        break;
+
+      case 'preventive_care_specialist':
+        enhancedContext.familyHistory = await this.medicalMCPHandler.handleGetFamilyGeneticHistory({
+          patientId,
+          relationshipLevels: ['immediate', 'extended'],
+          relevanceToCurrentSymptoms: true
+        });
+        enhancedContext.riskAssessment = await this.medicalMCPHandler.handleGetRiskStratification({
+          patientId,
+          riskCategories: ['genetic', 'behavioral', 'environmental'],
+          timeHorizon: '5_years',
+          includeRecommendations: true
+        });
+        break;
+
+      default:
+        // For other experts, provide general structured data access
+        enhancedContext.structuredData = await this.medicalMCPHandler.handleGetStructuredMedicalData({
+          patientId,
+          dataTypes: ['medication_history', 'vital_signs', 'lab_results'],
+          aggregationLevel: 'summary'
+        });
+    }
+
+    return enhancedContext;
+  }
+}
+```
+
 ### Security Considerations
 
 **Access Control:**
@@ -923,6 +1406,23 @@ class MCPSecurityManager {
     const hasSharedAccess = await this.checkSharedAccess(documentId, userId);
 
     return hasKeyAccess || hasSharedAccess;
+  }
+
+  async verifyPatientAccess(patientId: string, userId: string): Promise<void> {
+    // Extended security for medical expert access
+    const hasAccess = await this.patientAccessService.verifyAccess(patientId, userId);
+    if (!hasAccess) {
+      throw new Error('Unauthorized access to patient medical data');
+    }
+
+    // Audit all medical data access for expert analysis
+    await this.auditLogger.log({
+      timestamp: new Date(),
+      userId,
+      action: 'medical_expert_access',
+      patientId,
+      sessionId: this.currentSessionId
+    });
   }
 
   async auditToolCall(toolName: string, params: any, userId: string): Promise<void> {

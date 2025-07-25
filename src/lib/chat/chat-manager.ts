@@ -1,11 +1,13 @@
 import { get } from 'svelte/store';
-import { chatStore, chatActions, createMessage } from './store';
+import { chatStore, chatActions, createMessage, isOpen } from './store';
 import ChatClientService from './client-service';
 import AnatomyIntegration from './anatomy-integration';
 import type { ChatMessage, ChatContext, ChatResponse } from './types.d';
 import { generateId } from '$lib/utils/id';
 import ui from '$lib/ui';
 import { t } from '$lib/i18n';
+import { chatContextService } from '$lib/context/integration/chat-service';
+import type { ChatContextResult } from '$lib/context/integration/chat-service';
 
 export class ChatManager {
   private clientService: ChatClientService;
@@ -13,6 +15,8 @@ export class ChatManager {
   private isInitialized = false;
   private currentProfileId: string | null = null;
   private eventListeners: (() => void)[] = [];
+  private currentContextResult: ChatContextResult | null = null;
+  private currentPromptProfileId: string | null = null; // Track active profile prompt
 
   constructor() {
     this.clientService = new ChatClientService();
@@ -146,12 +150,19 @@ export class ChatManager {
   }): void {
     const state = get(chatStore);
     if (state.context) {
-      // Update page context
+      // If we're navigating away from a profile that has an active prompt, remove it
+      if (this.currentPromptProfileId && this.currentPromptProfileId !== data.profileId) {
+        console.log(`Navigating away from profile ${this.currentPromptProfileId}, removing stale prompt`);
+        this.removeContextPromptMessage(this.currentPromptProfileId, 'profile');
+        this.currentPromptProfileId = null;
+      }
+
+      // Update page context (but keep the chat's profile identity unchanged)
       chatActions.updateContext({
         pageContext: {
           ...state.context.pageContext,
           route: data.route,
-          profileName: data.profileName,
+          // Don't update profileName - it should only change when chat context switches
         }
       });
 
@@ -181,9 +192,15 @@ export class ChatManager {
       return;
     }
     
+    // If switching to the same profile, no action needed
+    if (state.context.currentProfileId === data.profileId) {
+      console.log(`Already on profile ${data.profileId}, no switch needed`);
+      return;
+    }
+    
     // If switching to a different profile, save current conversation but don't initialize yet
     // Let the profile context event handle the prompt
-    if (state.context.currentProfileId !== data.profileId && state.messages.length > 0) {
+    if (state.messages.length > 0) {
       const history = new Map(state.conversationHistory);
       history.set(state.context.currentProfileId, [...state.messages]);
       
@@ -304,6 +321,9 @@ export class ChatManager {
    * Handle user accepting document addition
    */
   acceptDocumentContext(documentId: string, documentName: string, documentContent: any): void {
+    // Remove the prompt message from chat
+    this.removeContextPromptMessage(documentId, 'document');
+    
     // Store document content in context
     const state = get(chatStore);
     if (state.context) {
@@ -330,16 +350,30 @@ export class ChatManager {
    * Handle user declining document addition
    */
   declineDocumentContext(documentId: string, documentName: string): void {
-    // Add system message about declining
-    const declineMsg = createMessage(
-      'system',
-      '', // Empty content - translation will be handled in the component
-      {
-        translationKey: 'app.chat.document.declined'
-      }
-    );
-    chatActions.addMessage(declineMsg);
+    // Remove the prompt message from chat
+    this.removeContextPromptMessage(documentId, 'document');
+    
     console.log(`Document ${documentId} declined by user`);
+  }
+
+  /**
+   * Remove context prompt message from chat after user responds
+   */
+  private removeContextPromptMessage(id: string, type: 'document' | 'profile'): void {
+    const state = get(chatStore);
+    const updatedMessages = state.messages.filter(message => {
+      // Remove messages that have a contextPrompt with matching id and type
+      if (message.metadata?.contextPrompt) {
+        const prompt = message.metadata.contextPrompt;
+        return !(prompt.id === id && prompt.type === type);
+      }
+      return true;
+    });
+    
+    if (updatedMessages.length !== state.messages.length) {
+      chatActions.setMessages(updatedMessages);
+      console.log(`Removed context prompt message for ${type}: ${id}`);
+    }
   }
 
   /**
@@ -359,6 +393,13 @@ export class ChatManager {
     // Check if this is a different profile
     if (state.context.currentProfileId === data.profileId) {
       return; // Same profile, no action needed
+    }
+
+    // Only show prompt if chat is open and has messages
+    const chatIsOpen = get(isOpen);
+    if (!chatIsOpen || state.messages.length === 0) {
+      console.log('Skipping profile context prompt - chat is closed or has no messages');
+      return;
     }
 
     // Create uniform prompt object with callbacks
@@ -382,6 +423,7 @@ export class ChatManager {
     });
     
     chatActions.addMessage(promptMessage);
+    this.currentPromptProfileId = data.profileId; // Track the active prompt
     console.log(`Profile context prompt added for: ${data.profileName}`);
   }
 
@@ -390,6 +432,10 @@ export class ChatManager {
    */
   acceptProfileContext(profileId: string, profileName: string, _profileData: any): void {
     const state = get(chatStore);
+    
+    // Remove the prompt message from chat and clear tracking
+    this.removeContextPromptMessage(profileId, 'profile');
+    this.currentPromptProfileId = null;
     
     // Save current conversation to history before switching
     if (state.context && state.messages.length > 0) {
@@ -423,16 +469,12 @@ export class ChatManager {
     // Initialize chat with new profile context
     this.initializeChat(newContext);
     
-    // Add system message about context reset
-    const resetMsg = createMessage(
+    // Add simple system message about switching profile
+    const switchMsg = createMessage(
       'system',
-      '', // Empty content - translation will be handled in the component
-      {
-        translationKey: 'app.chat.profile.context-reset',
-        translationParams: { profileName }
-      }
+      `Switching to ${profileName}`
     );
-    chatActions.addMessage(resetMsg);
+    chatActions.addMessage(switchMsg);
     console.log(`Profile context reset accepted for ${profileId}`);
   }
 
@@ -440,6 +482,10 @@ export class ChatManager {
    * Handle user declining profile context reset
    */
   declineProfileContext(profileId: string, profileName: string): void {
+    // Remove the prompt message from chat and clear tracking
+    this.removeContextPromptMessage(profileId, 'profile');
+    this.currentPromptProfileId = null;
+    
     // Update the context to reflect we're now discussing a different profile
     const state = get(chatStore);
     if (state.context) {
@@ -452,16 +498,6 @@ export class ChatManager {
       });
     }
     
-    // Add system message about keeping context
-    const keepMsg = createMessage(
-      'system',
-      '', // Empty content - translation will be handled in the component
-      {
-        translationKey: 'app.chat.profile.context-kept',
-        translationParams: { profileName }
-      }
-    );
-    chatActions.addMessage(keepMsg);
     console.log(`Profile context reset declined for ${profileId}`);
   }
 
@@ -476,16 +512,46 @@ export class ChatManager {
     // Check if we have existing history for this profile
     const existingHistory = state.conversationHistory.get(context.currentProfileId) || [];
     
+    // Initialize context assembly for this profile
+    try {
+      this.currentContextResult = await chatContextService.prepareContextForChat(
+        'Initial chat setup', // Initial message for context preparation
+        {
+          profileId: context.currentProfileId,
+          maxTokens: 3000,
+          includeDocuments: true,
+          contextThreshold: 0.6
+        }
+      );
+      
+      console.log(`Context assembly initialized: ${this.currentContextResult.documentCount} documents available, confidence: ${this.currentContextResult.confidence}`);
+    } catch (error) {
+      console.warn('Failed to initialize context assembly:', error);
+      this.currentContextResult = null;
+    }
+    
     // Only clear messages if we don't have existing history
     if (existingHistory.length === 0) {
       chatActions.clearMessages();
       
-      // Add initial greeting based on mode
-      const greeting = this.getInitialGreeting(context);
+      // Add context-aware initial greeting
+      const greeting = this.getContextAwareGreeting(context, this.currentContextResult);
       if (greeting) {
-        const greetingMessage = createMessage('assistant', greeting);
+        // Include context metadata if available
+        const messageMetadata = this.currentContextResult ? {
+          contextAvailable: true,
+          documentCount: this.currentContextResult.documentCount,
+          contextConfidence: this.currentContextResult.confidence,
+          availableTools: this.currentContextResult.availableTools,
+          shouldEnhanceGreeting: this.currentContextResult.documentCount > 0
+        } : {
+          contextAvailable: false,
+          shouldEnhanceGreeting: false
+        };
+        
+        const greetingMessage = createMessage('assistant', greeting, messageMetadata);
         chatActions.addMessage(greetingMessage);
-        console.log('Added greeting message:', greeting.substring(0, 50) + '...');
+        console.log('Added context-aware greeting message:', greeting.substring(0, 50) + '...');
       }
     } else {
       // Restore existing history
@@ -515,23 +581,52 @@ export class ChatManager {
       throw new Error('Chat context not initialized');
     }
 
+    // If there's an active profile prompt, remove it since user is continuing with current context
+    if (this.currentPromptProfileId) {
+      console.log(`User sent message without responding to profile switch prompt, removing prompt for profile ${this.currentPromptProfileId}`);
+      this.removeContextPromptMessage(this.currentPromptProfileId, 'profile');
+      this.currentPromptProfileId = null;
+    }
+
     this.isProcessing = true;
     chatActions.setLoading(true);
 
     try {
+      // Update context assembly for current conversation
+      const conversationHistory = state.messages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .map(m => m.content)
+        .slice(-5); // Last 5 messages for context
+      
+      this.currentContextResult = await chatContextService.updateContextDuringConversation(
+        state.context.currentProfileId,
+        conversationHistory,
+        userMessage
+      );
+      
+      console.log(`Context updated for message: ${this.currentContextResult.documentCount} documents, confidence: ${this.currentContextResult.confidence}`);
+
       // Add user message to chat
       const userMsg = createMessage('user', userMessage);
       chatActions.addMessage(userMsg);
+
+      // Create enhanced context for AI with assembled context and MCP tools
+      const enhancedContext = {
+        ...state.context,
+        assembledContext: this.currentContextResult?.assembledContext,
+        availableTools: this.currentContextResult?.availableTools || [],
+        mcpTools: chatContextService.getMCPToolsForChat(state.context.currentProfileId)
+      };
 
       // Create a message that will be updated as chunks arrive
       let streamingMessageId: string | null = null;
       let accumulatedContent = '';
       let messageMetadata: any = {};
 
-      // Send message via SSE
+      // Send message via SSE with enhanced context
       await this.clientService.sendMessage(
         userMessage,
-        state.context,
+        enhancedContext,
         state.messages,
         (event) => {
           switch (event.type) {
@@ -725,6 +820,33 @@ export class ChatManager {
     } else {
       return get(t)('app.chat.greetings.clinical', { values: { profileName } });
     }
+  }
+
+  /**
+   * Get context-aware greeting that includes information about available medical context
+   * The AI will handle language translation based on the user's language context
+   */
+  private getContextAwareGreeting(context: ChatContext, contextResult: ChatContextResult | null): string {
+    const baseGreeting = this.getInitialGreeting(context);
+    
+    // If no context available, return the standard translated greeting
+    if (!contextResult || contextResult.documentCount === 0) {
+      return baseGreeting;
+    }
+    
+    // For context-enhanced greeting, we'll let the AI handle the language
+    // by providing metadata that the AI service can use to generate a contextualized response
+    const contextMetadata = {
+      hasContext: true,
+      documentCount: contextResult.documentCount,
+      confidence: contextResult.confidence,
+      contextSummary: contextResult.contextSummary,
+      userLanguage: context.language,
+      mode: context.mode
+    };
+    
+    // Create a message with metadata that the AI service will use to generate the appropriate greeting
+    return baseGreeting; // Return base greeting and let AI enhance it with context
   }
 
   /**

@@ -27,6 +27,7 @@ import {
 } from "$lib/documents/types.d";
 import { base64ToArrayBuffer } from "$lib/arrays";
 import { logger } from "$lib/logging/logger";
+import { profileContextManager } from "$lib/context/integration/profile-context";
 
 const documents: Writable<(DocumentPreload | Document)[]> = writable([]);
 
@@ -140,6 +141,126 @@ export async function importDocuments(
   return documentsPreload;
 }
 
+/**
+ * Generate embedding for a document if it doesn't already exist
+ * This is called on-demand when documents are loaded
+ */
+async function generateEmbeddingForDocument(
+  document: Document, 
+  profileId: string
+): Promise<void> {
+  try {
+    // Check if profile context is initialized
+    const contextStats = profileContextManager.getProfileContextStats(profileId);
+    if (!contextStats) {
+      // Initialize profile context if needed
+      await profileContextManager.initializeProfileContext(profileId);
+    }
+
+    // Check if document already has embedding
+    const hasEmbedding = await checkDocumentHasEmbedding(document.id, contextStats);
+    if (hasEmbedding) {
+      logger.documents.debug('Document already has embedding, skipping generation', {
+        documentId: document.id
+      });
+      return;
+    }
+
+    // Check if document is suitable for embedding
+    if (!isDocumentSuitableForEmbedding(document)) {
+      logger.documents.debug('Document not suitable for embedding', {
+        documentId: document.id,
+        type: document.metadata?.type
+      });
+      return;
+    }
+
+    logger.documents.info('Generating embedding for loaded document', {
+      documentId: document.id,
+      type: document.metadata?.type
+    });
+
+    // Generate embedding using the context manager
+    await profileContextManager.addDocumentToContext(
+      profileId,
+      document,
+      {
+        generateEmbedding: true,
+        onDemand: true // Flag to indicate this is on-demand generation
+      }
+    );
+
+    logger.documents.info('Successfully generated embedding for document', {
+      documentId: document.id
+    });
+
+  } catch (error) {
+    logger.documents.error('Failed to generate embedding for document', {
+      documentId: document.id,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    // Don't throw - this is background processing
+  }
+}
+
+/**
+ * Check if document already has an embedding in the context system
+ */
+async function checkDocumentHasEmbedding(documentId: string, contextStats: any): Promise<boolean> {
+  // This is a simplified check - in a real implementation you'd query the context database
+  // For now, we'll assume we need to generate embeddings for all documents
+  return false;
+}
+
+/**
+ * Check if document is suitable for embedding generation
+ */
+function isDocumentSuitableForEmbedding(document: Document): boolean {
+  // Skip documents without content
+  if (!document.content) {
+    return false;
+  }
+
+  // Extract text content for length checking
+  const textContent = extractTextContent(document);
+  if (textContent.length < 50) {
+    return false;
+  }
+
+  // Skip certain document types that shouldn't have embeddings
+  const skipTypes = ['image', 'video', 'audio', 'binary'];
+  if (skipTypes.includes(document.metadata?.type || '')) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Extract text content from document for analysis
+ */
+function extractTextContent(document: Document): string {
+  let content = '';
+  
+  if (typeof document.content === 'string') {
+    content = document.content;
+  } else if (document.content && typeof document.content === 'object') {
+    // Extract text from various content structures
+    if (document.content.text) {
+      content = document.content.text;
+    } else if (document.content.content) {
+      content = document.content.content;
+    } else if (document.content.body) {
+      content = document.content.body;
+    } else {
+      // Try to stringify object content
+      content = JSON.stringify(document.content);
+    }
+  }
+  
+  return content;
+}
+
 export async function loadDocument(
   id: string,
   profile_id: string | null = null,
@@ -198,7 +319,19 @@ export async function loadDocument(
   });
   updateIndex();
 
-  return byID[id] as Document;
+  // On-demand embedding generation for loaded document
+  const loadedDocument = byID[id] as Document;
+  if (loadedDocument.content) {
+    // Generate embedding in background (don't block document loading)
+    generateEmbeddingForDocument(loadedDocument, profile_id).catch(error => {
+      logger.documents.warn('Failed to generate embedding for loaded document', {
+        documentId: id,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    });
+  }
+
+  return loadedDocument;
 }
 
 export async function updateDocument(documentData: Document) {
@@ -378,7 +511,26 @@ export async function addDocument(document: DocumentNew): Promise<Document> {
     });
 
   // update local documents
-  return await loadDocument(data.id, profile_id || user_id);
+  const newDocument = await loadDocument(data.id, profile_id || user_id);
+  
+  // Generate embedding for new document if suitable
+  try {
+    await profileContextManager.addDocumentToContext(
+      profile_id || user_id,
+      newDocument,
+      {
+        generateEmbedding: true
+      }
+    );
+  } catch (error) {
+    logger.documents.warn('Failed to add document to context', {
+      documentId: data.id,
+      profileId: profile_id || user_id,
+      error
+    });
+  }
+  
+  return newDocument;
 }
 
 export async function removeDocument(id: string): Promise<void> {
@@ -412,6 +564,17 @@ export async function removeDocument(id: string): Promise<void> {
     }
     return docs;
   });
+
+  // Remove document from context
+  try {
+    profileContextManager.removeDocumentFromContext(document.user_id, id);
+  } catch (error) {
+    logger.documents.warn('Failed to remove document from context', {
+      documentId: id,
+      profileId: document.user_id,
+      error
+    });
+  }
 
   delete byID[id];
   return;
