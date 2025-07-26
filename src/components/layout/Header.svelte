@@ -87,7 +87,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                     </a>
                     <!--div class="spacer"></div-->
                     <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname)}>{ $t('app.nav.documents') }</a>
-                    <a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>{ $t('app.nav.history') }</a>
+                    <!--a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>{ $t('app.nav.history') }</a-->
                     {#if $user && 'isMedical' in $user && $user.isMedical}
                     <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>{ $t('app.nav.new-session') }</a>
                     {/if}
@@ -129,7 +129,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
         {#if $profile?.id}
         <button on:click={() => ui.emit('chat:toggle')} class="icon" class:-active={$chatIsOpen} aria-label={$chatIsOpen ? $t('app.chat.actions.close') : $t('app.chat.actions.open')} title={$chatIsOpen ? $t('app.chat.actions.close') : $t('app.chat.actions.open')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                <use href="/icons.svg#doctor"/>
             </svg>
         </button>
         {/if}
