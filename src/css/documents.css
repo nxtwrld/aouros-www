@@ -169,7 +169,6 @@
 
 .document-section .value {
   color: var(--color-text-primary);
-  word-break: break-word;
 }
 
 /* Stack label/value pairs in very narrow containers */
