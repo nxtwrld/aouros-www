@@ -181,7 +181,7 @@ class ChatConfigManager {
   /**
    * Build system prompt from configuration
    */
-  buildSystemPrompt(mode: 'patient' | 'clinical', language: string, pageContext: any): string {
+  buildSystemPrompt(mode: 'patient' | 'clinical', language: string, pageContext: any, assembledContext?: any): string {
     const basePrompt = this.config.prompts.base.instruction;
     const modeConfig = this.config.prompts[mode];
     
@@ -199,11 +199,47 @@ class ChatConfigManager {
       systemPrompt += `${instruction}\n`;
     });
     
-    // Add document context if enabled
+    // Add document context if enabled (includes formatted signals data)
     if (this.config.documentContext.enabled) {
       const documentContext = this.buildDocumentContext(pageContext);
       if (documentContext) {
         systemPrompt += `\n${documentContext}`;
+      }
+    }
+    
+    // Add assembled context from embedding search if available
+    if (assembledContext) {
+      systemPrompt += '\n\n## Additional Medical Context\n';
+      
+      // Add summary if available
+      if (assembledContext.summary) {
+        systemPrompt += `**Patient Summary:**\n${assembledContext.summary}\n\n`;
+      }
+      
+      // Add key points by type
+      if (assembledContext.keyPoints && assembledContext.keyPoints.length > 0) {
+        const pointsByType = assembledContext.keyPoints.reduce((acc: any, point: any) => {
+          if (!acc[point.type]) acc[point.type] = [];
+          acc[point.type].push(point);
+          return acc;
+        }, {});
+        
+        Object.entries(pointsByType).forEach(([type, points]: [string, any]) => {
+          const pointsList = points
+            .slice(0, 3) // Limit to top 3 per type
+            .map((p: any) => `- ${p.text} (${p.date || 'unknown date'})`)
+            .join('\n');
+          systemPrompt += `**${type.charAt(0).toUpperCase() + type.slice(1)}s:**\n${pointsList}\n\n`;
+        });
+      }
+      
+      // Add recent changes
+      if (assembledContext.medicalContext?.recentChanges?.length) {
+        const recentList = assembledContext.medicalContext.recentChanges
+          .slice(0, 3)
+          .map((change: any) => `- ${change.date}: ${change.description}`)
+          .join('\n');
+        systemPrompt += `**Recent Changes:**\n${recentList}\n\n`;
       }
     }
     
@@ -276,6 +312,41 @@ class ChatConfigManager {
     });
   }
 
+  /**
+   * Extract the best available text content from document, avoiding duplication
+   */
+  private extractBestTextContent(documentContent: any): string {
+    let content = '';
+    
+    // Priority 1: Use localized text if available (user's language)
+    if (documentContent.localizedContent && typeof documentContent.localizedContent === 'string') {
+      content = documentContent.localizedContent;
+    }
+    // Priority 2: Fall back to original content
+    else if (documentContent.content && typeof documentContent.content === 'string') {
+      content = documentContent.content;
+    }
+    // Priority 3: Legacy fields for backward compatibility
+    else if (documentContent.text && typeof documentContent.text === 'string') {
+      content = documentContent.text;
+    }
+    else if (documentContent.original && typeof documentContent.original === 'string') {
+      content = documentContent.original;
+    }
+    
+    // Always prepend title if available and not already included
+    if (documentContent.title && !content.includes(documentContent.title)) {
+      content = documentContent.title + '\n\n' + content;
+    }
+    
+    // Always append tags for structured metadata
+    if (documentContent.tags && Array.isArray(documentContent.tags) && documentContent.tags.length > 0) {
+      content += '\n\nTags: ' + documentContent.tags.join(', ');
+    }
+    
+    return content.trim();
+  }
+
   private buildDocumentContext(pageContext: any): string {
     if (!pageContext?.documentsContent || !Array.isArray(pageContext.documentsContent)) {
       return '';
@@ -288,24 +359,46 @@ class ChatConfigManager {
 
     let documentContext = '\n\nAVAILABLE MEDICAL DOCUMENTS:\n';
     
-    documents.forEach(([docId, doc]: [string, any]) => {
-      if (doc?.content) {
-        documentContext += `\nDocument: ${doc.content.title || doc.metadata?.title || 'Untitled'}\n`;
+    documents.forEach(([_docId, doc]: [string, any]) => {
+      if (doc) {
+        documentContext += `\nDocument: ${doc.title || 'Untitled'}\n`;
         
-        // Include configured fields
+        // Include configured fields - doc IS the content object
         this.config.documentContext.includeFields.forEach(field => {
-          if (doc.content[field]) {
-            documentContext += `- ${field.charAt(0).toUpperCase() + field.slice(1)}: ${JSON.stringify(doc.content[field])}\n`;
+          if (doc[field]) {
+            if (field === 'content') {
+              // Special handling for content field - use smart text extraction
+              const smartText = this.extractBestTextContent(doc);
+              if (smartText) {
+                documentContext += `- Content: ${smartText}\n`;
+              }
+            } else if (field === 'signals') {
+              // Special handling for signals data - format for better readability
+              const signals = doc[field];
+              if (signals && Array.isArray(signals)) {
+                documentContext += `- Lab/Vital Signs:\n`;
+                signals.forEach((signal: any) => {
+                  if (signal.signal && signal.value !== undefined) {
+                    const unit = signal.unit ? ` ${signal.unit}` : '';
+                    const reference = signal.reference ? ` (ref: ${signal.reference})` : '';
+                    documentContext += `  • ${signal.signal}: ${signal.value}${unit}${reference}\n`;
+                  }
+                });
+              }
+            } else {
+              // Use JSON.stringify for other structured fields
+              documentContext += `- ${field.charAt(0).toUpperCase() + field.slice(1)}: ${JSON.stringify(doc[field])}\n`;
+            }
           }
         });
         
         // Include additional content if enabled
         if (this.config.documentContext.includeAdditionalContent) {
           const excludeFields = ['title', ...this.config.documentContext.includeFields];
-          const otherContent = Object.keys(doc.content)
+          const otherContent = Object.keys(doc)
             .filter(key => !excludeFields.includes(key))
             .reduce((obj, key) => {
-              obj[key] = doc.content[key];
+              obj[key] = doc[key];
               return obj;
             }, {} as any);
             

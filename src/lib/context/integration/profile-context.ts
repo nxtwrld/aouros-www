@@ -359,10 +359,12 @@ export class ProfileContextManager {
     }
     
     // Add main content based on type
-    if (content.text) {
-      parts.push(content.text);
+    if (content.localizedContent) {
+      parts.push(content.localizedContent);
     } else if (content.content) {
       parts.push(content.content);
+    } else if (content.text) {
+      parts.push(content.text);
     } else if (content.body) {
       parts.push(content.body);
     } else if (content.description) {

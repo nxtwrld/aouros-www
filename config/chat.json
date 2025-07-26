@@ -146,10 +146,12 @@
   "documentContext": {
     "enabled": true,
     "includeFields": [
+      "content",
       "diagnosis",
       "medications", 
       "vitals",
-      "recommendations"
+      "recommendations",
+      "signals"
     ],
     "includeAdditionalContent": true,
     "maxDocuments": 5

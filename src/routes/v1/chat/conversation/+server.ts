@@ -126,25 +126,8 @@ async function processAIRequest(
     const finalContext = assembledContext || contextResult?.assembledContext;
     const finalTools = availableTools || contextResult?.availableTools || [];
     
-    // Build enhanced system prompt with context
-    let systemPrompt = chatConfigManager.buildSystemPrompt(mode, language, pageContext);
-    
-    // Enhance system prompt with assembled context if available
-    if (finalContext || finalTools.length > 0) {
-      const contextEnhancement = chatContextService.createContextAwareSystemPrompt(
-        systemPrompt,
-        {
-          assembledContext: finalContext,
-          availableTools: finalTools,
-          contextSummary: contextResult?.contextSummary || 'Medical context available',
-          documentCount: contextResult?.documentCount || 0,
-          confidence: contextResult?.confidence || 0,
-          tokenUsage: contextResult?.tokenUsage || 0
-        },
-        mode === 'patient' ? 'patient' : 'clinical'
-      );
-      systemPrompt = contextEnhancement;
-    }
+    // Build system prompt with both document context (signals) and assembled context
+    const systemPrompt = chatConfigManager.buildSystemPrompt(mode, language, pageContext, finalContext);
     
     // Phase 1: Stream the text response using configured model
     const streamingModel = chatConfigManager.createStreamingModel(provider);

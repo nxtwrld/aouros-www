@@ -1,4 +1,4 @@
-/**
+Uint16Array./**
  * LangGraph Node: Embedding Storage
  * 
  * Stores generated embeddings encrypted alongside document metadata.

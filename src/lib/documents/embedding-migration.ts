@@ -25,16 +25,19 @@ export function extractDocumentContent(document: Document): string {
   let content = '';
   
   // Priority 1: Use localized text if available (user's language)
-  if (document.content?.text && typeof document.content.text === 'string') {
-    content = document.content.text;
+  if (document.content?.localizedContent && typeof document.content.localizedContent === 'string') {
+    content = document.content.localizedContent;
   }
-  // Priority 2: Fall back to original if no localized version
-  else if (document.content?.original && typeof document.content.original === 'string') {
-    content = document.content.original;
-  }
-  // Priority 3: Other text fields (for documents without text/original structure)
+  // Priority 2: Fall back to original content if no localized version
   else if (document.content?.content && typeof document.content.content === 'string') {
     content = document.content.content;
+  }
+  // Priority 3: Legacy fields for backward compatibility
+  else if (document.content?.text && typeof document.content.text === 'string') {
+    content = document.content.text;
+  }
+  else if (document.content?.original && typeof document.content.original === 'string') {
+    content = document.content.original;
   }
   else if (document.content?.body && typeof document.content.body === 'string') {
     content = document.content.body;
@@ -64,7 +67,7 @@ export function extractDocumentContent(document: Document): string {
  */
 export function getDocumentLanguage(document: Document): string {
   // If we're using localized text, use user's language or metadata language
-  if (document.content?.text && document.content.text !== document.content?.original) {
+  if (document.content?.localizedContent && document.content.localizedContent !== document.content?.content) {
     return document.metadata?.userLanguage || document.metadata?.language || 'en';
   }
   // Otherwise use document's original language
@@ -122,7 +125,7 @@ export async function generateEmbeddingsForDocument(document: Document): Promise
     documentId: document.id,
     contentLength: content.length,
     language: language,
-    isLocalized: !!(document.content?.text && document.content.text !== document.content?.original),
+    isLocalized: !!(document.content?.localizedContent && document.content.localizedContent !== document.content?.content),
     hasTitle: !!document.content?.title,
     tagCount: document.content?.tags?.length || 0
   });

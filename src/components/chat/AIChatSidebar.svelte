@@ -6,6 +6,7 @@
   import ui from '$lib/ui';
   import { t } from '$lib/i18n';
   import ContextPrompt from './ContextPrompt.svelte';
+  import Markdown from '$components/ui/Markdown.svelte';
   
   interface Props {
     currentProfile: any;
@@ -281,7 +282,11 @@
             <div class="message-text">
               {#if message.metadata?.translationKey}
                 {$t(message.metadata.translationKey, { values: message.metadata.translationParams })}
+              {:else if message.role === 'assistant'}
+                <!-- Render assistant messages with markdown formatting -->
+                <Markdown text={message.content} />
               {:else}
+                <!-- Render user and system messages as plain text -->
                 {message.content}
               {/if}
             </div>
@@ -603,6 +608,37 @@
     margin-bottom: 8px;
     line-height: 1.4;
     white-space: pre-wrap;
+  }
+  
+  /* Override markdown styles for chat messages */
+  .message-text :global(.markdown) {
+    margin: 0;
+  }
+  
+  .message-text :global(.markdown p) {
+    margin: 0.5em 0;
+  }
+  
+  .message-text :global(.markdown p:first-child) {
+    margin-top: 0;
+  }
+  
+  .message-text :global(.markdown p:last-child) {
+    margin-bottom: 0;
+  }
+  
+  .message-text :global(.markdown h1),
+  .message-text :global(.markdown h2),
+  .message-text :global(.markdown h3),
+  .message-text :global(.markdown h4),
+  .message-text :global(.markdown h5),
+  .message-text :global(.markdown h6) {
+    margin: 0.5em 0;
+  }
+  
+  .message-text :global(.markdown ul),
+  .message-text :global(.markdown ol) {
+    margin: 0.5em 0;
   }
 
   .message-time {

@@ -239,7 +239,50 @@ export class ChatManager {
    * Handle chat toggle events
    */
   private handleChatToggle(): void {
+    const wasOpen = get(chatStore).isOpen;
     chatActions.toggle();
+    
+    // If chat was just opened, check for latest document context
+    if (!wasOpen && get(chatStore).isOpen) {
+      this.checkForLatestDocumentOnOpen();
+    }
+  }
+
+  /**
+   * Check for latest document context when chat is opened and suggest adding it
+   */
+  private checkForLatestDocumentOnOpen(): void {
+    const state = get(chatStore);
+    
+    // Only check if chat is initialized and not processing
+    if (!state.context || this.isProcessing) {
+      return;
+    }
+
+    // Get the latest document event
+    const documentEvent = ui.getLatest('aicontext:document');
+    if (!documentEvent?.data) {
+      return;
+    }
+
+    const documentData = documentEvent.data;
+    
+    // Check if document is already in context
+    const existingDocs = state.context.pageContext.availableData.documents || [];
+    if (existingDocs.includes(documentData.documentId)) {
+      return; // Document already added
+    }
+
+    // Check if this is a recent document (within last 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    if (documentData.timestamp < fiveMinutesAgo) {
+      return; // Document is too old, don't auto-suggest
+    }
+
+    // Trigger document context handling to show the prompt
+    this.handleDocumentContext(documentData);
+    
+    console.log(`Auto-suggested latest document context for: ${documentData.title}`);
   }
 
   /**
