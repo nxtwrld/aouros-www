@@ -66,7 +66,6 @@ export async function embeddingStorageNode(
     // Prepare embedding metadata for storage
     const embeddingMetadata = {
       // Core embedding fields for document storage
-      embedding_summary: embeddingData.summary,
       embedding_provider: embeddingData.metadata.provider,
       embedding_model: embeddingData.metadata.model,
       embedding_dimensions: embeddingData.metadata.dimensions,
@@ -89,7 +88,7 @@ export async function embeddingStorageNode(
       provider: embeddingData.metadata.provider,
       model: embeddingData.metadata.model,
       dimensions: embeddingData.metadata.dimensions,
-      summaryLength: embeddingData.summary.length
+      vectorLength: embeddingData.vector.length
     });
 
     state.emitProgress?.('embedding_storage', 100, 'Embedding storage completed');

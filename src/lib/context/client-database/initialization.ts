@@ -218,32 +218,32 @@ export class ContextInitializer {
   // Private helper methods
   
   private hasEmbedding(document: Document): boolean {
-    return !!(document as any).embedding_vector;
+    return !!(document.metadata?.embeddings?.vector);
   }
   
   private async decryptDocumentEmbedding(
     document: Document,
     userKeys: CryptoKeyPair
   ): Promise<DocumentEmbedding> {
-    const doc = document as any;
+    const embeddings = document.metadata?.embeddings;
     
-    if (!doc.embedding_vector) {
+    if (!embeddings?.vector) {
       throw new Error('Document does not have embedding');
     }
     
     // Decrypt the embedding vector
-    const encryptedVector = doc.embedding_vector;
+    const encryptedVector = embeddings.vector;
     const decryptedData = await decryptAES(encryptedVector, userKeys.privateKey);
     const vectorArray = new Float32Array(decryptedData);
     
     // Create metadata
     const metadata: EmbeddingMetadata = {
       documentId: document.id,
-      summary: doc.embedding_summary || 'No summary available',
+      summary: embeddings.summary || 'No summary available',
       documentType: document.type,
       date: document.created_at || new Date().toISOString(),
-      provider: doc.embedding_provider || 'unknown',
-      model: doc.embedding_model || 'unknown',
+      provider: embeddings.provider || 'unknown',
+      model: embeddings.model || 'unknown',
       language: document.metadata?.language,
       tags: document.metadata?.tags || []
     };
@@ -257,7 +257,7 @@ export class ContextInitializer {
         normalized: true
       },
       metadata,
-      timestamp: doc.embedding_timestamp || document.created_at || new Date().toISOString()
+      timestamp: embeddings.timestamp || document.created_at || new Date().toISOString()
     };
   }
   

@@ -27,14 +27,6 @@ export {
   validateSecurityContext,
   sanitizeSecurityContext
 } from './mcp-tools/security-context-builder';
-export { embeddingMigrationService } from './migration/embedding-migration';
-export { 
-  checkMigrationStatus,
-  migrateEmbeddings,
-  autoMigrateIfNeeded,
-  MigrationProgressTracker
-} from './migration/client-migration';
-export { migrationUtils, initializeBrowserMigrationUtils } from './migration/browser-utility';
 export { sessionContextService } from './integration/session-context';
 export { chatContextService } from './integration/chat-service';
 

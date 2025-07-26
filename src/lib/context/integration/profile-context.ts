@@ -12,7 +12,6 @@ import type { Document, DocumentPreload } from '$lib/documents/types.d';
 import { get } from 'svelte/store';
 import user from '$lib/user';
 import { logger } from '$lib/logging/logger';
-import { autoMigrateIfNeeded } from '../migration/client-migration';
 
 export class ProfileContextManager {
   private initializationPromises = new Map<string, Promise<void>>();
@@ -25,7 +24,6 @@ export class ProfileContextManager {
     profileId: string,
     options: {
       forceRebuild?: boolean;
-      generateMissingEmbeddings?: boolean;
       onProgress?: (status: string, progress?: number) => void;
     } = {}
   ): Promise<void> {
@@ -65,7 +63,6 @@ export class ProfileContextManager {
     documents: (Document | DocumentPreload)[],
     options: {
       forceRebuild?: boolean;
-      generateMissingEmbeddings?: boolean;
       onProgress?: (status: string, progress?: number) => void;
     } = {}
   ): Promise<void> {
@@ -123,8 +120,8 @@ export class ProfileContextManager {
         suitable: suitableDocuments.length
       });
       
-      // 3. Extract existing embeddings from documents
-      if (options.generateMissingEmbeddings && suitableDocuments.length > 0) {
+      // 3. Extract existing embeddings from documents  
+      if (suitableDocuments.length > 0) {
         options.onProgress?.('Processing existing embeddings...', 30);
         
         const existingEmbeddings = this.extractExistingEmbeddings(suitableDocuments);
@@ -168,34 +165,8 @@ export class ProfileContextManager {
       
       options.onProgress?.('Context ready', 100);
 
-      // 6. Auto-migrate missing embeddings if enabled
-      if (options.generateMissingEmbeddings) {
-        try {
-          options.onProgress?.('Checking for missing embeddings...', 90);
-          
-          const migrationResult = await autoMigrateIfNeeded(profileId);
-          
-          if (migrationResult.migrationPerformed) {
-            logger.namespace('ProfileContext').info('Auto-migration completed', {
-              profileId,
-              documentsNeedingEmbeddings: migrationResult.status.documentsNeedingEmbeddings,
-              successful: migrationResult.result?.progress.successfulEmbeddings || 0
-            });
-            options.onProgress?.('Embeddings migrated', 95);
-          } else if (migrationResult.migrationNeeded) {
-            logger.namespace('ProfileContext').warn('Migration needed but not performed', {
-              profileId,
-              documentsNeedingEmbeddings: migrationResult.status.documentsNeedingEmbeddings
-            });
-          }
-        } catch (error) {
-          logger.namespace('ProfileContext').warn('Auto-migration failed', {
-            profileId,
-            error: error instanceof Error ? error.message : String(error)
-          });
-          // Don't fail initialization if migration fails
-        }
-      }
+      // Note: Embedding generation now happens automatically during document loading
+      // via the loadDocument function, so no separate migration step is needed
       
     } catch (error) {
       logger.namespace('ProfileContext').error('Failed to initialize profile context', {
@@ -433,27 +404,28 @@ export class ProfileContextManager {
    * Extract embedding data from a single document
    */
   private extractDocumentEmbedding(document: Document): any | null {
-    // Check if document has embedding metadata
-    if (!document.metadata?.embedding_vector || !document.metadata?.embedding_summary) {
+    // Check if document has embedding metadata in new structure
+    const embeddings = document.metadata?.embeddings;
+    if (!embeddings?.vector || !embeddings?.summary) {
       return null;
     }
     
     try {
       // Parse embedding vector (assuming it's stored as JSON array)
-      const vectorData = JSON.parse(document.metadata.embedding_vector);
+      const vectorData = JSON.parse(embeddings.vector);
       const vector = new Float32Array(vectorData);
       
       return {
         documentId: document.id,
         vector,
-        summary: document.metadata.embedding_summary,
+        summary: embeddings.summary,
         metadata: {
-          provider: document.metadata.embedding_provider || 'unknown',
-          model: document.metadata.embedding_model || 'unknown',
+          provider: embeddings.provider || 'unknown',
+          model: embeddings.model || 'unknown',
           dimensions: vector.length,
           language: document.metadata.language || 'en',
           documentType: document.type,
-          processingDate: document.metadata.embedding_timestamp || new Date().toISOString()
+          processingDate: embeddings.timestamp || new Date().toISOString()
         }
       };
     } catch (error) {

@@ -40,7 +40,6 @@ export const load: LayoutLoad = async ({ parent, params, fetch }) => {
         params.profile,
         documents,
         {
-          generateMissingEmbeddings: true,
           onProgress: (status, progress) => {
             console.log(`Profile context init: ${status} ${progress ? `(${progress}%)` : ''}`);
           }

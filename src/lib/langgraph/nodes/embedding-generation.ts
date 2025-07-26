@@ -56,23 +56,6 @@ export async function embeddingGenerationNode(
       };
     }
 
-    state.emitProgress?.('embedding_generation', 25, 'Creating document summary for embedding');
-
-    // Create summary optimized for embedding
-    const documentSummary = createDocumentSummary(state);
-    
-    if (!documentSummary || documentSummary.length < 20) {
-      logger.namespace('EmbeddingGeneration').warn('Failed to create adequate document summary');
-      
-      return {
-        embeddingGeneration: {
-          skipped: true,
-          reason: 'Inadequate summary',
-          timestamp: new Date().toISOString()
-        }
-      };
-    }
-
     state.emitProgress?.('embedding_generation', 50, 'Generating embedding vector');
 
     // Generate embedding using the server-side embedding service
@@ -80,16 +63,9 @@ export async function embeddingGenerationNode(
       id: generateDocumentId(state),
       type: state.documentTypeAnalysis?.predictedType || 'document',
       content: state.text,
-      summary: documentSummary,
       metadata: {
         language: state.language,
-        processingDate: new Date().toISOString(),
-        featureDetection: state.featureDetectionResults,
-        multiNodeResults: state.multiNodeResults ? {
-          processedNodes: state.multiNodeResults.processedNodes,
-          hasAnalysis: !!state.multiNodeResults.medicalAnalysis,
-          hasSignals: !!state.multiNodeResults.signals
-        } : undefined
+        processingDate: new Date().toISOString()
       }
     });
 
@@ -121,7 +97,6 @@ export async function embeddingGenerationNode(
     return {
       embeddingGeneration: {
         success: true,
-        summary: documentSummary,
         provider: embeddingResult.provider,
         model: embeddingResult.model,
         dimensions: embeddingResult.embedding?.length || 0,
@@ -129,7 +104,6 @@ export async function embeddingGenerationNode(
         // Store the actual embedding data for the storage node
         embeddingData: {
           vector: embeddingResult.embedding,
-          summary: documentSummary,
           metadata: {
             provider: embeddingResult.provider,
             model: embeddingResult.model,
@@ -157,77 +131,6 @@ export async function embeddingGenerationNode(
   }
 }
 
-/**
- * Create document summary optimized for embedding generation
- */
-function createDocumentSummary(state: DocumentProcessingState): string {
-  const summaryParts: string[] = [];
-  
-  // Add document type if available
-  if (state.documentTypeAnalysis?.predictedType) {
-    summaryParts.push(`Document type: ${state.documentTypeAnalysis.predictedType}`);
-  }
-  
-  // Add feature detection insights
-  if (state.featureDetectionResults) {
-    const features = state.featureDetectionResults;
-    if (features.isMedical) {
-      summaryParts.push('Medical document');
-    }
-    if (features.hasStructuredData) {
-      summaryParts.push('Contains structured medical data');
-    }
-    if (features.hasTimestamps) {
-      summaryParts.push('Contains timestamps');
-    }
-  }
-  
-  // Add multi-node analysis results if available
-  if (state.multiNodeResults) {
-    const multiNode = state.multiNodeResults;
-    
-    // Add medical analysis summary
-    if (multiNode.medicalAnalysis) {
-      const analysis = multiNode.medicalAnalysis;
-      if (analysis.diagnosis && analysis.diagnosis.length > 0) {
-        const diagnoses = analysis.diagnosis.slice(0, 3).map(d => d.name).join(', ');
-        summaryParts.push(`Diagnoses: ${diagnoses}`);
-      }
-      if (analysis.medications && analysis.medications.length > 0) {
-        const medications = analysis.medications.slice(0, 3).map(m => m.name).join(', ');
-        summaryParts.push(`Medications: ${medications}`);
-      }
-      if (analysis.procedures && analysis.procedures.length > 0) {
-        const procedures = analysis.procedures.slice(0, 2).map(p => p.name).join(', ');
-        summaryParts.push(`Procedures: ${procedures}`);
-      }
-    }
-    
-    // Add signals summary
-    if (multiNode.signals && multiNode.signals.length > 0) {
-      const significantSignals = multiNode.signals
-        .filter(s => s.urgency && s.urgency > 2)
-        .slice(0, 3)
-        .map(s => `${s.signal}: ${s.value}${s.unit || ''}`)
-        .join(', ');
-      if (significantSignals) {
-        summaryParts.push(`Key vitals: ${significantSignals}`);
-      }
-    }
-  }
-  
-  // Add original text excerpt (first 200 characters)
-  if (state.text) {
-    const textExcerpt = state.text.trim().substring(0, 200);
-    summaryParts.push(`Content: ${textExcerpt}${state.text.length > 200 ? '...' : ''}`);
-  }
-  
-  // Combine all parts
-  const summary = summaryParts.join('. ');
-  
-  // Ensure summary is within reasonable limits (embedding models typically work best with 500-1000 chars)
-  return summary.length > 800 ? summary.substring(0, 800) + '...' : summary;
-}
 
 /**
  * Generate a consistent document ID for embedding

@@ -93,7 +93,6 @@ export async function loadProfiles(
               d.profiles.id,
               roots,
               {
-                generateMissingEmbeddings: true,
                 onProgress: (status, progress) => {
                   console.log(`Context init for ${d.profiles.id}: ${status} ${progress ? `(${progress}%)` : ''}`);
                 }

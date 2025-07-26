@@ -1,28 +1,25 @@
 /**
- * Encrypted Embedding Storage
+ * Embedding Storage
  * 
- * Manages storing and retrieving encrypted embedding vectors
- * using the existing document encryption system.
+ * Manages storing and retrieving embedding vectors in document metadata.
+ * No additional encryption needed - embeddings are encrypted with metadata.
  */
 
-import { encrypt as encryptAES, decrypt as decryptAES } from '$lib/encryption/aes';
 import { updateDocument, getDocument } from '$lib/documents';
 import type { Document } from '$lib/documents/types.d';
-import type { EmbeddingGenerationOptions } from '../types';
 import { logger } from '$lib/logging/logger';
 
 export class EmbeddingStorage {
   
   /**
-   * Store encrypted embedding for a document
+   * Store embedding for a document in metadata
    */
   async storeEmbedding(
     documentId: string,
     embedding: Float32Array,
     summary: string,
     provider: string,
-    model: string,
-    userKey: CryptoKey
+    model: string
   ): Promise<void> {
     try {
       // Get the document
@@ -31,24 +28,30 @@ export class EmbeddingStorage {
         throw new Error(`Document ${documentId} not found`);
       }
       
-      // Encrypt the embedding vector
-      const vectorBuffer = embedding.buffer;
-      const encryptedVector = await encryptAES(vectorBuffer, userKey);
+      // Store embedding vector as JSON string (will be encrypted with metadata)
+      const vectorArray = Array.from(embedding);
       
-      // Update document with embedding fields
+      // Update document metadata with embedding fields
+      const embeddings = {
+        summary,
+        vector: JSON.stringify(vectorArray),
+        provider,
+        model,
+        timestamp: new Date().toISOString()
+      };
+      
       const updatedDocument = {
         ...document,
-        embedding_summary: summary,
-        embedding_vector: encryptedVector,
-        embedding_provider: provider,
-        embedding_model: model,
-        embedding_timestamp: new Date().toISOString()
+        metadata: {
+          ...document.metadata,
+          embeddings
+        }
       };
       
       // Save the updated document
       await updateDocument(updatedDocument);
       
-      logger.context?.info('Stored embedding for document', {
+      logger.namespace('EmbeddingStorage').info('Stored embedding for document', {
         documentId,
         provider,
         model,
@@ -56,20 +59,19 @@ export class EmbeddingStorage {
       });
       
     } catch (error) {
-      logger.context?.error('Failed to store embedding', {
+      logger.namespace('EmbeddingStorage').error('Failed to store embedding', {
         documentId,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
   }
   
   /**
-   * Retrieve and decrypt embedding for a document
+   * Retrieve embedding for a document from metadata
    */
   async retrieveEmbedding(
-    documentId: string,
-    userKey: CryptoKey
+    documentId: string
   ): Promise<{
     embedding: Float32Array;
     summary: string;
@@ -83,31 +85,28 @@ export class EmbeddingStorage {
         throw new Error(`Document ${documentId} not found`);
       }
       
-      // Check if document has embedding
-      const docWithEmbedding = document as any;
-      if (!docWithEmbedding.embedding_vector) {
+      // Check if document has embedding in metadata
+      const embeddings = document.metadata?.embeddings;
+      if (!embeddings?.vector) {
         return null;
       }
       
-      // Decrypt the embedding vector
-      const decryptedBuffer = await decryptAES(
-        docWithEmbedding.embedding_vector,
-        userKey
-      );
-      const embedding = new Float32Array(decryptedBuffer);
+      // Parse the embedding vector (already decrypted with metadata)
+      const vectorArray = JSON.parse(embeddings.vector);
+      const embedding = new Float32Array(vectorArray);
       
       return {
         embedding,
-        summary: docWithEmbedding.embedding_summary || '',
-        provider: docWithEmbedding.embedding_provider || 'unknown',
-        model: docWithEmbedding.embedding_model || 'unknown',
-        timestamp: docWithEmbedding.embedding_timestamp || ''
+        summary: embeddings.summary || '',
+        provider: embeddings.provider || 'unknown',
+        model: embeddings.model || 'unknown',
+        timestamp: embeddings.timestamp || ''
       };
       
     } catch (error) {
-      logger.context?.error('Failed to retrieve embedding', {
+      logger.namespace('EmbeddingStorage').error('Failed to retrieve embedding', {
         documentId,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
@@ -121,13 +120,12 @@ export class EmbeddingStorage {
       const document = await getDocument(documentId);
       if (!document) return false;
       
-      const docWithEmbedding = document as any;
-      return !!docWithEmbedding.embedding_vector;
+      return !!(document.metadata?.embeddings?.vector);
       
     } catch (error) {
-      logger.context?.error('Failed to check embedding existence', {
+      logger.namespace('EmbeddingStorage').error('Failed to check embedding existence', {
         documentId,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       });
       return false;
     }
@@ -143,25 +141,22 @@ export class EmbeddingStorage {
         throw new Error(`Document ${documentId} not found`);
       }
       
-      // Remove embedding fields
+      // Remove embeddings from metadata
+      const { embeddings, ...metadataWithoutEmbeddings } = document.metadata || {};
       const updatedDocument = {
         ...document,
-        embedding_summary: undefined,
-        embedding_vector: undefined,
-        embedding_provider: undefined,
-        embedding_model: undefined,
-        embedding_timestamp: undefined
+        metadata: metadataWithoutEmbeddings
       };
       
       // Save the updated document
       await updateDocument(updatedDocument);
       
-      logger.context?.info('Removed embedding from document', { documentId });
+      logger.namespace('EmbeddingStorage').info('Removed embedding from document', { documentId });
       
     } catch (error) {
-      logger.context?.error('Failed to remove embedding', {
+      logger.namespace('EmbeddingStorage').error('Failed to remove embedding', {
         documentId,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
@@ -171,8 +166,7 @@ export class EmbeddingStorage {
    * Batch retrieve embeddings for multiple documents
    */
   async retrieveBatchEmbeddings(
-    documentIds: string[],
-    userKey: CryptoKey
+    documentIds: string[]
   ): Promise<Map<string, {
     embedding: Float32Array;
     summary: string;
@@ -189,14 +183,14 @@ export class EmbeddingStorage {
       
       const batchPromises = batch.map(async (docId) => {
         try {
-          const embedding = await this.retrieveEmbedding(docId, userKey);
+          const embedding = await this.retrieveEmbedding(docId);
           if (embedding) {
             results.set(docId, embedding);
           }
         } catch (error) {
-          logger.context?.error('Failed to retrieve embedding in batch', {
+          logger.namespace('EmbeddingStorage').error('Failed to retrieve embedding in batch', {
             documentId: docId,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
           });
         }
       });
@@ -204,7 +198,7 @@ export class EmbeddingStorage {
       await Promise.all(batchPromises);
     }
     
-    logger.context?.debug('Retrieved batch embeddings', {
+    logger.namespace('EmbeddingStorage').debug('Retrieved batch embeddings', {
       requested: documentIds.length,
       retrieved: results.size
     });
@@ -236,29 +230,29 @@ export class EmbeddingStorage {
     let newestDate = new Date(0);
     
     for (const doc of userDocuments) {
-      const docWithEmbedding = doc as any;
+      const embeddings = doc.metadata?.embeddings;
       
-      if (docWithEmbedding.embedding_vector) {
+      if (embeddings?.vector) {
         stats.documentsWithEmbeddings++;
         
         // Track providers
-        const provider = docWithEmbedding.embedding_provider || 'unknown';
+        const provider = embeddings.provider || 'unknown';
         stats.providers.set(provider, (stats.providers.get(provider) || 0) + 1);
         
         // Track models
-        const model = docWithEmbedding.embedding_model || 'unknown';
+        const model = embeddings.model || 'unknown';
         stats.models.set(model, (stats.models.get(model) || 0) + 1);
         
         // Track timestamps
-        if (docWithEmbedding.embedding_timestamp) {
-          const embeddingDate = new Date(docWithEmbedding.embedding_timestamp);
+        if (embeddings.timestamp) {
+          const embeddingDate = new Date(embeddings.timestamp);
           if (embeddingDate < oldestDate) {
             oldestDate = embeddingDate;
-            stats.oldestEmbedding = docWithEmbedding.embedding_timestamp;
+            stats.oldestEmbedding = embeddings.timestamp;
           }
           if (embeddingDate > newestDate) {
             newestDate = embeddingDate;
-            stats.newestEmbedding = docWithEmbedding.embedding_timestamp;
+            stats.newestEmbedding = embeddings.timestamp;
           }
         }
       }
@@ -280,25 +274,33 @@ export class EmbeddingStorage {
         throw new Error(`Document ${documentId} not found`);
       }
       
-      const docWithEmbedding = document as any;
-      if (!docWithEmbedding.embedding_vector) {
+      const embeddings = document.metadata?.embeddings;
+      if (!embeddings?.vector) {
         throw new Error(`Document ${documentId} does not have embedding`);
       }
       
-      // Update just the summary
+      // Update just the summary in embeddings metadata
+      const updatedEmbeddings = {
+        ...embeddings,
+        summary: newSummary
+      };
+      
       const updatedDocument = {
         ...document,
-        embedding_summary: newSummary
+        metadata: {
+          ...document.metadata,
+          embeddings: updatedEmbeddings
+        }
       };
       
       await updateDocument(updatedDocument);
       
-      logger.context?.info('Updated embedding summary', { documentId });
+      logger.namespace('EmbeddingStorage').info('Updated embedding summary', { documentId });
       
     } catch (error) {
-      logger.context?.error('Failed to update embedding summary', {
+      logger.namespace('EmbeddingStorage').error('Failed to update embedding summary', {
         documentId,
-        error: error.message
+        error: error instanceof Error ? error.message : String(error)
       });
       throw error;
     }
