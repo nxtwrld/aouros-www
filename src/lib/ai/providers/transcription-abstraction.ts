@@ -4,7 +4,7 @@
 import OpenAI from "openai";
 import fs from 'fs/promises';
 import path from 'path';
-import { OPENAI_API_KEY, AZURE_SPEECH_KEY, GOOGLE_CLOUD_API_KEY } from "$env/static/private";
+import { OPENAI_API_KEY, AZURE_SPEECH_KEY, GOOGLE_API_KEY } from "$env/static/private";
 
 export interface TranscriptionConfig {
   providers: Record<string, ProviderConfig>;
@@ -182,7 +182,7 @@ export class TranscriptionProviderAbstraction {
     }
 
     // Initialize Google Cloud Speech-to-Text (placeholder)
-    if (this.config.providers.google?.enabled && GOOGLE_CLOUD_API_KEY) {
+    if (this.config.providers.google?.enabled && GOOGLE_API_KEY) {
       // TODO: Initialize Google Cloud Speech-to-Text
       console.log('🤖 Google Speech-to-Text provider initialized (placeholder)');
     }
