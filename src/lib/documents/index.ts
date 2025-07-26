@@ -101,7 +101,7 @@ export async function loadDocuments(
 
 export async function importDocuments(
   documentsEncrypted: DocumentEncrypted[] = [],
-): Promise<DocumentPreload[]> {
+): Promise<(Document | DocumentPreload)[]> {
   const documentsPreload: (DocumentPreload | Document)[] = await Promise.all(
     documentsEncrypted.map(async (document) => {
       const key = document.keys[0].key;
@@ -122,6 +122,12 @@ export async function importDocuments(
         owner_id: document.keys[0].owner_id,
         author_id: document.author_id,
         attachments: document.attachments || [],
+        // Include embedding fields from encrypted document
+        embedding_summary: document.embedding_summary,
+        embedding_vector: document.embedding_vector,
+        embedding_provider: document.embedding_provider,
+        embedding_model: document.embedding_model,
+        embedding_timestamp: document.embedding_timestamp,
       };
 
       if (enc[1]) {

@@ -7,8 +7,9 @@
 
 import { contextInitializer } from '../client-database/initialization';
 import { clientEmbeddingManager } from '../embeddings/client-embedding-manager';
-import { loadDocuments } from '$lib/documents';
-import type { Document } from '$lib/documents/types.d';
+import { byUser } from '$lib/documents';
+import type { Document, DocumentPreload } from '$lib/documents/types.d';
+import { get } from 'svelte/store';
 import user from '$lib/user';
 import { logger } from '$lib/logging/logger';
 import { autoMigrateIfNeeded } from '../migration/client-migration';
@@ -17,8 +18,8 @@ export class ProfileContextManager {
   private initializationPromises = new Map<string, Promise<void>>();
   
   /**
-   * Initialize context for a profile during profile loading
-   * This is called from loadProfiles() after documents are decrypted
+   * Initialize context for a profile using documents from memory
+   * This avoids duplicate document loading by using already-loaded documents
    */
   async initializeProfileContext(
     profileId: string,
@@ -33,7 +34,19 @@ export class ProfileContextManager {
       return this.initializationPromises.get(profileId)!;
     }
     
-    const initPromise = this.performInitialization(profileId, options);
+    // Get documents from memory instead of loading them again
+    const documentsFromMemory = get(byUser(profileId));
+    
+    if (documentsFromMemory.length === 0) {
+      logger.namespace('ProfileContext').warn('No documents found in memory for profile context initialization', { 
+        profileId 
+      });
+      // Documents should already be loaded at this point
+      // If not, something went wrong in the loading process
+      return;
+    }
+    
+    const initPromise = this.performInitializationWithDocuments(profileId, documentsFromMemory, options);
     this.initializationPromises.set(profileId, initPromise);
     
     try {
@@ -44,10 +57,39 @@ export class ProfileContextManager {
   }
   
   /**
-   * Perform the actual context initialization
+   * Initialize context with already-loaded documents
+   * This avoids the need to reload documents and prevents SSR fetch issues
    */
-  private async performInitialization(
+  async initializeWithDocuments(
     profileId: string,
+    documents: (Document | DocumentPreload)[],
+    options: {
+      forceRebuild?: boolean;
+      generateMissingEmbeddings?: boolean;
+      onProgress?: (status: string, progress?: number) => void;
+    } = {}
+  ): Promise<void> {
+    // Prevent concurrent initialization for same profile
+    if (this.initializationPromises.has(profileId) && !options.forceRebuild) {
+      return this.initializationPromises.get(profileId)!;
+    }
+    
+    const initPromise = this.performInitializationWithDocuments(profileId, documents, options);
+    this.initializationPromises.set(profileId, initPromise);
+    
+    try {
+      await initPromise;
+    } finally {
+      this.initializationPromises.delete(profileId);
+    }
+  }
+  
+  /**
+   * Perform the actual context initialization with already-loaded documents
+   */
+  private async performInitializationWithDocuments(
+    profileId: string,
+    documents: (Document | DocumentPreload)[],
     options: {
       forceRebuild?: boolean;
       generateMissingEmbeddings?: boolean;
@@ -57,39 +99,34 @@ export class ProfileContextManager {
     try {
       const startTime = performance.now();
       
-      logger.namespace('ProfileContext').info('Starting profile context initialization', { profileId });
-      options.onProgress?.('Loading documents...', 0);
-      
-      // 1. Load all documents for this profile
-      const allDocuments = await loadDocuments(profileId);
-      
-      logger.namespace('ProfileContext').debug('Loaded profile documents', {
+      logger.namespace('ProfileContext').info('Starting profile context initialization with documents', { 
         profileId,
-        documentCount: allDocuments.length
+        documentCount: documents.length
       });
+      options.onProgress?.('Processing documents...', 10);
       
-      // 2. Get user keys for decryption
+      // 1. Get user keys for decryption
       const userKeys = user.keyPair;
       if (!userKeys) {
         throw new Error('User keys not available');
       }
       
-      // 3. Filter documents suitable for embeddings
+      // 2. Filter documents suitable for embeddings
       options.onProgress?.('Analyzing documents...', 20);
-      const suitableDocuments = await this.filterSuitableDocuments(allDocuments.filter(doc => doc.content !== undefined) as Document[]);
+      const suitableDocuments = await this.filterSuitableDocuments(
+        documents.filter(doc => doc.content !== undefined) as Document[]
+      );
       
       logger.namespace('ProfileContext').debug('Filtered suitable documents', {
         profileId,
-        total: allDocuments.length,
+        total: documents.length,
         suitable: suitableDocuments.length
       });
       
-      // 4. Note: Embedding generation now happens server-side during document processing
-      // For profile loading, we focus on extracting existing embeddings from documents
+      // 3. Extract existing embeddings from documents
       if (options.generateMissingEmbeddings && suitableDocuments.length > 0) {
         options.onProgress?.('Processing existing embeddings...', 30);
         
-        // Extract embeddings from documents that already have them
         const existingEmbeddings = this.extractExistingEmbeddings(suitableDocuments);
         
         logger.namespace('ProfileContext').info('Extracted existing embeddings from documents', {
@@ -106,12 +143,12 @@ export class ProfileContextManager {
         options.onProgress?.('Embeddings processed', 70);
       }
       
-      // 5. Initialize context database
+      // 4. Initialize context database
       options.onProgress?.('Building context database...', 80);
       
       const { database } = await contextInitializer.initializeContext(
         profileId,
-        allDocuments.filter(doc => doc.content !== undefined) as Document[], // Filter out DocumentPreload types
+        documents.filter(doc => doc.content !== undefined) as Document[],
         userKeys,
         {
           maxMemoryMB: 50,
@@ -119,7 +156,7 @@ export class ProfileContextManager {
         }
       );
       
-      // 6. Log completion statistics
+      // 5. Log completion statistics
       const stats = database.getStats();
       const initTime = performance.now() - startTime;
       
@@ -131,7 +168,7 @@ export class ProfileContextManager {
       
       options.onProgress?.('Context ready', 100);
 
-      // 7. Auto-migrate missing embeddings if enabled
+      // 6. Auto-migrate missing embeddings if enabled
       if (options.generateMissingEmbeddings) {
         try {
           options.onProgress?.('Checking for missing embeddings...', 90);

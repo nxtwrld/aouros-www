@@ -28,6 +28,13 @@ export interface DocumentPreload {
   content?: string | undefined;
   author_id?: string;
   owner_id: string;
+  
+  // Embedding fields for context system
+  embedding_summary?: string;        // Plain text summary for embedding
+  embedding_vector?: string;         // Encrypted embedding vector
+  embedding_provider?: string;       // Provider used ('openai', 'local', etc.)
+  embedding_model?: string;          // Model version
+  embedding_timestamp?: string;      // When embedding was generated
 }
 
 export interface DocumentEncrypted {

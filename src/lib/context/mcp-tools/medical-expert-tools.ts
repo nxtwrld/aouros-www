@@ -11,9 +11,10 @@
 import { clientEmbeddingManager } from '../embeddings/client-embedding-manager';
 import { profileContextManager } from '../integration/profile-context';
 import { contextAssembler } from '../context-assembly/context-composer';
-import { loadDocuments, getDocument } from '$lib/documents';
+import { byUser, getDocument } from '$lib/documents';
 import user from '$lib/user';
 import { profiles } from '$lib/profiles';
+import { get } from 'svelte/store';
 import type { Document } from '$lib/documents/types.d';
 import type { Profile } from '$lib/types.d';
 import { logger } from '$lib/logging/logger';
@@ -1197,8 +1198,8 @@ export class MedicalExpertTools {
         };
       }
 
-      // Load documents for timeline analysis
-      const documents = await loadDocuments(targetProfileId);
+      // Get documents from memory for timeline analysis
+      const documents = get(byUser(targetProfileId));
       
       // Build timeline events from documents
       const timelineEvents = [];
@@ -1277,8 +1278,8 @@ export class MedicalExpertTools {
         };
       }
 
-      // Load documents for trend analysis
-      const documents = await loadDocuments(targetProfileId);
+      // Get documents from memory for trend analysis
+      const documents = get(byUser(targetProfileId));
       
       // Extract trend data based on analysis type
       const trendData = this.extractTrendData(documents, params.analysisType, params.parameter, params.timeframe);

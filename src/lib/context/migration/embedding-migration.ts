@@ -5,10 +5,11 @@
  * This ensures all documents are available for semantic search and context assembly.
  */
 
-import { loadDocuments, getDocument } from '$lib/documents';
+import { byUser, getDocument } from '$lib/documents';
 import { profileContextManager } from '../integration/profile-context';
 import { logger } from '$lib/logging/logger';
 import type { Document } from '$lib/documents/types.d';
+import { get } from 'svelte/store';
 
 const migrationLogger = logger.namespace('EmbeddingMigration');
 
@@ -286,24 +287,28 @@ export class EmbeddingMigrationService {
   }
 
   /**
-   * Load all documents for a profile
+   * Load all documents for a profile from memory
+   * Uses in-memory documents store to avoid duplicate API calls
    */
   private async loadProfileDocuments(profileId: string): Promise<Document[]> {
     try {
-      // This loads all documents for the current user
-      // We'll need to ensure we're loading for the correct profile
-      const documents = await loadDocuments();
+      // Get documents from memory instead of making API call
+      const documentsFromMemory = get(byUser(profileId));
       
-      // Filter by profile if needed (documents might be shared across profiles)
-      return documents.filter(doc => 
-        doc.profile_id === profileId || 
-        doc.user_id === profileId || // Fallback for older documents
-        (!doc.profile_id && !doc.user_id) // Include documents without profile info
-      );
-    } catch (error) {
-      migrationLogger.error('Failed to load profile documents', {
+      // Convert DocumentPreload to Document by ensuring all have content
+      const documents = documentsFromMemory.filter(doc => doc.content !== undefined) as Document[];
+      
+      migrationLogger.debug('Loaded profile documents from memory for migration', {
         profileId,
-        error: error instanceof Error ? error.message : error
+        documentCount: documents.length
+      });
+      
+      return documents;
+      
+    } catch (error) {
+      migrationLogger.error('Failed to load profile documents from memory for migration', {
+        profileId,
+        error: error instanceof Error ? error.message : String(error)
       });
       return [];
     }

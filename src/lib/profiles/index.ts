@@ -87,10 +87,11 @@ export async function loadProfiles(
           // map profile data
           const profileData = mapProfileData(d, roots);
           
-          // NEW: Initialize context for this profile
+          // Initialize context for this profile with already loaded documents
           try {
-            await profileContextManager.initializeProfileContext(
+            await profileContextManager.initializeWithDocuments(
               d.profiles.id,
+              roots,
               {
                 generateMissingEmbeddings: true,
                 onProgress: (status, progress) => {
