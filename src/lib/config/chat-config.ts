@@ -54,6 +54,7 @@ export interface PromptConfig {
     anatomyInstructions: string[];
     boundaries?: string[];
     focus?: string[];
+    toolInstructions?: string[];
   };
   responseSchema: {
     additionalProperties: Record<string, any>;
@@ -257,6 +258,14 @@ class ChatConfigManager {
       systemPrompt += '\nCLINICAL FOCUS:\n';
       modeConfig.systemPrompt.focus.forEach(focus => {
         systemPrompt += `- ${focus}\n`;
+      });
+    }
+    
+    // Add tool instructions if available
+    if (modeConfig.systemPrompt.toolInstructions) {
+      systemPrompt += '\nMEDICAL DATA TOOLS:\n';
+      modeConfig.systemPrompt.toolInstructions.forEach((instruction: string) => {
+        systemPrompt += `- ${instruction}\n`;
       });
     }
     

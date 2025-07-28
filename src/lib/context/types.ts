@@ -1,35 +1,9 @@
 /**
- * Type definitions for the Context & Embeddings System
+ * Type definitions for the Medical Classification & Context System
  */
 
 import type { Document } from '$lib/documents/types.d';
 import type { MetaHistoryEntry } from '$lib/health/meta-history-types';
-
-// Core embedding types
-export interface EmbeddingVector {
-  vector: Float32Array;
-  dimensions: number;
-  normalized: boolean;
-}
-
-export interface EmbeddingMetadata {
-  documentId: string;
-  summary: string;
-  documentType: string;
-  date: string;
-  provider: string;
-  model: string;
-  language?: string;
-  tags?: string[];
-}
-
-export interface DocumentEmbedding {
-  id: string;
-  documentId: string;
-  vector: EmbeddingVector;
-  metadata: EmbeddingMetadata;
-  timestamp: string;
-}
 
 // Search types
 export interface SearchOptions {
@@ -56,9 +30,17 @@ export interface SearchFilters {
 export interface ContextMatch {
   documentId: string;
   similarity: number;
-  metadata: EmbeddingMetadata;
-  relevanceScore: number; // Combined similarity + time decay
+  metadata: {
+    documentId: string;
+    summary: string;
+    documentType: string;
+    date: string;
+    language?: string;
+    tags?: string[];
+  };
+  relevanceScore: number; // Combined relevance score based on medical terms matching
   excerpt?: string;
+  matchedTerms?: string[];
 }
 
 // Context assembly types
@@ -177,20 +159,13 @@ export interface MCPToolResult<T = any> {
   };
 }
 
-// Provider types
-export interface EmbeddingProviderConfig {
-  provider: 'openai' | 'local' | 'gemini';
-  model: string;
-  dimensions: number;
-  maxTokens?: number;
-  costPer1kTokens?: number;
-}
-
-export interface EmbeddingGenerationOptions {
-  provider?: string;
-  model?: string;
-  language?: string;
-  extractKeyPoints?: boolean;
+// Medical terms classification types
+export interface MedicalTermsConfig {
+  useLatinTerminology: boolean;
+  standardizeToICD10: boolean;
+  includeLOINCCodes: boolean;
+  extractProcedures: boolean;
+  extractMedications: boolean;
 }
 
 // Session integration types

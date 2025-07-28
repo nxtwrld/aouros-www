@@ -3,7 +3,7 @@ export type ChatMode = 'patient' | 'clinical';
 export type ChatMessageRole = 'user' | 'assistant' | 'system';
 
 export interface ContextPrompt {
-  type: 'document' | 'profile';
+  type: 'document' | 'profile' | 'tool';
   id: string;
   title: string;
   messageKey: string;
@@ -14,6 +14,11 @@ export interface ContextPrompt {
   timestamp: Date;
   onAccept: () => void;
   onDecline: () => void;
+  // Tool-specific fields
+  toolName?: string;
+  toolParameters?: any;
+  securityLevel?: 'low' | 'medium' | 'high';
+  dataAccessDescription?: string[];
 }
 
 export interface ChatMessage {
@@ -35,6 +40,8 @@ export interface ChatMessage {
     contextConfidence?: number;
     availableTools?: string[];
     shouldEnhanceGreeting?: boolean;
+    // Tool execution result
+    toolResult?: ToolCallResult;
     // Keep legacy support temporarily
     documentPrompt?: {
       documentId: string;
@@ -135,11 +142,25 @@ export interface ConsentRequest {
   reason: string;
 }
 
+export interface ToolCallRequest {
+  name: string;
+  parameters: any;
+  reason: string;
+}
+
+export interface ToolCallResult {
+  toolName: string;
+  success: boolean;
+  data?: any;
+  error?: string;
+  timestamp: Date;
+}
+
 export interface ChatResponse {
   message: string;
   anatomyReferences?: string[];
   documentReferences?: string[];
-  toolCalls?: any[];
+  toolCalls?: ToolCallRequest[];
   suggestions?: AnatomySuggestion[];
   consentRequests?: ConsentRequest[];
 }

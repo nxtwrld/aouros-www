@@ -8,7 +8,7 @@
  * https://modelcontextprotocol.io/specification
  */
 
-import { clientEmbeddingManager } from '../embeddings/client-embedding-manager';
+// Removed: import { clientEmbeddingManager } from '../embeddings/client-embedding-manager';
 import { profileContextManager } from '../integration/profile-context';
 import { contextAssembler } from '../context-assembly/context-composer';
 import { byUser, getDocument } from '$lib/documents';
@@ -146,13 +146,14 @@ export class MedicalExpertTools {
     return [
       {
         name: 'searchDocuments',
-        description: 'Search patient medical documents using semantic similarity. Use when you need to find specific medical information or documents related to symptoms, conditions, or treatments.',
+        description: 'Search patient medical documents by matching medical terms. Documents contain standardized medical terms arrays for precise matching.',
         inputSchema: {
           type: 'object',
           properties: {
-            query: {
-              type: 'string',
-              description: 'Search query describing what medical information you are looking for'
+            terms: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of specific medical terms in ENGLISH ONLY that exist in document metadata. IMPORTANT: Always provide medical terms in English, never in other languages. Use exact English terms like: CATEGORIES: "laboratory", "imaging", "medications", "cardiology", "surgery", "consultation", "emergency", "pathology", "therapy", "oncology", "mental_health", "pediatrics", "obstetrics" | TEMPORAL: "latest", "recent", "historical" | MEDICAL: "blood", "glucose", "cholesterol", "heart", "cardiac", "ecg", "x-ray", "mri", "ct", "ultrasound", "prescription", "medication", "surgery", "procedure" | BODY PARTS: anatomical terms from 473 body parts enum (English names) | ICD-10 CODES: diagnostic codes | LOINC CODES: lab test codes | Use specific, standardized English medical terminology for best matches.'
             },
             limit: {
               type: 'number',
@@ -291,307 +292,323 @@ export class MedicalExpertTools {
           required: []
         }
       },
-      {
-        name: 'analyzeMedicalTrends',
-        description: 'Analyze trends and patterns in medical data over time. Use when you need to identify changes in patient condition, medication effectiveness, or disease progression.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            analysisType: {
-              type: 'string',
-              enum: ['vital_signs', 'lab_values', 'symptoms', 'medications', 'conditions'],
-              description: 'Type of medical trend to analyze'
-            },
-            parameter: {
-              type: 'string',
-              description: 'Specific parameter to analyze (e.g., "blood_pressure", "glucose", "weight")'
-            },
-            timeframe: {
-              type: 'object',
-              properties: {
-                start: { type: 'string', format: 'date' },
-                end: { type: 'string', format: 'date' }
-              },
-              description: 'Time period for trend analysis'
-            },
-            includeCorrelations: {
-              type: 'boolean',
-              description: 'Include correlations with other medical parameters (default: false)'
-            }
-          },
-          required: ['analysisType']
-        }
-      },
-      {
-        name: 'getMedicationHistory',
-        description: 'Get comprehensive medication history including current medications, past prescriptions, dosage changes, and potential interactions.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            includeCurrentMedications: {
-              type: 'boolean',
-              description: 'Include currently prescribed medications (default: true)'
-            },
-            includeHistoricalMedications: {
-              type: 'boolean',
-              description: 'Include past medications and discontinued prescriptions (default: true)'
-            },
-            checkInteractions: {
-              type: 'boolean',
-              description: 'Check for potential drug interactions (default: true)'
-            },
-            medicationClass: {
-              type: 'string',
-              description: 'Filter by medication class (e.g., "antihypertensive", "diabetes", "antibiotic")'
-            },
-            timeframe: {
-              type: 'object',
-              properties: {
-                start: { type: 'string', format: 'date' },
-                end: { type: 'string', format: 'date' }
-              },
-              description: 'Optional timeframe to filter medication history'
-            }
-          },
-          required: []
-        }
-      },
-      {
-        name: 'getTestResultSummary',
-        description: 'Get aggregated summary of laboratory test results, diagnostic imaging, and other medical tests with trend analysis.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            testTypes: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Filter by test types (e.g., "blood_work", "imaging", "cardiac", "endocrine")'
-            },
-            abnormalOnly: {
-              type: 'boolean',
-              description: 'Show only abnormal or concerning results (default: false)'
-            },
-            timeframe: {
-              type: 'object',
-              properties: {
-                start: { type: 'string', format: 'date' },
-                end: { type: 'string', format: 'date' }
-              },
-              description: 'Time period for test result summary'
-            },
-            includeTrends: {
-              type: 'boolean',
-              description: 'Include trend analysis for repeated tests (default: true)'
-            },
-            groupByTest: {
-              type: 'boolean',
-              description: 'Group results by test type rather than chronologically (default: false)'
-            }
-          },
-          required: []
-        }
-      },
-      {
-        name: 'identifyMedicalPatterns',
-        description: 'Identify patterns and correlations across medical documents using AI analysis. Use when you need to find hidden connections in patient data.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            patternType: {
-              type: 'string',
-              enum: ['symptom_clusters', 'treatment_responses', 'risk_factors', 'comorbidities', 'medication_effects'],
-              description: 'Type of medical pattern to identify'
-            },
-            focusArea: {
-              type: 'string',
-              description: 'Specific medical area to focus analysis on (e.g., "cardiovascular", "diabetes", "mental_health")'
-            },
-            confidenceThreshold: {
-              type: 'number',
-              minimum: 0.5,
-              maximum: 1.0,
-              description: 'Minimum confidence level for pattern identification (default: 0.7)'
-            },
-            includeHypotheses: {
-              type: 'boolean',
-              description: 'Include AI-generated hypotheses about identified patterns (default: true)'
-            }
-          },
-          required: ['patternType']
-        }
-      },
-      {
-        name: 'generateClinicalSummary',
-        description: 'Generate AI-powered clinical summary of patient condition, recent changes, and key medical insights.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            summaryType: {
-              type: 'string',
-              enum: ['comprehensive', 'recent_changes', 'condition_specific', 'risk_assessment'],
-              description: 'Type of clinical summary to generate'
-            },
-            focusCondition: {
-              type: 'string',
-              description: 'Focus summary on specific condition or medical area'
-            },
-            timeframe: {
-              type: 'object',
-              properties: {
-                start: { type: 'string', format: 'date' },
-                end: { type: 'string', format: 'date' }
-              },
-              description: 'Time period for summary (defaults to last 6 months)'
-            },
-            includeRecommendations: {
-              type: 'boolean',
-              description: 'Include clinical recommendations and follow-up suggestions (default: true)'
-            },
-            audience: {
-              type: 'string',
-              enum: ['physician', 'patient', 'specialist'],
-              description: 'Target audience for the summary (affects language and detail level)'
-            }
-          },
-          required: ['summaryType']
-        }
-      },
-      {
-        name: 'searchBySymptoms',
-        description: 'Search medical documents based on symptom descriptions and clinical presentations. Use when analyzing symptom patterns or differential diagnosis.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            symptoms: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'List of symptoms to search for (e.g., ["chest pain", "shortness of breath", "fatigue"])'
-            },
-            severity: {
-              type: 'string',
-              enum: ['mild', 'moderate', 'severe', 'any'],
-              description: 'Filter by symptom severity (default: "any")'
-            },
-            duration: {
-              type: 'string',
-              description: 'Symptom duration (e.g., "acute", "chronic", "3 days", "2 weeks")'
-            },
-            associatedFindings: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Associated clinical findings or exam results'
-            },
-            includeRelatedConditions: {
-              type: 'boolean',
-              description: 'Include documents about conditions commonly associated with these symptoms (default: true)'
-            }
-          },
-          required: ['symptoms']
-        }
-      },
-      {
-        name: 'getSpecialtyRecommendations',
-        description: 'Get specialty-specific recommendations and insights based on patient data and current medical evidence.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            specialty: {
-              type: 'string',
-              enum: ['cardiology', 'endocrinology', 'neurology', 'psychiatry', 'gastroenterology', 'pulmonology', 'nephrology', 'oncology', 'general'],
-              description: 'Medical specialty for focused recommendations'
-            },
-            clinicalQuestion: {
-              type: 'string',
-              description: 'Specific clinical question or area of concern'
-            },
-            includeGuidelines: {
-              type: 'boolean',
-              description: 'Include relevant clinical guidelines and evidence-based recommendations (default: true)'
-            },
-            riskLevel: {
-              type: 'string',
-              enum: ['low', 'moderate', 'high', 'unknown'],
-              description: 'Patient risk level for risk-stratified recommendations (default: "unknown")'
-            },
-            includeDifferentialDx: {
-              type: 'boolean',
-              description: 'Include differential diagnosis considerations (default: false)'
-            }
-          },
-          required: ['specialty']
-        }
-      }
+      // TODO: Implement analyzeMedicalTrends - currently incomplete
+      // {
+      //   name: 'analyzeMedicalTrends',
+      //   description: 'Analyze trends and patterns in medical data over time. Use when you need to identify changes in patient condition, medication effectiveness, or disease progression.',
+      //   inputSchema: {
+      //     type: 'object',
+      //     properties: {
+      //       analysisType: {
+      //         type: 'string',
+      //         enum: ['vital_signs', 'lab_values', 'symptoms', 'medications', 'conditions'],
+      //         description: 'Type of medical trend to analyze'
+      //       },
+      //       parameter: {
+      //         type: 'string',
+      //         description: 'Specific parameter to analyze (e.g., "blood_pressure", "glucose", "weight")'
+      //       },
+      //       timeframe: {
+      //         type: 'object',
+      //         properties: {
+      //           start: { type: 'string', format: 'date' },
+      //           end: { type: 'string', format: 'date' }
+      //         },
+      //         description: 'Time period for trend analysis'
+      //       },
+      //       includeCorrelations: {
+      //         type: 'boolean',
+      //         description: 'Include correlations with other medical parameters (default: false)'
+      //       }
+      //     },
+      //     required: ['analysisType']
+      //   }
+      // },
+      // TODO: Implement getMedicationHistory - currently incomplete
+      // {
+      //   name: 'getMedicationHistory',
+      //   description: 'Get comprehensive medication history including current medications, past prescriptions, dosage changes, and potential interactions.',
+      //   inputSchema: {
+      //     type: 'object',
+      //     properties: {
+      //       includeCurrentMedications: {
+      //         type: 'boolean',
+      //         description: 'Include currently prescribed medications (default: true)'
+      //       },
+      //       includeHistoricalMedications: {
+      //         type: 'boolean',
+      //         description: 'Include past medications and discontinued prescriptions (default: true)'
+      //       },
+      //       checkInteractions: {
+      //         type: 'boolean',
+      //         description: 'Check for potential drug interactions (default: true)'
+      //       },
+      //       medicationClass: {
+      //         type: 'string',
+      //         description: 'Filter by medication class (e.g., "antihypertensive", "diabetes", "antibiotic")'
+      //       },
+      //       timeframe: {
+      //         type: 'object',
+      //         properties: {
+      //           start: { type: 'string', format: 'date' },
+      //           end: { type: 'string', format: 'date' }
+      //         },
+      //         description: 'Optional timeframe to filter medication history'
+      //       }
+      //     },
+      //     required: []
+      //   }
+      // },
+      // TODO: Implement getTestResultSummary - currently incomplete
+      // {
+      //   name: 'getTestResultSummary',
+      //   description: 'Get aggregated summary of laboratory test results, diagnostic imaging, and other medical tests with trend analysis.',
+      //   inputSchema: {
+      //     type: 'object',
+      //     properties: {
+      //       testTypes: {
+      //         type: 'array',
+      //         items: { type: 'string' },
+      //         description: 'Filter by test types (e.g., "blood_work", "imaging", "cardiac", "endocrine")'
+      //       },
+      //       abnormalOnly: {
+      //         type: 'boolean',
+      //         description: 'Show only abnormal or concerning results (default: false)'
+      //       },
+      //       timeframe: {
+      //         type: 'object',
+      //         properties: {
+      //           start: { type: 'string', format: 'date' },
+      //           end: { type: 'string', format: 'date' }
+      //         },
+      //         description: 'Time period for test result summary'
+      //       },
+      //       includeTrends: {
+      //         type: 'boolean',
+      //         description: 'Include trend analysis for repeated tests (default: true)'
+      //       },
+      //       groupByTest: {
+      //         type: 'boolean',
+      //         description: 'Group results by test type rather than chronologically (default: false)'
+      //       }
+      //     },
+      //     required: []
+      //   }
+      // },
+      // TODO: Implement identifyMedicalPatterns - currently incomplete
+      // {
+      //   name: 'identifyMedicalPatterns',
+      //   description: 'Identify patterns and correlations across medical documents using AI analysis. Use when you need to find hidden connections in patient data.',
+      //   inputSchema: {
+      //     type: 'object',
+      //     properties: {
+      //       patternType: {
+      //         type: 'string',
+      //         enum: ['symptom_clusters', 'treatment_responses', 'risk_factors', 'comorbidities', 'medication_effects'],
+      //         description: 'Type of medical pattern to identify'
+      //       },
+      //       focusArea: {
+      //         type: 'string',
+      //         description: 'Specific medical area to focus analysis on (e.g., "cardiovascular", "diabetes", "mental_health")'
+      //       },
+      //       confidenceThreshold: {
+      //         type: 'number',
+      //         minimum: 0.5,
+      //         maximum: 1.0,
+      //         description: 'Minimum confidence level for pattern identification (default: 0.7)'
+      //       },
+      //       includeHypotheses: {
+      //         type: 'boolean',
+      //         description: 'Include AI-generated hypotheses about identified patterns (default: true)'
+      //       }
+      //     },
+      //     required: ['patternType']
+      //   }
+      // },
+      // TODO: Implement generateClinicalSummary - currently incomplete
+      // {
+      //   name: 'generateClinicalSummary',
+      //   description: 'Generate AI-powered clinical summary of patient condition, recent changes, and key medical insights.',
+      //   inputSchema: {
+      //     type: 'object',
+      //     properties: {
+      //       summaryType: {
+      //         type: 'string',
+      //         enum: ['comprehensive', 'recent_changes', 'condition_specific', 'risk_assessment'],
+      //         description: 'Type of clinical summary to generate'
+      //       },
+      //       focusCondition: {
+      //         type: 'string',
+      //         description: 'Focus summary on specific condition or medical area'
+      //       },
+      //       timeframe: {
+      //         type: 'object',
+      //         properties: {
+      //           start: { type: 'string', format: 'date' },
+      //           end: { type: 'string', format: 'date' }
+      //         },
+      //         description: 'Time period for summary (defaults to last 6 months)'
+      //       },
+      //       includeRecommendations: {
+      //         type: 'boolean',
+      //         description: 'Include clinical recommendations and follow-up suggestions (default: true)'
+      //       },
+      //       audience: {
+      //         type: 'string',
+      //         enum: ['physician', 'patient', 'specialist'],
+      //         description: 'Target audience for the summary (affects language and detail level)'
+      //       }
+      //     },
+      //     required: ['summaryType']
+      //   }
+      // },
+      // TODO: Implement searchBySymptoms - currently incomplete
+      // {
+      //   name: 'searchBySymptoms',
+      //   description: 'Search medical documents based on symptom descriptions and clinical presentations. Use when analyzing symptom patterns or differential diagnosis.',
+      //   inputSchema: {
+      //     type: 'object',
+      //     properties: {
+      //       symptoms: {
+      //         type: 'array',
+      //         items: { type: 'string' },
+      //         description: 'List of symptoms to search for (e.g., ["chest pain", "shortness of breath", "fatigue"])'
+      //       },
+      //       severity: {
+      //         type: 'string',
+      //         enum: ['mild', 'moderate', 'severe', 'any'],
+      //         description: 'Filter by symptom severity (default: "any")'
+      //       },
+      //       duration: {
+      //         type: 'string',
+      //         description: 'Symptom duration (e.g., "acute", "chronic", "3 days", "2 weeks")'
+      //       },
+      //       associatedFindings: {
+      //         type: 'array',
+      //         items: { type: 'string' },
+      //         description: 'Associated clinical findings or exam results'
+      //       },
+      //       includeRelatedConditions: {
+      //         type: 'boolean',
+      //         description: 'Include documents about conditions commonly associated with these symptoms (default: true)'
+      //       }
+      //     },
+      //     required: ['symptoms']
+      //   }
+      // },
+      // TODO: Implement getSpecialtyRecommendations - currently incomplete
+      // {
+      //   name: 'getSpecialtyRecommendations',
+      //   description: 'Get specialty-specific recommendations and insights based on patient data and current medical evidence.',
+      //   inputSchema: {
+      //     type: 'object',
+      //     properties: {
+      //       specialty: {
+      //         type: 'string',
+      //         enum: ['cardiology', 'endocrinology', 'neurology', 'psychiatry', 'gastroenterology', 'pulmonology', 'nephrology', 'oncology', 'general'],
+      //         description: 'Medical specialty for focused recommendations'
+      //       },
+      //       clinicalQuestion: {
+      //         type: 'string',
+      //         description: 'Specific clinical question or area of concern'
+      //       },
+      //       includeGuidelines: {
+      //         type: 'boolean',
+      //         description: 'Include relevant clinical guidelines and evidence-based recommendations (default: true)'
+      //       },
+      //       riskLevel: {
+      //         type: 'string',
+      //         enum: ['low', 'moderate', 'high', 'unknown'],
+      //         description: 'Patient risk level for risk-stratified recommendations (default: "unknown")'
+      //       },
+      //       includeDifferentialDx: {
+      //         type: 'boolean',
+      //         description: 'Include differential diagnosis considerations (default: false)'
+      //       }
+      //     },
+      //     required: ['specialty']
+      //   }
+      // }
     ];
   }
 
   /**
-   * Search patient documents by semantic similarity - MCP compliant
+   * Search patient documents by medical terms - MCP compliant
    */
   async searchDocuments(params: {
-    query: string;
+    terms: string[];
     limit?: number;
     threshold?: number;
     includeContent?: boolean;
     documentTypes?: string[];
   }, profileId: string): Promise<MCPToolResult> {
     try {
-      // Get context for profile
-      const contextStats = profileContextManager.getProfileContextStats(profileId);
-      if (!contextStats) {
+      // Get user documents directly instead of using context
+      const currentUser = get(user);
+      if (!currentUser) {
         return {
           content: [{
             type: 'text',
-            text: 'Error: No medical context available for this profile. Please ensure documents are loaded and context is initialized.'
+            text: 'Error: User not authenticated. Please log in to access medical documents.'
           }],
           isError: true
         };
       }
-      
-      // Generate query embedding
-      const queryEmbedding = await this.generateQueryEmbedding(query);
-      
-      // Perform semantic search
-      const searchResults = await contextStats.database.search(
-        queryEmbedding,
+
+      // Get all user documents
+      const documentsStore = await byUser(currentUser.id);
+      const allDocuments = get(documentsStore);
+      if (!allDocuments || allDocuments.length === 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: 'No medical documents found for this profile.'
+          }],
+          isError: false
+        };
+      }
+
+      // Search documents using simple medical terms matching
+      const searchResults = this.searchDocumentsByTerms(
+        allDocuments,
+        params.terms,
         {
-          limit: params.limit || 10,
+          maxResults: params.limit || 10,
           threshold: params.threshold || 0.6,
-          includeMetadata: true
+          documentTypes: params.documentTypes
         }
       );
       
-      // Filter by document types if specified
-      let filteredResults = searchResults;
-      if (params.documentTypes && params.documentTypes.length > 0) {
-        filteredResults = searchResults.filter(result => 
-          params.documentTypes!.includes(result.metadata.documentType)
-        );
-      }
+      // Search results are already filtered by document types in the search method
+      const filteredResults = searchResults;
       
       // Format results for AI consumption
       const documents = await Promise.all(
         filteredResults.slice(0, params.limit || 10).map(async (result) => {
-          const docData = {
-            id: result.documentId,
-            title: result.metadata.title,
-            date: result.metadata.date,
-            type: result.metadata.documentType,
-            summary: result.metadata.summary,
-            relevance: result.similarity,
-            excerpt: result.excerpt || result.metadata.summary?.substring(0, 200) + '...'
+          const doc = result.document;
+          const docData: any = {
+            id: doc.id,
+            title: doc.content?.title || doc.metadata?.summary?.substring(0, 100) + '...',
+            date: doc.metadata?.date || doc.created_at,
+            type: doc.metadata?.documentType || 'document',
+            summary: doc.metadata?.summary || '',
+            relevance: result.relevance,
+            matchedTerms: result.matchedTerms,
+            temporalType: doc.temporalType,
+            excerpt: doc.metadata?.summary?.substring(0, 200) + '...'
           };
           
           // Include full content if requested and relevant
-          if (params.includeContent && result.similarity > 0.8) {
+          if (params.includeContent && result.relevance > 0.8) {
             try {
-              const fullDoc = await getDocument(result.documentId);
+              const fullDoc = await getDocument(doc.id);
               if (fullDoc && fullDoc.content) {
                 docData.content = this.sanitizeContentForAI(fullDoc.content);
               }
             } catch (error) {
               logger.namespace('Context')?.warn('Failed to load full document content', {
-                documentId: result.documentId,
-                error
+                documentId: doc.id,
+                error: error instanceof Error ? error.message : String(error)
               });
             }
           }
@@ -601,12 +618,13 @@ export class MedicalExpertTools {
       );
       
       const searchData = {
-        query: params.query,
+        searchTerms: params.terms,
         totalResults: filteredResults.length,
         documents,
         searchMetadata: {
           threshold: params.threshold || 0.6,
           limit: params.limit || 10,
+          searchMethod: 'medical_terms_matching',
           documentTypes: params.documentTypes
         }
       };
@@ -614,9 +632,10 @@ export class MedicalExpertTools {
       return {
         content: [{
           type: 'text',
-          text: `Found ${documents.length} relevant documents matching "${params.query}":\n\n${documents.map(doc => 
+          text: `Found ${documents.length} relevant documents matching terms [${params.terms.join(', ')}]:\n\n${documents.map(doc => 
             `**${doc.title}** (${doc.type}, ${doc.date})\n` +
             `Relevance: ${(doc.relevance * 100).toFixed(1)}%\n` +
+            `Matched terms: ${doc.matchedTerms?.join(', ') || 'none'}\n` +
             `Summary: ${doc.summary || doc.excerpt}\n`
           ).join('\n')}`
         }, {
@@ -626,7 +645,7 @@ export class MedicalExpertTools {
       };
       
     } catch (error) {
-      logger.namespace('Context')?.error('Failed to search documents', { error: error.message, profileId, query: params.query });
+      logger.namespace('Context')?.error('Failed to search documents', { error: error.message, profileId, terms: params.terms });
       return {
         content: [{
           type: 'text',
@@ -3035,6 +3054,104 @@ Data Points: ${analysis.dataPoints || 'N/A'}`;
       });
       throw error;
     }
+  }
+
+  /**
+   * Search documents by medical terms matching
+   */
+  private searchDocumentsByTerms(
+    documents: (Document | any)[],
+    searchTerms: string[],
+    options: {
+      maxResults: number;
+      threshold: number;
+      documentTypes?: string[];
+    }
+  ): Array<{
+    document: Document | any;
+    relevance: number;
+    matchedTerms: string[];
+  }> {
+    const results: Array<{
+      document: Document | any;
+      relevance: number;
+      matchedTerms: string[];
+    }> = [];
+
+    for (const doc of documents) {
+      // Filter by document type if specified
+      if (options.documentTypes && options.documentTypes.length > 0) {
+        const docType = doc.metadata?.documentType || 'unknown';
+        if (!options.documentTypes.includes(docType)) {
+          continue;
+        }
+      }
+
+      let relevance = 0;
+      const matchedTerms: string[] = [];
+
+      // Check medical terms in document
+      if (doc.medicalTerms && doc.medicalTerms.length > 0) {
+        for (const searchTerm of searchTerms) {
+          const searchTermLower = searchTerm.toLowerCase();
+          
+          for (const docTerm of doc.medicalTerms) {
+            const docTermLower = docTerm.toLowerCase();
+            
+            // Exact match (highest weight)
+            if (docTermLower === searchTermLower) {
+              relevance += 2;
+              matchedTerms.push(docTerm);
+            }
+            // Partial match (medium weight)
+            else if (docTermLower.includes(searchTermLower) || searchTermLower.includes(docTermLower)) {
+              relevance += 1;
+              matchedTerms.push(docTerm);
+            }
+          }
+        }
+      }
+
+      // Boost relevance for temporal matching
+      if (doc.temporalType) {
+        for (const searchTerm of searchTerms) {
+          if (searchTerm.toLowerCase() === doc.temporalType.toLowerCase()) {
+            relevance += 3; // High boost for temporal matching
+            matchedTerms.push(`temporal:${doc.temporalType}`);
+          }
+        }
+      }
+
+      // Fallback to text content search if no medical terms match
+      if (relevance === 0) {
+        const content = doc.content?.title || '';
+        const summary = doc.metadata?.summary || '';
+        const searchText = (content + ' ' + summary).toLowerCase();
+        
+        for (const searchTerm of searchTerms) {
+          if (searchText.includes(searchTerm.toLowerCase())) {
+            relevance += 0.5;
+            matchedTerms.push(`content:${searchTerm}`);
+          }
+        }
+      }
+
+      // Normalize relevance score (0-1)
+      const normalizedRelevance = Math.min(relevance / (searchTerms.length * 2), 1);
+
+      if (normalizedRelevance >= options.threshold) {
+        results.push({
+          document: doc,
+          relevance: normalizedRelevance,
+          matchedTerms: [...new Set(matchedTerms)]
+        });
+      }
+    }
+
+    // Sort by relevance (descending) and return top results
+    return results
+      .sort((a, b) => b.relevance - a.relevance)
+      .slice(0, options.maxResults);
   }
 }
 

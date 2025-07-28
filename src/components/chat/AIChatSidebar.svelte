@@ -608,8 +608,9 @@
     margin-bottom: 8px;
     line-height: 1.4;
     white-space: pre-wrap;
+    user-select: text;
   }
-  
+
   /* Override markdown styles for chat messages */
   .message-text :global(.markdown) {
     margin: 0;

@@ -28,8 +28,7 @@ import { providerSelectionNode } from "../nodes/provider-selection";
 import { externalValidationNode } from "../nodes/external-validation";
 import { qualityGateNode } from "../nodes/quality-gate";
 import { documentTypeRouterNode } from "../nodes/document-type-router";
-import { embeddingGenerationNode } from "../nodes/embedding-generation";
-import { embeddingStorageNode } from "../nodes/embedding-storage";
+import { medicalTermsGenerationNode } from "../nodes/medical-terms-generation";
 
 // Import unified multi-node processing
 import { executeMultiNodeProcessing } from "./multi-node-orchestrator";
@@ -115,9 +114,8 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
       multiNodeResults: { reducer: (current: any, update: any) => update ?? current },
       report: { reducer: (current: any, update: any) => update ?? current },
       
-      // Embedding processing channels
-      embeddingGeneration: { reducer: (current: any, update: any) => update ?? current },
-      embeddingStorage: { reducer: (current: any, update: any) => update ?? current },
+      // Medical terms generation channel  
+      medicalTermsGeneration: { reducer: (current: any, update: any) => update ?? current },
       
       // Workflow control channels
       documentTypeAnalysis: { reducer: (current: any, update: any) => update ?? current },
@@ -142,8 +140,7 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
   workflow.addNode("provider_selection", createNodeWrapper(providerSelectionNode, { start: 50, end: 60 }));
   workflow.addNode("feature_detection", createNodeWrapper(featureDetectionNode, { start: 60, end: 70 }));
   workflow.addNode("multi_node_processing", createNodeWrapper(executeMultiNodeProcessing, { start: 70, end: 85 }));
-  workflow.addNode("embedding_generation", createNodeWrapper(embeddingGenerationNode, { start: 85, end: 90 }));
-  workflow.addNode("embedding_storage", createNodeWrapper(embeddingStorageNode, { start: 90, end: 95 }));
+  workflow.addNode("medical_terms_generation", createNodeWrapper(medicalTermsGenerationNode, { start: 85, end: 90 }));
   workflow.addNode("external_validation", createNodeWrapper(externalValidationNode, { start: 95, end: 98 }));
   workflow.addNode("quality_gate", createNodeWrapper(qualityGateNode, { start: 98, end: 100 }));
 
@@ -158,12 +155,11 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
     error: END,
   });
 
-  // Add embedding generation after multi-node processing
-  workflow.addEdge("multi_node_processing", "embedding_generation");
-  workflow.addEdge("embedding_generation", "embedding_storage");
+  // Add medical terms generation after multi-node processing
+  workflow.addEdge("multi_node_processing", "medical_terms_generation");
 
   // External validation (optional)
-  workflow.addConditionalEdges("embedding_storage", shouldValidateExternally, {
+  workflow.addConditionalEdges("medical_terms_generation", shouldValidateExternally, {
     validate: "external_validation",
     skip: "quality_gate",
   });

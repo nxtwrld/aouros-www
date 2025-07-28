@@ -82,6 +82,12 @@
           "Always answer to the point. You can provide estimates as long as we mentioned that these are only estimates",
           "When using medical advice or diagnosis or treatment recommendations always defer to healthcare providers at the end.",
           "Focus on understanding and support"
+        ],
+        "toolInstructions": [
+          "You have access to medical data tools. USE THESE TOOLS when the user asks about their medical information.",
+          "When a user asks about medications, conditions, test results, or medical history, you MUST request the appropriate tool.",
+          "Do not say 'I don't have access' or 'no information available' without first attempting to use the relevant tools.",
+          "Example: If asked 'What medications am I taking?', use the queryMedicalHistory tool with category: 'medications'"
         ]
       },
       "responseSchema": {
@@ -95,6 +101,29 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "Coping strategies suggested"
+          },
+          "toolCalls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { 
+                  "type": "string",
+                  "enum": ["searchDocuments", "getAssembledContext", "getProfileData", "queryMedicalHistory", "getDocumentById"],
+                  "description": "REQUIRED: Exact tool name from available tools"
+                },
+                "parameters": { 
+                  "type": "object",
+                  "description": "REQUIRED: Parameters object for the tool"
+                },
+                "reason": { 
+                  "type": "string",
+                  "description": "REQUIRED: Clear explanation of why this tool is needed to answer the user's question"
+                }
+              },
+              "required": ["name", "parameters", "reason"]
+            },
+            "description": "CRITICAL: When user asks about their medical information, you MUST include tool calls here. Examples: medications → queryMedicalHistory, test results → searchDocuments, profile info → getProfileData"
           }
         }
       }
@@ -125,6 +154,12 @@
           "Differential diagnostic considerations",
           "Evidence-based insights",
           "Professional medical terminology"
+        ],
+        "toolInstructions": [
+          "You have access to medical data tools. USE THESE TOOLS to retrieve patient information for clinical analysis.",
+          "When analyzing patient data, medications, conditions, or test results, you MUST request the appropriate tool.",
+          "Do not state 'no data available' without first attempting to use the relevant tools.",
+          "Example: For medication review, use queryMedicalHistory with category: 'medications'"
         ]
       },
       "responseSchema": {
@@ -138,6 +173,29 @@
             "type": "array", 
             "items": { "type": "string" },
             "description": "Differential diagnostic considerations"
+          },
+          "toolCalls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { 
+                  "type": "string",
+                  "enum": ["searchDocuments", "getAssembledContext", "getProfileData", "queryMedicalHistory", "getDocumentById"],
+                  "description": "REQUIRED: Exact tool name from available tools"
+                },
+                "parameters": { 
+                  "type": "object",
+                  "description": "REQUIRED: Parameters object for the tool"
+                },
+                "reason": { 
+                  "type": "string",
+                  "description": "REQUIRED: Clear explanation of why this tool is needed for clinical analysis"
+                }
+              },
+              "required": ["name", "parameters", "reason"]
+            },
+            "description": "CRITICAL: When analyzing patient data, you MUST include tool calls here. Examples: medication review → queryMedicalHistory, lab analysis → searchDocuments, patient overview → getProfileData"
           }
         }
       }
@@ -159,13 +217,13 @@
   "responseSchema": {
     "base": {
       "name": "chat_response",
-      "description": "AI medical chat response",
+      "description": "AI medical chat response. CRITICAL: You MUST include toolCalls array whenever the user asks about their medical information.",
       "parameters": {
         "type": "object",
         "properties": {
           "response": {
             "type": "string",
-            "description": "Main response to user message"
+            "description": "Main response to user message. If you mention needing to access medical data, you MUST also include toolCalls."
           },
           "anatomyReferences": {
             "type": "array",
@@ -194,6 +252,29 @@
               }
             },
             "description": "Consent requests for accessing documents or using anatomy model"
+          },
+          "toolCalls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { 
+                  "type": "string",
+                  "enum": ["searchDocuments", "getAssembledContext", "getProfileData", "queryMedicalHistory", "getDocumentById"],
+                  "description": "Name of the MCP tool to call"
+                },
+                "parameters": { 
+                  "type": "object",
+                  "description": "Parameters for the tool call"
+                },
+                "reason": { 
+                  "type": "string",
+                  "description": "Explanation of why this tool is needed"
+                }
+              },
+              "required": ["name", "parameters", "reason"]
+            },
+            "description": "MANDATORY: MCP tools the AI wants to use to answer the question. If user asks about medications, conditions, test results, documents, or any medical information, you MUST include appropriate tool calls here. DO NOT mention accessing data in your response without including the corresponding toolCalls."
           }
         },
         "required": ["response"]

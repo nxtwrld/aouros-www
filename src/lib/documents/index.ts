@@ -28,7 +28,7 @@ import {
 import { base64ToArrayBuffer } from "$lib/arrays";
 import { logger } from "$lib/logging/logger";
 import { profileContextManager } from "$lib/context/integration/profile-context";
-import { ensureDocumentHasEmbeddings } from "./embedding-migration";
+// Removed embedding migration import - now using medical terms classification
 
 const documents: Writable<(DocumentPreload | Document)[]> = writable([]);
 
@@ -214,27 +214,29 @@ export async function loadDocument(
   const loadedDocument = byID[id] as Document;
   if (loadedDocument.content) {
     try {
-      const documentWithEmbeddings = await ensureDocumentHasEmbeddings(loadedDocument);
+      // Medical terms are now generated during LangGraph workflow processing
+      // No need for separate embedding generation step
+      const documentWithTerms = loadedDocument;
       
-      // Update local store with the document that has embeddings
-      if (documentWithEmbeddings !== loadedDocument) {
+      // Document is already processed with medical terms
+      if (documentWithTerms !== loadedDocument) {
         documents.update(docs => {
           const index = docs.findIndex(doc => doc.id === id);
           if (index >= 0) {
-            docs[index] = documentWithEmbeddings;
-            byID[id] = documentWithEmbeddings;
+            docs[index] = documentWithTerms;
+            byID[id] = documentWithTerms;
           }
           return docs;
         });
         updateIndex();
-        return documentWithEmbeddings;
+        return documentWithTerms;
       }
     } catch (error) {
-      logger.documents.warn('Failed to ensure embeddings for document', {
+      logger.documents.warn('Failed to process document with medical terms', {
         documentId: id,
         error: error instanceof Error ? error.message : String(error)
       });
-      // Continue with original document if embedding fails
+      // Continue with original document if medical terms processing fails
     }
   }
 
@@ -420,14 +422,11 @@ export async function addDocument(document: DocumentNew): Promise<Document> {
   // update local documents
   const newDocument = await loadDocument(data.id, profile_id || user_id);
   
-  // Generate embedding for new document if suitable
+  // Add document to context (simplified for medical terms system)
   try {
     await profileContextManager.addDocumentToContext(
       profile_id || user_id,
-      newDocument,
-      {
-        generateEmbedding: true
-      }
+      newDocument
     );
   } catch (error) {
     logger.documents.warn('Failed to add document to context', {
@@ -623,12 +622,8 @@ function deriveMetadata(
   };
   
   // Include embeddings if available from server analysis
-  // Check both document level and metadata level for embeddings
-  const docWithEmbeddings = document as DocumentNew;
-  const embeddings = docWithEmbeddings.embeddings || metadata?.embeddings;
-  if (embeddings) {
-    result.embeddings = embeddings;
-  }
+  // Medical terms are now generated during workflow processing
+  // No need for separate embedding handling
   
   return result;
 }

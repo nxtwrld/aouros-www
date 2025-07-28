@@ -51,7 +51,10 @@ export class ChatClientService {
             documentsContent: context.pageContext.documentsContent 
               ? Array.from(context.pageContext.documentsContent.entries())
               : []
-          }
+          },
+          // Pass enhanced context features
+          assembledContext: context.assembledContext,
+          availableTools: context.availableTools
         }),
         signal: this.abortController.signal
       });

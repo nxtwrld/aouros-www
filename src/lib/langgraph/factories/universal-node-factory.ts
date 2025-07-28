@@ -337,6 +337,18 @@ export const NODE_CONFIGURATIONS: NodeRegistry = {
       reportField: "molecular",
     },
   },
+
+  // Post-Processing Nodes (Priority 10)
+  "medical-terms-generation": {
+    nodeName: "medical-terms-generation",
+    description: "Generate unified medical terms array from analysis results for search optimization",
+    schemaPath: "", // No schema - uses custom processing logic
+    triggers: ["isMedical"], // Always run for medical documents
+    priority: 10, // Run after all other medical processing
+    outputMapping: {
+      reportField: "medicalTermsGeneration",
+    },
+  },
 };
 
 /**
@@ -474,6 +486,14 @@ export class UniversalNodeFactory {
       throw new Error(`Unknown node configuration: ${nodeId}`);
     }
 
+    // Special case: medical-terms-generation uses custom logic instead of schema
+    if (nodeId === "medical-terms-generation") {
+      return async (state: DocumentProcessingState) => {
+        const { medicalTermsGenerationNode } = await import("../nodes/medical-terms-generation");
+        return medicalTermsGenerationNode(state);
+      };
+    }
+
     const nodeInstance = new UniversalProcessingNode(config);
     
     return async (state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> => {
@@ -581,3 +601,6 @@ export const createSocialHistoryNode = () => UniversalNodeFactory.createNode("so
 export const createTreatmentsNode = () => UniversalNodeFactory.createNode("treatments-processing");
 export const createAssessmentNode = () => UniversalNodeFactory.createNode("assessment-processing");
 export const createMolecularNode = () => UniversalNodeFactory.createNode("molecular-processing");
+
+// Post-Processing Nodes (Priority 10)
+export const createMedicalTermsGenerationNode = () => UniversalNodeFactory.createNode("medical-terms-generation");

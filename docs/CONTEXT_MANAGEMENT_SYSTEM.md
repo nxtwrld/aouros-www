@@ -209,6 +209,172 @@ const chatContext = await chatContextService.prepareContextForChat(
 - **Context-Enhanced Prompts**: AI system prompts with medical context
 - **Conversation History**: Persistent context across chat sessions
 
+### 7. Medical Classification Layer 🆕
+
+**Language-Independent Medical Intelligence**: The Medical Classification Layer provides semantic medical concept extraction and categorization that works across multiple languages, enabling precise medical document retrieval regardless of query language.
+
+```
+Document Import → Text Extraction → Medical Classification → Vector Embeddings → Context Storage
+                                          ↓
+Search Query → Query Classification → Category Filtering → Vector Search → Results
+```
+
+**Architecture Components**:
+
+```typescript
+src/lib/medical/
+├── classification-service.ts     # Core medical concept extraction
+├── concept-mappings/            # Multi-language medical dictionaries
+│   ├── laboratory.ts           # Blood tests, lab results, etc.
+│   ├── imaging.ts              # X-ray, MRI, CT scans, etc.
+│   ├── medications.ts          # Drug names, prescriptions, etc.
+│   └── temporal.ts             # "latest", "recent", time patterns
+└── migration-service.ts        # Background classification migration
+```
+
+#### Medical Concept Classification
+
+**Multi-Language Medical Categories**:
+```typescript
+enum MedicalCategory {
+  LABORATORY = "laboratory",        // Blood tests, urinalysis, cultures
+  IMAGING = "imaging",             // X-ray, MRI, CT, ultrasound  
+  MEDICATIONS = "medications",     // Prescriptions, drug therapy
+  CARDIOLOGY = "cardiology",       // ECG, stress tests, cardiac procedures
+  SURGERY = "surgery",             // Surgical procedures, operations
+  CONSULTATION = "consultation",   // Doctor visits, clinical notes
+  EMERGENCY = "emergency",         // ER visits, urgent care
+  PATHOLOGY = "pathology",         // Biopsies, tissue analysis
+  THERAPY = "therapy",             // Physical therapy, rehabilitation
+  ONCOLOGY = "oncology",           // Cancer-related documents
+  MENTAL_HEALTH = "mental_health", // Psychology, psychiatry
+  PEDIATRICS = "pediatrics",       // Children's health
+  OBSTETRICS = "obstetrics"        // Pregnancy, childbirth
+}
+```
+
+**Cross-Language Concept Mapping**:
+```typescript
+// Example: Laboratory results concept mapping
+{
+  conceptId: "lab_results_general",
+  primaryTerm: "laboratory results",
+  category: MedicalCategory.LABORATORY,
+  translations: [
+    { language: "en", terms: ["lab results", "laboratory results", "blood work"] },
+    { language: "cs", terms: ["laboratorní výsledky", "výsledky testů", "krevní testy"] },
+    { language: "de", terms: ["Laborergebnisse", "Laborwerte", "Blutwerte"] }
+  ]
+}
+```
+
+#### Temporal Intelligence
+
+**Time-Aware Medical Queries**:
+```typescript
+interface TemporalInfo {
+  type: "latest" | "recent" | "historical" | "periodic";
+  value: string;                  // Original temporal expression
+  normalizedDate?: Date;          // Parsed absolute date
+  relativeTime?: {                // Relative time information
+    modifier: "latest" | "recent" | "previous";
+    timeframe?: number;           // Days/weeks/months
+    unit?: "days" | "weeks" | "months";
+  };
+}
+
+// Query examples:
+// "poslední laboratorní výsledky" → { type: "latest", category: "laboratory" }
+// "recent blood tests" → { type: "recent", category: "laboratory" }
+// "letzte Röntgenbilder" → { type: "latest", category: "imaging" }
+```
+
+#### Classification-Based Search
+
+**Primary Search Method**: Fast category-based filtering before vector search:
+
+```typescript
+async function classificationBasedSearch(query: ProcessedMedicalQuery, profileId: string) {
+  // 1. Extract medical concepts from query
+  const queryClassification = await medicalClassificationService.classifyQuery(
+    "poslední laboratorní výsledky", "cs"
+  );
+  // Result: { categories: ["laboratory"], temporal: { type: "latest" } }
+  
+  // 2. Filter documents by medical categories (fast)
+  const categoryMatches = context.classificationIndex.get("laboratory");
+  // Returns: Set of document IDs with laboratory classification
+  
+  // 3. Apply temporal filtering for "latest" requests
+  const temporalResults = applyTemporalFilter(categoryMatches, queryClassification.temporal);
+  
+  // 4. Score and rank results
+  return scoreAndRankResults(temporalResults, queryClassification);
+}
+```
+
+#### Integration Points
+
+**Document Import Pipeline Enhancement**:
+```typescript
+// LangGraph node enhancement
+export async function medicalClassificationNode(state: DocumentProcessingState) {
+  const classification = await medicalClassificationService.classifyDocument(
+    state.text, 
+    state.language || 'en'
+  );
+  
+  return {
+    medicalClassification: classification,
+    // Classification passed to embedding generation node
+  };
+}
+```
+
+**Client-Side Document Migration**:
+```typescript
+// Automatic classification when documents are accessed
+export async function getDocument(documentId: string): Promise<Document | null> {
+  const document = await loadDocument(documentId);
+  
+  if (document && !document.medicalClassification) {
+    // Background classification for existing documents
+    await migrateDocumentClassification(document);
+  }
+  
+  return document;
+}
+```
+
+**Enhanced Search Architecture**:
+```typescript
+// Multi-modal search: Classification + Vector similarity
+async searchDocuments(params: SearchParams, profileId: string) {
+  // 1. Classify search query
+  const processedQuery = await medicalClassificationService.classifyQuery(
+    params.query, params.language || 'en'
+  );
+  
+  // 2. Classification-based filtering (primary)
+  const classificationResults = await classificationBasedSearch(processedQuery, profileId);
+  
+  // 3. Vector similarity search (fallback)
+  if (classificationResults.length === 0) {
+    return await vectorBasedSearch(params, profileId);
+  }
+  
+  return formatSearchResults(classificationResults);
+}
+```
+
+**Key Benefits**:
+- ✅ **Language Independence**: Czech query finds German/English documents
+- ✅ **Medical Precision**: "laboratory results" matches regardless of language
+- ✅ **Temporal Understanding**: "latest" properly prioritizes recent documents  
+- ✅ **Fast Performance**: Category filtering before expensive vector search
+- ✅ **Explainable Results**: Clear reasoning for why documents matched
+- ✅ **Automatic Migration**: Existing documents classified on access
+
 ## Implementation Details
 
 ### 1. Document Processing Pipeline

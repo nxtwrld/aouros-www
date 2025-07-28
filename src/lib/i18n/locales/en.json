@@ -97,6 +97,33 @@
       "greetings": {
         "patient": "Hello! I'm here to help you understand your medical information and support you through your healthcare journey. Feel free to ask me about your health records, symptoms, or any questions you might have about your care.",
         "clinical": "Hello! I'm here to assist with clinical analysis of {profileName}'s medical profile. I can help analyze patterns, suggest differential considerations, and provide insights based on the available medical data."
+      },
+      "tool": {
+        "searchDocuments": {
+          "prompt": "AI wants to search your medical documents for: {query}"
+        },
+        "getProfileData": {
+          "prompt": "AI wants to access your basic health profile information"
+        },
+        "queryMedicalHistory": {
+          "prompt": "AI wants to query your {category} history"
+        },
+        "getAssembledContext": {
+          "prompt": "AI wants to gather comprehensive medical context about: {query}"
+        },
+        "getDocumentById": {
+          "prompt": "AI wants to access document: {documentTitle}"
+        },
+        "approve": "Allow Access",
+        "deny": "Deny Access",
+        "security": {
+          "low": "Basic Access",
+          "medium": "Medical Data",
+          "high": "Sensitive Data"
+        },
+        "executed": "{toolName} executed successfully",
+        "declined": "{toolName} access was denied",
+        "error": "{toolName} failed: {error}"
       }
     },
     "onboarding": {

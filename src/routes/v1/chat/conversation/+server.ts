@@ -4,8 +4,8 @@ import type { Content } from '$lib/ai/types.d';
 import { generateId } from '$lib/utils/id';
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { chatConfigManager } from '$lib/config/chat-config';
-import { chatContextService } from '$lib/context/integration/chat-service';
-import type { ChatContextResult } from '$lib/context/integration/chat-service';
+import { serverChatContextService } from '$lib/context/integration/server/chat-context-server';
+import type { ChatContextResult } from '$lib/context/integration/shared/chat-context-base';
 
 export const POST: RequestHandler = async ({ request, locals: { safeGetSession } }) => {
   // Check authentication
@@ -105,7 +105,7 @@ async function processAIRequest(
           .map((msg: any) => `${msg.role}: ${msg.content}`)
           .join('\n\n') + `\n\nuser: ${userMessage}`;
         
-        contextResult = await chatContextService.prepareContextForChat(
+        contextResult = await serverChatContextService.prepareContextForChat(
           conversationContext,
           {
             profileId,
@@ -125,6 +125,10 @@ async function processAIRequest(
     // Use provided context or fallback to prepared context
     const finalContext = assembledContext || contextResult?.assembledContext;
     const finalTools = availableTools || contextResult?.availableTools || [];
+    
+    // Debug logging
+    console.log('[MCP Debug] Available tools:', finalTools);
+    console.log('[MCP Debug] Has assembled context:', !!finalContext);
     
     // Build system prompt with both document context (signals) and assembled context
     const systemPrompt = chatConfigManager.buildSystemPrompt(mode, language, pageContext, finalContext);
@@ -168,13 +172,36 @@ async function processAIRequest(
     // Phase 2: Get structured data using the full response
     const content: Content[] = [
       { type: 'text', text: systemPrompt },
-      ...conversationHistory.slice(-conversationConfig.maxMessages).map(msg => ({
-        type: 'text' as const,
-        text: `${msg.role}: ${msg.content}`
-      })),
+    ];
+    
+    // Add assembled context if available
+    if (finalContext) {
+      content.push({
+        type: 'text',
+        text: formatAssembledContext(finalContext)
+      });
+    }
+    
+    // Add available tools information
+    if (finalTools && finalTools.length > 0) {
+      content.push({
+        type: 'text',
+        text: formatAvailableTools(finalTools)
+      });
+      console.log('[MCP Debug] Tool instructions added to content');
+    }
+    
+    // Add conversation history
+    content.push(...conversationHistory.slice(-conversationConfig.maxMessages).map(msg => ({
+      type: 'text' as const,
+      text: `${msg.role}: ${msg.content}`
+    })));
+    
+    // Add current exchange
+    content.push(
       { type: 'text', text: `user: ${userMessage}` },
       { type: 'text', text: `assistant: ${fullResponse}` }
-    ];
+    );
 
     const schema = chatConfigManager.createResponseSchema(mode);
     
@@ -190,6 +217,47 @@ async function processAIRequest(
       }
     );
 
+    // Debug: Log what we got back from the AI
+    console.log('🔍 [Tool Debug] Structured data from AI:', {
+      hasToolCalls: !!(structuredData.toolCalls),
+      toolCallsLength: structuredData.toolCalls?.length || 0,
+      toolCalls: structuredData.toolCalls,
+      anatomyReferences: structuredData.anatomyReferences?.length || 0,
+      documentReferences: structuredData.documentReferences?.length || 0,
+      response: structuredData.response?.substring(0, 100) + '...'
+    });
+
+    // Validate that AI is using tools when it should
+    const toolMentionKeywords = [
+      'check your', 'look at your', 'access your', 'review your', 'examine your',
+      'search for', 'find information', 'retrieve data', 'get your medical',
+      'medication', 'condition', 'test result', 'lab result', 'medical history'
+    ];
+    
+    const mentionsTools = toolMentionKeywords.some(keyword => 
+      fullResponse.toLowerCase().includes(keyword.toLowerCase())
+    );
+    
+    const hasToolCalls = structuredData.toolCalls && structuredData.toolCalls.length > 0;
+    const hasAvailableTools = finalTools && finalTools.length > 0;
+    
+    // Log validation results
+    console.log('🔍 [Tool Validation] Analysis:', {
+      mentionsTools,
+      hasToolCalls,
+      hasAvailableTools,
+      responseLength: fullResponse.length,
+      responseStart: fullResponse.substring(0, 150) + '...'
+    });
+
+    if (mentionsTools && !hasToolCalls && hasAvailableTools) {
+      console.warn('⚠️ [Tool Validation] AI mentioned accessing medical data but did not generate toolCalls', {
+        responseExcerpt: fullResponse.substring(0, 200),
+        availableTools: finalTools,
+        mentionedKeywords: toolMentionKeywords.filter(k => fullResponse.toLowerCase().includes(k.toLowerCase()))
+      });
+    }
+
     // Send the structured data as metadata with context information
     const metadata = {
       type: 'metadata',
@@ -197,13 +265,20 @@ async function processAIRequest(
         anatomyReferences: structuredData.anatomyReferences || [],
         documentReferences: structuredData.documentReferences || [],
         consentRequests: structuredData.consentRequests || [],
+        toolCalls: structuredData.toolCalls || [],
         tokenUsage: tokenUsage.total,
         mode,
         // Include context metadata
         contextAvailable: !!(finalContext || contextResult),
         documentCount: contextResult?.documentCount || 0,
         contextConfidence: contextResult?.confidence || 0,
-        availableTools: finalTools
+        availableTools: finalTools,
+        // Debug info
+        debugInfo: {
+          mentionsTools,
+          hasToolCalls,
+          hasAvailableTools
+        }
       }
     };
 
@@ -233,4 +308,116 @@ async function processAIRequest(
 
 // All prompt building, schema creation, and utility functions are now handled by chatConfigManager
 // Configuration is loaded from config/chat.json and managed by src/lib/config/chat-config.ts
+
+/**
+ * Format assembled context for AI consumption
+ */
+function formatAssembledContext(assembledContext: any): string {
+  if (!assembledContext) {
+    return 'No medical context available for this conversation.';
+  }
+  
+  const sections = [];
+  
+  // Summary
+  if (assembledContext.summary) {
+    sections.push(`**Medical Context Summary:**\n${assembledContext.summary}`);
+  }
+  
+  // Key points with source document IDs
+  if (assembledContext.keyPoints && assembledContext.keyPoints.length > 0) {
+    const keyPointsList = assembledContext.keyPoints
+      .slice(0, 5) // Limit to top 5 points
+      .map((point: any) => `- ${point.text} (${point.type}, ${point.date || 'unknown date'}, from document: ${point.sourceDocumentId})`)
+      .join('\n');
+    sections.push(`**Key Medical Points:**\n${keyPointsList}`);
+  }
+  
+  // Relevant documents with IDs
+  if (assembledContext.relevantDocuments && assembledContext.relevantDocuments.length > 0) {
+    const documentsList = assembledContext.relevantDocuments
+      .slice(0, 5) // Limit to top 5 documents
+      .map((doc: any) => `- Document ID: ${doc.documentId} (${doc.type}, ${doc.date}) - ${doc.excerpt}`)
+      .join('\n');
+    sections.push(`**Available Documents:**\n${documentsList}`);
+  }
+  
+  // Recent changes
+  if (assembledContext.medicalContext?.recentChanges?.length) {
+    const recentList = assembledContext.medicalContext.recentChanges
+      .slice(0, 3)
+      .map((change: any) => `- ${change.date}: ${change.description}`)
+      .join('\n');
+    sections.push(`**Recent Medical Changes:**\n${recentList}`);
+  }
+  
+  return sections.join('\n\n');
+}
+
+/**
+ * Format available MCP tools for AI prompt
+ */
+function formatAvailableTools(availableTools: string[]): string {
+  if (!availableTools || availableTools.length === 0) {
+    return 'No medical data access tools are currently available.';
+  }
+  
+  const toolDescriptions: Record<string, string> = {
+    searchDocuments: 'Search patient documents using semantic similarity',
+    getAssembledContext: 'Get comprehensive assembled medical context',
+    getProfileData: 'Access patient profile and basic health information',
+    queryMedicalHistory: 'Query specific medical history (medications, conditions, procedures, allergies)',
+    getDocumentById: 'Retrieve specific document by ID'
+  };
+  
+  const toolsList = availableTools
+    .map(tool => `- **${tool}**: ${toolDescriptions[tool] || 'Medical data access tool'}`)
+    .join('\n');
+  
+  return `**🚨 CRITICAL: You have access to medical data tools. YOU MUST USE THEM! 🚨**
+
+**Available Medical Data Tools:**
+${toolsList}
+
+**⚠️ MANDATORY INSTRUCTIONS:**
+- When a user asks about their medications, conditions, test results, or any medical information, you MUST use these tools
+- DO NOT say "I don't have access" or "no information available" without FIRST attempting to use the relevant tools
+- DO NOT apologize for not having information - instead, USE THE TOOLS to get the information
+- If you mention accessing or checking medical data in your response, you MUST include toolCalls
+
+**🔧 How to use tools - REQUIRED FORMAT:**
+You MUST include a toolCalls array in your structured response with:
+- name: The exact tool name from the list above
+- parameters: Required parameters for the tool
+- reason: Clear explanation of why you need this information
+
+**❌ WRONG - Do not do this:**
+"Let me check your medications for you..." (without toolCalls)
+
+**✅ CORRECT - Always do this:**
+"Let me check your medications for you..." + include toolCalls: [{"name": "queryMedicalHistory", "parameters": {"category": "medications"}, "reason": "User asked about their current medications"}]
+
+**Examples of when to use each tool:**
+- User asks "What medications am I taking?" → Use queryMedicalHistory with { "category": "medications" }
+- User asks "What do my lab results show?" → Use searchDocuments with { "query": "lab results blood test", "limit": 5 }
+- User asks "Tell me about my health" → Use getProfileData with {}
+- User asks "Do I have diabetes?" → Use queryMedicalHistory with { "category": "conditions" }
+- User asks about specific document → Use getDocumentById with { "documentId": "the_id" }
+
+**Tool parameter examples:**
+- searchDocuments: { "query": "diabetes medications", "limit": 5 }
+- getAssembledContext: { "query": "recent lab results", "maxTokens": 1000 }
+- getProfileData: {} (no parameters needed)
+- queryMedicalHistory: { "category": "medications" } (categories: medications, conditions, procedures, allergies)
+- getDocumentById: { "documentId": "doc_123" } (use EXACT document IDs provided in context or user message)
+
+**CRITICAL PARAMETER REQUIREMENTS:**
+- ALWAYS include a "parameters" object in your toolCalls
+- For getDocumentById: parameters MUST contain {"documentId": "exact_id_from_context"}
+- For queryMedicalHistory: parameters MUST contain {"category": "medications|conditions|procedures|allergies"}
+- For searchDocuments: parameters MUST contain {"query": "search terms", "limit": 5}
+- NEVER leave parameters empty or undefined
+
+**Remember:** The user will approve each tool use. Always attempt to use tools when asked about medical information.`;
+}
 

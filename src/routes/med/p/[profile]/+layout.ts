@@ -33,12 +33,11 @@ export const load: LayoutLoad = async ({ parent, params, fetch }) => {
 
   const documents = await importDocuments(await documentsResponse.json());
 
-  // Initialize profile context with the loaded documents
+  // Initialize profile context with simplified medical terms approach
   if (documents.length > 0) {
     try {
-      await profileContextManager.initializeWithDocuments(
+      await profileContextManager.initializeProfileContext(
         params.profile,
-        documents,
         {
           onProgress: (status, progress) => {
             console.log(`Profile context init: ${status} ${progress ? `(${progress}%)` : ''}`);

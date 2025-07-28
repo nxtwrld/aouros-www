@@ -1,27 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)",
-      "Bash(mkdir:*)",
-      "Bash(grep:*)",
-      "Bash(npm run build:*)"
-      "Bash(find:*)"
+      "Bash(grep:*)"
     ],
     "deny": []
-  },
-  "enableAllProjectMcpServers": true,
-  "mcpServers": {
-    "supabase": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@supabase/mcp-server-supabase@latest",
-        "--read-only",
-        "--project-ref=lzvphtdhhpbpurqojqrt"
-      ],
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_e29325256f9886419522b9f8fdfc5545a9f9ca4c"
-      }
-    }
   }
 }

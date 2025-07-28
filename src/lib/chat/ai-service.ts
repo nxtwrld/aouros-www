@@ -217,29 +217,52 @@ CLINICAL FOCUS:
             },
             description: 'Consent requests for accessing documents or using anatomy model',
           },
+          toolCalls: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { 
+                  type: 'string',
+                  enum: ['searchDocuments', 'getAssembledContext', 'getProfileData', 'queryMedicalHistory', 'getDocumentById'],
+                  description: 'Name of the MCP tool to call'
+                },
+                parameters: { 
+                  type: 'object',
+                  description: 'Parameters for the tool call'
+                },
+                reason: { 
+                  type: 'string',
+                  description: 'Explanation of why this tool is needed'
+                }
+              },
+              required: ['name', 'parameters', 'reason']
+            },
+            description: 'MCP tools the AI wants to use to answer the question'
+          },
         },
         required: ['response'],
       },
     };
 
     if (mode === 'patient') {
-      baseSchema.parameters.properties.supportType = {
+      (baseSchema.parameters.properties as any).supportType = {
         type: 'string',
         enum: ['educational', 'emotional', 'preparatory'],
         description: 'Type of support provided',
       };
-      baseSchema.parameters.properties.copingStrategies = {
+      (baseSchema.parameters.properties as any).copingStrategies = {
         type: 'array',
         items: { type: 'string' },
         description: 'Coping strategies suggested',
       };
     } else {
-      baseSchema.parameters.properties.clinicalInsights = {
+      (baseSchema.parameters.properties as any).clinicalInsights = {
         type: 'array',
         items: { type: 'string' },
         description: 'Clinical insights provided',
       };
-      baseSchema.parameters.properties.differentialConsiderations = {
+      (baseSchema.parameters.properties as any).differentialConsiderations = {
         type: 'array',
         items: { type: 'string' },
         description: 'Differential diagnostic considerations',
@@ -309,7 +332,20 @@ CLINICAL FOCUS:
       .map(tool => `- **${tool}**: ${toolDescriptions[tool] || 'Medical data access tool'}`)
       .join('\n');
     
-    return `**Available Medical Data Tools:**\n\n${toolsList}\n\nUse these tools when you need specific medical information about the patient. Always explain what information you're looking for and why it's relevant to the conversation.`;
+    return `**Available Medical Data Tools:**\n\n${toolsList}\n\n**How to use tools:**
+When you need medical information to answer a question, request to use these tools by including a toolCalls array in your response. Each tool request must include:
+- name: The exact tool name from the list above
+- parameters: Required parameters for the tool (see examples below)
+- reason: Clear explanation of why you need this information
+
+**Tool parameter examples:**
+- searchDocuments: { "query": "diabetes medications", "limit": 5 }
+- getAssembledContext: { "query": "recent lab results", "maxTokens": 1000 }
+- getProfileData: {} (no parameters needed)
+- queryMedicalHistory: { "category": "medications" } (categories: medications, conditions, procedures, allergies)
+- getDocumentById: { "documentId": "doc_123" }
+
+**Important:** The user will be asked to approve each tool use before execution. Only request tools when necessary to answer the user's question accurately.`;
   }
   
   /**

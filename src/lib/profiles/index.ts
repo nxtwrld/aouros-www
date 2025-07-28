@@ -87,11 +87,10 @@ export async function loadProfiles(
           // map profile data
           const profileData = mapProfileData(d, roots);
           
-          // Initialize context for this profile with already loaded documents
+          // Initialize context for this profile with simplified medical terms approach
           try {
-            await profileContextManager.initializeWithDocuments(
+            await profileContextManager.initializeProfileContext(
               d.profiles.id,
-              roots,
               {
                 onProgress: (status, progress) => {
                   console.log(`Context init for ${d.profiles.id}: ${status} ${progress ? `(${progress}%)` : ''}`);

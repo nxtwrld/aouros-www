@@ -15,6 +15,12 @@ export enum DocumentState {
   CANCELED = "CANCELED",
 }
 
+export enum TemporalType {
+  LATEST = "latest",
+  RECENT = "recent", 
+  HISTORICAL = "historical"
+}
+
 export interface DocumentPreload {
   id: string;
   key: string;
@@ -29,12 +35,9 @@ export interface DocumentPreload {
   author_id?: string;
   owner_id: string;
   
-  // Embedding fields for context system
-  embedding_summary?: string;        // Plain text summary for embedding
-  embedding_vector?: string;         // Encrypted embedding vector
-  embedding_provider?: string;       // Provider used ('openai', 'local', etc.)
-  embedding_model?: string;          // Model version
-  embedding_timestamp?: string;      // When embedding was generated
+  // Unified medical terms for search
+  medicalTerms?: string[];           // Single array: categories + bodyParts + diagnoses + temporal + procedures
+  temporalType?: TemporalType;       // Simple temporal classification
 }
 
 export interface DocumentEncrypted {
@@ -68,14 +71,11 @@ export interface Document {
   attachments: Attachment[];
   author_id?: string;
   owner_id: string;
-  
-  // Embedding fields for context system
-  embedding_summary?: string;        // Plain text summary for embedding
-  embedding_vector?: string;         // Encrypted embedding vector
-  embedding_provider?: string;       // Provider used ('openai', 'local', etc.)
-  embedding_model?: string;          // Model version
-  embedding_timestamp?: string;      // When embedding was generated
   created_at?: string;              // Document creation timestamp
+  
+  // Unified medical terms for search
+  medicalTerms?: string[];           // Single array: categories + bodyParts + diagnoses + temporal + procedures
+  temporalType?: TemporalType;       // Simple temporal classification
 }
 
 export interface DocumentNew {
@@ -90,14 +90,9 @@ export interface DocumentNew {
   };
   attachments?: Attachment[];
   user_id?: string;
-  // Optional embeddings from server analysis
-  embeddings?: {
-    summary: string;
-    vector: string;
-    provider: string;
-    model: string;
-    timestamp: string;
-  };
+  // Optional medical terms from analysis
+  medicalTerms?: string[];
+  temporalType?: TemporalType;
 }
 
 export interface Attachment {

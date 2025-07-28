@@ -73,13 +73,13 @@ export async function performSystemHealthCheck(): Promise<SystemHealthReport> {
   let criticalFailures = 0;
   let warnings = 0;
 
-  // Check 1: Context Initialization Module
+  // Check 1: Profile Context Manager (simplified medical terms system)
   try {
-    const contextInit = await import('../client-database/initialization');
+    const { profileContextManager } = await import('../profile-context');
     const contextInitCheck = checkServiceMethods(
-      contextInit.contextInitializer,
-      ['initialize', 'isInitialized'],
-      'Context Initializer'
+      profileContextManager,
+      ['initializeProfileContext', 'isContextReady'],
+      'Profile Context Manager'
     );
     components.push(contextInitCheck);
     if (!contextInitCheck.available) criticalFailures++;
