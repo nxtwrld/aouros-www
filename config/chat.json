@@ -114,7 +114,49 @@
                 },
                 "parameters": { 
                   "type": "object",
-                  "description": "REQUIRED: Parameters object for the tool"
+                  "properties": {
+                    "terms": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "REQUIRED: Array of specific medical terms in ENGLISH ONLY. For searchDocuments tool, this is MANDATORY. Examples: ['blood', 'glucose', 'latest'], ['heart', 'cardiac', 'recent'], ['medication', 'prescription'], ['laboratory', 'results']"
+                    },
+                    "limit": {
+                      "type": "number",
+                      "description": "Maximum number of documents to return (default: 10)",
+                      "minimum": 1,
+                      "maximum": 50
+                    },
+                    "threshold": {
+                      "type": "number", 
+                      "description": "Minimum relevance threshold (0.0-1.0, default: 0.6)",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "includeContent": {
+                      "type": "boolean",
+                      "description": "Whether to include full document content for highly relevant results (default: false)"
+                    },
+                    "documentTypes": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Filter by document types (e.g., 'consultation', 'lab_result', 'prescription')"
+                    },
+                    "queryType": {
+                      "type": "string", 
+                      "enum": ["medications", "conditions", "procedures", "allergies"],
+                      "description": "For queryMedicalHistory tool - type of medical information to query"
+                    },
+                    "conversationContext": {
+                      "type": "string",
+                      "description": "For getAssembledContext tool - conversation context to analyze"
+                    },
+                    "documentId": {
+                      "type": "string",
+                      "description": "For getDocumentById tool - exact document ID to retrieve"
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": true
                 },
                 "reason": { 
                   "type": "string",
@@ -186,7 +228,49 @@
                 },
                 "parameters": { 
                   "type": "object",
-                  "description": "REQUIRED: Parameters object for the tool"
+                  "properties": {
+                    "terms": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "REQUIRED: Array of specific medical terms in ENGLISH ONLY for clinical analysis. For searchDocuments tool, this is MANDATORY. Examples: ['laboratory', 'glucose', 'latest'], ['imaging', 'mri', 'heart'], ['pathology', 'biopsy', 'results']"
+                    },
+                    "limit": {
+                      "type": "number",
+                      "description": "Maximum number of documents to return (default: 10)",
+                      "minimum": 1,
+                      "maximum": 50
+                    },
+                    "threshold": {
+                      "type": "number", 
+                      "description": "Minimum relevance threshold (0.0-1.0, default: 0.6)",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "includeContent": {
+                      "type": "boolean",
+                      "description": "Whether to include full document content for highly relevant results (default: false)"
+                    },
+                    "documentTypes": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Filter by document types (e.g., 'consultation', 'lab_result', 'prescription')"
+                    },
+                    "queryType": {
+                      "type": "string", 
+                      "enum": ["medications", "conditions", "procedures", "allergies"],
+                      "description": "For queryMedicalHistory tool - type of medical information to query"
+                    },
+                    "conversationContext": {
+                      "type": "string",
+                      "description": "For getAssembledContext tool - conversation context to analyze"
+                    },
+                    "documentId": {
+                      "type": "string",
+                      "description": "For getDocumentById tool - exact document ID to retrieve"
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": true
                 },
                 "reason": { 
                   "type": "string",
@@ -265,7 +349,36 @@
                 },
                 "parameters": { 
                   "type": "object",
-                  "description": "Parameters for the tool call"
+                  "properties": {
+                    "terms": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "REQUIRED: Array of specific medical terms in ENGLISH ONLY. For searchDocuments tool, this is MANDATORY. Convert user queries to English medical terms. Examples: Czech 'laboratorní výsledky' → English ['laboratory', 'results', 'latest']. Use terms like: 'laboratory', 'imaging', 'medications', 'cardiology', 'surgery', 'consultation', 'emergency', 'pathology', 'therapy', 'blood', 'glucose', 'cholesterol', 'heart', 'cardiac', 'ecg', 'x-ray', 'mri', 'ct', 'ultrasound', 'prescription', 'medication', 'latest', 'recent', 'historical'"
+                    },
+                    "limit": {
+                      "type": "number",
+                      "description": "Maximum number of documents to return (default: 10)",
+                      "minimum": 1,
+                      "maximum": 50
+                    },
+                    "threshold": {
+                      "type": "number", 
+                      "description": "Minimum relevance threshold (0.0-1.0, default: 0.6)",
+                      "minimum": 0.0,
+                      "maximum": 1.0
+                    },
+                    "includeContent": {
+                      "type": "boolean",
+                      "description": "Whether to include full document content for highly relevant results (default: false)"
+                    },
+                    "documentTypes": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Filter by document types (e.g., 'consultation', 'lab_result', 'prescription')"
+                    }
+                  },
+                  "required": ["terms"],
+                  "additionalProperties": true
                 },
                 "reason": { 
                   "type": "string",

@@ -4,6 +4,7 @@ import type { Content } from '$lib/ai/types.d';
 import AnatomyIntegration from './anatomy-integration';
 import { generateId } from '$lib/utils/id';
 import { chatContextService } from '$lib/context/integration/chat-service';
+import { chatConfigManager } from '$lib/config/chat-config';
 
 export class ChatAIService {
   private tokenUsage = { total: 0 };
@@ -23,8 +24,8 @@ export class ChatAIService {
       // Create content for AI processing
       const content = this.buildContent(userMessage, context, conversationHistory);
       
-      // Create schema based on mode
-      const schema = this.createResponseSchema(context.mode);
+      // Create schema based on mode using ChatConfigManager
+      const schema = chatConfigManager.createResponseSchema(context.mode);
       
       // Choose flow type based on mode
       const flowType = context.mode === 'patient' ? 'medical_analysis' : 'medical_analysis';
@@ -181,96 +182,6 @@ CLINICAL FOCUS:
     }
   }
 
-  /**
-   * Create response schema based on mode
-   */
-  private createResponseSchema(mode: ChatMode) {
-    const baseSchema = {
-      name: 'chat_response',
-      description: 'AI medical chat response',
-      parameters: {
-        type: 'object',
-        properties: {
-          response: {
-            type: 'string',
-            description: 'Main response to user message',
-          },
-          anatomyReferences: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Body parts mentioned that could be visualized',
-          },
-          documentReferences: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Document IDs referenced in response',
-          },
-          consentRequests: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                type: { type: 'string', enum: ['document_access', 'anatomy_integration'] },
-                message: { type: 'string' },
-                reason: { type: 'string' },
-              },
-            },
-            description: 'Consent requests for accessing documents or using anatomy model',
-          },
-          toolCalls: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { 
-                  type: 'string',
-                  enum: ['searchDocuments', 'getAssembledContext', 'getProfileData', 'queryMedicalHistory', 'getDocumentById'],
-                  description: 'Name of the MCP tool to call'
-                },
-                parameters: { 
-                  type: 'object',
-                  description: 'Parameters for the tool call'
-                },
-                reason: { 
-                  type: 'string',
-                  description: 'Explanation of why this tool is needed'
-                }
-              },
-              required: ['name', 'parameters', 'reason']
-            },
-            description: 'MCP tools the AI wants to use to answer the question'
-          },
-        },
-        required: ['response'],
-      },
-    };
-
-    if (mode === 'patient') {
-      (baseSchema.parameters.properties as any).supportType = {
-        type: 'string',
-        enum: ['educational', 'emotional', 'preparatory'],
-        description: 'Type of support provided',
-      };
-      (baseSchema.parameters.properties as any).copingStrategies = {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Coping strategies suggested',
-      };
-    } else {
-      (baseSchema.parameters.properties as any).clinicalInsights = {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Clinical insights provided',
-      };
-      (baseSchema.parameters.properties as any).differentialConsiderations = {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Differential diagnostic considerations',
-      };
-    }
-
-    return baseSchema;
-  }
 
   /**
    * Format assembled context for AI prompt
@@ -339,10 +250,10 @@ When you need medical information to answer a question, request to use these too
 - reason: Clear explanation of why you need this information
 
 **Tool parameter examples:**
-- searchDocuments: { "query": "diabetes medications", "limit": 5 }
-- getAssembledContext: { "query": "recent lab results", "maxTokens": 1000 }
+- searchDocuments: { "terms": ["diabetes", "medications"], "limit": 5 }
+- getAssembledContext: { "conversationContext": "recent lab results", "maxTokens": 1000 }
 - getProfileData: {} (no parameters needed)
-- queryMedicalHistory: { "category": "medications" } (categories: medications, conditions, procedures, allergies)
+- queryMedicalHistory: { "queryType": "medications" } (queryType: medications, conditions, procedures, allergies)
 - getDocumentById: { "documentId": "doc_123" }
 
 **Important:** The user will be asked to approve each tool use before execution. Only request tools when necessary to answer the user's question accurately.`;

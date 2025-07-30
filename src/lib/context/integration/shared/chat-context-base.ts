@@ -34,11 +34,6 @@ export interface ChatContextResult {
 
 export abstract class BaseChatContextService {
   
-  /**
-   * Abstract method for generating query embeddings
-   * Must be implemented by client/server specific classes
-   */
-  protected abstract generateQueryEmbedding(query: string): Promise<Float32Array>;
 
   /**
    * Prepare context for chat conversation
@@ -57,27 +52,10 @@ export abstract class BaseChatContextService {
         return this.createEmptyContextResult();
       }
       
-      // Generate embedding for user message
-      let messageEmbedding: Float32Array;
-      try {
-        messageEmbedding = await this.generateQueryEmbedding(userMessage);
-      } catch (error) {
-        logger.namespace('ChatContext').error('Failed to generate query embedding', {
-          error: error instanceof Error ? error.message : String(error)
-        });
-        // Return context result without embedding-based search
-        return this.createEmptyContextResult();
-      }
-      
-      // Search for relevant context
-      const searchResults = await contextData.search.searchSimilar(
-        messageEmbedding,
-        {
-          maxResults: 20,
-          threshold: options.contextThreshold || 0.6,
-          includeMetadata: true
-        }
-      );
+      // Use term-based search through MCP tools instead of embeddings
+      // Note: This base class no longer uses embedding-based search
+      // Context is now retrieved through MCP tools in chat implementations
+      const searchResults: any[] = [];
       
       // Filter by document types if specified
       let filteredResults = searchResults;
@@ -146,12 +124,39 @@ export abstract class BaseChatContextService {
    */
   getMCPToolsForChat(profileId: string) {
     return {
-      searchDocuments: async (query: string, options: any = {}) => {
-        // Combine query and options into params object as expected by MCP tools
-        const params = {
-          query,
-          ...options
-        };
+      searchDocuments: async (params: {
+        terms: string[];
+        limit?: number;
+        threshold?: number;
+        includeContent?: boolean;
+        documentTypes?: string[];
+      }) => {
+        // Log the AI-provided parameters for debugging
+        logger.namespace('ChatContextBase').info('AI calling searchDocuments with params', {
+          profileId,
+          params,
+          termsCount: params.terms?.length || 0,
+          hasTerms: !!(params.terms && Array.isArray(params.terms) && params.terms.length > 0)
+        });
+
+        // Validate that AI provided terms array as expected
+        if (!params.terms || !Array.isArray(params.terms) || params.terms.length === 0) {
+          logger.namespace('ChatContextBase').error('AI called searchDocuments without proper terms array', {
+            profileId,
+            params,
+            termsReceived: params.terms
+          });
+          
+          return {
+            content: [{
+              type: 'text',
+              text: 'Error: Search requires medical terms array. Please provide specific medical terms in English.'
+            }],
+            isError: true
+          };
+        }
+
+        // Call MCP tool directly with the terms array interface
         return await mcpTools.searchDocuments(profileId, params);
       },
       

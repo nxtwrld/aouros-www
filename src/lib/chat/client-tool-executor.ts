@@ -258,56 +258,26 @@ export class ClientToolExecutor {
   }
 
   /**
-   * Search documents using existing context service
+   * Search documents using medical terms array - AI should provide terms directly
    */
   private async searchDocuments(parameters: any): Promise<ToolCallResult> {
-    // Enhanced parameter extraction - check multiple possible locations and formats
-    let query = "";
-
-    // Try different parameter formats that AI might use
-    if (parameters) {
-      query =
-        parameters.query ||
-        parameters.q ||
-        parameters.searchQuery ||
-        parameters.searchTerm ||
-        parameters.text ||
-        parameters.input ||
-        "";
-
-      // If parameters is a string, use it directly as query
-      if (typeof parameters === "string") {
-        query = parameters;
-      }
-
-      // If no query found but we have a single property, try using its value
-      if (!query && typeof parameters === "object") {
-        const keys = Object.keys(parameters);
-        if (keys.length === 1 && typeof parameters[keys[0]] === "string") {
-          query = parameters[keys[0]];
-        }
-      }
-    }
-
-    log.info("Search documents request", {
+    log.info("Search documents request - checking AI-provided parameters", {
       profileId: this.profileId,
-      extractedQuery: query,
       originalParameters: parameters,
       parameterType: typeof parameters,
       parameterKeys:
         parameters && typeof parameters === "object"
           ? Object.keys(parameters)
           : [],
-      hasQuery: !!query,
+      hasTermsArray: !!(parameters?.terms && Array.isArray(parameters.terms)),
     });
 
-    // Validate query
-    if (!query || typeof query !== "string" || query.trim() === "") {
-      const errorMsg = `Search query is required and cannot be empty. Received parameters: ${JSON.stringify(parameters)}`;
-      log.error("Invalid search parameters", {
+    // AI should provide terms array directly as per MCP tool description
+    if (!parameters?.terms || !Array.isArray(parameters.terms)) {
+      const errorMsg = `AI must provide medical terms as array. Expected: { terms: string[] }. Received: ${JSON.stringify(parameters)}`;
+      log.error("AI called searchDocuments without terms array", {
         profileId: this.profileId,
         parameters,
-        extractedQuery: query,
         error: errorMsg,
       });
 
@@ -319,33 +289,62 @@ export class ClientToolExecutor {
       };
     }
 
-    const cleanQuery = query.trim();
+    // Filter and validate terms
+    const terms = parameters.terms.filter((term: any) => 
+      typeof term === 'string' && term.trim().length > 0
+    );
+
+    log.info("AI provided medical terms for search", {
+      profileId: this.profileId,
+      aiProvidedTerms: parameters.terms,
+      validTermsCount: terms.length,
+      filteredTerms: terms,
+    });
+
+    // Validate that we have valid terms
+    if (terms.length === 0) {
+      const errorMsg = `No valid medical terms provided. AI provided: ${JSON.stringify(parameters.terms)}`;
+      log.error("No valid terms after filtering", {
+        profileId: this.profileId,
+        aiProvidedTerms: parameters.terms,
+        error: errorMsg,
+      });
+
+      return {
+        toolName: "searchDocuments",
+        success: false,
+        error: errorMsg,
+        timestamp: new Date(),
+      };
+    }
 
     try {
-      const mcpTools = chatContextService.getMCPToolsForChat(this.profileId);
+      // Import medical expert tools directly to use the new interface
+      const { medicalExpertTools } = await import('$lib/context/mcp-tools/medical-expert-tools');
 
-      // Create search options object, preserving any additional parameters
-      const searchOptions = {
+      // Create search parameters object for the new MCP tool interface
+      const searchParams = {
+        terms: terms,
         limit: parameters?.limit || 10,
         threshold: parameters?.threshold || 0.6,
         includeContent: parameters?.includeContent !== false,
         documentTypes: parameters?.documentTypes,
-        ...parameters,
       };
 
-      log.info("Executing document search", {
+      log.info("Executing document search with medical terms", {
         profileId: this.profileId,
-        query: cleanQuery,
-        searchOptions,
+        searchTerms: terms,
+        searchParams,
       });
 
-      const result = await mcpTools.searchDocuments(cleanQuery, searchOptions);
+      // Call the MCP tool directly with the new interface
+      const result = await medicalExpertTools.searchDocuments(searchParams, this.profileId);
 
       // Check if the MCP tool returned an error
       if (result?.isError) {
         log.error("Search documents failed", {
           profileId: this.profileId,
-          query: cleanQuery,
+          searchTerms: terms,
           error: result.content?.[0]?.text || "Unknown error",
         });
 
@@ -359,7 +358,7 @@ export class ClientToolExecutor {
 
       log.info("Search documents completed successfully", {
         profileId: this.profileId,
-        query: cleanQuery,
+        searchTerms: terms,
         resultType: typeof result,
         resultContent: result?.content ? "has content" : "no content",
       });
@@ -375,7 +374,7 @@ export class ClientToolExecutor {
         error instanceof Error ? error.message : String(error);
       log.error("Document search execution failed", {
         profileId: this.profileId,
-        query: cleanQuery,
+        searchTerms: terms,
         originalParameters: parameters,
         error: errorMessage,
         errorStack: error instanceof Error ? error.stack : undefined,

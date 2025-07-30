@@ -395,27 +395,27 @@ You MUST include a toolCalls array in your structured response with:
 "Let me check your medications for you..." (without toolCalls)
 
 **✅ CORRECT - Always do this:**
-"Let me check your medications for you..." + include toolCalls: [{"name": "queryMedicalHistory", "parameters": {"category": "medications"}, "reason": "User asked about their current medications"}]
+"Let me check your medications for you..." + include toolCalls: [{"name": "queryMedicalHistory", "parameters": {"queryType": "medications"}, "reason": "User asked about their current medications"}]
 
 **Examples of when to use each tool:**
-- User asks "What medications am I taking?" → Use queryMedicalHistory with { "category": "medications" }
-- User asks "What do my lab results show?" → Use searchDocuments with { "query": "lab results blood test", "limit": 5 }
+- User asks "What medications am I taking?" → Use queryMedicalHistory with { "queryType": "medications" }
+- User asks "What do my lab results show?" → Use searchDocuments with { "terms": ["laboratory", "results", "blood", "test"], "limit": 5 }
 - User asks "Tell me about my health" → Use getProfileData with {}
-- User asks "Do I have diabetes?" → Use queryMedicalHistory with { "category": "conditions" }
+- User asks "Do I have diabetes?" → Use queryMedicalHistory with { "queryType": "conditions" }
 - User asks about specific document → Use getDocumentById with { "documentId": "the_id" }
 
 **Tool parameter examples:**
-- searchDocuments: { "query": "diabetes medications", "limit": 5 }
-- getAssembledContext: { "query": "recent lab results", "maxTokens": 1000 }
+- searchDocuments: { "terms": ["diabetes", "medications"], "limit": 5 }
+- getAssembledContext: { "conversationContext": "recent lab results", "maxTokens": 1000 }
 - getProfileData: {} (no parameters needed)
-- queryMedicalHistory: { "category": "medications" } (categories: medications, conditions, procedures, allergies)
+- queryMedicalHistory: { "queryType": "medications" } (queryType: medications, conditions, procedures, allergies)
 - getDocumentById: { "documentId": "doc_123" } (use EXACT document IDs provided in context or user message)
 
 **CRITICAL PARAMETER REQUIREMENTS:**
 - ALWAYS include a "parameters" object in your toolCalls
 - For getDocumentById: parameters MUST contain {"documentId": "exact_id_from_context"}
-- For queryMedicalHistory: parameters MUST contain {"category": "medications|conditions|procedures|allergies"}
-- For searchDocuments: parameters MUST contain {"query": "search terms", "limit": 5}
+- For queryMedicalHistory: parameters MUST contain {"queryType": "medications|conditions|procedures|allergies"}
+- For searchDocuments: parameters MUST contain {"terms": ["medical", "terms", "array"], "limit": 5}
 - NEVER leave parameters empty or undefined
 
 **Remember:** The user will approve each tool use. Always attempt to use tools when asked about medical information.`;

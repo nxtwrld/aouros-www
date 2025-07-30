@@ -4,117 +4,123 @@
 
 The Context Management System is Mediqom's intelligent document retrieval and contextual AI system that provides semantic search, context assembly, and secure medical data access through Model Context Protocol (MCP) tools. Built with privacy-first architecture and HIPAA compliance, it enables AI-powered conversations with complete medical context while maintaining strong security and audit trails.
 
-**Current Status**: ✅ **Production Ready** - Fully implemented with security, audit logging, and MCP compliance.
+**Current Status**: ✅ **Production Ready** - Fully implemented with medical terms classification, security, audit logging, and MCP compliance.
 
 **Key Capabilities**:
-- ✅ **Client-side Encrypted Embeddings** - Privacy-preserving semantic search
-- ✅ **Context Assembly** - Intelligent context compilation for AI interactions
-- ✅ **12 MCP Medical Tools** - Comprehensive medical data access for AI
+- ✅ **Medical Terms Classification** - Direct medical term matching and classification
+- ✅ **Three-Stage Search** - Category filtering, term refinement, and temporal processing
+- ✅ **5+ MCP Medical Tools** - Essential medical data access for AI (8+ in development)
 - ✅ **Security & Audit System** - HIPAA-compliant access control and logging
 - ✅ **Real-time Integration** - Session management and chat context
-- ✅ **Server-Client Architecture** - Secure embedding generation
+- ✅ **Term-Based Architecture** - Fast, precise medical concept matching
 
 ## Architecture Overview
 
 ### Core Concept: Intelligent Medical Context
 
-The Context Management System treats medical documents as semantically searchable knowledge that can be intelligently assembled and securely accessed by AI systems. This enables:
+The Context Management System treats medical documents as classified, searchable medical knowledge that can be intelligently filtered and securely accessed by AI systems through direct term matching. This enables:
 
 - **Contextual Conversations**: AI chat with complete medical history awareness
 - **Real-time Consultations**: Live session context for medical professionals
-- **Semantic Search**: Find relevant medical information using natural language
-- **Pattern Recognition**: Identify medical trends and insights across documents
+- **Medical Term Search**: Find relevant medical information using standardized medical terminology
+- **Temporal Intelligence**: Identify "latest", "recent", and historical medical information
 - **Secure Access**: HIPAA-compliant medical data access with complete audit trails
 
 ### System Components
 
 ```
 src/lib/context/
-├── client-database/           # Privacy-preserving vector database
-│   ├── memory-store.ts       # In-memory encrypted document storage
-│   ├── vector-search.ts      # Client-side cosine similarity search
-│   └── initialization.ts    # Context database setup
-├── embeddings/               # Document embedding system
-│   ├── client-embedding-manager.ts    # Client-side embedding operations
-│   ├── server-embedding-service.ts    # Server-side embedding generation
-│   └── providers/            # Multi-provider embedding support
-├── context-assembly/         # Intelligent context compilation
-│   └── context-composer.ts  # AI-optimized context assembly
 ├── mcp-tools/               # Medical expert tools for AI
-│   ├── medical-expert-tools.ts      # 12 MCP medical tools
+│   ├── medical-expert-tools.ts      # 5+ MCP medical tools (8+ in development)
 │   ├── security-audit.ts            # Security and audit system
-│   └── security-context-builder.ts  # Security context utilities
-└── integration/             # System integrations
-    ├── profile-context.ts   # Profile context management
-    ├── session-context.ts   # Real-time session integration
-    └── chat-service.ts      # Chat context integration
+│   ├── security-context-builder.ts  # Security context utilities
+│   ├── base/                        # Base tool classes
+│   │   └── base-tool.ts            # Common MCP tool functionality
+│   └── tools/                       # Individual MCP tools
+│       ├── search-documents.ts     # Three-stage medical document search
+│       └── index.ts                # Tool exports
+├── context-assembly/               # Intelligent context compilation
+│   ├── context-composer.ts        # AI-optimized context assembly
+│   └── token-optimization.ts      # Token management for AI limits
+├── integration/                    # System integrations
+│   ├── profile-context.ts         # Profile context management
+│   ├── session-context.ts         # Real-time session integration
+│   ├── chat-service.ts            # Chat context integration
+│   ├── client/                     # Client-side integrations
+│   ├── server/                     # Server-side integrations
+│   └── shared/                     # Shared base classes
+└── types.ts                       # Type definitions for context system
 ```
 
-## Core Features
+## Core Features  
 
-### 1. Client-Side Encrypted Embeddings
+### 1. Medical Terms Classification System
 
-**Privacy-First Design**: All document embeddings are generated server-side but stored encrypted on the client, ensuring sensitive medical data never leaves the user's control.
+**Direct Medical Term Matching**: Documents are processed to extract standardized medical terms in English, enabling precise medical concept matching without complex vector operations.
 
 ```typescript
-// Document embedding generation (server-side)
-const embeddingResult = await serverEmbeddingService.generateDocumentEmbedding({
-  content: documentContent,
-  metadata: { type: 'medical-record', sensitivity: 'high' }
+// Document medical terms extraction
+const documentTerms = await medicalTermsExtractor.extractTerms(documentContent, {
+  useEnglishTerminology: true,
+  useLatinTerminology: true,
+  standardizeToICD10: true,
+  includeLOINCCodes: true,
+  extractProcedures: true,
+  extractMedications: true
 });
 
-// Client-side encrypted storage
-await clientContextDatabase.addDocument({
+// Store with document
+await documentStore.save({
   id: documentId,
-  embedding: embeddingResult.embedding,
   content: encryptedContent,
-  metadata: documentMetadata
+  medicalTerms: documentTerms,
+  metadata: { category: 'laboratory', tags: ['blood', 'glucose'] }
 });
 ```
 
 **Key Features**:
-- **Server-side Generation**: Embedding creation using OpenAI/Google APIs
-- **Client-side Storage**: Encrypted document storage with vector search
-- **Fast Retrieval**: In-memory cosine similarity search
-- **Multi-provider Support**: OpenAI, Google, and Anthropic embedding models
+- **Standardized Terminology**: All terms normalized to English medical standards
+- **Fast Matching**: Direct array-based term matching with relevance scoring
+- **Medical Categories**: 13 predefined medical categories for precise filtering
+- **Multi-language Support**: Terms extracted from Czech, German, English documents
 
-### 2. Intelligent Context Assembly
+### 2. Three-Stage Search Architecture
 
-**AI-Optimized Context**: Automatically assembles relevant medical context for AI interactions with token optimization and relevance scoring.
+**Intelligent Document Filtering**: The search system uses a three-stage approach to find the most relevant medical documents efficiently.
 
 ```typescript
-// Context assembly for AI conversation
-const assembledContext = await contextAssembler.assembleContextForAI(
-  searchResults,
-  conversationQuery,
-  {
-    maxTokens: 3000,
-    includeMetadata: true,
-    includeMedicalContext: true,
-    priorityTypes: ['medication', 'diagnosis', 'lab-results']
-  }
-);
+// Three-stage search execution
+const searchResults = await searchDocumentsTool.execute({
+  terms: ['latest', 'blood', 'glucose'],          // AI-provided search terms
+  documentTypes: ['laboratory'],                  // Stage 1: Category filtering
+  threshold: 0.6,                                 // Stage 2: Relevance threshold
+  limit: 10                                       // Result limiting
+}, profileId);
+
+// Stage 1: Category Filtering - Filter by metadata.category
+// Stage 2: Term Refinement - Match against medicalTerms arrays
+// Stage 3: Temporal Processing - Handle "latest", "recent", "historical"
 ```
 
-**Assembly Features**:
-- **Relevance Scoring**: ML-based document relevance assessment
-- **Token Optimization**: Intelligent context truncation for AI models
-- **Medical Context**: Structured medical data extraction
-- **Key Points**: Automatic extraction of critical medical information
-- **Temporal Ordering**: Chronological organization of medical events
+**Search Features**:
+- **Category Filtering**: Fast pre-filtering by medical document categories
+- **Term Matching**: Exact and partial matching against medical terms arrays
+- **Temporal Intelligence**: Smart handling of time-based queries ("latest", "recent")
+- **Relevance Scoring**: Combined scoring based on term matches and temporal relevance
+- **Multi-stage Optimization**: Each stage reduces search space for performance
 
 ### 3. Model Context Protocol (MCP) Tools
 
-**12 Comprehensive Medical Tools**: AI can access medical data through standardized MCP tools with full security validation.
+**5+ Production Medical Tools**: AI can access medical data through standardized MCP tools with full security validation. 8+ additional tools in active development.
 
-#### Basic Tools
-1. **searchDocuments** - Semantic search across medical documents
+#### Production-Ready Tools ✅
+1. **searchDocuments** - Three-stage medical document search with term matching
 2. **getAssembledContext** - Get AI-optimized context assembly
 3. **getProfileData** - Access patient profile information
-4. **queryMedicalHistory** - Query specific medical history
+4. **queryMedicalHistory** - Query specific medical history types
 5. **getDocumentById** - Retrieve specific documents
 
-#### Advanced Medical Analysis Tools
+#### Advanced Tools In Development 🚧
 6. **getPatientTimeline** - Chronological medical event timeline
 7. **analyzeMedicalTrends** - Trend analysis across medical data
 8. **getMedicationHistory** - Medication history with interaction checking
@@ -125,15 +131,14 @@ const assembledContext = await contextAssembler.assembleContextForAI(
 13. **getSpecialtyRecommendations** - AI-powered specialty referral recommendations
 
 ```typescript
-// Example: Secure medication history access
-const medicationHistory = await secureMcpTools.getMedicationHistory(
-  securityContext,
-  {
-    includeInteractions: true,
-    timeframe: { start: '2023-01-01', end: '2024-01-01' },
-    includeDosage: true
-  }
-);
+// Example: Medical document search with three-stage filtering
+const searchResults = await secureMcpTools.searchDocuments(securityContext, {
+  terms: ['latest', 'laboratory', 'blood', 'glucose'],     // Medical terms in English
+  documentTypes: ['laboratory'],                           // Category filtering
+  threshold: 0.7,                                          // Relevance threshold
+  limit: 10,                                               // Result limit
+  includeContent: true                                     // Include previews for high-relevance
+});
 ```
 
 ### 4. Security & Audit System

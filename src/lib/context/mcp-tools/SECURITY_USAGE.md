@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ request, locals: { supabase, safeGe
   
   // Use secure tools
   try {
-    const result = await secureMcpTools.searchDocuments(securityContext, { query });
+    const result = await secureMcpTools.searchDocuments(securityContext, { terms: ["medical", "search", "terms"] });
     return json(result);
   } catch (err) {
     if (err.message.includes('Access denied')) {
@@ -71,7 +71,7 @@ async function searchMedicalData() {
   
   try {
     const results = await secureMcpTools.searchDocuments(securityContext, {
-      query: 'diabetes medications',
+      terms: ['diabetes', 'medications'],
       limit: 10
     });
     

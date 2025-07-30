@@ -25,6 +25,7 @@ export class ChatManager {
   private eventListeners: (() => void)[] = [];
   private currentContextResult: ChatContextResult | null = null;
   private currentPromptProfileId: string | null = null; // Track active profile prompt
+  private lastToolCall: string | null = null; // Track last executed tool to prevent immediate duplicates
 
   constructor() {
     this.clientService = new ChatClientService();
@@ -719,6 +720,9 @@ export class ChatManager {
       return;
     }
 
+    // Clear last tool call on new user message to allow fresh tool usage
+    this.lastToolCall = null;
+
     const state = get(chatStore);
     if (!state.context) {
       throw new Error("Chat context not initialized");
@@ -955,6 +959,20 @@ export class ChatManager {
 
     // Process each tool call request
     for (const toolCall of toolCalls) {
+      // Check for duplicate tool calls to prevent infinite loops
+      const toolSignature = `${toolCall.name}_${JSON.stringify(toolCall.parameters)}`;
+      if (this.lastToolCall === toolSignature) {
+        console.log(`🚫 [Tool Loop Prevention] Suppressing duplicate tool call: ${toolCall.name}`);
+        
+        // Add explanatory message instead of executing the duplicate tool
+        const explanationMessage = createMessage(
+          "system",
+          `I already searched for that information and found no results. Let me provide an answer based on what I found.`
+        );
+        chatActions.addMessage(explanationMessage);
+        continue; // Skip this duplicate tool call
+      }
+
       const toolPrompt = await chatMCPToolWrapper.createToolPrompt(
         toolCall.name,
         toolCall.parameters,
@@ -962,6 +980,9 @@ export class ChatManager {
         (result) => this.onToolApproved(result, toolCall.name),
         () => this.onToolDeclined(toolCall.name),
       );
+
+      // Track this tool call signature to prevent immediate duplicates
+      this.lastToolCall = toolSignature;
 
       // Only add prompt message if tool requires confirmation
       if (toolPrompt) {
@@ -1050,14 +1071,70 @@ export class ChatManager {
       };
 
       // Send a message with tool results context
+      let streamingMessageId: string | null = null;
+      let accumulatedContent = "";
+      let messageMetadata: any = {};
+      
       await this.clientService.sendMessage(
         followUpMessage,
         enhancedContext,
         state.messages,
         (event) => {
-          // The streaming response will be handled by the existing event handler
-          // Just log for now
-          console.log("Tool result processing event:", event);
+          switch (event.type) {
+            case "chunk":
+              // Handle streaming chunks
+              accumulatedContent += event.content || "";
+              if (!streamingMessageId) {
+                // Create initial streaming message
+                const streamingMsg = createMessage(
+                  "assistant",
+                  accumulatedContent,
+                );
+                streamingMessageId = streamingMsg.id;
+                chatActions.addMessage(streamingMsg);
+              } else {
+                // Update existing message with new content
+                const currentState = get(chatStore);
+                const updatedMessages = currentState.messages.map((msg) =>
+                  msg.id === streamingMessageId
+                    ? { ...msg, content: accumulatedContent }
+                    : msg,
+                );
+                chatActions.setMessages(updatedMessages);
+              }
+              break;
+            case "metadata":
+              // Store metadata for the final message
+              messageMetadata = event.data;
+              
+              // Note: Tool calls are already processed by the main sendMessage handler
+              // No need to process them again here to avoid duplication
+              break;
+            case "complete":
+              // Finalize the streaming message with metadata
+              if (streamingMessageId) {
+                const finalState = get(chatStore);
+                const updatedMessages = finalState.messages.map((msg) =>
+                  msg.id === streamingMessageId
+                    ? {
+                        ...msg,
+                        metadata: {
+                          ...msg.metadata,
+                          ...messageMetadata,
+                          tokenUsage: messageMetadata.tokenUsage,
+                          anatomyReferences: messageMetadata.anatomyReferences || [],
+                          documentReferences: messageMetadata.documentReferences || [],
+                        },
+                      }
+                    : msg,
+                );
+                chatActions.setMessages(updatedMessages);
+              }
+              break;
+            case "error":
+              console.error("Tool result processing error:", event.message);
+              break;
+          }
         },
       );
     } catch (error) {
@@ -1137,6 +1214,9 @@ export class ChatManager {
    */
   clearConversation(): void {
     chatActions.clearMessages();
+
+    // Clear last tool call to allow fresh tool usage in new conversation
+    this.lastToolCall = null;
 
     // Clear approved documents for this session
     if (this.currentProfileId) {

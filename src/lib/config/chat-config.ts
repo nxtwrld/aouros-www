@@ -4,6 +4,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { modelConfig } from './model-config';
 import anatomyObjects from '$components/anatomy/objects.json';
+import { classificationConfig } from './classification';
 
 export interface ChatProvider {
   name: string;
@@ -290,6 +291,32 @@ class ChatConfigManager {
     Object.entries(modeConfig.responseSchema.additionalProperties).forEach(([key, value]) => {
       schema.parameters.properties[key] = value;
     });
+    
+    // Enhance tool calls with dynamic categories from classification config
+    if (schema.parameters.properties.toolCalls?.items?.properties?.parameters?.properties) {
+      const toolParams = schema.parameters.properties.toolCalls.items.properties.parameters.properties;
+      
+      // Update documentTypes description with actual categories
+      if (toolParams.documentTypes) {
+        const categoryList = Object.values(classificationConfig.categories)
+          .map(cat => `'${cat.id}'`)
+          .join(', ');
+        toolParams.documentTypes.description = `Filter by document categories. Use exact category IDs: ${categoryList}. These map to the metadata.category field in documents.`;
+      }
+      
+      // Update terms description with temporal terms
+      if (toolParams.terms) {
+        const temporalTerms = Object.keys(classificationConfig.temporalTerms)
+          .map(term => `"${term}"`)
+          .join(', ');
+        const currentDescription = toolParams.terms.description;
+        // Replace the temporal terms section
+        toolParams.terms.description = currentDescription.replace(
+          /TEMPORAL: "[^"]*"(?:, "[^"]*")*/,
+          `TEMPORAL: ${temporalTerms}`
+        );
+      }
+    }
     
     return schema;
   }
