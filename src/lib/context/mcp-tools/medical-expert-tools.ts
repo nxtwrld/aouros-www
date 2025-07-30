@@ -2286,10 +2286,10 @@ Data Points: ${analysis.dataPoints || 'N/A'}`;
   private generateSummaryContent(searchResults: any[], summaryType: string): any {
     const sections = {
       demographics: this.extractDemographics(searchResults),
-      conditions: this.extractConditions(searchResults),
+      conditions: this.extractConditionsFromSearchResults(searchResults),
       medications: this.extractMedicationData(searchResults),
-      procedures: this.extractProcedures(searchResults),
-      allergies: this.extractAllergies(searchResults),
+      procedures: this.extractProceduresFromSearchResults(searchResults),
+      allergies: this.extractAllergiesFromSearchResults(searchResults),
       vitals: this.extractVitalSigns(searchResults)
     };
 
@@ -2770,7 +2770,7 @@ Data Points: ${analysis.dataPoints || 'N/A'}`;
   /**
    * Extract conditions from search results
    */
-  private extractConditions(searchResults: any[]): any[] {
+  private extractConditionsFromSearchResults(searchResults: any[]): any[] {
     return searchResults
       .filter(result => {
         const content = (result.excerpt || '').toLowerCase();
@@ -2814,7 +2814,7 @@ Data Points: ${analysis.dataPoints || 'N/A'}`;
   /**
    * Extract procedures from search results
    */
-  private extractProcedures(searchResults: any[]): any[] {
+  private extractProceduresFromSearchResults(searchResults: any[]): any[] {
     return searchResults
       .filter(result => {
         const content = (result.excerpt || '').toLowerCase();
@@ -2856,7 +2856,7 @@ Data Points: ${analysis.dataPoints || 'N/A'}`;
   /**
    * Extract allergies from search results
    */
-  private extractAllergies(searchResults: any[]): any[] {
+  private extractAllergiesFromSearchResults(searchResults: any[]): any[] {
     return searchResults
       .filter(result => {
         const content = (result.excerpt || '').toLowerCase();
