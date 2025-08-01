@@ -84,37 +84,55 @@ let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 
 // extend common schemas
 
-((signals as ExtendedFunctionDefinition).items!.properties.signal.enum as string[]) =
-  Object.keys(propertiesDefition); //testPropserties.map((item: any) => item[0]);
-((featureDetection as ExtendedFunctionDefinition).parameters.properties.tags.items.enum as string[]) = [
+((signals as ExtendedFunctionDefinition).items!.properties.signal
+  .enum as string[]) = Object.keys(propertiesDefition); //testPropserties.map((item: any) => item[0]);
+((featureDetection as ExtendedFunctionDefinition).parameters.properties.tags
+  .items.enum as string[]) = [
   ...tags,
-  ...((signals as ExtendedFunctionDefinition).items!.properties.signal.enum as string[]),
+  ...((signals as ExtendedFunctionDefinition).items!.properties.signal
+    .enum as string[]),
 ];
 
-(performer as ExtendedFunctionDefinition).properties = (jcard as ExtendedFunctionDefinition).properties;
-(performer as ExtendedFunctionDefinition).required = (jcard as ExtendedFunctionDefinition).required;
+(performer as ExtendedFunctionDefinition).properties = (
+  jcard as ExtendedFunctionDefinition
+).properties;
+(performer as ExtendedFunctionDefinition).required = (
+  jcard as ExtendedFunctionDefinition
+).required;
 
-(report as ExtendedFunctionDefinition).parameters.properties.performer = performer;
-(imaging as ExtendedFunctionDefinition).parameters.properties.performer = performer;
-(laboratory as ExtendedFunctionDefinition).parameters.properties.performer = performer;
-(dental as ExtendedFunctionDefinition).parameters.properties.performer = performer;
+(report as ExtendedFunctionDefinition).parameters.properties.performer =
+  performer;
+(imaging as ExtendedFunctionDefinition).parameters.properties.performer =
+  performer;
+(laboratory as ExtendedFunctionDefinition).parameters.properties.performer =
+  performer;
+(dental as ExtendedFunctionDefinition).parameters.properties.performer =
+  performer;
 
 (report as ExtendedFunctionDefinition).parameters.properties.patient = patient;
 (imaging as ExtendedFunctionDefinition).parameters.properties.patient = patient;
-(laboratory as ExtendedFunctionDefinition).parameters.properties.patient = patient;
+(laboratory as ExtendedFunctionDefinition).parameters.properties.patient =
+  patient;
 (dental as ExtendedFunctionDefinition).parameters.properties.patient = patient;
 
 //report.parameters.properties.signals = signals;
-(laboratory as ExtendedFunctionDefinition).parameters.properties.signals = signals;
+(laboratory as ExtendedFunctionDefinition).parameters.properties.signals =
+  signals;
 
-(report as ExtendedFunctionDefinition).parameters.properties.diagnosis = diagnosis;
-(imaging as ExtendedFunctionDefinition).parameters.properties.diagnosis = diagnosis;
-(dental as ExtendedFunctionDefinition).parameters.properties.diagnosis = diagnosis;
+(report as ExtendedFunctionDefinition).parameters.properties.diagnosis =
+  diagnosis;
+(imaging as ExtendedFunctionDefinition).parameters.properties.diagnosis =
+  diagnosis;
+(dental as ExtendedFunctionDefinition).parameters.properties.diagnosis =
+  diagnosis;
 
-((bodyParts as ExtendedFunctionDefinition).items!.properties.identification.enum as string[]) = [...tags];
+((bodyParts as ExtendedFunctionDefinition).items!.properties.identification
+  .enum as string[]) = [...tags];
 
-(report as ExtendedFunctionDefinition).parameters.properties.bodyParts = bodyParts;
-(imaging as ExtendedFunctionDefinition).parameters.properties.bodyParts = bodyParts;
+(report as ExtendedFunctionDefinition).parameters.properties.bodyParts =
+  bodyParts;
+(imaging as ExtendedFunctionDefinition).parameters.properties.bodyParts =
+  bodyParts;
 
 function getContentDefinition(input: Input): Content[] {
   const content: Content[] = [];
@@ -140,7 +158,7 @@ function updateLanguage(
   language: string = "English",
 ) {
   let replacementCount = 0;
-  
+
   for (const key in schema) {
     if (schema[key] instanceof Object) {
       schema[key] = updateLanguage(schema[key], language);
@@ -153,7 +171,7 @@ function updateLanguage(
       }
     }
   }
-  
+
   return schema;
 }
 
@@ -166,18 +184,24 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
   const currentLanguage = input.language || "English";
 
   console.log("🔍 About to update schemas for language:", currentLanguage);
-  console.log("🔍 Original report schema description preview:", 
-    schemas.report.description?.substring(0, 100) + "...");
-  
+  console.log(
+    "🔍 Original report schema description preview:",
+    schemas.report.description?.substring(0, 100) + "...",
+  );
+
   localizedSchemas = updateLanguage(
     JSON.parse(JSON.stringify(schemas)),
     currentLanguage,
   );
 
-  console.log("🔍 After language update - report schema description preview:", 
-    localizedSchemas.report.description.substring(0, 100) + "...");
+  console.log(
+    "🔍 After language update - report schema description preview:",
+    localizedSchemas.report.description.substring(0, 100) + "...",
+  );
 
-  log.analysis.info("Schema updated for language:", { language: currentLanguage });
+  log.analysis.info("Schema updated for language:", {
+    language: currentLanguage,
+  });
 
   if (DEBUG) {
     await sleep(1500);
@@ -237,33 +261,35 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
     hasLabOrVitals: data.hasLabOrVitals,
     hasPrescription: data.hasPrescription,
     textLength: data.text.length,
-    language: currentLanguage
+    language: currentLanguage,
   });
 
   switch (data.type) {
     case Types.report:
       console.log("🏥 Processing medical report...");
       // FIXED: Use the same content (text + images) as feature detection
-      console.log("🔧 FIXED: Using same content structure for report extraction as feature detection");
+      console.log(
+        "🔧 FIXED: Using same content structure for report extraction as feature detection",
+      );
       console.log("📋 Content structure:", {
         contentItems: content.length,
-        hasText: content.some(c => c.type === "text"),
-        hasImages: content.some(c => c.type === "image_url"),
-        textLength: data.text?.length || 0
+        hasText: content.some((c) => c.type === "text"),
+        hasImages: content.some((c) => c.type === "image_url"),
+        textLength: data.text?.length || 0,
       });
-      
+
       data.report = await evaluate(
         content, // Use original content (text + images) instead of just text
         Types.report,
         tokenUsage,
       );
-      
+
       console.log("🏥 Report analysis completed:", {
         hasReport: !!data.report,
         reportKeys: data.report ? Object.keys(data.report) : [],
-        reportEmpty: Object.keys(data.report || {}).length === 0
+        reportEmpty: Object.keys(data.report || {}).length === 0,
       });
-      
+
       // extract lab or vitals from the report
       if (data.hasLabOrVitals) {
         console.log("🧪 Processing lab/vitals data...");
@@ -280,7 +306,7 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
 
         data.report.signals = laboratory.signals;
         console.log("🧪 Lab analysis completed:", {
-          signalsCount: laboratory.signals?.length || 0
+          signalsCount: laboratory.signals?.length || 0,
         });
       }
       break;
@@ -321,7 +347,9 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
 
   // Safety check: ensure data.report exists
   if (!data.report) {
-    log.analysis.warn(`Medical analysis: data.report is undefined for type "${data.type}". Creating empty report object.`);
+    log.analysis.warn(
+      `Medical analysis: data.report is undefined for type "${data.type}". Creating empty report object.`,
+    );
     data.report = {};
   }
 
@@ -358,10 +386,10 @@ export async function analyze(input: Input): Promise<ReportAnalysis> {
 
   data.tokenUsage = tokenUsage;
 
-  log.analysis.info("Analysis completed", { 
+  log.analysis.info("Analysis completed", {
     totalTokens: data.tokenUsage.total,
     type: data.type,
-    isMedical: data.isMedical 
+    isMedical: data.isMedical,
   });
   // return item
   return data;
@@ -382,11 +410,11 @@ export async function evaluate(
     contentLength: content[0]?.text?.length || 0,
     schemaRequired: schema.parameters?.required || [],
     schemaProperties: Object.keys(schema.parameters?.properties || {}),
-    schemaSize: JSON.stringify(schema).length
+    schemaSize: JSON.stringify(schema).length,
   });
-  
+
   // For report schema, log the actual structure being sent to OpenAI
-  if (type === 'report') {
+  if (type === "report") {
     console.log("📋 Report Schema Analysis:", {
       propertiesCount: Object.keys(schema.parameters?.properties || {}).length,
       requiredCount: schema.parameters?.required?.length || 0,
@@ -394,12 +422,16 @@ export async function evaluate(
       hasPatient: !!schema.parameters?.properties?.patient,
       hasBodyParts: !!schema.parameters?.properties?.bodyParts,
       hasDiagnosis: !!schema.parameters?.properties?.diagnosis,
-      performerComplexity: schema.parameters?.properties?.performer ? 
-        Object.keys(schema.parameters.properties.performer.properties || {}).length : 0,
-      patientComplexity: schema.parameters?.properties?.patient ? 
-        Object.keys(schema.parameters.properties.patient.properties || {}).length : 0
+      performerComplexity: schema.parameters?.properties?.performer
+        ? Object.keys(schema.parameters.properties.performer.properties || {})
+            .length
+        : 0,
+      patientComplexity: schema.parameters?.properties?.patient
+        ? Object.keys(schema.parameters.properties.patient.properties || {})
+            .length
+        : 0,
     });
-    
+
     // Log the complete schema for debugging (only first time)
     if (!global.reportSchemaLogged) {
       console.log("🔍 Complete Report Schema being sent to OpenAI:");
@@ -408,16 +440,21 @@ export async function evaluate(
     }
   }
 
-  const result = (await fetchGptEnhanced(content, schema, tokenUsage)) as ReportAnalysis;
-  
+  const result = (await fetchGptEnhanced(
+    content,
+    schema,
+    tokenUsage,
+  )) as ReportAnalysis;
+
   console.log(`🤖 AI Evaluation - ${type} result:`, {
     resultKeys: Object.keys(result || {}),
     isEmpty: Object.keys(result || {}).length === 0,
-    hasExpectedFields: type === 'report' ? !!result?.title || !!result?.summary : true,
+    hasExpectedFields:
+      type === "report" ? !!result?.title || !!result?.summary : true,
     fullResult: result, // Log the complete result for debugging
     resultType: typeof result,
     isNull: result === null,
-    isUndefined: result === undefined
+    isUndefined: result === undefined,
   });
 
   if (!result) {

@@ -163,20 +163,25 @@
 		line-height: 1.6;
 	}
 
+	/* Unused - h1 comes from markdown content
 	h1 {
 		margin-bottom: 1rem;
 		font-size: 2.5rem;
 		color: var(--color-heading, #1a1a1a);
 	}
+	*/
 
+	/* Unused - no time element in template
 	time {
 		display: block;
 		margin-bottom: 2rem;
 		color: var(--color-text-muted, #666);
 		font-size: 0.9rem;
 	}
+	*/
 
-	.error {
+	/* Used dynamically in JavaScript for mermaid rendering errors */
+	:global(.error) {
 		padding: 1rem;
 		background-color: #fee;
 		border: 1px solid #fcc;
@@ -184,11 +189,13 @@
 		color: #c00;
 	}
 
+	/* Unused - no loading state in template
 	.loading {
 		padding: 2rem;
 		text-align: center;
 		color: var(--color-text-muted, #666);
 	}
+	*/
 
 	:global(.content-page h2) {
 		margin-top: 2rem;

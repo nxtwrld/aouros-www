@@ -94,38 +94,45 @@ export const POST: RequestHandler = async ({
             // Save mode: Run real extraction and save results to file
             sendEvent({
               type: "progress",
-              stage: "ocr_extraction", 
+              stage: "ocr_extraction",
               progress: 60,
               message: "Running extraction and saving test data...",
               timestamp: Date.now(),
             });
 
             result = await assess(data);
-            
+
             // Save the result to a timestamped file
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
             const filename = `extraction-result-${timestamp}.json`;
-            const filepath = join(process.cwd(), 'test-data', 'extractions', filename);
-            
+            const filepath = join(
+              process.cwd(),
+              "test-data",
+              "extractions",
+              filename,
+            );
+
             try {
               // Ensure directory exists
               const { mkdirSync } = await import("fs");
-              mkdirSync(join(process.cwd(), 'test-data', 'extractions'), { recursive: true });
-              
+              mkdirSync(join(process.cwd(), "test-data", "extractions"), {
+                recursive: true,
+              });
+
               // Save with metadata
               const testData = {
                 timestamp: new Date().toISOString(),
                 input: {
                   imagesCount: data.images?.length || 0,
                   hasText: !!data.text,
-                  language: data.language
+                  language: data.language,
                 },
-                result: result
+                result: result,
               };
-              
+
               writeFileSync(filepath, JSON.stringify(testData, null, 2));
               console.log(`📁 Extraction test data saved to: ${filepath}`);
-              
+
               sendEvent({
                 type: "progress",
                 stage: "test_data_saved",
@@ -136,13 +143,12 @@ export const POST: RequestHandler = async ({
             } catch (saveError) {
               console.error("Failed to save test data:", saveError);
             }
-            
           } else {
             // Load mode: Load results from specified file
-            const filepath = DEBUG_EXTRACTOR.startsWith('/') 
-              ? DEBUG_EXTRACTOR 
+            const filepath = DEBUG_EXTRACTOR.startsWith("/")
+              ? DEBUG_EXTRACTOR
               : join(process.cwd(), DEBUG_EXTRACTOR);
-              
+
             sendEvent({
               type: "progress",
               stage: "loading_test_data",
@@ -153,12 +159,12 @@ export const POST: RequestHandler = async ({
 
             if (existsSync(filepath)) {
               try {
-                const testData = JSON.parse(readFileSync(filepath, 'utf8'));
+                const testData = JSON.parse(readFileSync(filepath, "utf8"));
                 result = testData.result || testData; // Handle both wrapped and raw formats
-                
+
                 // Simulate processing time for realistic testing
                 await sleep(1500);
-                
+
                 sendEvent({
                   type: "progress",
                   stage: "test_data_loaded",
@@ -166,14 +172,18 @@ export const POST: RequestHandler = async ({
                   message: `Test data loaded successfully from ${DEBUG_EXTRACTOR}`,
                   timestamp: Date.now(),
                 });
-                
+
                 console.log(`📁 Using test extraction data from: ${filepath}`);
               } catch (loadError) {
                 console.error("Failed to load test data:", loadError);
-                error(500, { message: `Failed to load test data from ${DEBUG_EXTRACTOR}` });
+                error(500, {
+                  message: `Failed to load test data from ${DEBUG_EXTRACTOR}`,
+                });
               }
             } else {
-              error(404, { message: `Test data file not found: ${DEBUG_EXTRACTOR}` });
+              error(404, {
+                message: `Test data file not found: ${DEBUG_EXTRACTOR}`,
+              });
             }
           }
         } else {

@@ -243,9 +243,12 @@ export class ChatMCPToolWrapper {
     switch (toolName) {
       case "searchDocuments":
         const terms = safeParams.terms || [];
-        return { 
-          terms: Array.isArray(terms) && terms.length > 0 ? terms : ["medical information"],
-          termCount: Array.isArray(terms) ? terms.length : 0
+        return {
+          terms:
+            Array.isArray(terms) && terms.length > 0
+              ? terms
+              : ["medical information"],
+          termCount: Array.isArray(terms) ? terms.length : 0,
         };
 
       case "queryMedicalHistory":
@@ -287,14 +290,15 @@ export class ChatMCPToolWrapper {
     switch (toolName) {
       case "searchDocuments":
         const searchTerms = parameters.terms || [];
-        const termsDisplay = Array.isArray(searchTerms) && searchTerms.length > 0
-          ? searchTerms.map((term: string) => `"${term}"`).join(", ")
-          : "not specified";
+        const termsDisplay =
+          Array.isArray(searchTerms) && searchTerms.length > 0
+            ? searchTerms.map((term: string) => `"${term}"`).join(", ")
+            : "not specified";
         return [
           "Search through your medical documents",
           "Access document titles and snippets",
           `Search terms: ${termsDisplay}`,
-          `Individual terms will be matched against document metadata`
+          `Individual terms will be matched against document metadata`,
         ];
 
       case "getAssembledContext":

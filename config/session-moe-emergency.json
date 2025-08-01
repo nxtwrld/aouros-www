@@ -3,13 +3,9 @@
   "description": "Rapid assessment focused on critical conditions",
   "targetAudience": "emergency_physicians",
   "complexity": "specialized",
-  "experts": [
-    "emergency_triage",
-    "rapid_diagnosis",
-    "safety_monitor"
-  ],
+  "experts": ["emergency_triage", "rapid_diagnosis", "safety_monitor"],
   "consensus": {
-    "algorithm": "weighted_voting", 
+    "algorithm": "weighted_voting",
     "expertWeights": {
       "emergency_triage": 1.0,
       "rapid_diagnosis": 0.9,

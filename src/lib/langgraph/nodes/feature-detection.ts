@@ -10,19 +10,21 @@ export const featureDetectionNode = async (
   state: DocumentProcessingState,
 ): Promise<Partial<DocumentProcessingState>> => {
   const stepStartTime = Date.now();
-  
+
   console.log("🔍 Feature Detection Node - Progress Debug:", {
     hasProgressCallback: !!state.progressCallback,
     progressCallbackType: typeof state.progressCallback,
     hasEmitProgress: !!state.emitProgress,
     emitProgressType: typeof state.emitProgress,
-    stateKeys: Object.keys(state).filter(k => k.includes('progress') || k.includes('emit'))
+    stateKeys: Object.keys(state).filter(
+      (k) => k.includes("progress") || k.includes("emit"),
+    ),
   });
-  
+
   // Create local progress emitters if we have a progress callback
   const hasCallback = !!state.progressCallback;
-  
-  const emitProgress = hasCallback 
+
+  const emitProgress = hasCallback
     ? (stage: string, progress: number, message: string) => {
         state.progressCallback?.({
           type: "progress",
@@ -33,7 +35,7 @@ export const featureDetectionNode = async (
         });
       }
     : state.emitProgress;
-    
+
   const emitComplete = hasCallback
     ? (stage: string, message: string, data?: any) => {
         state.progressCallback?.({
@@ -46,7 +48,7 @@ export const featureDetectionNode = async (
         });
       }
     : state.emitComplete;
-    
+
   const emitError = hasCallback
     ? (stage: string, message: string, error?: any) => {
         state.progressCallback?.({
@@ -59,21 +61,13 @@ export const featureDetectionNode = async (
         });
       }
     : state.emitError;
-  
+
   // Emit progress start
-  emitProgress?.(
-    "feature_detection",
-    0,
-    "Starting feature detection analysis",
-  );
+  emitProgress?.("feature_detection", 0, "Starting feature detection analysis");
 
   try {
     // Use existing feature detection configuration
-    emitProgress?.(
-      "feature_detection",
-      20,
-      "Loading feature detection schema",
-    );
+    emitProgress?.("feature_detection", 20, "Loading feature detection schema");
     const schema = featureDetection as FunctionDefinition;
 
     // Perform feature detection using enhanced AI provider
@@ -82,27 +76,29 @@ export const featureDetectionNode = async (
       40,
       "Analyzing document features with AI",
     );
-    
+
     // Initialize token usage tracking
     const tokenUsage = { ...state.tokenUsage };
-    
+
     const result = await fetchGptEnhanced(
-      state.content, 
-      schema, 
+      state.content,
+      schema,
       tokenUsage,
       state.language || "English",
       "feature_detection",
-      hasCallback ? (stage, progress, message) => {
-        // Convert AI progress to node progress (map 0-100% to 40-70% of node progress)
-        const nodeProgress = 40 + (progress * 0.30);
-        state.progressCallback?.({
-          type: "progress",
-          stage: `feature_detection_${stage}`,
-          progress: nodeProgress,
-          message: `AI: ${message}`,
-          timestamp: Date.now(),
-        });
-      } : undefined
+      hasCallback
+        ? (stage, progress, message) => {
+            // Convert AI progress to node progress (map 0-100% to 40-70% of node progress)
+            const nodeProgress = 40 + progress * 0.3;
+            state.progressCallback?.({
+              type: "progress",
+              stage: `feature_detection_${stage}`,
+              progress: nodeProgress,
+              message: `AI: ${message}`,
+              timestamp: Date.now(),
+            });
+          }
+        : undefined,
     );
 
     // Update token usage
@@ -116,16 +112,16 @@ export const featureDetectionNode = async (
     );
 
     const parsedResult = result || {};
-    
+
     // Verbose logging of AI results
     log.analysis.debug("Feature detection AI response:", {
       parsedResult,
       hasCategory: !!parsedResult.category,
       hasNotMedical: !!parsedResult.notMedical,
       hasTags: !!parsedResult.tags,
-      tagsLength: parsedResult.tags?.length || 0
+      tagsLength: parsedResult.tags?.length || 0,
     });
-    
+
     // Log the boolean flags we received
     console.log("📋 Feature Detection - AI Response Boolean Flags:", {
       hasPrescriptions: parsedResult.hasPrescriptions,
@@ -134,7 +130,7 @@ export const featureDetectionNode = async (
       hasDiagnosis: parsedResult.hasDiagnosis,
       hasBodyParts: parsedResult.hasBodyParts,
       documentType: parsedResult.documentType,
-      isMedical: parsedResult.isMedical
+      isMedical: parsedResult.isMedical,
     });
 
     const featureDetectionResult = {
@@ -142,12 +138,12 @@ export const featureDetectionNode = async (
       confidence: parsedResult.notMedical ? 0 : 0.9,
       features: parsedResult.tags || [],
     };
-    
+
     log.analysis.info("Feature detection results:", {
       type: featureDetectionResult.type,
       confidence: featureDetectionResult.confidence,
       featuresCount: featureDetectionResult.features.length,
-      isMedical: !parsedResult.notMedical
+      isMedical: !parsedResult.notMedical,
     });
 
     // Emit completion
@@ -167,11 +163,12 @@ export const featureDetectionNode = async (
     const aiFeatureDetectionResults = {
       isMedical: !parsedResult.notMedical,
       language: parsedResult.language || state.language || "English",
-      documentType: parsedResult.documentType || parsedResult.category || "unknown",
+      documentType:
+        parsedResult.documentType || parsedResult.category || "unknown",
       medicalSpecialty: parsedResult.medicalSpecialty || [],
       urgencyLevel: parsedResult.urgencyLevel || 1,
       tags: parsedResult.tags || [],
-      
+
       // Core section flags - use actual values from AI response
       hasSummary: parsedResult.hasSummary || false,
       hasDiagnosis: parsedResult.hasDiagnosis || false,
@@ -217,9 +214,9 @@ export const featureDetectionNode = async (
           isMedical: aiFeatureDetectionResults.isMedical,
           documentType: aiFeatureDetectionResults.documentType,
           language: aiFeatureDetectionResults.language,
-          tags: aiFeatureDetectionResults.tags
+          tags: aiFeatureDetectionResults.tags,
         },
-        tokenUsageTotal: tokenUsage.total
+        tokenUsageTotal: tokenUsage.total,
       });
     }
 
@@ -228,7 +225,7 @@ export const featureDetectionNode = async (
       documentType: aiFeatureDetectionResults.documentType,
       hasPrescriptions: aiFeatureDetectionResults.hasPrescriptions,
       hasImmunizations: aiFeatureDetectionResults.hasImmunizations,
-      hasSignals: aiFeatureDetectionResults.hasSignals
+      hasSignals: aiFeatureDetectionResults.hasSignals,
     });
 
     const outputState = {
@@ -250,8 +247,8 @@ export const featureDetectionNode = async (
         provider: "enhanced-openai",
         flowType: "feature_detection",
         confidence: featureDetectionResult.confidence,
-        documentType: aiFeatureDetectionResults.documentType
-      }
+        documentType: aiFeatureDetectionResults.documentType,
+      },
     );
 
     return outputState;
@@ -284,8 +281,8 @@ export const featureDetectionNode = async (
       {
         provider: "enhanced-openai",
         flowType: "feature_detection",
-        failed: true
-      }
+        failed: true,
+      },
     );
 
     return errorState;

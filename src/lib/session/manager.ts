@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import EventEmitter from "eventemitter3";
 import { logger } from "$lib/logging/logger";
-import { sessionContextService } from '$lib/context/integration/session-context';
-import type { SessionContextResult } from '$lib/context/integration/session-context';
+import { sessionContextService } from "$lib/context/integration/session-context";
+import type { SessionContextResult } from "$lib/context/integration/session-context";
 
 // Enhanced session data interface with ChatGPT thread support and context assembly
 export interface SessionData {
@@ -39,7 +39,7 @@ export interface SessionData {
   // Real-time Data
   transcripts?: PartialTranscript[];
   realtimeUpdates: SSEUpdate[];
-  
+
   // Analysis results - add missing property
   analysis?: any;
 }
@@ -111,39 +111,41 @@ export async function createSession(
 
   // Create event emitter for this session
   sessionEmitters.set(sessionId, new EventEmitter());
-  
+
   // Initialize context if profile ID is provided
   if (fullSessionData.profileId) {
     try {
-      const contextResult = await sessionContextService.initializeSessionContext(
-        sessionId,
-        fullSessionData,
-        {
-          profileId: fullSessionData.profileId,
-          includeRecentTranscripts: true,
-          maxContextTokens: 2000,
-          contextThreshold: 0.6
-        }
-      );
-      
+      const contextResult =
+        await sessionContextService.initializeSessionContext(
+          sessionId,
+          fullSessionData,
+          {
+            profileId: fullSessionData.profileId,
+            includeRecentTranscripts: true,
+            maxContextTokens: 2000,
+            contextThreshold: 0.6,
+          },
+        );
+
       fullSessionData.contextResult = contextResult;
       fullSessionData.contextLastUpdated = Date.now();
       fullSessionData.availableTools = contextResult.availableTools;
-      fullSessionData.analysisState.contextAvailable = contextResult.documentCount > 0;
-      
+      fullSessionData.analysisState.contextAvailable =
+        contextResult.documentCount > 0;
+
       sessions.set(sessionId, fullSessionData);
-      
-      logger.session.info('Session context initialized', {
+
+      logger.session.info("Session context initialized", {
         sessionId,
         profileId: fullSessionData.profileId,
         documentCount: contextResult.documentCount,
-        confidence: contextResult.confidence
+        confidence: contextResult.confidence,
       });
     } catch (error) {
-      logger.session.warn('Failed to initialize session context', {
+      logger.session.warn("Failed to initialize session context", {
         sessionId,
         profileId: fullSessionData.profileId,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -202,12 +204,16 @@ export async function addTranscript(
     session.conversationHistory.push(message);
 
     // Update context if transcript is final and profile ID is available
-    if (transcript.is_final && session.profileId && session.transcripts.length % 3 === 0) {
+    if (
+      transcript.is_final &&
+      session.profileId &&
+      session.transcripts.length % 3 === 0
+    ) {
       try {
         const newTranscripts = session.transcripts
           .slice(-3) // Last 3 transcripts
-          .map(t => t.text);
-          
+          .map((t) => t.text);
+
         const updatedContext = await sessionContextService.updateSessionContext(
           sessionId,
           session,
@@ -215,24 +221,25 @@ export async function addTranscript(
           {
             profileId: session.profileId,
             maxContextTokens: 2000,
-            contextThreshold: 0.7
-          }
+            contextThreshold: 0.7,
+          },
         );
-        
+
         session.contextResult = updatedContext;
         session.contextLastUpdated = Date.now();
         session.analysisState.lastContextUpdate = Date.now();
-        session.analysisState.contextAvailable = updatedContext.documentCount > 0;
-        
-        logger.session.debug('Session context updated with new transcript', {
+        session.analysisState.contextAvailable =
+          updatedContext.documentCount > 0;
+
+        logger.session.debug("Session context updated with new transcript", {
           sessionId,
           documentCount: updatedContext.documentCount,
-          confidence: updatedContext.confidence
+          confidence: updatedContext.confidence,
         });
       } catch (error) {
-        logger.session.warn('Failed to update session context', {
+        logger.session.warn("Failed to update session context", {
           sessionId,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -416,7 +423,7 @@ export function getSessionEmitter(sessionId: string): EventEmitter | undefined {
 export function deleteSession(sessionId: string): void {
   // Clear session context cache
   sessionContextService.clearSessionContext(sessionId);
-  
+
   sessions.delete(sessionId);
   const emitter = sessionEmitters.get(sessionId);
   if (emitter) {
@@ -454,7 +461,7 @@ export function cleanupInactiveSessions(maxAgeHours: number = 24): void {
  */
 export async function getSessionAnalysisContext(
   sessionId: string,
-  analysisType: 'diagnosis' | 'treatment' | 'medication' | 'followup'
+  analysisType: "diagnosis" | "treatment" | "medication" | "followup",
 ): Promise<{
   medicalHistory: any[];
   relevantDocuments: any[];
@@ -462,18 +469,20 @@ export async function getSessionAnalysisContext(
 } | null> {
   const session = sessions.get(sessionId);
   if (!session) return null;
-  
+
   return await sessionContextService.getContextForAnalysis(
     sessionId,
     analysisType,
-    session
+    session,
   );
 }
 
 /**
  * Get session context result
  */
-export function getSessionContext(sessionId: string): SessionContextResult | null {
+export function getSessionContext(
+  sessionId: string,
+): SessionContextResult | null {
   const session = sessions.get(sessionId);
   return session?.contextResult || null;
 }

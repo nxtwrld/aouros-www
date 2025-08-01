@@ -66,7 +66,8 @@ export default {
       searchKeywords: {
         type: "array",
         items: { type: "string" },
-        description: "Search-optimized keywords: imaging modalities, anatomical regions, findings, radiological terms",
+        description:
+          "Search-optimized keywords: imaging modalities, anatomical regions, findings, radiological terms",
       },
     },
     required: [

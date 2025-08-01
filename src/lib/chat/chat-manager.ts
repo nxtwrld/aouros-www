@@ -16,6 +16,7 @@ import { chatContextService } from "$lib/context/integration/chat-service";
 import type { ChatContextResult } from "$lib/context/integration/shared/chat-context-base";
 import { chatMCPToolWrapper } from "./mcp-tool-wrapper";
 import user from "$lib/user";
+import { profile } from "$lib/profiles";
 
 export class ChatManager {
   private clientService: ChatClientService;
@@ -134,7 +135,31 @@ export class ChatManager {
   }
 
   /**
-   * Get cached context for chat initialization
+   * Create context from current profile data (preferred method)
+   */
+  private createContextFromProfileData(
+    profileId: string,
+    profileName: string,
+    isOwnProfile: boolean,
+    language: string,
+    healthData?: any,
+    healthDocumentId?: string,
+  ): ChatContext {
+    const navigationEvent = ui.getLatest("chat:navigation");
+    
+    return profile.createChatContext(
+      profileId,
+      profileName,
+      isOwnProfile,
+      language,
+      navigationEvent?.data?.route || "/",
+      healthData,
+      healthDocumentId
+    );
+  }
+
+  /**
+   * Get cached context for chat initialization (legacy method)
    */
   private getCachedContext(
     profileId: string,
@@ -231,16 +256,12 @@ export class ChatManager {
   }): void {
     const state = get(chatStore);
 
-    // If we don't have a context yet, initialize with this profile
-    // Check cache for any existing context first
+    // Don't auto-initialize chat on profile switch - only initialize when chat is actually opened
+    // If we don't have a context yet, just return - chat will initialize when opened
     if (!state.context) {
-      const cachedContext = this.getCachedContext(
-        data.profileId,
-        data.profileName,
-        data.isOwnProfile,
-        data.language,
+      console.log(
+        `Profile switch to ${data.profileName}, but chat not initialized yet`,
       );
-      this.initializeChat(cachedContext);
       return;
     }
 
@@ -250,8 +271,7 @@ export class ChatManager {
       return;
     }
 
-    // If switching to a different profile, save current conversation but don't initialize yet
-    // Let the profile context event handle the prompt
+    // If switching to a different profile, save current conversation and update context
     if (state.messages.length > 0) {
       const history = new Map(state.conversationHistory);
       history.set(state.context.currentProfileId, [...state.messages]);
@@ -263,6 +283,42 @@ export class ChatManager {
       console.log(
         `Saved ${state.messages.length} messages for profile ${state.context.currentProfileId}`,
       );
+    }
+
+    // Get current profile data from store and update context
+    const currentProfile = profile.get();
+    if (currentProfile && currentProfile.id === data.profileId) {
+      console.log(`Switching chat context to profile: ${data.profileName}`);
+      
+      // Create new context for the switched profile using profile store data
+      const newContext = this.createContextFromProfileData(
+        currentProfile.id,
+        currentProfile.fullName || "Unknown",
+        data.isOwnProfile,
+        currentProfile.language || data.language,
+        currentProfile.health,
+        currentProfile.healthDocumentId,
+      );
+
+      // Update chat context
+      chatActions.setContext(newContext);
+      
+      // Load conversation history for this profile if it exists
+      const existingHistory = state.conversationHistory.get(data.profileId) || [];
+      if (existingHistory.length > 0) {
+        chatActions.setMessages(existingHistory);
+        console.log(`Restored ${existingHistory.length} messages for profile ${data.profileId}`);
+      } else {
+        // Clear messages and add a greeting for the new profile
+        chatActions.clearMessages();
+        const greeting = this.getInitialGreeting(newContext);
+        if (greeting) {
+          const greetingMessage = createMessage("assistant", greeting);
+          chatActions.addMessage(greetingMessage);
+        }
+      }
+    } else {
+      console.warn(`Profile data not found or mismatched for ID: ${data.profileId}`);
     }
   }
 
@@ -296,10 +352,61 @@ export class ChatManager {
     const wasOpen = get(chatStore).isOpen;
     chatActions.toggle();
 
-    // If chat was just opened, check for latest document context
+    // If chat was just opened, initialize with current profile
     if (!wasOpen && get(chatStore).isOpen) {
-      this.checkForLatestDocumentOnOpen();
+      this.initializeChatWithCurrentProfile();
     }
+  }
+
+  /**
+   * Initialize chat with current profile when chat is opened
+   */
+  private initializeChatWithCurrentProfile(): void {
+    const currentProfile = profile.get();
+
+    if (!currentProfile) {
+      console.warn("No current profile available for chat initialization");
+      return;
+    }
+
+    // Check if we already have a context for this profile
+    const state = get(chatStore);
+    if (state.context && state.context.currentProfileId === currentProfile.id) {
+      console.log(`Chat already initialized for profile ${currentProfile.id}`);
+      // Still check for latest document context
+      this.checkForLatestDocumentOnOpen();
+      return;
+    }
+
+    console.log(
+      `Initializing chat for current profile: ${currentProfile.fullName || "Unknown"}`,
+      {
+        profileId: currentProfile.id,
+        hasHealthData: !!currentProfile.health,
+        language: currentProfile.language,
+      },
+    );
+
+    // Create context from current profile including health data
+    const initialContext = this.createContextFromProfileData(
+      currentProfile.id,
+      currentProfile.fullName || "Unknown",
+      true, // For now, assume all profiles are "own" profiles in patient mode
+      currentProfile.language || "en",
+      currentProfile.health, // Pass health data
+      currentProfile.healthDocumentId, // Pass health document ID
+    );
+
+    // Health context will be available through the profile context system
+    if (currentProfile.health) {
+      console.log("Health context available for chat initialization", {
+        hasHealthData: true,
+        healthDocumentId: currentProfile.healthDocumentId,
+      });
+    }
+
+    // Initialize the chat
+    this.initializeChat(initialContext);
   }
 
   /**
@@ -573,27 +680,45 @@ export class ChatManager {
       }));
     }
 
-    // Create new context for the new profile
-    const newContext: ChatContext = {
-      mode: state.context?.mode || "patient",
-      currentProfileId: profileId,
-      conversationThreadId: generateId(),
-      language: state.context?.language || "en",
-      isOwnProfile: state.context?.isOwnProfile || true,
-      pageContext: {
-        route: state.context?.pageContext?.route || "/",
-        profileName: profileName,
-        availableData: {
-          documents: [],
-          conditions: [],
-          medications: [],
-          vitals: [],
-        },
-      },
-    };
+    // Get current profile data from store for consistency
+    const currentProfile = profile.get();
+    if (currentProfile && currentProfile.id === profileId) {
+      // Create new context using profile store data (same as other methods)
+      const newContext = this.createContextFromProfileData(
+        currentProfile.id,
+        currentProfile.fullName || profileName,
+        state.context?.isOwnProfile || true,
+        currentProfile.language || state.context?.language || "en",
+        currentProfile.health,
+        currentProfile.healthDocumentId,
+      );
 
-    // Initialize chat with new profile context
-    this.initializeChat(newContext);
+      // Initialize chat with new profile context
+      this.initializeChat(newContext);
+    } else {
+      console.warn(`Profile data not found for accepted profile context: ${profileId}`);
+      
+      // Fallback to manual creation (legacy behavior)
+      const newContext: ChatContext = {
+        mode: state.context?.mode || "patient",
+        currentProfileId: profileId,
+        conversationThreadId: generateId(),
+        language: state.context?.language || "en",
+        isOwnProfile: state.context?.isOwnProfile || true,
+        pageContext: {
+          route: state.context?.pageContext?.route || "/",
+          profileName: profileName,
+          availableData: {
+            documents: [],
+            conditions: [],
+            medications: [],
+            vitals: [],
+          },
+        },
+      };
+
+      this.initializeChat(newContext);
+    }
 
     // Add simple system message about switching profile
     const switchMsg = createMessage("system", `Switching to ${profileName}`);
@@ -962,12 +1087,14 @@ export class ChatManager {
       // Check for duplicate tool calls to prevent infinite loops
       const toolSignature = `${toolCall.name}_${JSON.stringify(toolCall.parameters)}`;
       if (this.lastToolCall === toolSignature) {
-        console.log(`🚫 [Tool Loop Prevention] Suppressing duplicate tool call: ${toolCall.name}`);
-        
+        console.log(
+          `🚫 [Tool Loop Prevention] Suppressing duplicate tool call: ${toolCall.name}`,
+        );
+
         // Add explanatory message instead of executing the duplicate tool
         const explanationMessage = createMessage(
           "system",
-          `I already searched for that information and found no results. Let me provide an answer based on what I found.`
+          `I already searched for that information and found no results. Let me provide an answer based on what I found.`,
         );
         chatActions.addMessage(explanationMessage);
         continue; // Skip this duplicate tool call
@@ -1074,7 +1201,7 @@ export class ChatManager {
       let streamingMessageId: string | null = null;
       let accumulatedContent = "";
       let messageMetadata: any = {};
-      
+
       await this.clientService.sendMessage(
         followUpMessage,
         enhancedContext,
@@ -1106,7 +1233,7 @@ export class ChatManager {
             case "metadata":
               // Store metadata for the final message
               messageMetadata = event.data;
-              
+
               // Note: Tool calls are already processed by the main sendMessage handler
               // No need to process them again here to avoid duplication
               break;
@@ -1122,8 +1249,10 @@ export class ChatManager {
                           ...msg.metadata,
                           ...messageMetadata,
                           tokenUsage: messageMetadata.tokenUsage,
-                          anatomyReferences: messageMetadata.anatomyReferences || [],
-                          documentReferences: messageMetadata.documentReferences || [],
+                          anatomyReferences:
+                            messageMetadata.anatomyReferences || [],
+                          documentReferences:
+                            messageMetadata.documentReferences || [],
                         },
                       }
                     : msg,

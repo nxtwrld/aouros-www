@@ -43,7 +43,8 @@ export default {
       searchKeywords: {
         type: "array",
         items: { type: "string" },
-        description: "Search-optimized keywords: ICD-10 codes, Latin terms, body systems, diagnostic categories",
+        description:
+          "Search-optimized keywords: ICD-10 codes, Latin terms, body systems, diagnostic categories",
       },
     },
     required: ["description"],

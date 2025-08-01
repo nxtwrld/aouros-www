@@ -1,10 +1,10 @@
 // AI Model Configuration Loader
 // Loads and manages AI model configurations from YAML file
 
-import { readFileSync } from 'fs';
-import { load as yamlLoad } from 'js-yaml';
-import { env } from '$env/dynamic/private';
-import { join } from 'path';
+import { readFileSync } from "fs";
+import { load as yamlLoad } from "js-yaml";
+import { env } from "$env/dynamic/private";
+import { join } from "path";
 
 export interface ModelInfo {
   model_id: string;
@@ -54,13 +54,13 @@ export interface ModelConfiguration {
   };
 }
 
-export type FlowType = 
-  | 'extraction'
-  | 'medical_analysis'
-  | 'feature_detection'
-  | 'signal_processing'
-  | 'document_type_routing'
-  | 'quality_validation';
+export type FlowType =
+  | "extraction"
+  | "medical_analysis"
+  | "feature_detection"
+  | "signal_processing"
+  | "document_type_routing"
+  | "quality_validation";
 
 // Global configuration cache
 let cachedConfig: ModelConfiguration | null = null;
@@ -75,18 +75,21 @@ function loadConfiguration(): ModelConfiguration {
 
   try {
     // Try to load from YAML file
-    const configPath = join(process.cwd(), 'src/lib/config/models.yaml');
-    const configFile = readFileSync(configPath, 'utf8');
+    const configPath = join(process.cwd(), "src/lib/config/models.yaml");
+    const configFile = readFileSync(configPath, "utf8");
     cachedConfig = yamlLoad(configFile) as ModelConfiguration;
-    
-    console.log('📋 Model configuration loaded from YAML file');
-    console.log('🔧 Available providers:', Object.keys(cachedConfig.providers));
-    console.log('📊 Configured flows:', Object.keys(cachedConfig.flows));
-    
+
+    console.log("📋 Model configuration loaded from YAML file");
+    console.log("🔧 Available providers:", Object.keys(cachedConfig.providers));
+    console.log("📊 Configured flows:", Object.keys(cachedConfig.flows));
+
     return cachedConfig;
   } catch (error) {
-    console.warn('⚠️ Failed to load YAML config, using fallback:', error.message);
-    
+    console.warn(
+      "⚠️ Failed to load YAML config, using fallback:",
+      error.message,
+    );
+
     // Fallback configuration if YAML loading fails
     cachedConfig = getFallbackConfiguration();
     return cachedConfig;
@@ -98,35 +101,81 @@ function loadConfiguration(): ModelConfiguration {
  */
 function getFallbackConfiguration(): ModelConfiguration {
   return {
-    default_providers: ['openai'],
+    default_providers: ["openai"],
     providers: {
       openai: {
-        name: 'OpenAI',
+        name: "OpenAI",
         enabled: true,
-        api_key_env: 'OPENAI_API_KEY',
+        api_key_env: "OPENAI_API_KEY",
         models: {
           gpt4: {
-            model_id: 'gpt-4o-2024-08-06',
-            description: 'GPT-4 Omni - Latest with vision capabilities',
+            model_id: "gpt-4o-2024-08-06",
+            description: "GPT-4 Omni - Latest with vision capabilities",
             max_tokens: 4096,
             temperature: 0,
             supports_vision: true,
-            cost_per_1k_tokens: 0.03
-          }
-        }
-      }
+            cost_per_1k_tokens: 0.03,
+          },
+        },
+      },
     },
     flows: {
-      extraction: { provider: 'openai', model: 'gpt4', description: 'Extract text', fallback_models: [] },
-      medical_analysis: { provider: 'openai', model: 'gpt4', description: 'Medical analysis', fallback_models: [] },
-      feature_detection: { provider: 'openai', model: 'gpt4', description: 'Feature detection', fallback_models: [] },
-      signal_processing: { provider: 'openai', model: 'gpt4', description: 'Signal processing', fallback_models: [] },
-      document_type_routing: { provider: 'openai', model: 'gpt4', description: 'Document routing', fallback_models: [] },
-      quality_validation: { provider: 'openai', model: 'gpt4', description: 'Quality validation', fallback_models: [] }
+      extraction: {
+        provider: "openai",
+        model: "gpt4",
+        description: "Extract text",
+        fallback_models: [],
+      },
+      medical_analysis: {
+        provider: "openai",
+        model: "gpt4",
+        description: "Medical analysis",
+        fallback_models: [],
+      },
+      feature_detection: {
+        provider: "openai",
+        model: "gpt4",
+        description: "Feature detection",
+        fallback_models: [],
+      },
+      signal_processing: {
+        provider: "openai",
+        model: "gpt4",
+        description: "Signal processing",
+        fallback_models: [],
+      },
+      document_type_routing: {
+        provider: "openai",
+        model: "gpt4",
+        description: "Document routing",
+        fallback_models: [],
+      },
+      quality_validation: {
+        provider: "openai",
+        model: "gpt4",
+        description: "Quality validation",
+        fallback_models: [],
+      },
     },
-    performance: { max_retries: 3, timeout_ms: 30000, concurrent_requests: 5, rate_limit_per_minute: 100 },
-    cost_optimization: { enable_cost_optimization: false, simple_task_model: 'gpt4', complex_task_model: 'gpt4', simple_tasks: [], complex_tasks: [] },
-    monitoring: { log_model_usage: true, track_token_costs: true, performance_metrics: true, error_tracking: true }
+    performance: {
+      max_retries: 3,
+      timeout_ms: 30000,
+      concurrent_requests: 5,
+      rate_limit_per_minute: 100,
+    },
+    cost_optimization: {
+      enable_cost_optimization: false,
+      simple_task_model: "gpt4",
+      complex_task_model: "gpt4",
+      simple_tasks: [],
+      complex_tasks: [],
+    },
+    monitoring: {
+      log_model_usage: true,
+      track_token_costs: true,
+      performance_metrics: true,
+      error_tracking: true,
+    },
   };
 }
 
@@ -143,7 +192,11 @@ export class ModelConfigManager {
   /**
    * Get model configuration for a specific flow
    */
-  getModelForFlow(flowType: FlowType): { provider: string; modelInfo: ModelInfo; config: FlowConfig } {
+  getModelForFlow(flowType: FlowType): {
+    provider: string;
+    modelInfo: ModelInfo;
+    config: FlowConfig;
+  } {
     const config = loadConfiguration();
     const flowConfig = config.flows[flowType];
     if (!flowConfig) {
@@ -162,7 +215,9 @@ export class ModelConfigManager {
 
     const provider = config.providers[flowConfig.provider];
     if (!provider || !provider.enabled) {
-      throw new Error(`Provider '${flowConfig.provider}' not available for flow '${flowType}'`);
+      throw new Error(
+        `Provider '${flowConfig.provider}' not available for flow '${flowType}'`,
+      );
     }
 
     const modelInfo = provider.models[selectedModel];
@@ -171,11 +226,19 @@ export class ModelConfigManager {
       for (const fallbackModel of flowConfig.fallback_models) {
         const fallbackInfo = provider.models[fallbackModel];
         if (fallbackInfo) {
-          console.log(`⚠️ Using fallback model '${fallbackModel}' for flow '${flowType}'`);
-          return { provider: flowConfig.provider, modelInfo: fallbackInfo, config: flowConfig };
+          console.log(
+            `⚠️ Using fallback model '${fallbackModel}' for flow '${flowType}'`,
+          );
+          return {
+            provider: flowConfig.provider,
+            modelInfo: fallbackInfo,
+            config: flowConfig,
+          };
         }
       }
-      throw new Error(`Model '${selectedModel}' not available for provider '${flowConfig.provider}'`);
+      throw new Error(
+        `Model '${selectedModel}' not available for provider '${flowConfig.provider}'`,
+      );
     }
 
     return { provider: flowConfig.provider, modelInfo, config: flowConfig };
@@ -207,7 +270,9 @@ export class ModelConfigManager {
 
     const apiKey = env[provider.api_key_env];
     if (!apiKey) {
-      throw new Error(`API key not found for provider '${providerName}' (env: ${provider.api_key_env})`);
+      throw new Error(
+        `API key not found for provider '${providerName}' (env: ${provider.api_key_env})`,
+      );
     }
 
     return apiKey;
@@ -218,8 +283,8 @@ export class ModelConfigManager {
    */
   getAvailableProviders(): string[] {
     const config = loadConfiguration();
-    return Object.keys(config.providers).filter(providerName => 
-      this.isProviderAvailable(providerName)
+    return Object.keys(config.providers).filter((providerName) =>
+      this.isProviderAvailable(providerName),
     );
   }
 
@@ -250,10 +315,19 @@ export class ModelConfigManager {
   /**
    * Log model usage for monitoring
    */
-  logModelUsage(flowType: FlowType, provider: string, model: string, tokens: number, cost: number, duration: number): void {
+  logModelUsage(
+    flowType: FlowType,
+    provider: string,
+    model: string,
+    tokens: number,
+    cost: number,
+    duration: number,
+  ): void {
     const config = loadConfiguration();
     if (config.monitoring.log_model_usage) {
-      console.log(`📊 Model Usage: ${flowType} | ${provider}:${model} | ${tokens} tokens | $${cost.toFixed(4)} | ${duration}ms`);
+      console.log(
+        `📊 Model Usage: ${flowType} | ${provider}:${model} | ${tokens} tokens | $${cost.toFixed(4)} | ${duration}ms`,
+      );
     }
   }
 
@@ -264,7 +338,7 @@ export class ModelConfigManager {
     const config = loadConfiguration();
     const providerConfig = config.providers[provider];
     const modelInfo = providerConfig?.models[model];
-    
+
     if (!modelInfo) {
       return 0;
     }
@@ -278,9 +352,9 @@ export class ModelConfigManager {
   reloadConfiguration(): void {
     cachedConfig = null; // Clear cache
     const config = loadConfiguration(); // Force reload
-    console.log('🔄 Model configuration reloaded from YAML file');
-    console.log('🔧 Available providers:', Object.keys(config.providers));
-    console.log('📊 Configured flows:', Object.keys(config.flows));
+    console.log("🔄 Model configuration reloaded from YAML file");
+    console.log("🔧 Available providers:", Object.keys(config.providers));
+    console.log("📊 Configured flows:", Object.keys(config.flows));
   }
 
   /**

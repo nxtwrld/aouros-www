@@ -7,7 +7,7 @@ This directory contains test data for the AI document processing system.
 ```
 test-data/
 ├── extractions/     # OCR/extraction test results (gitignored)
-├── analyses/        # AI analysis test results (gitignored)  
+├── analyses/        # AI analysis test results (gitignored)
 ├── workflows/       # Complete workflow recordings (gitignored)
 ├── results/         # Final processing results (gitignored)
 └── README.md        # This file
@@ -26,19 +26,21 @@ Control via `DEBUG_EXTRACTOR` environment variable:
 #### Example Workflow:
 
 1. **Capture real data:**
+
    ```bash
    # Set in .env.development.local
    DEBUG_EXTRACTOR="true"
-   
+
    # Run extraction - this will save results to test-data/extractions/
    # File will be named: extraction-result-YYYY-MM-DDTHH-MM-SS-sssZ.json
    ```
 
 2. **Use saved data for testing:**
+
    ```bash
-   # Set in .env.development.local  
+   # Set in .env.development.local
    DEBUG_EXTRACTOR="test-data/extractions/extraction-result-2024-01-15T10-30-45-123Z.json"
-   
+
    # Now extraction will load from file instead of doing real OCR
    ```
 
@@ -72,39 +74,42 @@ Control via `DEBUG_ANALYSIS` environment variable for comprehensive workflow deb
 #### Example Workflow:
 
 1. **Record a workflow:**
+
    ```bash
    # Set in .env.development.local
    DEBUG_ANALYSIS="true"
-   
+
    # Run analysis - saves complete workflow to test-data/workflows/
    # File: workflow-analysis-YYYY-MM-DDTHH-MM-SS-sssZ.json
    ```
 
 2. **Replay saved workflow:**
+
    ```bash
-   # Set in .env.development.local  
+   # Set in .env.development.local
    DEBUG_ANALYSIS="test-data/workflows/workflow-analysis-2025-01-15T10-30-45-123Z.json"
-   
+
    # Analysis will replay from recording step by step
    ```
 
 3. **Workflow CLI Tools:**
+
    ```bash
    # List available recordings
    npx ts-node src/lib/debug/workflow-cli.ts list
-   
+
    # Show workflow details
    npx ts-node src/lib/debug/workflow-cli.ts info --file my-workflow.json
-   
+
    # Replay with verbose output
    npx ts-node src/lib/debug/workflow-cli.ts replay --file my-workflow.json --verbose
-   
+
    # Extract specific step data
    npx ts-node src/lib/debug/workflow-cli.ts extract --file my-workflow.json --step feature_detection
-   
+
    # Compare two workflows
    npx ts-node src/lib/debug/workflow-cli.ts compare --file workflow1.json --compare workflow2.json
-   
+
    # Performance analysis
    npx ts-node src/lib/debug/workflow-cli.ts analyze --file my-workflow.json
    ```

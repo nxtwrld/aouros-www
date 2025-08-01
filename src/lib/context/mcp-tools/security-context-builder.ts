@@ -1,13 +1,13 @@
 /**
  * Security Context Builder
- * 
+ *
  * Utility functions to build MCPSecurityContext from various sources
  * like HTTP requests, SvelteKit events, and user sessions.
  */
 
-import type { RequestEvent } from '@sveltejs/kit';
-import type { User } from '@supabase/supabase-js';
-import type { MCPSecurityContext } from './security-audit';
+import type { RequestEvent } from "@sveltejs/kit";
+import type { User } from "@supabase/supabase-js";
+import type { MCPSecurityContext } from "./security-audit";
 
 /**
  * Build security context from SvelteKit request event
@@ -16,14 +16,14 @@ export function buildSecurityContextFromEvent(
   event: RequestEvent,
   user: User,
   profileId: string,
-  sessionId?: string
+  sessionId?: string,
 ): MCPSecurityContext {
   return {
     user,
     profileId,
     sessionId,
     ipAddress: getClientIP(event),
-    userAgent: event.request.headers.get('user-agent') || undefined
+    userAgent: event.request.headers.get("user-agent") || undefined,
   };
 }
 
@@ -33,13 +33,14 @@ export function buildSecurityContextFromEvent(
 export function buildSecurityContextFromBrowser(
   user: User,
   profileId: string,
-  sessionId?: string
+  sessionId?: string,
 ): MCPSecurityContext {
   return {
     user,
     profileId,
     sessionId,
-    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined
+    userAgent:
+      typeof navigator !== "undefined" ? navigator.userAgent : undefined,
   };
 }
 
@@ -49,23 +50,23 @@ export function buildSecurityContextFromBrowser(
 export function buildTestSecurityContext(
   userId: string,
   profileId: string,
-  sessionId?: string
+  sessionId?: string,
 ): MCPSecurityContext {
   return {
     user: {
       id: userId,
-      email: 'test@example.com',
+      email: "test@example.com",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      aud: 'authenticated',
+      aud: "authenticated",
       app_metadata: {},
       user_metadata: {},
-      role: 'authenticated'
+      role: "authenticated",
     },
     profileId,
     sessionId,
-    ipAddress: '127.0.0.1',
-    userAgent: 'test-agent'
+    ipAddress: "127.0.0.1",
+    userAgent: "test-agent",
   };
 }
 
@@ -75,15 +76,15 @@ export function buildTestSecurityContext(
 function getClientIP(event: RequestEvent): string {
   // Check various headers for the real client IP
   const headers = event.request.headers;
-  
+
   return (
-    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    headers.get('x-real-ip') ||
-    headers.get('x-client-ip') ||
-    headers.get('cf-connecting-ip') || // Cloudflare
-    headers.get('x-forwarded') ||
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headers.get("x-real-ip") ||
+    headers.get("x-client-ip") ||
+    headers.get("cf-connecting-ip") || // Cloudflare
+    headers.get("x-forwarded") ||
     event.getClientAddress() ||
-    'unknown'
+    "unknown"
   );
 }
 
@@ -95,35 +96,37 @@ export function validateSecurityContext(context: MCPSecurityContext): {
   errors: string[];
 } {
   const errors: string[] = [];
-  
+
   if (!context.user) {
-    errors.push('User is required');
+    errors.push("User is required");
   } else {
     if (!context.user.id) {
-      errors.push('User ID is required');
+      errors.push("User ID is required");
     }
   }
-  
+
   if (!context.profileId) {
-    errors.push('Profile ID is required');
+    errors.push("Profile ID is required");
   }
-  
+
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
 /**
  * Sanitize security context for logging
  */
-export function sanitizeSecurityContext(context: MCPSecurityContext): Record<string, any> {
+export function sanitizeSecurityContext(
+  context: MCPSecurityContext,
+): Record<string, any> {
   return {
-    userId: context.user?.id || 'anonymous',
+    userId: context.user?.id || "anonymous",
     profileId: context.profileId,
     sessionId: context.sessionId,
     hasUser: !!context.user,
     hasIP: !!context.ipAddress,
-    hasUserAgent: !!context.userAgent
+    hasUserAgent: !!context.userAgent,
   };
 }

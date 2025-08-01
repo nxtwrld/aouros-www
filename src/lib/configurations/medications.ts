@@ -203,12 +203,14 @@ export default {
             therapeuticClass: {
               type: "array",
               items: { type: "string" },
-              description: "Therapeutic classes: antibiotic, analgesic, antihypertensive, etc.",
+              description:
+                "Therapeutic classes: antibiotic, analgesic, antihypertensive, etc.",
             },
             searchTerms: {
               type: "array",
               items: { type: "string" },
-              description: "Search-optimized terms: generic names, brand names, drug classes, indications",
+              description:
+                "Search-optimized terms: generic names, brand names, drug classes, indications",
             },
           },
           required: ["medicationName", "dosage", "route", "form"],
@@ -300,12 +302,14 @@ export default {
             therapeuticClass: {
               type: "array",
               items: { type: "string" },
-              description: "Therapeutic classes: antibiotic, analgesic, antihypertensive, etc.",
+              description:
+                "Therapeutic classes: antibiotic, analgesic, antihypertensive, etc.",
             },
             searchTerms: {
               type: "array",
               items: { type: "string" },
-              description: "Search-optimized terms: generic names, brand names, drug classes, indications",
+              description:
+                "Search-optimized terms: generic names, brand names, drug classes, indications",
             },
           },
           required: ["medicationName"],

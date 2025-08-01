@@ -2,9 +2,13 @@
 // Extends the existing AI provider abstractions to support audio transcription
 
 import OpenAI from "openai";
-import fs from 'fs/promises';
-import path from 'path';
-import { OPENAI_API_KEY, AZURE_SPEECH_KEY, GOOGLE_API_KEY } from "$env/static/private";
+import fs from "fs/promises";
+import path from "path";
+import {
+  OPENAI_API_KEY,
+  AZURE_SPEECH_KEY,
+  GOOGLE_API_KEY,
+} from "$env/static/private";
 
 export interface TranscriptionConfig {
   providers: Record<string, ProviderConfig>;
@@ -122,7 +126,11 @@ export class TranscriptionProviderAbstraction {
   private configPath: string;
 
   private constructor() {
-    this.configPath = path.join(process.cwd(), 'config', 'audio-transcription.json');
+    this.configPath = path.join(
+      process.cwd(),
+      "config",
+      "audio-transcription.json",
+    );
   }
 
   static getInstance(): TranscriptionProviderAbstraction {
@@ -137,18 +145,18 @@ export class TranscriptionProviderAbstraction {
    */
   async initialize(): Promise<void> {
     try {
-      const configData = await fs.readFile(this.configPath, 'utf-8');
+      const configData = await fs.readFile(this.configPath, "utf-8");
       this.config = JSON.parse(configData);
-      
+
       await this.initializeProviders();
-      
-      console.log('✅ Transcription providers initialized', {
+
+      console.log("✅ Transcription providers initialized", {
         providersCount: this.providers.size,
-        defaultProvider: this.config.defaultProvider
+        defaultProvider: this.config.defaultProvider,
       });
     } catch (error) {
-      console.error('❌ Failed to initialize transcription providers:', error);
-      
+      console.error("❌ Failed to initialize transcription providers:", error);
+
       // Fallback to default configuration
       this.config = this.getDefaultConfig();
       await this.initializeProviders();
@@ -166,25 +174,29 @@ export class TranscriptionProviderAbstraction {
       const openaiClient = new OpenAI({
         apiKey: OPENAI_API_KEY,
       });
-      
-      this.providers.set('openai', {
+
+      this.providers.set("openai", {
         client: openaiClient,
-        config: this.config.providers.openai
+        config: this.config.providers.openai,
       });
-      
-      console.log('🤖 OpenAI Whisper provider initialized');
+
+      console.log("🤖 OpenAI Whisper provider initialized");
     }
 
     // Initialize Azure Speech Services (placeholder)
     if (this.config.providers.azure?.enabled && AZURE_SPEECH_KEY) {
       // TODO: Initialize Azure Speech Services
-      console.log('🤖 Azure Speech Services provider initialized (placeholder)');
+      console.log(
+        "🤖 Azure Speech Services provider initialized (placeholder)",
+      );
     }
 
     // Initialize Google Cloud Speech-to-Text (placeholder)
     if (this.config.providers.google?.enabled && GOOGLE_API_KEY) {
       // TODO: Initialize Google Cloud Speech-to-Text
-      console.log('🤖 Google Speech-to-Text provider initialized (placeholder)');
+      console.log(
+        "🤖 Google Speech-to-Text provider initialized (placeholder)",
+      );
     }
   }
 
@@ -193,7 +205,7 @@ export class TranscriptionProviderAbstraction {
    */
   async transcribeAudio(
     audioData: File,
-    options: TranscriptionOptions = {}
+    options: TranscriptionOptions = {},
   ): Promise<TranscriptionResult> {
     if (!this.config) {
       await this.initialize();
@@ -204,25 +216,35 @@ export class TranscriptionProviderAbstraction {
     const model = options.model || this.config!.defaultModel;
 
     try {
-      const result = await this.executeTranscription(provider, model, audioData, options);
-      
+      const result = await this.executeTranscription(
+        provider,
+        model,
+        audioData,
+        options,
+      );
+
       const processingTime = Date.now() - startTime;
-      console.log(`✅ Transcription completed with ${provider} in ${processingTime}ms`);
+      console.log(
+        `✅ Transcription completed with ${provider} in ${processingTime}ms`,
+      );
 
       return {
         ...result,
         provider,
         modelUsed: model,
-        processingTime
+        processingTime,
       };
     } catch (error) {
       console.error(`❌ Transcription failed with ${provider}:`, error);
-      
+
       // Try fallback providers if enabled
-      if (this.config!.fallback.enableFallback && this.config!.fallback.fallbackOnError) {
+      if (
+        this.config!.fallback.enableFallback &&
+        this.config!.fallback.fallbackOnError
+      ) {
         return this.attemptFallbackTranscription(audioData, options, provider);
       }
-      
+
       throw error;
     }
   }
@@ -234,18 +256,20 @@ export class TranscriptionProviderAbstraction {
     provider: string,
     model: string,
     audioData: File,
-    options: TranscriptionOptions
-  ): Promise<Omit<TranscriptionResult, 'provider' | 'modelUsed' | 'processingTime'>> {
+    options: TranscriptionOptions,
+  ): Promise<
+    Omit<TranscriptionResult, "provider" | "modelUsed" | "processingTime">
+  > {
     switch (provider) {
-      case 'openai':
+      case "openai":
         return this.executeOpenAITranscription(model, audioData, options);
-      
-      case 'azure':
+
+      case "azure":
         return this.executeAzureTranscription(model, audioData, options);
-      
-      case 'google':
+
+      case "google":
         return this.executeGoogleTranscription(model, audioData, options);
-      
+
       default:
         throw new Error(`Unsupported transcription provider: ${provider}`);
     }
@@ -257,11 +281,13 @@ export class TranscriptionProviderAbstraction {
   private async executeOpenAITranscription(
     model: string,
     audioData: File,
-    options: TranscriptionOptions
-  ): Promise<Omit<TranscriptionResult, 'provider' | 'modelUsed' | 'processingTime'>> {
-    const openaiProvider = this.providers.get('openai');
+    options: TranscriptionOptions,
+  ): Promise<
+    Omit<TranscriptionResult, "provider" | "modelUsed" | "processingTime">
+  > {
+    const openaiProvider = this.providers.get("openai");
     if (!openaiProvider) {
-      throw new Error('OpenAI provider not initialized');
+      throw new Error("OpenAI provider not initialized");
     }
 
     const modelConfig = openaiProvider.config.models[model];
@@ -270,10 +296,13 @@ export class TranscriptionProviderAbstraction {
     }
 
     // Prepare transcription parameters
-    const language = options.language || this.config!.transcriptionSettings.defaultLanguage;
-    const responseFormat = options.responseFormat || this.config!.transcriptionSettings.responseFormat;
+    const language =
+      options.language || this.config!.transcriptionSettings.defaultLanguage;
+    const responseFormat =
+      options.responseFormat ||
+      this.config!.transcriptionSettings.responseFormat;
     const temperature = options.temperature ?? modelConfig.temperature ?? 0;
-    
+
     // Use medical context prompt if enabled and no custom prompt provided
     let prompt = options.prompt;
     if (!prompt && this.config!.transcriptionSettings.medicalContext.enabled) {
@@ -285,7 +314,7 @@ export class TranscriptionProviderAbstraction {
       model: modelConfig.name,
       language: language,
       response_format: responseFormat,
-      temperature: temperature
+      temperature: temperature,
     };
 
     if (prompt) {
@@ -300,38 +329,43 @@ export class TranscriptionProviderAbstraction {
       }
     }
 
-    const transcription = await openaiProvider.client.audio.transcriptions.create(transcriptionParams);
+    const transcription =
+      await openaiProvider.client.audio.transcriptions.create(
+        transcriptionParams,
+      );
 
     // Handle different response formats
-    if (typeof transcription === 'string') {
+    if (typeof transcription === "string") {
       return {
         text: transcription,
-        confidence: 0.8 // OpenAI Whisper doesn't provide confidence scores
+        confidence: 0.8, // OpenAI Whisper doesn't provide confidence scores
       };
     } else if (transcription.text) {
       // Verbose JSON response with segments
       return {
         text: transcription.text,
         confidence: 0.8,
-        segments: transcription.segments?.map((segment: any, index: number) => ({
-          id: index,
-          start: segment.start,
-          end: segment.end,
-          text: segment.text,
-          confidence: 0.8,
-          words: segment.words?.map((word: any) => ({
-            word: word.word,
-            start: word.start,
-            end: word.end,
-            confidence: 0.8
-          }))
-        })),
+        segments: transcription.segments?.map(
+          (segment: any, index: number) => ({
+            id: index,
+            start: segment.start,
+            end: segment.end,
+            text: segment.text,
+            confidence: 0.8,
+            words: segment.words?.map((word: any) => ({
+              word: word.word,
+              start: word.start,
+              end: word.end,
+              confidence: 0.8,
+            })),
+          }),
+        ),
         language: transcription.language,
-        duration: transcription.duration
+        duration: transcription.duration,
       };
     }
 
-    throw new Error('Unexpected transcription response format');
+    throw new Error("Unexpected transcription response format");
   }
 
   /**
@@ -340,10 +374,12 @@ export class TranscriptionProviderAbstraction {
   private async executeAzureTranscription(
     model: string,
     audioData: File,
-    options: TranscriptionOptions
-  ): Promise<Omit<TranscriptionResult, 'provider' | 'modelUsed' | 'processingTime'>> {
+    options: TranscriptionOptions,
+  ): Promise<
+    Omit<TranscriptionResult, "provider" | "modelUsed" | "processingTime">
+  > {
     // TODO: Implement Azure Speech Services transcription
-    throw new Error('Azure Speech Services not yet implemented');
+    throw new Error("Azure Speech Services not yet implemented");
   }
 
   /**
@@ -352,10 +388,12 @@ export class TranscriptionProviderAbstraction {
   private async executeGoogleTranscription(
     model: string,
     audioData: File,
-    options: TranscriptionOptions
-  ): Promise<Omit<TranscriptionResult, 'provider' | 'modelUsed' | 'processingTime'>> {
+    options: TranscriptionOptions,
+  ): Promise<
+    Omit<TranscriptionResult, "provider" | "modelUsed" | "processingTime">
+  > {
     // TODO: Implement Google Cloud Speech-to-Text transcription
-    throw new Error('Google Cloud Speech-to-Text not yet implemented');
+    throw new Error("Google Cloud Speech-to-Text not yet implemented");
   }
 
   /**
@@ -364,30 +402,37 @@ export class TranscriptionProviderAbstraction {
   private async attemptFallbackTranscription(
     audioData: File,
     options: TranscriptionOptions,
-    failedProvider: string
+    failedProvider: string,
   ): Promise<TranscriptionResult> {
     const fallbackProviders = this.config!.fallback.fallbackProviders.filter(
-      provider => provider !== failedProvider && this.providers.has(provider)
+      (provider) => provider !== failedProvider && this.providers.has(provider),
     );
 
     for (const fallbackProvider of fallbackProviders) {
       try {
-        console.log(`🔄 Attempting fallback transcription with ${fallbackProvider}`);
-        
+        console.log(
+          `🔄 Attempting fallback transcription with ${fallbackProvider}`,
+        );
+
         const result = await this.transcribeAudio(audioData, {
           ...options,
-          provider: fallbackProvider
+          provider: fallbackProvider,
         });
-        
-        console.log(`✅ Fallback transcription successful with ${fallbackProvider}`);
+
+        console.log(
+          `✅ Fallback transcription successful with ${fallbackProvider}`,
+        );
         return result;
       } catch (error) {
-        console.error(`❌ Fallback transcription failed with ${fallbackProvider}:`, error);
+        console.error(
+          `❌ Fallback transcription failed with ${fallbackProvider}:`,
+          error,
+        );
         continue;
       }
     }
 
-    throw new Error('All transcription providers failed');
+    throw new Error("All transcription providers failed");
   }
 
   /**
@@ -403,14 +448,22 @@ export class TranscriptionProviderAbstraction {
             whisper: {
               name: "whisper-1",
               description: "OpenAI Whisper ASR model",
-              supportedFormats: ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"],
+              supportedFormats: [
+                "mp3",
+                "mp4",
+                "mpeg",
+                "mpga",
+                "m4a",
+                "wav",
+                "webm",
+              ],
               maxFileSize: "25MB",
               languages: ["en", "cs", "de"],
               responseFormats: ["json", "text", "verbose_json"],
-              temperature: 0
-            }
-          }
-        }
+              temperature: 0,
+            },
+          },
+        },
       },
       defaultProvider: "openai",
       defaultModel: "whisper",
@@ -420,10 +473,11 @@ export class TranscriptionProviderAbstraction {
         includeTimestamps: false,
         medicalContext: {
           enabled: true,
-          prompt: "The transcript is a part of a doctor patient session conversation. The doctor is asking the patient about their symptoms and the patient is responding. A nurse or multiple doctors may be part of the conversation.",
+          prompt:
+            "The transcript is a part of a doctor patient session conversation. The doctor is asking the patient about their symptoms and the patient is responding. A nurse or multiple doctors may be part of the conversation.",
           medicalTermsBoost: true,
-          speakerIdentification: false
-        }
+          speakerIdentification: false,
+        },
       },
       performance: {
         maxRetries: 3,
@@ -431,27 +485,27 @@ export class TranscriptionProviderAbstraction {
         batchProcessing: {
           enabled: false,
           maxBatchSize: 10,
-          batchTimeoutMs: 60000
-        }
+          batchTimeoutMs: 60000,
+        },
       },
       fallback: {
         enableFallback: true,
         fallbackProviders: ["openai"],
         fallbackOnError: true,
-        fallbackOnTimeout: true
+        fallbackOnTimeout: true,
       },
       quality: {
         confidenceThreshold: 0.7,
         enableQualityFiltering: false,
         profanityFilter: false,
-        medicalTermsValidation: true
+        medicalTermsValidation: true,
       },
       monitoring: {
         logTranscriptions: false,
         trackTokenUsage: true,
         performanceMetrics: true,
-        errorTracking: true
-      }
+        errorTracking: true,
+      },
     };
   }
 
@@ -481,17 +535,18 @@ export class TranscriptionProviderAbstraction {
    */
   async transcribeAudioCompatible(
     audioData: File,
-    instructions: { lang: string } = { lang: "en" }
+    instructions: { lang: string } = { lang: "en" },
   ): Promise<{ text: string }> {
     const result = await this.transcribeAudio(audioData, {
-      language: instructions.lang
+      language: instructions.lang,
     });
-    
+
     return {
-      text: result.text
+      text: result.text,
     };
   }
 }
 
 // Export singleton instance
-export const transcriptionProvider = TranscriptionProviderAbstraction.getInstance();
+export const transcriptionProvider =
+  TranscriptionProviderAbstraction.getInstance();

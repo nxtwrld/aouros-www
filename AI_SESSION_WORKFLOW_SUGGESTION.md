@@ -8,11 +8,11 @@ This document provides an analysis of the existing `AI_SESSION_WORKFLOW.md` and 
 
 The current AI session workflow is exceptionally well-designed and demonstrates a deep understanding of the complexities of medical AI. The following core strengths are particularly noteworthy:
 
-*   **Comprehensive MoE Architecture:** The five-expert model (GP, Diagnostic, Treatment, Inquiry, Safety) is a robust and holistic approach to clinical analysis.
-*   **Advanced Context-Awareness:** The "Context Assembly System" using client-side embeddings is a state-of-the-art solution that ensures personalization while preserving privacy.
-*   **Rich Visual Outputs:** The proposed interactive Sankey diagram is an innovative and intuitive way to represent complex medical reasoning.
-*   **Structured and Actionable Outputs:** The detailed schemas for all outputs (diagnoses, treatments, questions) ensure the AI's contributions are immediately usable within the application.
-*   **User-Centric Dual-Mode Chat:** The clear distinction between patient and clinical modes addresses the unique needs of each user group effectively.
+- **Comprehensive MoE Architecture:** The five-expert model (GP, Diagnostic, Treatment, Inquiry, Safety) is a robust and holistic approach to clinical analysis.
+- **Advanced Context-Awareness:** The "Context Assembly System" using client-side embeddings is a state-of-the-art solution that ensures personalization while preserving privacy.
+- **Rich Visual Outputs:** The proposed interactive Sankey diagram is an innovative and intuitive way to represent complex medical reasoning.
+- **Structured and Actionable Outputs:** The detailed schemas for all outputs (diagnoses, treatments, questions) ensure the AI's contributions are immediately usable within the application.
+- **User-Centric Dual-Mode Chat:** The clear distinction between patient and clinical modes addresses the unique needs of each user group effectively.
 
 ## Proposed Enhancements
 
@@ -26,12 +26,12 @@ The following suggestions are intended to enhance the existing workflow by intro
 
 **Implementation:**
 
-*   **UI:** Add a simple "thumbs up/down" or a 1-5 star rating system to each major node (diagnosis, treatment) in the Sankey diagram.
-*   **Data Model:** Extend the analysis output schema to include a `feedback` object where user ratings and comments can be stored.
-*   **Backend:** Create a service to collect and aggregate this feedback. This data can be used for:
-    *   **Model Fine-Tuning:** Periodically use the feedback data to fine-tune the expert models.
-    *   **Performance Monitoring:** Track the performance of each expert over time.
-    *   **Identifying Weaknesses:** Pinpoint areas where the AI is consistently underperforming.
+- **UI:** Add a simple "thumbs up/down" or a 1-5 star rating system to each major node (diagnosis, treatment) in the Sankey diagram.
+- **Data Model:** Extend the analysis output schema to include a `feedback` object where user ratings and comments can be stored.
+- **Backend:** Create a service to collect and aggregate this feedback. This data can be used for:
+  - **Model Fine-Tuning:** Periodically use the feedback data to fine-tune the expert models.
+  - **Performance Monitoring:** Track the performance of each expert over time.
+  - **Identifying Weaknesses:** Pinpoint areas where the AI is consistently underperforming.
 
 ### 2. "Human-in-the-Loop" for Consensus Approval
 
@@ -41,9 +41,9 @@ The following suggestions are intended to enhance the existing workflow by intro
 
 **Implementation:**
 
-*   **Workflow State:** Introduce a new state in the workflow, such as `PENDING_APPROVAL`.
-*   **UI:** The Sankey diagram would be presented in a "draft" mode. The clinician would have an "Approve Analysis" button.
-*   **Audit Trail:** Record the approval event, including the clinician's identity and a timestamp, in the session's audit trail.
+- **Workflow State:** Introduce a new state in the workflow, such as `PENDING_APPROVAL`.
+- **UI:** The Sankey diagram would be presented in a "draft" mode. The clinician would have an "Approve Analysis" button.
+- **Audit Trail:** Record the approval event, including the clinician's identity and a timestamp, in the session's audit trail.
 
 ### 3. Cost, Performance, and Usage Monitoring
 
@@ -53,15 +53,15 @@ The following suggestions are intended to enhance the existing workflow by intro
 
 **Implementation:**
 
-*   **Instrumentation:** Add logging to each expert and the consensus builder to record:
-    *   Token usage (prompt and completion).
-    *   Latency (time to first token and total time).
-    *   Provider used (e.g., OpenAI, Gemini).
-    *   Cost per analysis.
-*   **Dashboard:** Create an internal dashboard to visualize these metrics. This will help in:
-    *   **Cost Management:** Identifying the most expensive parts of the workflow.
-    *   **Performance Optimization:** Finding and addressing bottlenecks.
-    *   **Usage Analysis:** Understanding which experts are used most and in what contexts.
+- **Instrumentation:** Add logging to each expert and the consensus builder to record:
+  - Token usage (prompt and completion).
+  - Latency (time to first token and total time).
+  - Provider used (e.g., OpenAI, Gemini).
+  - Cost per analysis.
+- **Dashboard:** Create an internal dashboard to visualize these metrics. This will help in:
+  - **Cost Management:** Identifying the most expensive parts of the workflow.
+  - **Performance Optimization:** Finding and addressing bottlenecks.
+  - **Usage Analysis:** Understanding which experts are used most and in what contexts.
 
 ### 4. Explicit Integration with Medical Knowledge Bases
 
@@ -71,9 +71,9 @@ The following suggestions are intended to enhance the existing workflow by intro
 
 **Implementation:**
 
-*   **Entity Linking:** After extracting medical entities, use an entity linking service to map them to standard codes from these knowledge bases.
-*   **Schema Enhancement:** Add fields to the output schemas for these standard codes (e.g., `snomedCtCode`, `rxNormCui`).
-*   **Reasoning Enhancement:** The experts can use the structured information from these knowledge bases to improve their reasoning. For example, the Safety Monitor can use RxNorm to get more reliable drug interaction data.
+- **Entity Linking:** After extracting medical entities, use an entity linking service to map them to standard codes from these knowledge bases.
+- **Schema Enhancement:** Add fields to the output schemas for these standard codes (e.g., `snomedCtCode`, `rxNormCui`).
+- **Reasoning Enhancement:** The experts can use the structured information from these knowledge bases to improve their reasoning. For example, the Safety Monitor can use RxNorm to get more reliable drug interaction data.
 
 ### 5. UI/UX Enhancements for Sankey Diagram Complexity
 
@@ -83,11 +83,11 @@ The following suggestions are intended to enhance the existing workflow by intro
 
 **Implementation:**
 
-*   **Simple/Expert View Toggle:**
-    *   **Simple View:** Shows only the top 3-5 most likely paths.
-    *   **Expert View:** Shows the full, detailed diagram.
-*   **Focus Mode:** Allow the user to click on a node to highlight only its direct connections and fade out the rest of the diagram.
-*   **Filtering:** Provide options to filter the diagram by expert, confidence level, or evidence type.
+- **Simple/Expert View Toggle:**
+  - **Simple View:** Shows only the top 3-5 most likely paths.
+  - **Expert View:** Shows the full, detailed diagram.
+- **Focus Mode:** Allow the user to click on a node to highlight only its direct connections and fade out the rest of the diagram.
+- **Filtering:** Provide options to filter the diagram by expert, confidence level, or evidence type.
 
 ### 6. Ethical and Bias Monitoring
 
@@ -97,9 +97,9 @@ The following suggestions are intended to enhance the existing workflow by intro
 
 **Implementation:**
 
-*   **Demographic Analysis:** Regularly analyze the AI's performance across different demographic groups (age, sex, ethnicity) to identify any performance disparities.
-*   **Fairness Metrics:** Define and track fairness metrics (e.g., equal opportunity, predictive equality) for the AI's suggestions.
-*   **Transparency Reports:** Generate periodic transparency reports on the system's bias and fairness performance.
+- **Demographic Analysis:** Regularly analyze the AI's performance across different demographic groups (age, sex, ethnicity) to identify any performance disparities.
+- **Fairness Metrics:** Define and track fairness metrics (e.g., equal opportunity, predictive equality) for the AI's suggestions.
+- **Transparency Reports:** Generate periodic transparency reports on the system's bias and fairness performance.
 
 ## Updated AI Session Workflow Diagram
 
@@ -124,13 +124,13 @@ graph TB
         K --> L{New Inputs?}
         L -->|No| M[Wait for Updates]
         L -->|Yes| N[Context-Aware Expert Analysis]
-        
+
         N --> O[GP Expert]
         N --> P[Diagnostic Expert]
         N --> Q[Treatment Expert]
         N --> R[Inquiry Expert]
         N --> S[Safety Monitor]
-        
+
         subgraph "Human-in-the-Loop & Learning"
             T --> U{Review & Approve}
             U -->|Approved| V[Finalized Analysis]
@@ -149,13 +149,13 @@ graph TB
         N --> Y[Cost & Performance Logger]
         Y --> X
     end
-    
+
     subgraph "Output & Visualization"
         V --> Z[Context-Enhanced Sankey]
         V --> AA[SSE Updates]
         AA --> BB[Client UI]
     end
-    
+
     subgraph "External Knowledge Integration"
         CC[Medical Knowledge Bases] <--> N
     end

@@ -262,15 +262,19 @@
     .button.-large {
         width: 100%;
     }
+    /* Unused - no password input with button class
     input[type=password].button {
         caret-color: transparent;
         color: transparent;
         cursor: pointer;
 
     }
+    */
+    /* Unused - no password input with button class
     input[type=password].button::placeholder {
         text-align: center;
         color: var(--color-text);
     }
+    */
  
 </style>

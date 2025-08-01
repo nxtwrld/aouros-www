@@ -79,6 +79,7 @@
         height: 100%;
     }
 
+    /* Unused - no document-header class in template
     .document-header {
         padding: 1rem;
         border-bottom: 1px solid var(--border-color, #e0e0e0);
@@ -87,24 +88,32 @@
         justify-content: space-between;
         align-items: center;
     }
+    */
 
+    /* Unused - no document-info class in template
     .document-info h3 {
         margin: 0;
         font-size: 1.1rem;
         color: var(--text-primary, #333);
     }
+    */
 
+    /* Unused - no document-info class in template
     .document-info p {
         margin: 0.25rem 0 0 0;
         font-size: 0.9rem;
         color: var(--text-secondary, #666);
     }
+    */
 
+    /* Unused - no document-actions class in template
     .document-actions {
         display: flex;
         gap: 0.5rem;
     }
+    */
 
+    /* Unused - no btn class in template
     .btn {
         padding: 0.5rem 1rem;
         border: 1px solid var(--border-color, #ddd);
@@ -115,20 +124,27 @@
         font-size: 0.9rem;
         transition: all 0.2s ease;
     }
+    */
 
+    /* Unused - no btn class in template
     .btn:hover {
         background: var(--bg-hover, #f0f0f0);
     }
+    */
 
+    /* Unused - no btn class in template
     .btn.primary {
         background: var(--primary-color, #007bff);
         color: white;
         border-color: var(--primary-color, #007bff);
     }
+    */
 
+    /* Unused - no btn class in template
     .btn.primary:hover {
         background: var(--primary-hover, #0056b3);
     }
+    */
 
     .viewer-content {
         flex: 1;

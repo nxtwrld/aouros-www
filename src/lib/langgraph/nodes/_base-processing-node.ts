@@ -1,6 +1,6 @@
 /**
  * Base Processing Node Template
- * 
+ *
  * Provides a reusable foundation for all specialized medical processing nodes
  * with consistent progress tracking, error handling, and AI provider integration.
  */
@@ -10,7 +10,10 @@ import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { log } from "$lib/logging/logger";
 // import { isStateTransitionDebuggingEnabled } from "$lib/config/logging-config";
-import { recordWorkflowStep, workflowRecorder } from "$lib/debug/workflow-recorder";
+import {
+  recordWorkflowStep,
+  workflowRecorder,
+} from "$lib/debug/workflow-recorder";
 
 export interface BaseProcessingNodeConfig {
   nodeName: string;
@@ -45,63 +48,91 @@ export abstract class BaseProcessingNode {
   /**
    * Main processing method - implements the standard workflow
    */
-  async process(state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> {
+  async process(
+    state: DocumentProcessingState,
+  ): Promise<Partial<DocumentProcessingState>> {
     const stepStartTime = Date.now();
-    
+
     // CRITICAL: Check if we're in replay mode and should not execute real processing
     if (workflowRecorder.isReplayMode()) {
       const replayFilePath = workflowRecorder.getReplayFilePath();
-      log.analysis.error(`🚫 BaseProcessingNode execution blocked during replay mode`, {
-        nodeName: this.config.nodeName,
-        replayFile: replayFilePath,
-        stack: new Error().stack
-      });
-      throw new Error(`BaseProcessingNode (${this.config.nodeName}) should not be executed during replay mode. Replay file: ${replayFilePath}. This suggests the replay mechanism is bypassing node execution incorrectly.`);
+      log.analysis.error(
+        `🚫 BaseProcessingNode execution blocked during replay mode`,
+        {
+          nodeName: this.config.nodeName,
+          replayFile: replayFilePath,
+          stack: new Error().stack,
+        },
+      );
+      throw new Error(
+        `BaseProcessingNode (${this.config.nodeName}) should not be executed during replay mode. Replay file: ${replayFilePath}. This suggests the replay mechanism is bypassing node execution incorrectly.`,
+      );
     }
-    
+
     try {
       // Check if this node should execute based on feature detection
       if (!this.shouldExecute(state)) {
-        console.log(`⏭️ Skipping ${this.config.nodeName} - feature not detected`, {
-          triggers: this.config.featureDetectionTriggers,
-          featureResults: state.featureDetectionResults
-        });
-        log.analysis.debug(`Skipping ${this.config.nodeName} - feature not detected`);
+        console.log(
+          `⏭️ Skipping ${this.config.nodeName} - feature not detected`,
+          {
+            triggers: this.config.featureDetectionTriggers,
+            featureResults: state.featureDetectionResults,
+          },
+        );
+        log.analysis.debug(
+          `Skipping ${this.config.nodeName} - feature not detected`,
+        );
         return {};
       }
-      
-      console.log(`✅ ${this.config.nodeName} should execute - feature detected`, {
-        triggers: this.config.featureDetectionTriggers,
-        matchingTriggers: this.config.featureDetectionTriggers.filter(trigger => 
-          (state.featureDetectionResults as any)?.[trigger] === true
-        )
-      });
+
+      console.log(
+        `✅ ${this.config.nodeName} should execute - feature detected`,
+        {
+          triggers: this.config.featureDetectionTriggers,
+          matchingTriggers: this.config.featureDetectionTriggers.filter(
+            (trigger) =>
+              (state.featureDetectionResults as any)?.[trigger] === true,
+          ),
+        },
+      );
 
       // Initialize progress tracking
       const emitProgress = this.createProgressEmitter(state);
       const emitComplete = this.createCompleteEmitter(state);
 
       // Load schema
-      emitProgress(this.config.progressStages[0].stage, this.config.progressStages[0].progress, this.config.progressStages[0].message);
+      emitProgress(
+        this.config.progressStages[0].stage,
+        this.config.progressStages[0].progress,
+        this.config.progressStages[0].message,
+      );
       await this.loadSchema();
 
       // Process section with AI
-      emitProgress(this.config.progressStages[1].stage, this.config.progressStages[1].progress, this.config.progressStages[1].message);
+      emitProgress(
+        this.config.progressStages[1].stage,
+        this.config.progressStages[1].progress,
+        this.config.progressStages[1].message,
+      );
       console.log(`🤖 ${this.config.nodeName} starting AI processing`, {
         hasSchema: !!this.schema,
         schemaName: this.schema?.name,
         contentLength: state.content?.length || 0,
-        hasText: !!state.text
+        hasText: !!state.text,
       });
       const result = await this.processWithAI(state, emitProgress);
       console.log(`🤖 ${this.config.nodeName} AI processing result:`, {
         resultType: typeof result,
         resultKeys: result ? Object.keys(result) : [],
-        result: result
+        result: result,
       });
 
       // Validate and enhance results
-      emitProgress(this.config.progressStages[2].stage, this.config.progressStages[2].progress, this.config.progressStages[2].message);
+      emitProgress(
+        this.config.progressStages[2].stage,
+        this.config.progressStages[2].progress,
+        this.config.progressStages[2].message,
+      );
       const processedData = await this.validateAndEnhance(result, state);
 
       // Emit completion
@@ -112,7 +143,7 @@ export abstract class BaseProcessingNode {
           dataExtracted: !!processedData.data,
           tokensUsed: processedData.metadata.tokensUsed,
           confidence: processedData.metadata.confidence,
-        }
+        },
       );
 
       // Record workflow step for debugging
@@ -128,7 +159,7 @@ export abstract class BaseProcessingNode {
           provider: processedData.metadata.provider,
           flowType: this.config.nodeName,
           confidence: processedData.metadata.confidence,
-        }
+        },
       );
 
       // Return state update
@@ -137,19 +168,19 @@ export abstract class BaseProcessingNode {
         tokenUsage: {
           ...state.tokenUsage,
           [this.config.nodeName]: processedData.metadata.tokensUsed,
-          total: (state.tokenUsage?.total || 0) + processedData.metadata.tokensUsed,
+          total:
+            (state.tokenUsage?.total || 0) + processedData.metadata.tokensUsed,
         },
       };
-      
+
       console.log(`📤 ${this.config.nodeName} returning state update:`, {
         sectionName: this.getSectionName(),
         dataKeys: processedData.data ? Object.keys(processedData.data) : [],
         tokensUsed: processedData.metadata.tokensUsed,
-        stateUpdate
+        stateUpdate,
       });
-      
-      return stateUpdate;
 
+      return stateUpdate;
     } catch (error) {
       log.analysis.error(`${this.config.nodeName} processing error:`, error);
 
@@ -166,7 +197,7 @@ export abstract class BaseProcessingNode {
           provider: "unknown",
           flowType: this.config.nodeName,
           failed: true,
-        }
+        },
       );
 
       return {
@@ -189,7 +220,7 @@ export abstract class BaseProcessingNode {
     const featureResults = state.featureDetectionResults;
     if (!featureResults) return false;
 
-    return this.config.featureDetectionTriggers.some(trigger => {
+    return this.config.featureDetectionTriggers.some((trigger) => {
       return (featureResults as any)[trigger] === true;
     });
   }
@@ -201,23 +232,32 @@ export abstract class BaseProcessingNode {
     try {
       // Convert $lib alias to relative path for dynamic imports
       let importPath = this.config.schemaImportPath;
-      if (importPath.startsWith('$lib/')) {
+      if (importPath.startsWith("$lib/")) {
         // From src/lib/langgraph/nodes/ to src/lib/configurations/
-        importPath = importPath.replace('$lib/', '../../');
+        importPath = importPath.replace("$lib/", "../../");
       }
-      
-      console.log(`📋 Loading schema from: ${importPath} (original: ${this.config.schemaImportPath})`);
+
+      console.log(
+        `📋 Loading schema from: ${importPath} (original: ${this.config.schemaImportPath})`,
+      );
       const schemaModule = await import(importPath);
       this.schema = schemaModule.default;
-      
+
       if (!this.schema) {
-        throw new Error(`Schema module at ${importPath} does not export a default export`);
+        throw new Error(
+          `Schema module at ${importPath} does not export a default export`,
+        );
       }
-      
+
       console.log(`✅ Successfully loaded schema for ${this.config.nodeName}`);
     } catch (error) {
-      console.error(`❌ Failed to load schema for ${this.config.nodeName}:`, error);
-      throw new Error(`Failed to load schema from ${this.config.schemaImportPath}: ${error}`);
+      console.error(
+        `❌ Failed to load schema for ${this.config.nodeName}:`,
+        error,
+      );
+      throw new Error(
+        `Failed to load schema from ${this.config.schemaImportPath}: ${error}`,
+      );
     }
   }
 
@@ -226,7 +266,7 @@ export abstract class BaseProcessingNode {
    */
   protected async processWithAI(
     state: DocumentProcessingState,
-    emitProgress: (stage: string, progress: number, message: string) => void
+    emitProgress: (stage: string, progress: number, message: string) => void,
   ): Promise<any> {
     if (!this.schema) {
       throw new Error(`Schema not loaded for ${this.config.nodeName}`);
@@ -237,28 +277,38 @@ export abstract class BaseProcessingNode {
     // Build content array including images if available
     const content = [];
     if (state.images && state.images.length > 0) {
-      content.push(...state.images.map(img => ({ type: "image_url" as const, image_url: { url: img } })));
+      content.push(
+        ...state.images.map((img) => ({
+          type: "image_url" as const,
+          image_url: { url: img },
+        })),
+      );
     }
     if (state.text) {
       content.push({ type: "text" as const, text: state.text });
     }
-    
+
     // Fallback to state.content if no text/images found
-    const finalContent = content.length > 0 ? content : (state.content || []);
+    const finalContent = content.length > 0 ? content : state.content || [];
 
     const result = await fetchGptEnhanced(
       finalContent,
       this.schema,
       tokenUsage,
       state.language || "English",
-      'extraction',
+      "extraction",
       (stage, progress, message) => {
         // Convert AI progress to node progress (map to remaining progress space)
         const baseProgress = this.config.progressStages[1].progress;
         const maxProgress = this.config.progressStages[2].progress;
-        const nodeProgress = baseProgress + ((progress / 100) * (maxProgress - baseProgress));
-        emitProgress(`${this.config.nodeName}_ai_${stage}`, nodeProgress, `AI: ${message}`);
-      }
+        const nodeProgress =
+          baseProgress + (progress / 100) * (maxProgress - baseProgress);
+        emitProgress(
+          `${this.config.nodeName}_ai_${stage}`,
+          nodeProgress,
+          `AI: ${message}`,
+        );
+      },
     );
 
     return result;
@@ -269,12 +319,12 @@ export abstract class BaseProcessingNode {
    */
   protected async validateAndEnhance(
     aiResult: any,
-    state: DocumentProcessingState
+    state: DocumentProcessingState,
   ): Promise<ProcessingNodeResult> {
     // Default implementation - can be overridden by subclasses
     const processingTime = Date.now();
     const tokensUsed = state.tokenUsage?.[this.config.nodeName] || 0;
-    
+
     return {
       data: aiResult || {},
       metadata: {
@@ -291,11 +341,11 @@ export abstract class BaseProcessingNode {
    */
   protected calculateConfidence(data: any): number {
     if (!data) return 0;
-    
+
     // Basic confidence calculation - can be enhanced by subclasses
     const hasData = Object.keys(data).length > 0;
     const hasRequiredFields = this.hasRequiredFields(data);
-    
+
     if (!hasData) return 0;
     if (hasRequiredFields) return 0.9;
     return 0.7;
@@ -376,13 +426,15 @@ export abstract class BaseProcessingNode {
 export function createSimpleProcessingNode(config: BaseProcessingNodeConfig) {
   class SimpleProcessingNode extends BaseProcessingNode {
     protected getSectionName(): string {
-      return this.config.nodeName.replace('-processing', '');
+      return this.config.nodeName.replace("-processing", "");
     }
   }
 
   const nodeInstance = new SimpleProcessingNode(config);
-  
-  return async (state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> => {
+
+  return async (
+    state: DocumentProcessingState,
+  ): Promise<Partial<DocumentProcessingState>> => {
     return nodeInstance.process(state);
   };
 }

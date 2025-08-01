@@ -9,7 +9,11 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { AIProvider, ProviderRegistry } from "./registry";
 import type { Content, TokenUsage } from "$lib/ai/types.d";
-import { OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY } from "$env/static/private";
+import {
+  OPENAI_API_KEY,
+  ANTHROPIC_API_KEY,
+  GOOGLE_API_KEY,
+} from "$env/static/private";
 
 export interface AnalysisOptions {
   language?: string;

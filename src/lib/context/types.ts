@@ -2,8 +2,8 @@
  * Type definitions for the Medical Classification & Context System
  */
 
-import type { Document } from '$lib/documents/types.d';
-import type { MetaHistoryEntry } from '$lib/health/meta-history-types';
+import type { Document } from "$lib/documents/types.d";
+import type { MetaHistoryEntry } from "$lib/health/meta-history-types";
 
 // Search types
 export interface SearchOptions {
@@ -55,7 +55,13 @@ export interface AssembledContext {
 
 export interface KeyPoint {
   text: string;
-  type: 'finding' | 'medication' | 'diagnosis' | 'procedure' | 'risk' | 'recommendation';
+  type:
+    | "finding"
+    | "medication"
+    | "diagnosis"
+    | "procedure"
+    | "risk"
+    | "recommendation";
   date: string;
   confidence: number;
   sourceDocumentId: string;
@@ -88,9 +94,9 @@ export interface MedicalTimeline {
 export interface MedicalEvent {
   id: string;
   date: string;
-  type: 'diagnosis' | 'medication' | 'procedure' | 'lab_result' | 'symptom';
+  type: "diagnosis" | "medication" | "procedure" | "lab_result" | "symptom";
   description: string;
-  significance: 'critical' | 'high' | 'medium' | 'low';
+  significance: "critical" | "high" | "medium" | "low";
   relatedEvents?: string[];
 }
 
@@ -103,14 +109,19 @@ export interface MedicalPattern {
 }
 
 export interface RiskAssessment {
-  overallRisk: 'low' | 'moderate' | 'high' | 'critical';
+  overallRisk: "low" | "moderate" | "high" | "critical";
   riskFactors: RiskFactor[];
   recommendations: string[];
 }
 
 export interface RiskFactor {
   factor: string;
-  category: 'demographic' | 'clinical' | 'behavioral' | 'genetic' | 'environmental';
+  category:
+    | "demographic"
+    | "clinical"
+    | "behavioral"
+    | "genetic"
+    | "environmental";
   riskLevel: number; // 0-1
   modifiable: boolean;
 }
@@ -120,23 +131,27 @@ export interface Medication {
   dosage: string;
   frequency: string;
   startDate: string;
-  status: 'active' | 'discontinued' | 'paused';
-  effectiveness?: 'effective' | 'partially_effective' | 'ineffective' | 'unknown';
+  status: "active" | "discontinued" | "paused";
+  effectiveness?:
+    | "effective"
+    | "partially_effective"
+    | "ineffective"
+    | "unknown";
 }
 
 export interface Condition {
   name: string;
   icdCode?: string;
   diagnosisDate: string;
-  status: 'active' | 'resolved' | 'managed';
-  severity: 'mild' | 'moderate' | 'severe';
+  status: "active" | "resolved" | "managed";
+  severity: "mild" | "moderate" | "severe";
 }
 
 export interface RecentChange {
   date: string;
   type: string;
   description: string;
-  impact: 'positive' | 'negative' | 'neutral';
+  impact: "positive" | "negative" | "neutral";
 }
 
 // MCP Tool types
@@ -179,7 +194,11 @@ export interface ContextSnapshot {
 }
 
 export interface ContextUpdate {
-  type: 'document_added' | 'context_refreshed' | 'pattern_detected' | 'risk_identified';
+  type:
+    | "document_added"
+    | "context_refreshed"
+    | "pattern_detected"
+    | "risk_identified";
   sessionId: string;
   data: any;
   timestamp: string;
@@ -209,7 +228,7 @@ export interface ContextualChatResponse {
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
   timestamp: string;
   metadata?: any;

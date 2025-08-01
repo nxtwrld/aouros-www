@@ -7,9 +7,29 @@
         "whisper": {
           "name": "whisper-1",
           "description": "OpenAI Whisper ASR model",
-          "supportedFormats": ["mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm"],
+          "supportedFormats": [
+            "mp3",
+            "mp4",
+            "mpeg",
+            "mpga",
+            "m4a",
+            "wav",
+            "webm"
+          ],
           "maxFileSize": "25MB",
-          "languages": ["en", "cs", "de", "es", "fr", "it", "ja", "ko", "pt", "ru", "zh"],
+          "languages": [
+            "en",
+            "cs",
+            "de",
+            "es",
+            "fr",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "ru",
+            "zh"
+          ],
           "responseFormats": ["json", "text", "srt", "verbose_json", "vtt"],
           "temperature": 0,
           "timestampGranularities": ["segment", "word"]

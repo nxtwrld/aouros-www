@@ -5,7 +5,7 @@
 # Default provider priority (first available will be used)
 default_providers:
   - openai
-  - google    # Available when @langchain/google-genai is installed
+  - google # Available when @langchain/google-genai is installed
   - anthropic # Available when @langchain/anthropic is installed
 
 # Provider configurations
@@ -41,24 +41,24 @@ providers:
   google:
     name: "Google (using OpenAI backend)"
     enabled: true
-    api_key_env: "OPENAI_API_KEY"  # Use OpenAI key until Google is properly set up
+    api_key_env: "OPENAI_API_KEY" # Use OpenAI key until Google is properly set up
     models:
       gemini_pro:
-        model_id: "gpt-4o-2024-08-06"  # Use OpenAI model for now
+        model_id: "gpt-4o-2024-08-06" # Use OpenAI model for now
         description: "Gemini Pro (backed by GPT-4)"
         max_tokens: 4096
         temperature: 0
         supports_vision: true
         cost_per_1k_tokens: 0.03
 
-  # Anthropic provider - configured to use OpenAI for now  
+  # Anthropic provider - configured to use OpenAI for now
   anthropic:
     name: "Anthropic (using OpenAI backend)"
     enabled: true
-    api_key_env: "OPENAI_API_KEY"  # Use OpenAI key until Anthropic is properly set up
+    api_key_env: "OPENAI_API_KEY" # Use OpenAI key until Anthropic is properly set up
     models:
       claude_opus:
-        model_id: "gpt-4o-2024-08-06"  # Use OpenAI model for now
+        model_id: "gpt-4o-2024-08-06" # Use OpenAI model for now
         description: "Claude Opus (backed by GPT-4)"
         max_tokens: 4096
         temperature: 0
@@ -77,7 +77,7 @@ flows:
 
   # Medical analysis (deep analysis using LangGraph)
   medical_analysis:
-    provider: "openai"  # Using OpenAI for development
+    provider: "openai" # Using OpenAI for development
     model: "gpt4"
     description: "Deep medical content analysis"
     fallback_models: ["gpt4_turbo", "gpt3_5"]
@@ -85,7 +85,7 @@ flows:
 
   # Feature detection
   feature_detection:
-    provider: "openai"  # Using OpenAI for development
+    provider: "openai" # Using OpenAI for development
     model: "gpt4"
     description: "Detect document features and medical specialties"
     fallback_models: ["gpt4_turbo", "gpt3_5"]
@@ -100,15 +100,15 @@ flows:
 
   # Document type routing
   document_type_routing:
-    provider: "openai"  # Using OpenAI for development
-    model: "gpt3_5"     # Use cheaper model for simple routing task
+    provider: "openai" # Using OpenAI for development
+    model: "gpt3_5" # Use cheaper model for simple routing task
     description: "Route documents to appropriate processing pipelines"
     fallback_models: ["gpt4_turbo", "gpt4"]
     # Alternative: provider: "google", model: "gemini_pro"
 
   # Quality validation
   quality_validation:
-    provider: "openai"  # Using OpenAI for development
+    provider: "openai" # Using OpenAI for development
     model: "gpt4"
     description: "Validate processing quality and completeness"
     fallback_models: ["gpt4_turbo", "gpt3_5"]
@@ -116,7 +116,7 @@ flows:
 
   # AI Chat - Patient support mode
   ai_chat_patient:
-    provider: "openai"  # Using OpenAI for development
+    provider: "openai" # Using OpenAI for development
     model: "gpt4"
     description: "Patient support chat with empathetic responses"
     fallback_models: ["gpt4_turbo", "gpt3_5"]
@@ -124,7 +124,7 @@ flows:
 
   # AI Chat - Clinical consultation mode
   ai_chat_clinical:
-    provider: "openai"  # Using OpenAI for development
+    provider: "openai" # Using OpenAI for development
     model: "gpt4"
     description: "Clinical consultation chat with professional insights"
     fallback_models: ["gpt4_turbo", "gpt3_5"]
@@ -133,7 +133,7 @@ flows:
 # Performance settings
 performance:
   max_retries: 3
-  timeout_ms: 120000  # Increased to 2 minutes for complex medical analysis
+  timeout_ms: 120000 # Increased to 2 minutes for complex medical analysis
   concurrent_requests: 5
   rate_limit_per_minute: 100
 
@@ -143,7 +143,7 @@ cost_optimization:
   enable_cost_optimization: true
   simple_task_model: "gpt3_5"
   complex_task_model: "gpt4"
-  
+
   # Task complexity classification
   simple_tasks:
     - "document_type_routing"

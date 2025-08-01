@@ -51,7 +51,7 @@ export async function encrypt(
   combinedData.set(encryptedBytes, iv.length);
 
   // Convert combined data to a Base64 string
-  return arrayBufferToBase64(combinedData);
+  return arrayBufferToBase64(combinedData.buffer);
   //return btoa(String.fromCharCode(...combinedData));
 }
 

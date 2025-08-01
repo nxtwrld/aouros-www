@@ -1,6 +1,6 @@
-declare module 'merge-images' {
+declare module "merge-images" {
   interface MergeOptions {
-    format?: 'image/png' | 'image/jpeg' | 'image/webp';
+    format?: "image/png" | "image/jpeg" | "image/webp";
     quality?: number;
     width?: number;
     height?: number;
@@ -17,8 +17,8 @@ declare module 'merge-images' {
 
   function mergeImages(
     sources: (string | ImageSource)[],
-    options?: MergeOptions
+    options?: MergeOptions,
   ): Promise<string>;
 
   export default mergeImages;
-} 
+}

@@ -84,7 +84,8 @@ export default {
       searchTerms: {
         type: "array",
         items: { type: "string" },
-        description: "Search-optimized terms: LOINC codes, test abbreviations, medical terms, biomarkers",
+        description:
+          "Search-optimized terms: LOINC codes, test abbreviations, medical terms, biomarkers",
       },
     },
     required: ["signal", "date", "value", "valueType", "unit", "reference"],

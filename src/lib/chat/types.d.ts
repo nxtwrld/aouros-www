@@ -1,9 +1,9 @@
 // AI Chat Types
-export type ChatMode = 'patient' | 'clinical';
-export type ChatMessageRole = 'user' | 'assistant' | 'system';
+export type ChatMode = "patient" | "clinical";
+export type ChatMessageRole = "user" | "assistant" | "system";
 
 export interface ContextPrompt {
-  type: 'document' | 'profile' | 'tool';
+  type: "document" | "profile" | "tool";
   id: string;
   title: string;
   messageKey: string;
@@ -17,7 +17,7 @@ export interface ContextPrompt {
   // Tool-specific fields
   toolName?: string;
   toolParameters?: any;
-  securityLevel?: 'low' | 'medium' | 'high';
+  securityLevel?: "low" | "medium" | "high";
   dataAccessDescription?: string[];
 }
 
@@ -102,7 +102,7 @@ export interface ChatState {
   focusedBodyPart: string | null;
   conversationHistory: Map<string, ChatMessage[]>; // profileId -> messages
   currentConversationId: string | null;
-  syncStatus: 'synced' | 'syncing' | 'error';
+  syncStatus: "synced" | "syncing" | "error";
   lastSyncTime: Date | null;
 }
 
@@ -135,7 +135,7 @@ export interface ChatConversation {
 }
 
 export interface ConsentRequest {
-  type: 'document_access' | 'anatomy_integration';
+  type: "document_access" | "anatomy_integration";
   message: string;
   documentIds?: string[];
   bodyParts?: string[];

@@ -51,7 +51,7 @@
     font-size: 0.8rem;
     line-height: 1;
   }
-  
+
   /* Reduce heading height constraints in narrow containers */
   .document-section .heading {
     min-height: calc(0.8 * var(--heading-height));
@@ -66,7 +66,7 @@
     font-size: 0.75rem;
     line-height: 1;
   }
-  
+
   .document-section .heading {
     min-height: calc(0.7 * var(--heading-height));
   }
@@ -117,11 +117,11 @@
   .document-section .table-list {
     font-size: 0.85rem;
   }
-  
+
   .document-section .table-list tr td {
     padding: 0.5rem 0.25rem;
   }
-  
+
   .document-section .table-list .actions {
     flex-direction: column;
     gap: 0.25rem;
@@ -135,7 +135,6 @@
 }
 
 .document-section .table-list tr td {
-
   border: var(--gap) solid var(--color-border, #e0e0e0);
 }
 .document-section .table-list tr:last-child td {
@@ -177,7 +176,7 @@
     flex-direction: column;
     gap: 0.25rem;
   }
-  
+
   .document-section .label {
     min-width: auto;
   }
@@ -354,7 +353,7 @@
   .document-section .tag-list {
     gap: 0.125rem;
   }
-  
+
   .document-section .tag {
     font-size: 0.7rem;
   }
@@ -373,7 +372,6 @@
 }
 
 .document-section .table-list .actions button {
-  
   border: none;
   cursor: pointer;
   padding: 0.25rem;
@@ -391,7 +389,6 @@
 .document-section .table-list .actions button:hover svg {
   fill: var(--color-interactivity-hover);
 }
-
 
 .document-section .table-list tr .actions button {
   background: var(--color-interactivity);
@@ -429,7 +426,7 @@
   .document-section .label {
     min-width: auto;
   }
-  
+
   /* Reduce padding for compact layout */
   .document-section .page.-block,
   .document-section .list-items li {
@@ -442,7 +439,7 @@
   .document-section .list-items li {
     padding: 0.5rem;
   }
-  
+
   .document-section .item-name {
     font-size: 1rem;
   }
@@ -455,11 +452,11 @@
     overflow-x: auto;
     white-space: nowrap;
   }
-  
+
   .document-section .table-list tr {
     display: table-row;
   }
-  
+
   .document-section .table-list td {
     padding: 0.25rem;
     font-size: 0.75rem;

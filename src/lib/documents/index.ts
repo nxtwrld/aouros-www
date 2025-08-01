@@ -115,7 +115,7 @@ export async function importDocuments(
 
       const parsedMetadata = JSON.parse(enc[0]);
       const embeddings = parsedMetadata.embeddings || {};
-      
+
       const doc: Document | DocumentPreload = {
         key,
         id: document.id,
@@ -150,7 +150,6 @@ export async function importDocuments(
   loadingDocumentsResolve(true);
   return documentsPreload;
 }
-
 
 export async function loadDocument(
   id: string,
@@ -217,11 +216,11 @@ export async function loadDocument(
       // Medical terms are now generated during LangGraph workflow processing
       // No need for separate embedding generation step
       const documentWithTerms = loadedDocument;
-      
+
       // Document is already processed with medical terms
       if (documentWithTerms !== loadedDocument) {
-        documents.update(docs => {
-          const index = docs.findIndex(doc => doc.id === id);
+        documents.update((docs) => {
+          const index = docs.findIndex((doc) => doc.id === id);
           if (index >= 0) {
             docs[index] = documentWithTerms;
             byID[id] = documentWithTerms;
@@ -232,9 +231,9 @@ export async function loadDocument(
         return documentWithTerms;
       }
     } catch (error) {
-      logger.documents.warn('Failed to process document with medical terms', {
+      logger.documents.warn("Failed to process document with medical terms", {
         documentId: id,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       // Continue with original document if medical terms processing fails
     }
@@ -421,21 +420,21 @@ export async function addDocument(document: DocumentNew): Promise<Document> {
 
   // update local documents
   const newDocument = await loadDocument(data.id, profile_id || user_id);
-  
+
   // Add document to context (simplified for medical terms system)
   try {
     await profileContextManager.addDocumentToContext(
       profile_id || user_id,
-      newDocument
+      newDocument,
     );
   } catch (error) {
-    logger.documents.warn('Failed to add document to context', {
+    logger.documents.warn("Failed to add document to context", {
       documentId: data.id,
       profileId: profile_id || user_id,
-      error
+      error,
     });
   }
-  
+
   return newDocument;
 }
 
@@ -475,10 +474,10 @@ export async function removeDocument(id: string): Promise<void> {
   try {
     profileContextManager.removeDocumentFromContext(document.user_id, id);
   } catch (error) {
-    logger.documents.warn('Failed to remove document from context', {
+    logger.documents.warn("Failed to remove document from context", {
       documentId: id,
       profileId: document.user_id,
-      error
+      error,
     });
   }
 
@@ -620,10 +619,10 @@ function deriveMetadata(
     date: document.content.date || new Date().toISOString(),
     ...metadata,
   };
-  
+
   // Include embeddings if available from server analysis
   // Medical terms are now generated during workflow processing
   // No need for separate embedding handling
-  
+
   return result;
 }

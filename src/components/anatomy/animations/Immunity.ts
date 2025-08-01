@@ -97,7 +97,7 @@ export default class Vaccination implements IAnimation {
       }
       if (object.material) {
         if (Array.isArray(object.material)) {
-          object.material.forEach(material => material.dispose());
+          object.material.forEach((material) => material.dispose());
         } else {
           object.material.dispose();
         }

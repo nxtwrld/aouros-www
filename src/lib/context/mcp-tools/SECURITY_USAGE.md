@@ -5,6 +5,7 @@ This document explains how to use the MCP security and audit system for HIPAA-co
 ## Overview
 
 The security system provides:
+
 - **Access Control**: Authentication, authorization, and rate limiting
 - **Audit Logging**: Complete audit trail of all medical data access
 - **HIPAA Compliance**: Security measures for protected health information
@@ -15,33 +16,38 @@ The security system provides:
 ### 1. Server-side Usage (Recommended)
 
 ```typescript
-import { 
+import {
   secureMcpTools,
   buildSecurityContextFromEvent,
-  type MCPSecurityContext 
-} from '$lib/context';
+  type MCPSecurityContext,
+} from "$lib/context";
 
 // In your API route (+server.ts)
-export const POST: RequestHandler = async ({ request, locals: { supabase, safeGetSession } }) => {
+export const POST: RequestHandler = async ({
+  request,
+  locals: { supabase, safeGetSession },
+}) => {
   const { session } = await safeGetSession();
-  if (!session) error(401, { message: 'Unauthorized' });
+  if (!session) error(401, { message: "Unauthorized" });
 
   const { profileId, query } = await request.json();
-  
+
   // Build security context
   const securityContext = buildSecurityContextFromEvent(
     event,
     session.user,
     profileId,
-    sessionId // optional
+    sessionId, // optional
   );
-  
+
   // Use secure tools
   try {
-    const result = await secureMcpTools.searchDocuments(securityContext, { terms: ["medical", "search", "terms"] });
+    const result = await secureMcpTools.searchDocuments(securityContext, {
+      terms: ["medical", "search", "terms"],
+    });
     return json(result);
   } catch (err) {
-    if (err.message.includes('Access denied')) {
+    if (err.message.includes("Access denied")) {
       error(403, { message: err.message });
     }
     throw err;
@@ -52,11 +58,8 @@ export const POST: RequestHandler = async ({ request, locals: { supabase, safeGe
 ### 2. Client-side Usage
 
 ```typescript
-import { 
-  buildSecurityContextFromBrowser,
-  secureMcpTools 
-} from '$lib/context';
-import { user } from '$lib/user';
+import { buildSecurityContextFromBrowser, secureMcpTools } from "$lib/context";
+import { user } from "$lib/user";
 
 // In your Svelte component
 async function searchMedicalData() {
@@ -66,20 +69,20 @@ async function searchMedicalData() {
   const securityContext = buildSecurityContextFromBrowser(
     currentUser,
     profileId,
-    sessionId
+    sessionId,
   );
-  
+
   try {
     const results = await secureMcpTools.searchDocuments(securityContext, {
-      terms: ['diabetes', 'medications'],
-      limit: 10
+      terms: ["diabetes", "medications"],
+      limit: 10,
     });
-    
+
     // Handle results
   } catch (error) {
-    if (error.message.includes('Access denied')) {
+    if (error.message.includes("Access denied")) {
       // Handle access denial
-      console.error('Access denied:', error.message);
+      console.error("Access denied:", error.message);
     }
   }
 }
@@ -88,6 +91,7 @@ async function searchMedicalData() {
 ## Available Secure Tools
 
 ### Basic Tools
+
 - `searchDocuments` - Search medical documents
 - `getAssembledContext` - Get assembled context for AI
 - `getProfileData` - Access patient profile
@@ -95,6 +99,7 @@ async function searchMedicalData() {
 - `getDocumentById` - Access specific documents
 
 ### Advanced Medical Tools
+
 - `getPatientTimeline` - Chronological medical history
 - `analyzeMedicalTrends` - Medical trend analysis
 - `getMedicationHistory` - Medication history with interactions
@@ -123,6 +128,7 @@ Each tool has configurable access policies:
 ### Rate Limiting
 
 Automatic rate limiting prevents abuse:
+
 - Different limits per tool based on sensitivity
 - User-specific rate limiting
 - Automatic cleanup of expired limits
@@ -130,6 +136,7 @@ Automatic rate limiting prevents abuse:
 ### Audit Trail
 
 All access is logged with:
+
 - User identification
 - Tool and operation
 - Parameters (sanitized)
@@ -143,14 +150,14 @@ All access is logged with:
 ### Viewing Audit Logs
 
 ```typescript
-import { mcpSecurityService } from '$lib/context';
+import { mcpSecurityService } from "$lib/context";
 
 // Get audit trail for a profile
 const auditEntries = await mcpSecurityService.getAuditTrail(profileId, {
-  startDate: new Date('2024-01-01'),
+  startDate: new Date("2024-01-01"),
   endDate: new Date(),
-  toolName: 'getMedicationHistory', // optional filter
-  limit: 100
+  toolName: "getMedicationHistory", // optional filter
+  limit: 100,
 });
 ```
 
@@ -159,9 +166,9 @@ const auditEntries = await mcpSecurityService.getAuditTrail(profileId, {
 ```typescript
 // Export for compliance
 const auditReport = await mcpSecurityService.exportAuditLogs(
-  new Date('2024-01-01'),
+  new Date("2024-01-01"),
   new Date(),
-  'json' // or 'csv'
+  "json", // or 'csv'
 );
 ```
 
@@ -170,16 +177,19 @@ const auditReport = await mcpSecurityService.exportAuditLogs(
 ### Common Errors
 
 1. **Authentication Required**
+
    ```
    Access denied: Authentication required
    ```
 
 2. **Profile Access Denied**
+
    ```
    Access denied: Profile access denied
    ```
 
 3. **Rate Limit Exceeded**
+
    ```
    Access denied: Rate limit exceeded
    ```
@@ -195,9 +205,9 @@ const auditReport = await mcpSecurityService.exportAuditLogs(
 try {
   const result = await secureMcpTools.toolName(context, params);
 } catch (error) {
-  if (error.message.includes('Access denied')) {
+  if (error.message.includes("Access denied")) {
     // Security issue - log and handle appropriately
-    console.error('Security violation:', error.message);
+    console.error("Security violation:", error.message);
     // Show user-friendly message
   } else {
     // Other error - handle normally
@@ -222,7 +232,12 @@ const result = await mcpTools.searchDocuments(profileId, params);
 
 ```typescript
 // ✅ Good - complete context
-const context = buildSecurityContextFromEvent(event, user, profileId, sessionId);
+const context = buildSecurityContextFromEvent(
+  event,
+  user,
+  profileId,
+  sessionId,
+);
 
 // ❌ Bad - incomplete context
 const context = { user, profileId };
@@ -236,8 +251,8 @@ try {
   const result = await secureMcpTools.getProfileData(context, {});
   return result;
 } catch (error) {
-  if (error.message.includes('Access denied')) {
-    return { error: 'Access not authorized' };
+  if (error.message.includes("Access denied")) {
+    return { error: "Access not authorized" };
   }
   throw error;
 }
@@ -260,20 +275,24 @@ await secureMcpTools.searchDocuments(context, params);
 ### Test Security Context
 
 ```typescript
-import { buildTestSecurityContext } from '$lib/context';
+import { buildTestSecurityContext } from "$lib/context";
 
-const testContext = buildTestSecurityContext('user123', 'profile456', 'session789');
+const testContext = buildTestSecurityContext(
+  "user123",
+  "profile456",
+  "session789",
+);
 ```
 
 ### Test Access Policies
 
 ```typescript
-import { mcpSecurityService } from '$lib/context';
+import { mcpSecurityService } from "$lib/context";
 
 const accessResult = await mcpSecurityService.validateAccess(
-  'getMedicationHistory',
+  "getMedicationHistory",
   testContext,
-  { includeInteractions: true }
+  { includeInteractions: true },
 );
 
 console.log(accessResult); // { allowed: true/false, reason?: string }
@@ -290,6 +309,7 @@ The security system supports HIPAA compliance through:
 5. **Activity Monitoring**: Real-time security monitoring
 
 Ensure your deployment includes:
+
 - SSL/TLS encryption in transit
 - Encrypted storage at rest
 - Regular audit log review

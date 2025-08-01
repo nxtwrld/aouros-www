@@ -290,8 +290,8 @@ export class ClientToolExecutor {
     }
 
     // Filter and validate terms
-    const terms = parameters.terms.filter((term: any) => 
-      typeof term === 'string' && term.trim().length > 0
+    const terms = parameters.terms.filter(
+      (term: any) => typeof term === "string" && term.trim().length > 0,
     );
 
     log.info("AI provided medical terms for search", {
@@ -320,7 +320,9 @@ export class ClientToolExecutor {
 
     try {
       // Import medical expert tools directly to use the new interface
-      const { medicalExpertTools } = await import('$lib/context/mcp-tools/medical-expert-tools');
+      const { medicalExpertTools } = await import(
+        "$lib/context/mcp-tools/medical-expert-tools"
+      );
 
       // Create search parameters object for the new MCP tool interface
       const searchParams = {
@@ -338,7 +340,10 @@ export class ClientToolExecutor {
       });
 
       // Call the MCP tool directly with the new interface
-      const result = await medicalExpertTools.searchDocuments(searchParams, this.profileId);
+      const result = await medicalExpertTools.searchDocuments(
+        searchParams,
+        this.profileId,
+      );
 
       // Check if the MCP tool returned an error
       if (result?.isError) {

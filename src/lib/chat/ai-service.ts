@@ -1,10 +1,15 @@
-import { enhancedAIProvider } from '$lib/ai/providers/enhanced-abstraction';
-import type { ChatMessage, ChatContext, ChatResponse, ChatMode } from './types.d';
-import type { Content } from '$lib/ai/types.d';
-import AnatomyIntegration from './anatomy-integration';
-import { generateId } from '$lib/utils/id';
-import { chatContextService } from '$lib/context/integration/chat-service';
-import { chatConfigManager } from '$lib/config/chat-config';
+import { enhancedAIProvider } from "$lib/ai/providers/enhanced-abstraction";
+import type {
+  ChatMessage,
+  ChatContext,
+  ChatResponse,
+  ChatMode,
+} from "./types.d";
+import type { Content } from "$lib/ai/types.d";
+import AnatomyIntegration from "./anatomy-integration";
+import { generateId } from "$lib/utils/id";
+import { chatContextService } from "$lib/context/integration/chat-service";
+import { chatConfigManager } from "$lib/config/chat-config";
 
 export class ChatAIService {
   private tokenUsage = { total: 0 };
@@ -15,21 +20,27 @@ export class ChatAIService {
   async processMessage(
     userMessage: string,
     context: ChatContext,
-    conversationHistory: ChatMessage[]
+    conversationHistory: ChatMessage[],
   ): Promise<ChatResponse> {
     try {
       // Detect body part references
-      const bodyPartReferences = AnatomyIntegration.detectBodyParts(userMessage);
-      
+      const bodyPartReferences =
+        AnatomyIntegration.detectBodyParts(userMessage);
+
       // Create content for AI processing
-      const content = this.buildContent(userMessage, context, conversationHistory);
-      
+      const content = this.buildContent(
+        userMessage,
+        context,
+        conversationHistory,
+      );
+
       // Create schema based on mode using ChatConfigManager
       const schema = chatConfigManager.createResponseSchema(context.mode);
-      
+
       // Choose flow type based on mode
-      const flowType = context.mode === 'patient' ? 'medical_analysis' : 'medical_analysis';
-      
+      const flowType =
+        context.mode === "patient" ? "medical_analysis" : "medical_analysis";
+
       // Get AI response using enhanced provider
       const aiResponse = await enhancedAIProvider.analyzeDocument(
         content,
@@ -39,24 +50,29 @@ export class ChatAIService {
           language: this.getLanguageName(context.language),
           temperature: 0.7,
           flowType,
-        }
+        },
       );
 
       // Generate anatomy suggestions if body parts detected
-      const anatomySuggestion = AnatomyIntegration.suggestAnatomyView(bodyPartReferences);
-      
+      const anatomySuggestion =
+        AnatomyIntegration.suggestAnatomyView(bodyPartReferences);
+
       return {
-        message: aiResponse.response || aiResponse.message || 'I apologize, but I encountered an issue processing your message.',
-        anatomyReferences: bodyPartReferences.map(ref => ref.bodyPartId),
+        message:
+          aiResponse.response ||
+          aiResponse.message ||
+          "I apologize, but I encountered an issue processing your message.",
+        anatomyReferences: bodyPartReferences.map((ref) => ref.bodyPartId),
         suggestions: anatomySuggestion ? [anatomySuggestion] : [],
         documentReferences: aiResponse.documentReferences || [],
         toolCalls: aiResponse.toolCalls || [],
         consentRequests: aiResponse.consentRequests || [],
       };
     } catch (error) {
-      console.error('Chat AI Service Error:', error);
+      console.error("Chat AI Service Error:", error);
       return {
-        message: 'I apologize, but I encountered an error processing your message. Please try again.',
+        message:
+          "I apologize, but I encountered an error processing your message. Please try again.",
         anatomyReferences: [],
         suggestions: [],
       };
@@ -69,20 +85,20 @@ export class ChatAIService {
   private buildContent(
     userMessage: string,
     context: ChatContext,
-    conversationHistory: ChatMessage[]
+    conversationHistory: ChatMessage[],
   ): Content[] {
     const content: Content[] = [];
 
     // Add enhanced system context with assembled medical context
     content.push({
-      type: 'text',
+      type: "text",
       text: this.buildEnhancedSystemPrompt(context),
     });
 
     // Add assembled medical context if available
     if (context.assembledContext) {
       content.push({
-        type: 'text',
+        type: "text",
         text: this.formatAssembledContext(context.assembledContext),
       });
     }
@@ -90,23 +106,23 @@ export class ChatAIService {
     // Add available MCP tools information
     if (context.availableTools && context.availableTools.length > 0) {
       content.push({
-        type: 'text',
+        type: "text",
         text: this.formatAvailableTools(context.availableTools),
       });
     }
 
     // Add conversation history (last 10 messages)
     const recentHistory = conversationHistory.slice(-10);
-    recentHistory.forEach(msg => {
+    recentHistory.forEach((msg) => {
       content.push({
-        type: 'text',
+        type: "text",
         text: `${msg.role}: ${msg.content}`,
       });
     });
 
     // Add current user message
     content.push({
-      type: 'text',
+      type: "text",
       text: `user: ${userMessage}`,
     });
 
@@ -122,14 +138,16 @@ export class ChatAIService {
       {
         assembledContext: context.assembledContext,
         availableTools: context.availableTools || [],
-        contextSummary: context.assembledContext ? 'Medical context available' : 'No medical context available',
+        contextSummary: context.assembledContext
+          ? "Medical context available"
+          : "No medical context available",
         documentCount: context.assembledContext?.relevantDocuments?.length || 0,
         confidence: context.assembledContext?.confidence || 0,
-        tokenUsage: context.assembledContext?.tokenCount || 0
+        tokenUsage: context.assembledContext?.tokenCount || 0,
       },
-      context.mode === 'patient' ? 'patient' : 'clinical'
+      context.mode === "patient" ? "patient" : "clinical",
     );
-    
+
     return basePrompt;
   }
 
@@ -138,8 +156,8 @@ export class ChatAIService {
    */
   private buildSystemPrompt(context: ChatContext): string {
     const basePrompt = `You are an AI medical assistant integrated with a 3D anatomy model. You can suggest anatomy visualizations when discussing body parts.`;
-    
-    if (context.mode === 'patient') {
+
+    if (context.mode === "patient") {
       return `${basePrompt}
 
 PATIENT SUPPORT MODE:
@@ -182,67 +200,75 @@ CLINICAL FOCUS:
     }
   }
 
-
   /**
    * Format assembled context for AI prompt
    */
   private formatAssembledContext(assembledContext: any): string {
     if (!assembledContext) {
-      return 'No medical context available for this conversation.';
+      return "No medical context available for this conversation.";
     }
-    
+
     const sections = [];
-    
+
     // Summary
     if (assembledContext.summary) {
-      sections.push(`**Medical Context Summary:**\n${assembledContext.summary}`);
+      sections.push(
+        `**Medical Context Summary:**\n${assembledContext.summary}`,
+      );
     }
-    
+
     // Key points
     if (assembledContext.keyPoints && assembledContext.keyPoints.length > 0) {
       const keyPointsList = assembledContext.keyPoints
         .slice(0, 5) // Limit to top 5 points
-        .map((point: any) => `- ${point.text} (${point.type}, ${point.date || 'unknown date'})`)
-        .join('\n');
+        .map(
+          (point: any) =>
+            `- ${point.text} (${point.type}, ${point.date || "unknown date"})`,
+        )
+        .join("\n");
       sections.push(`**Key Medical Points:**\n${keyPointsList}`);
     }
-    
+
     // Recent changes
     if (assembledContext.medicalContext?.recentChanges?.length) {
       const recentList = assembledContext.medicalContext.recentChanges
         .slice(0, 3)
         .map((change: any) => `- ${change.date}: ${change.description}`)
-        .join('\n');
+        .join("\n");
       sections.push(`**Recent Medical Changes:**\n${recentList}`);
     }
-    
+
     // Metadata
     const metadata = `**Context Statistics:**\n- Documents: ${assembledContext.relevantDocuments?.length || 0}\n- Key Points: ${assembledContext.keyPoints?.length || 0}\n- Confidence: ${((assembledContext.confidence || 0) * 100).toFixed(1)}%\n- Token Usage: ${assembledContext.tokenCount || 0}`;
     sections.push(metadata);
-    
-    return sections.join('\n\n');
+
+    return sections.join("\n\n");
   }
-  
+
   /**
    * Format available MCP tools for AI prompt
    */
   private formatAvailableTools(availableTools: string[]): string {
     if (!availableTools || availableTools.length === 0) {
-      return 'No medical data access tools are currently available.';
+      return "No medical data access tools are currently available.";
     }
-    
+
     const toolDescriptions: Record<string, string> = {
-      searchDocuments: 'Search patient documents using semantic similarity',
-      getAssembledContext: 'Get comprehensive assembled medical context',
-      getProfileData: 'Access patient profile and basic health information',
-      queryMedicalHistory: 'Query specific medical history (medications, conditions, procedures, allergies)',
-      getDocumentById: 'Retrieve specific document by ID'
+      searchDocuments: "Search patient documents using semantic similarity",
+      getAssembledContext: "Get comprehensive assembled medical context",
+      getProfileData: "Access patient profile and basic health information",
+      queryMedicalHistory:
+        "Query specific medical history (medications, conditions, procedures, allergies)",
+      getDocumentById: "Retrieve specific document by ID",
     };
-    
+
     const toolsList = availableTools
-      .map(tool => `- **${tool}**: ${toolDescriptions[tool] || 'Medical data access tool'}`)
-      .join('\n');
-    
+      .map(
+        (tool) =>
+          `- **${tool}**: ${toolDescriptions[tool] || "Medical data access tool"}`,
+      )
+      .join("\n");
+
     return `**Available Medical Data Tools:**\n\n${toolsList}\n\n**How to use tools:**
 When you need medical information to answer a question, request to use these tools by including a toolCalls array in your response. Each tool request must include:
 - name: The exact tool name from the list above
@@ -258,17 +284,17 @@ When you need medical information to answer a question, request to use these too
 
 **Important:** The user will be asked to approve each tool use before execution. Only request tools when necessary to answer the user's question accurately.`;
   }
-  
+
   /**
    * Get language name for AI prompt
    */
   private getLanguageName(languageCode: string): string {
     const languages: Record<string, string> = {
-      'en': 'English',
-      'cs': 'Czech',
-      'de': 'German',
+      en: "English",
+      cs: "Czech",
+      de: "German",
     };
-    return languages[languageCode] || 'English';
+    return languages[languageCode] || "English";
   }
 
   /**
@@ -279,12 +305,16 @@ When you need medical information to answer a question, request to use these too
 
     // Add anatomy suggestions
     if (response.suggestions && response.suggestions.length > 0) {
-      formatted += '\n\n' + response.suggestions.map(s => `🔍 ${s.suggestion}`).join('\n');
+      formatted +=
+        "\n\n" +
+        response.suggestions.map((s) => `🔍 ${s.suggestion}`).join("\n");
     }
 
     // Add consent requests
     if (response.consentRequests && response.consentRequests.length > 0) {
-      formatted += '\n\n' + response.consentRequests.map(cr => `📋 ${cr.message}`).join('\n');
+      formatted +=
+        "\n\n" +
+        response.consentRequests.map((cr) => `📋 ${cr.message}`).join("\n");
     }
 
     return formatted;

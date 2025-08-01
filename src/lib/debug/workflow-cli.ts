@@ -2,7 +2,7 @@
 
 /**
  * CLI Tool for Workflow Debug Management
- * 
+ *
  * Provides command-line interface for:
  * - Listing available workflow recordings
  * - Replaying workflows step by step
@@ -22,7 +22,7 @@ interface CLIOptions {
   file?: string;
   step?: string;
   output?: string;
-  format?: 'json' | 'summary' | 'detailed';
+  format?: "json" | "summary" | "detailed";
   compare?: string;
   verbose?: boolean;
   delay?: number;
@@ -72,7 +72,7 @@ export class WorkflowCLI {
     const options: CLIOptions = {
       command: args[0] || "help",
       format: "summary",
-      verbose: false
+      verbose: false,
     };
 
     for (let i = 1; i < args.length; i++) {
@@ -91,7 +91,7 @@ export class WorkflowCLI {
           options.output = args[++i];
           break;
         case "--format":
-          options.format = args[++i] as 'json' | 'summary' | 'detailed';
+          options.format = args[++i] as "json" | "summary" | "detailed";
           break;
         case "--compare":
         case "-c":
@@ -116,20 +116,22 @@ export class WorkflowCLI {
    */
   listRecordings(): void {
     if (!existsSync(this.debugDir)) {
-      console.log("No workflow recordings found. Debug directory does not exist.");
+      console.log(
+        "No workflow recordings found. Debug directory does not exist.",
+      );
       return;
     }
 
     const files = readdirSync(this.debugDir)
-      .filter(file => file.endsWith(".json"))
-      .map(file => {
+      .filter((file) => file.endsWith(".json"))
+      .map((file) => {
         const fullPath = join(this.debugDir, file);
         const stats = statSync(fullPath);
         return {
           file,
           path: fullPath,
           size: stats.size,
-          modified: stats.mtime.toISOString()
+          modified: stats.mtime.toISOString(),
         };
       })
       .sort((a, b) => b.modified.localeCompare(a.modified));
@@ -149,13 +151,18 @@ export class WorkflowCLI {
       console.log(file.padEnd(50) + `${sizeKB}KB`.padEnd(10) + date);
     });
 
-    console.log(`\nUse 'workflow-cli info --file <filename>' for detailed information.`);
+    console.log(
+      `\nUse 'workflow-cli info --file <filename>' for detailed information.`,
+    );
   }
 
   /**
    * Show detailed information about a recording
    */
-  async showRecordingInfo(file?: string, format: string = "summary"): Promise<void> {
+  async showRecordingInfo(
+    file?: string,
+    format: string = "summary",
+  ): Promise<void> {
     if (!file) {
       console.error("Error: --file parameter is required");
       return;
@@ -163,7 +170,7 @@ export class WorkflowCLI {
 
     const filePath = this.resolveFilePath(file);
     const recording = workflowRecorder.loadRecording(filePath);
-    
+
     if (!recording) {
       console.error(`Error: Could not load recording from ${filePath}`);
       return;
@@ -192,7 +199,9 @@ export class WorkflowCLI {
     if (format === "detailed") {
       console.log(`\n🔍 Steps:`);
       recording.steps.forEach((step, index) => {
-        console.log(`  ${index + 1}. ${step.stepName} (${step.duration}ms, ${step.tokenUsage.total} tokens)`);
+        console.log(
+          `  ${index + 1}. ${step.stepName} (${step.duration}ms, ${step.tokenUsage.total} tokens)`,
+        );
         if (step.errors && step.errors.length > 0) {
           console.log(`     ❌ Errors: ${step.errors.length}`);
         }
@@ -208,8 +217,12 @@ export class WorkflowCLI {
       if (result.content) {
         console.log(`  Content Type: ${result.content.type || "Unknown"}`);
         console.log(`  Medical: ${result.content.isMedical ? "Yes" : "No"}`);
-        console.log(`  Prescriptions: ${result.content.prescriptions?.length || 0}`);
-        console.log(`  Immunizations: ${result.content.immunizations?.length || 0}`);
+        console.log(
+          `  Prescriptions: ${result.content.prescriptions?.length || 0}`,
+        );
+        console.log(
+          `  Immunizations: ${result.content.immunizations?.length || 0}`,
+        );
       }
       if (result.signals) {
         console.log(`  Signals: ${result.signals.length || 0}`);
@@ -231,26 +244,30 @@ export class WorkflowCLI {
 
     const filePath = this.resolveFilePath(file);
     const replay = createWorkflowReplay(filePath);
-    
+
     if (!replay) {
-      console.error(`Error: Could not load workflow for replay from ${filePath}`);
+      console.error(
+        `Error: Could not load workflow for replay from ${filePath}`,
+      );
       return;
     }
 
     const summary = replay.getWorkflowSummary();
     console.log(`\n🔄 Replaying workflow: ${summary.recordingId}`);
-    console.log(`📊 ${summary.totalSteps} steps, ${summary.totalDuration}ms original duration\n`);
+    console.log(
+      `📊 ${summary.totalSteps} steps, ${summary.totalDuration}ms original duration\n`,
+    );
 
     const results = await replay.replayWorkflow({
       stepDelay: options.delay, // Use CLI delay if provided
       verbose: options.verbose,
-      useEnvironmentDelay: options.delay === undefined // Use env delay if no CLI delay specified
+      useEnvironmentDelay: options.delay === undefined, // Use env delay if no CLI delay specified
     });
 
     console.log(`\n✅ Replay completed:`);
     console.log(`  Steps: ${results.length}`);
-    console.log(`  Successful: ${results.filter(r => r.success).length}`);
-    console.log(`  Failed: ${results.filter(r => !r.success).length}`);
+    console.log(`  Successful: ${results.filter((r) => r.success).length}`);
+    console.log(`  Failed: ${results.filter((r) => !r.success).length}`);
 
     if (options.output) {
       const fs = require("fs");
@@ -262,7 +279,11 @@ export class WorkflowCLI {
   /**
    * Extract a specific step from a workflow
    */
-  async extractStep(file?: string, stepName?: string, format: string = "json"): Promise<void> {
+  async extractStep(
+    file?: string,
+    stepName?: string,
+    format: string = "json",
+  ): Promise<void> {
     if (!file) {
       console.error("Error: --file parameter is required");
       return;
@@ -270,7 +291,7 @@ export class WorkflowCLI {
 
     const filePath = this.resolveFilePath(file);
     const replay = createWorkflowReplay(filePath);
-    
+
     if (!replay) {
       console.error(`Error: Could not load workflow from ${filePath}`);
       return;
@@ -331,23 +352,31 @@ export class WorkflowCLI {
 
     // Compare basic metrics
     console.log("📈 Metrics Comparison:");
-    console.log(`Duration: ${recording1.totalDuration}ms vs ${recording2.totalDuration}ms`);
-    console.log(`Tokens: ${recording1.totalTokenUsage.total} vs ${recording2.totalTokenUsage.total}`);
-    console.log(`Steps: ${recording1.steps.length} vs ${recording2.steps.length}`);
+    console.log(
+      `Duration: ${recording1.totalDuration}ms vs ${recording2.totalDuration}ms`,
+    );
+    console.log(
+      `Tokens: ${recording1.totalTokenUsage.total} vs ${recording2.totalTokenUsage.total}`,
+    );
+    console.log(
+      `Steps: ${recording1.steps.length} vs ${recording2.steps.length}`,
+    );
     console.log();
 
     // Compare step by step
     console.log("🔍 Step-by-Step Comparison:");
     const maxSteps = Math.max(recording1.steps.length, recording2.steps.length);
-    
+
     for (let i = 0; i < maxSteps; i++) {
       const step1 = recording1.steps[i];
       const step2 = recording2.steps[i];
-      
+
       if (step1 && step2) {
         const durationDiff = step2.duration - step1.duration;
         const tokenDiff = step2.tokenUsage.total - step1.tokenUsage.total;
-        console.log(`  ${i + 1}. ${step1.stepName}: ${step1.duration}ms vs ${step2.duration}ms (${durationDiff > 0 ? '+' : ''}${durationDiff}ms)`);
+        console.log(
+          `  ${i + 1}. ${step1.stepName}: ${step1.duration}ms vs ${step2.duration}ms (${durationDiff > 0 ? "+" : ""}${durationDiff}ms)`,
+        );
       } else if (step1) {
         console.log(`  ${i + 1}. ${step1.stepName}: Present in A only`);
       } else if (step2) {
@@ -367,7 +396,7 @@ export class WorkflowCLI {
 
     const filePath = this.resolveFilePath(file);
     const recording = workflowRecorder.loadRecording(filePath);
-    
+
     if (!recording) {
       console.error(`Error: Could not load recording from ${filePath}`);
       return;
@@ -382,41 +411,54 @@ export class WorkflowCLI {
 
     console.log("📊 Overall Performance:");
     console.log(`  Total Duration: ${totalDuration}ms`);
-    console.log(`  Average Step Duration: ${Math.round(totalDuration / stepCount)}ms`);
+    console.log(
+      `  Average Step Duration: ${Math.round(totalDuration / stepCount)}ms`,
+    );
     console.log(`  Total Tokens: ${totalTokens}`);
-    console.log(`  Average Tokens per Step: ${Math.round(totalTokens / stepCount)}`);
+    console.log(
+      `  Average Tokens per Step: ${Math.round(totalTokens / stepCount)}`,
+    );
     console.log();
 
     // Step performance
     console.log("🏃 Step Performance (sorted by duration):");
-    const sortedSteps = [...recording.steps].sort((a, b) => b.duration - a.duration);
-    
+    const sortedSteps = [...recording.steps].sort(
+      (a, b) => b.duration - a.duration,
+    );
+
     sortedSteps.slice(0, 5).forEach((step, index) => {
       const percentage = Math.round((step.duration / totalDuration) * 100);
-      console.log(`  ${index + 1}. ${step.stepName}: ${step.duration}ms (${percentage}%) - ${step.tokenUsage.total} tokens`);
+      console.log(
+        `  ${index + 1}. ${step.stepName}: ${step.duration}ms (${percentage}%) - ${step.tokenUsage.total} tokens`,
+      );
     });
 
     // AI request analysis
-    const aiRequests = recording.steps.flatMap(step => step.aiRequests || []);
+    const aiRequests = recording.steps.flatMap((step) => step.aiRequests || []);
     if (aiRequests.length > 0) {
       console.log();
       console.log("🤖 AI Request Analysis:");
       console.log(`  Total AI Requests: ${aiRequests.length}`);
-      
-      const avgDuration = Math.round(aiRequests.reduce((sum, req) => sum + req.duration, 0) / aiRequests.length);
+
+      const avgDuration = Math.round(
+        aiRequests.reduce((sum, req) => sum + req.duration, 0) /
+          aiRequests.length,
+      );
       console.log(`  Average AI Request Duration: ${avgDuration}ms`);
-      
-      const providers = new Set(aiRequests.map(req => req.provider));
+
+      const providers = new Set(aiRequests.map((req) => req.provider));
       console.log(`  Providers Used: ${Array.from(providers).join(", ")}`);
     }
 
     // Error analysis
-    const errors = recording.steps.flatMap(step => step.errors || []);
+    const errors = recording.steps.flatMap((step) => step.errors || []);
     if (errors.length > 0) {
       console.log();
       console.log("❌ Error Analysis:");
       console.log(`  Total Errors: ${errors.length}`);
-      console.log(`  Steps with Errors: ${recording.steps.filter(s => s.errors && s.errors.length > 0).length}`);
+      console.log(
+        `  Steps with Errors: ${recording.steps.filter((s) => s.errors && s.errors.length > 0).length}`,
+      );
     }
   }
 
@@ -427,19 +469,19 @@ export class WorkflowCLI {
     if (file.startsWith("/")) {
       return file;
     }
-    
+
     // Try relative to debug directory first
     const debugPath = join(this.debugDir, file);
     if (existsSync(debugPath)) {
       return debugPath;
     }
-    
+
     // Try relative to current directory
     const relativePath = join(process.cwd(), file);
     if (existsSync(relativePath)) {
       return relativePath;
     }
-    
+
     return debugPath; // Return debug path as default
   }
 

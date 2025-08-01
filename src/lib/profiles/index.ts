@@ -86,21 +86,26 @@ export async function loadProfiles(
 
           // map profile data
           const profileData = mapProfileData(d, roots);
-          
+
           // Initialize context for this profile with simplified medical terms approach
           try {
             await profileContextManager.initializeProfileContext(
               d.profiles.id,
               {
                 onProgress: (status, progress) => {
-                  console.log(`Context init for ${d.profiles.id}: ${status} ${progress ? `(${progress}%)` : ''}`);
-                }
-              }
+                  console.log(
+                    `Context init for ${d.profiles.id}: ${status} ${progress ? `(${progress}%)` : ""}`,
+                  );
+                },
+              },
             );
           } catch (error) {
-            console.warn(`Failed to initialize context for profile ${d.profiles.id}:`, error);
+            console.warn(
+              `Failed to initialize context for profile ${d.profiles.id}:`,
+              error,
+            );
           }
-          
+
           return profileData;
         } catch (e) {
           return {

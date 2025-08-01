@@ -5,15 +5,15 @@ import type {
   ProgressCallback,
   ProgressEvent,
 } from "../state";
-import { 
+import {
   isLangGraphDebuggingEnabled,
-  isWorkflowTracingEnabled 
+  isWorkflowTracingEnabled,
 } from "$lib/config/logging-config";
-import { 
-  startWorkflowRecording, 
-  finishWorkflowRecording, 
+import {
+  startWorkflowRecording,
+  finishWorkflowRecording,
   isWorkflowReplayMode,
-  workflowRecorder 
+  workflowRecorder,
 } from "$lib/debug/workflow-recorder";
 import { createWorkflowReplay } from "$lib/debug/workflow-replay";
 
@@ -31,10 +31,13 @@ import { executeMultiNodeProcessing } from "./multi-node-orchestrator";
 // Conditional edge functions
 const shouldProcessMedical = (state: DocumentProcessingState): string => {
   if (state.errors && state.errors.length > 0) {
-    console.log("🚫 shouldProcessMedical: Routing to error due to processing errors", {
-      errorsCount: state.errors.length,
-      errors: state.errors
-    });
+    console.log(
+      "🚫 shouldProcessMedical: Routing to error due to processing errors",
+      {
+        errorsCount: state.errors.length,
+        errors: state.errors,
+      },
+    );
     return "error";
   }
 
@@ -44,30 +47,39 @@ const shouldProcessMedical = (state: DocumentProcessingState): string => {
     confidence: state.featureDetection?.confidence,
     type: state.featureDetection?.type,
     hasFeatureDetectionResults: !!state.featureDetectionResults,
-    isMedical: state.featureDetectionResults?.isMedical
+    isMedical: state.featureDetectionResults?.isMedical,
   });
 
   if (state.featureDetection && state.featureDetection.confidence > 0.5) {
     console.log("✅ shouldProcessMedical: Routing to medical analysis", {
       confidence: state.featureDetection.confidence,
-      type: state.featureDetection.type
+      type: state.featureDetection.type,
     });
     return "medical";
   }
 
   // Also check if we have alternative feature detection results indicating medical content
-  if (state.featureDetectionResults && state.featureDetectionResults.isMedical) {
-    console.log("✅ shouldProcessMedical: Routing to medical analysis (via featureDetectionResults)", {
-      isMedical: state.featureDetectionResults.isMedical,
-      documentType: state.featureDetectionResults.documentType
-    });
+  if (
+    state.featureDetectionResults &&
+    state.featureDetectionResults.isMedical
+  ) {
+    console.log(
+      "✅ shouldProcessMedical: Routing to medical analysis (via featureDetectionResults)",
+      {
+        isMedical: state.featureDetectionResults.isMedical,
+        documentType: state.featureDetectionResults.documentType,
+      },
+    );
     return "medical";
   }
 
-  console.log("🚫 shouldProcessMedical: Routing to error - not medical or low confidence", {
-    featureDetectionConfidence: state.featureDetection?.confidence,
-    isMedical: state.featureDetectionResults?.isMedical
-  });
+  console.log(
+    "🚫 shouldProcessMedical: Routing to error - not medical or low confidence",
+    {
+      featureDetectionConfidence: state.featureDetection?.confidence,
+      isMedical: state.featureDetectionResults?.isMedical,
+    },
+  );
   return "error";
 };
 
@@ -89,8 +101,11 @@ const shouldUseEnhancedSchema = (state: DocumentProcessingState): string => {
   return "standard";
 };
 
-// Create the document processing workflow  
-export const createDocumentProcessingWorkflow = (config?: WorkflowConfig, progressCallback?: ProgressCallback) => {
+// Create the document processing workflow
+export const createDocumentProcessingWorkflow = (
+  config?: WorkflowConfig,
+  progressCallback?: ProgressCallback,
+) => {
   // Create wrapper functions for nodes that have access to the progress callback
   const createNodeWrapper = (nodeFn: any) => {
     return async (state: DocumentProcessingState) => {
@@ -113,7 +128,7 @@ export const createDocumentProcessingWorkflow = (config?: WorkflowConfig, progre
       content: null,
       tokenUsage: null,
       featureDetection: null,
-      featureDetectionResults: null,  // ← Missing field added!
+      featureDetectionResults: null, // ← Missing field added!
       medicalAnalysis: null,
       signals: null,
       report: null, // Add report channel
@@ -141,13 +156,28 @@ export const createDocumentProcessingWorkflow = (config?: WorkflowConfig, progre
 
   // Core workflow nodes (wrapped to preserve progress callback)
   workflow.addNode("input_validation", createNodeWrapper(inputValidationNode));
-  workflow.addNode("feature_detection", createNodeWrapper(featureDetectionNode));
-  workflow.addNode("multi_node_processing", createNodeWrapper(executeMultiNodeProcessing));
+  workflow.addNode(
+    "feature_detection",
+    createNodeWrapper(featureDetectionNode),
+  );
+  workflow.addNode(
+    "multi_node_processing",
+    createNodeWrapper(executeMultiNodeProcessing),
+  );
 
   // Enhanced nodes (new capabilities)
-  workflow.addNode("provider_selection", createNodeWrapper(providerSelectionNode));
-  workflow.addNode("document_type_router", createNodeWrapper(documentTypeRouterNode));
-  workflow.addNode("external_validation", createNodeWrapper(externalValidationNode));
+  workflow.addNode(
+    "provider_selection",
+    createNodeWrapper(providerSelectionNode),
+  );
+  workflow.addNode(
+    "document_type_router",
+    createNodeWrapper(documentTypeRouterNode),
+  );
+  workflow.addNode(
+    "external_validation",
+    createNodeWrapper(externalValidationNode),
+  );
   workflow.addNode("quality_gate", createNodeWrapper(qualityGateNode));
 
   // Define simplified workflow edges for unified processing
@@ -162,10 +192,14 @@ export const createDocumentProcessingWorkflow = (config?: WorkflowConfig, progre
   });
 
   // Conditional external validation after multi-node processing
-  workflow.addConditionalEdges("multi_node_processing", shouldValidateExternally, {
-    validate: "external_validation",
-    skip: "quality_gate",
-  });
+  workflow.addConditionalEdges(
+    "multi_node_processing",
+    shouldValidateExternally,
+    {
+      validate: "external_validation",
+      skip: "quality_gate",
+    },
+  );
 
   workflow.addEdge("external_validation", "quality_gate");
   workflow.addEdge("quality_gate", END);
@@ -193,12 +227,14 @@ const createProgressEmitters = (
     if (progressCallback) {
       const overallProgress =
         ((completedStages + progress / 100) / totalStages) * 100;
-      
+
       // Only log if LangGraph debugging is enabled
       if (isLangGraphDebuggingEnabled()) {
-        console.log(`🔄 LangGraph Progress: ${stage} (${progress}%) - ${message}`);
+        console.log(
+          `🔄 LangGraph Progress: ${stage} (${progress}%) - ${message}`,
+        );
       }
-      
+
       progressCallback({
         type: "progress",
         stage,
@@ -214,12 +250,14 @@ const createProgressEmitters = (
     completedStages++;
     if (progressCallback) {
       const overallProgress = (completedStages / totalStages) * 100;
-      
+
       // Only log if LangGraph debugging is enabled
       if (isLangGraphDebuggingEnabled()) {
-        console.log(`✅ LangGraph Complete: ${stage} - ${message} (${completedStages}/${totalStages})`);
+        console.log(
+          `✅ LangGraph Complete: ${stage} - ${message} (${completedStages}/${totalStages})`,
+        );
       }
-      
+
       progressCallback({
         type: "progress",
         stage,
@@ -268,7 +306,10 @@ export async function runDocumentProcessingWorkflowLegacy(
   if (isWorkflowReplayMode()) {
     const replayFilePath = workflowRecorder.getReplayFilePath();
     if (replayFilePath) {
-      console.log("🔄 Replay mode detected, loading workflow from:", replayFilePath);
+      console.log(
+        "🔄 Replay mode detected, loading workflow from:",
+        replayFilePath,
+      );
       // In replay mode, we don't run the live workflow, only replay recorded events
       return await replayWorkflowFromFile(replayFilePath, progressCallback);
     }
@@ -279,12 +320,14 @@ export async function runDocumentProcessingWorkflowLegacy(
     images,
     text,
     language,
-    ...config
+    ...config,
   });
 
   // Logging is now configured via environment variables
   if (isWorkflowTracingEnabled()) {
-    console.log("🔍 LangGraph workflow tracing enabled via environment configuration");
+    console.log(
+      "🔍 LangGraph workflow tracing enabled via environment configuration",
+    );
     if (recordingId) {
       console.log("📹 Workflow recording started:", recordingId);
     }
@@ -326,7 +369,7 @@ export async function runDocumentProcessingWorkflowLegacy(
       hasProgressCallback: !!progressCallback,
       progressCallbackType: typeof progressCallback,
       emitProgressType: typeof emitProgress,
-      isFunction: typeof progressCallback === 'function'
+      isFunction: typeof progressCallback === "function",
     });
 
     if (isWorkflowTracingEnabled()) {
@@ -335,7 +378,7 @@ export async function runDocumentProcessingWorkflowLegacy(
         hasImages: !!images,
         hasText: !!text,
         language,
-        hasProgressCallback: !!progressCallback
+        hasProgressCallback: !!progressCallback,
       });
     }
 
@@ -345,11 +388,11 @@ export async function runDocumentProcessingWorkflowLegacy(
     if (isWorkflowTracingEnabled()) {
       console.log("✅ LangGraph workflow completed");
       console.log("📊 Final result:", {
-        hasSignals: !!(result.signals?.length),
+        hasSignals: !!result.signals?.length,
         signalsCount: result.signals?.length || 0,
-        hasErrors: !!(result.errors?.length),
+        hasErrors: !!result.errors?.length,
         errorsCount: result.errors?.length || 0,
-        totalTokens: result.tokenUsage?.total || 0
+        totalTokens: result.tokenUsage?.total || 0,
       });
     }
 
@@ -424,7 +467,7 @@ export async function runDocumentProcessingWorkflowLegacy(
  */
 async function replayWorkflowFromFile(
   filePath: string,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
 ): Promise<any> {
   const replay = createWorkflowReplay(filePath);
   if (!replay) {
@@ -437,7 +480,7 @@ async function replayWorkflowFromFile(
     phase: summary.phase,
     steps: summary.totalSteps,
     originalDuration: summary.totalDuration,
-    originalTokens: summary.totalTokenUsage.total
+    originalTokens: summary.totalTokenUsage.total,
   });
 
   // Emit initial progress - continue from where extraction left off
@@ -447,10 +490,10 @@ async function replayWorkflowFromFile(
       stage: "analysis_start",
       progress: 30, // Continue from extraction progress
       message: `Starting analysis replay: ${summary.recordingId}`,
-      data: { 
+      data: {
         originalSteps: summary.totalSteps,
         originalDuration: summary.totalDuration,
-        phase: "analysis" 
+        phase: "analysis",
       },
       timestamp: Date.now(),
     });
@@ -472,18 +515,18 @@ async function replayWorkflowFromFile(
     if (progressCallback) {
       // Calculate progress as continuation from extraction (assume extraction was ~30% of total)
       const analysisProgress = (stepIndex / totalSteps) * 100;
-      const overallProgress = 30 + (analysisProgress * 0.7); // Analysis takes remaining 70%
-      
+      const overallProgress = 30 + analysisProgress * 0.7; // Analysis takes remaining 70%
+
       progressCallback({
         type: "progress",
         stage: result.stepName,
         progress: Math.min(overallProgress, 100),
         message: `Replaying step: ${result.stepName}`,
-        data: { 
+        data: {
           stepId: result.stepId,
           success: result.success,
           stepIndex,
-          totalSteps
+          totalSteps,
         },
         timestamp: Date.now(),
       });
@@ -491,7 +534,7 @@ async function replayWorkflowFromFile(
 
     // Add configurable delay between steps to show progress
     const delayMs = workflowRecorder.getReplayDelay();
-    await new Promise(resolve => setTimeout(resolve, delayMs));
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 
   // Get the final result from the recording
@@ -500,8 +543,8 @@ async function replayWorkflowFromFile(
 
   console.log("✅ Workflow replay completed:", {
     stepsReplayed: replayResults.length,
-    successful: replayResults.filter(r => r.success).length,
-    failed: replayResults.filter(r => !r.success).length
+    successful: replayResults.filter((r) => r.success).length,
+    failed: replayResults.filter((r) => !r.success).length,
   });
 
   // Emit completion
@@ -514,7 +557,7 @@ async function replayWorkflowFromFile(
       data: {
         stepsReplayed: replayResults.length,
         originalTokens: recording.totalTokenUsage.total,
-        phase: "analysis"
+        phase: "analysis",
       },
       timestamp: Date.now(),
     });

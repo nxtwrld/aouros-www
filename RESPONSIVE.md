@@ -3,11 +3,13 @@
 ## Current Desktop Layout Analysis
 
 **3-Column Desktop Layout:**
+
 - **Left**: Anatomy Viewer (resizable, 20-50vw, default 33vw)
 - **Center**: Document Content (flexible width)
 - **Right**: AI Chat Sidebar (resizable, 300-800px, default 400px)
 
 **Current Mobile Issues (≤768px):**
+
 - Viewer remains at desktop width (33vw = ~240px on mobile)
 - Content gets pushed into remaining ~136px space
 - Text becomes unreadable and UI elements unusable
@@ -21,6 +23,7 @@
 ### **Option 1: Tab-Based Mobile Interface**
 
 **Implementation:**
+
 - Convert 3-column layout to tabbed interface on mobile
 - Tabs: "Document" | "Anatomy" | "Chat"
 - Full-screen each section when selected
@@ -40,6 +43,7 @@
 ❌ May require additional state management
 
 **Mobile UX Flow:**
+
 1. User opens document (default tab)
 2. Taps "Anatomy" to view 3D model full-screen
 3. Taps "Chat" for AI assistance
@@ -50,6 +54,7 @@
 ### **Option 2: Modal/Overlay System**
 
 **Implementation:**
+
 - Document content remains primary view
 - Anatomy viewer opens as full-screen modal
 - Chat remains as slide-in overlay from right
@@ -69,6 +74,7 @@
 ❌ Less discoverable than tabs
 
 **Mobile UX Flow:**
+
 1. User reads document content
 2. Taps anatomy button → full-screen modal opens
 3. Interacts with 3D model
@@ -80,6 +86,7 @@
 ### **Option 3: Collapsible Panels System**
 
 **Implementation:**
+
 - All three sections available but collapsible
 - Accordion-style: only one expanded at a time
 - Quick expand/collapse buttons
@@ -98,6 +105,7 @@
 ❌ Accordion behavior might confuse users
 
 **Mobile UX Flow:**
+
 1. Default: document expanded, others collapsed
 2. Tap viewer header → expands viewer, collapses document
 3. Tap chat header → expands chat, collapses others
@@ -108,6 +116,7 @@
 ### **Option 4: Swipe-Based Carousel**
 
 **Implementation:**
+
 - Three sections as carousel slides
 - Swipe left/right to navigate
 - Indicator dots show current section
@@ -126,6 +135,7 @@
 ❌ Discovery issues for new users
 
 **Mobile UX Flow:**
+
 1. Document view (default)
 2. Swipe left → Anatomy viewer
 3. Swipe left → Chat interface
@@ -137,6 +147,7 @@
 ### **Option 5: Hybrid Bottom Sheet System**
 
 **Implementation:**
+
 - Document content as main view
 - Anatomy as bottom sheet (drawer from bottom)
 - Chat as side sheet (drawer from right)
@@ -156,6 +167,7 @@
 ❌ Potential UI conflicts
 
 **Mobile UX Flow:**
+
 1. Document in main view
 2. Pull up from bottom → anatomy sheet opens
 3. Swipe from right → chat sheet opens
@@ -167,6 +179,7 @@
 ### **Option 6: Smart Responsive Stacking**
 
 **Implementation:**
+
 - Maintain 3-column on larger mobile (≥600px)
 - Stack to single column on smaller mobile (≤599px)
 - Context-aware prioritization
@@ -185,6 +198,7 @@
 ❌ Stacking might be jarring
 
 **Mobile UX Flow:**
+
 1. Large mobile: compressed 3-column
 2. Small mobile: stacked single column
 3. Priority: Document → Chat → Anatomy
@@ -197,6 +211,7 @@
 ### **Primary Recommendation: Option 1 (Tab-Based) + Option 2 (Modal) Hybrid**
 
 **Rationale:**
+
 - **Tab-based for primary navigation** (Document/Chat tabs)
 - **Modal anatomy viewer** triggered from document content
 - **Best of both approaches** without complexity
@@ -204,6 +219,7 @@
 **Implementation Plan:**
 
 #### **Phase 1: Mobile Tab System**
+
 ```html
 <!-- Mobile only: ≤768px -->
 <div class="mobile-tabs">
@@ -217,6 +233,7 @@
 ```
 
 #### **Phase 2: Modal Anatomy Integration**
+
 ```html
 <!-- Anatomy buttons in document trigger modal -->
 <button onclick="openAnatomyModal('spine')" class="anatomy-trigger-mobile">
@@ -230,6 +247,7 @@
 ```
 
 #### **Phase 3: Enhanced Mobile Features**
+
 - Swipe gestures between tabs
 - Touch-optimized anatomy controls
 - Mobile-specific chat interface improvements
@@ -239,6 +257,7 @@
 ## Technical Implementation Details
 
 ### **CSS Strategy**
+
 ```css
 /* Mobile-first approach */
 @media (max-width: 768px) {
@@ -246,7 +265,7 @@
     display: flex;
     flex-direction: column;
   }
-  
+
   .mobile-tabs {
     position: fixed;
     bottom: 0;
@@ -257,14 +276,16 @@
 ```
 
 ### **State Management**
+
 - Add mobile layout state to UI store
 - Track active mobile tab
 - Manage modal states
 - Preserve desktop functionality
 
 ### **Component Updates Needed**
+
 1. **UI.svelte**: Mobile layout detection and tab system
-2. **DocumentView.svelte**: Mobile anatomy button triggers  
+2. **DocumentView.svelte**: Mobile anatomy button triggers
 3. **Viewer.svelte**: Full-screen modal mode
 4. **AIChatSidebar.svelte**: Tab integration
 5. **CSS files**: Mobile-specific styles
@@ -274,12 +295,14 @@
 ## Breakpoint Strategy
 
 ### **Proposed Breakpoints**
+
 - **≥1024px**: Full 3-column desktop layout
 - **768px-1023px**: Compressed 3-column (tablet landscape)
 - **600px-767px**: 2-column (tablet portrait)
 - **≤599px**: Mobile tab system
 
 ### **Progressive Enhancement**
+
 1. Start with mobile-first design
 2. Enhance for larger screens
 3. Maintain touch-first approach
@@ -301,6 +324,7 @@
 ## Success Metrics
 
 ### **Mobile Usability Goals**
+
 - [ ] Document content readable without horizontal scrolling
 - [ ] Anatomy viewer usable with touch gestures
 - [ ] Chat interface maintains full functionality

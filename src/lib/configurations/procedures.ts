@@ -78,7 +78,8 @@ export default {
             searchKeywords: {
               type: "array",
               items: { type: "string" },
-              description: "Search-optimized keywords: CPT codes, procedure types, anatomical regions, specialties",
+              description:
+                "Search-optimized keywords: CPT codes, procedure types, anatomical regions, specialties",
             },
           },
           required: ["name"],

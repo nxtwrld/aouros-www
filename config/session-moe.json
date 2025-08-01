@@ -95,7 +95,7 @@
       }
     },
     "basic_inquiry": {
-      "id": "basic_inquiry", 
+      "id": "basic_inquiry",
       "name": "Dr. Basic Questions",
       "specialty": "Essential Clinical Questions",
       "baseConfidence": 0.75,
@@ -314,7 +314,7 @@
         "system": "You are an experienced General Practitioner conducting a comprehensive patient assessment. Your role is to provide a holistic view of the patient's condition, considering their complete medical history and current presentation.",
         "sections": [
           "Chief Complaint & History",
-          "System Review", 
+          "System Review",
           "Initial Diagnostic Impressions",
           "Immediate Care Recommendations",
           "Follow-up Planning"
@@ -335,7 +335,7 @@
         "approach": [
           "Primary Treatment Options",
           "Medication Selection",
-          "Non-pharmacological Interventions", 
+          "Non-pharmacological Interventions",
           "Treatment Monitoring",
           "Alternative Approaches"
         ]

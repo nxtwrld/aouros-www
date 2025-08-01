@@ -35,7 +35,10 @@ export const POST: RequestHandler = async ({ request }) => {
 
   // Initialize transcription provider and transcribe
   await transcriptionProvider.initialize();
-  const result = await transcriptionProvider.transcribeAudioCompatible(uploadedFile, instructions);
+  const result = await transcriptionProvider.transcribeAudioCompatible(
+    uploadedFile,
+    instructions,
+  );
 
   /*const bytes = new Uint8Array(await uploadedFile.arrayBuffer());
 

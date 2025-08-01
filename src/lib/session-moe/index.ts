@@ -1,18 +1,30 @@
 // Main entry point for MoE session analysis
-import { loadMoEConfig, getExpertSetExperts, getExpertSetConsensus, getAllExpertSets, getDefaultExpertSetKey } from './config/loader';
-import type { ExpertSetConfig } from './config/loader';
-import { GeneralPractitionerExpert } from './experts/general-practitioner';
-import { DiagnosticSpecialistExpert } from './experts/diagnostic-specialist';
-import { TreatmentPlannerExpert } from './experts/treatment-planner';
-import { DifferentialDiagnosisExpert } from './experts/differential-diagnosis';
-import { ClinicalInquiryExpert } from './experts/clinical-inquiry';
-import { ConsensusBuilder } from './consensus/builder';
-import { SankeyDiagramGenerator } from './visualization/sankey-generator';
-import { logger } from '$lib/logging/logger';
+import {
+  loadMoEConfig,
+  getExpertSetExperts,
+  getExpertSetConsensus,
+  getAllExpertSets,
+  getDefaultExpertSetKey,
+} from "./config/loader";
+import type { ExpertSetConfig } from "./config/loader";
+import { GeneralPractitionerExpert } from "./experts/general-practitioner";
+import { DiagnosticSpecialistExpert } from "./experts/diagnostic-specialist";
+import { TreatmentPlannerExpert } from "./experts/treatment-planner";
+import { DifferentialDiagnosisExpert } from "./experts/differential-diagnosis";
+import { ClinicalInquiryExpert } from "./experts/clinical-inquiry";
+import { ConsensusBuilder } from "./consensus/builder";
+import { SankeyDiagramGenerator } from "./visualization/sankey-generator";
+import { logger } from "$lib/logging/logger";
 
 export interface MoESessionAnalyzer {
-  analyzeSession(context: ExpertContext, expertSetKey?: string): Promise<MoEAnalysisOutput>;
-  streamAnalysis(context: ExpertContext, expertSetKey?: string): AsyncGenerator<MoEUpdateEvent>;
+  analyzeSession(
+    context: ExpertContext,
+    expertSetKey?: string,
+  ): Promise<MoEAnalysisOutput>;
+  streamAnalysis(
+    context: ExpertContext,
+    expertSetKey?: string,
+  ): AsyncGenerator<MoEUpdateEvent>;
   getAvailableExpertSets(): Record<string, ExpertSetInfo>;
 }
 
@@ -20,12 +32,17 @@ export interface ExpertSetInfo {
   name: string;
   description: string;
   targetAudience: string;
-  complexity: 'basic' | 'advanced' | 'specialized';
+  complexity: "basic" | "advanced" | "specialized";
   expertCount: number;
 }
 
 export interface MoEUpdateEvent {
-  type: 'expert_started' | 'expert_completed' | 'consensus_building' | 'visualization_ready' | 'complete';
+  type:
+    | "expert_started"
+    | "expert_completed"
+    | "consensus_building"
+    | "visualization_ready"
+    | "complete";
   expertId?: string;
   stage?: string;
   progress?: number;
@@ -41,19 +58,19 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
 
   constructor() {
     this.sankeyGenerator = new SankeyDiagramGenerator();
-    
+
     // Map of expert keys to their implementation classes
     this.expertClasses = {
       gp_core: GeneralPractitionerExpert,
       basic_diagnosis: DiagnosticSpecialistExpert, // Reuse with different config
-      basic_inquiry: ClinicalInquiryExpert,         // Reuse with different config
+      basic_inquiry: ClinicalInquiryExpert, // Reuse with different config
       diagnostic_specialist: DiagnosticSpecialistExpert,
       treatment_planner: TreatmentPlannerExpert,
       differential_expert: DifferentialDiagnosisExpert,
       clinical_inquiry: ClinicalInquiryExpert,
-      safety_monitor: GeneralPractitionerExpert,   // TODO: Create specialized class
+      safety_monitor: GeneralPractitionerExpert, // TODO: Create specialized class
       emergency_triage: GeneralPractitionerExpert, // TODO: Create specialized class
-      rapid_diagnosis: DiagnosticSpecialistExpert  // TODO: Create specialized class
+      rapid_diagnosis: DiagnosticSpecialistExpert, // TODO: Create specialized class
     };
   }
 
@@ -63,7 +80,7 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
     try {
       // Load configuration
       await loadMoEConfig();
-      logger.moe.info('MoE configuration loaded');
+      logger.moe.info("MoE configuration loaded");
 
       // Initialize all possible experts (they'll be selected per expert set later)
       for (const [key, ExpertClass] of Object.entries(this.expertClasses)) {
@@ -77,9 +94,11 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
       }
 
       this.initialized = true;
-      logger.moe.info(`MoE analyzer initialized with ${this.experts.size} experts`);
+      logger.moe.info(
+        `MoE analyzer initialized with ${this.experts.size} experts`,
+      );
     } catch (error) {
-      logger.moe.error('Failed to initialize MoE analyzer', { error });
+      logger.moe.error("Failed to initialize MoE analyzer", { error });
       throw error;
     }
   }
@@ -94,14 +113,17 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
         description: config.description,
         targetAudience: config.targetAudience,
         complexity: config.complexity,
-        expertCount: config.experts.length
+        expertCount: config.experts.length,
       };
     }
 
     return result;
   }
 
-  async analyzeSession(context: ExpertContext, expertSetKey?: string): Promise<MoEAnalysisOutput> {
+  async analyzeSession(
+    context: ExpertContext,
+    expertSetKey?: string,
+  ): Promise<MoEAnalysisOutput> {
     await this.initialize();
 
     // Use default expert set if none specified
@@ -110,39 +132,40 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
     const consensusConfig = getExpertSetConsensus(selectedExpertSetKey);
 
     if (!expertSetConfig.length) {
-      throw new Error(`No experts found for expert set: ${selectedExpertSetKey}`);
+      throw new Error(
+        `No experts found for expert set: ${selectedExpertSetKey}`,
+      );
     }
 
     const startTime = Date.now();
-    logger.moe.info('Starting MoE session analysis', {
+    logger.moe.info("Starting MoE session analysis", {
       transcriptLength: context.transcript.length,
       language: context.language,
       expertSet: selectedExpertSetKey,
-      expertsCount: expertSetConfig.length
+      expertsCount: expertSetConfig.length,
     });
 
     try {
       // Run selected experts in parallel
-      const expertPromises = expertSetConfig.map(
-        async (expertConfig) => {
-          const expert = this.experts.get(expertConfig.id);
-          if (!expert) {
-            logger.moe.error(`Expert not initialized: ${expertConfig.id}`);
-            return null;
-          }
-
-          try {
-            const analysis = await expert.analyze(context);
-            return [expertConfig.id, analysis] as [string, ExpertAnalysis];
-          } catch (error) {
-            logger.moe.error(`Expert ${expertConfig.id} failed`, { error });
-            return null;
-          }
+      const expertPromises = expertSetConfig.map(async (expertConfig) => {
+        const expert = this.experts.get(expertConfig.id);
+        if (!expert) {
+          logger.moe.error(`Expert not initialized: ${expertConfig.id}`);
+          return null;
         }
-      );
 
-      const expertResults = (await Promise.all(expertPromises))
-        .filter(result => result !== null) as [string, ExpertAnalysis][];
+        try {
+          const analysis = await expert.analyze(context);
+          return [expertConfig.id, analysis] as [string, ExpertAnalysis];
+        } catch (error) {
+          logger.moe.error(`Expert ${expertConfig.id} failed`, { error });
+          return null;
+        }
+      });
+
+      const expertResults = (await Promise.all(expertPromises)).filter(
+        (result) => result !== null,
+      ) as [string, ExpertAnalysis][];
 
       const expertAnalyses = new Map(expertResults);
 
@@ -153,7 +176,7 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
       // Generate visualizations
       const sankeyData = await this.sankeyGenerator.generateSankeyData(
         consensus,
-        expertAnalyses
+        expertAnalyses,
       );
 
       const processingTime = Date.now() - startTime;
@@ -165,45 +188,50 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
           treatments: consensus.treatments,
           medications: this.extractMedications(consensus.treatments),
           inquiries: consensus.inquiries,
-          recommendations: this.generateRecommendations(consensus)
+          recommendations: this.generateRecommendations(consensus),
         },
         consensus: {
           agreementScore: consensus.agreementScore,
           conflictingOpinions: consensus.conflicts,
-          highConfidenceFindings: consensus.diagnoses.filter(d => d.consensusConfidence > 0.8),
-          uncertainAreas: consensus.uncertainties
+          highConfidenceFindings: consensus.diagnoses.filter(
+            (d) => d.consensusConfidence > 0.8,
+          ),
+          uncertainAreas: consensus.uncertainties,
         },
         visualizations: {
           sankey: sankeyData,
           decisionTree: null, // TODO: Implement
-          evidenceMap: null,  // TODO: Implement
-          timeline: null,     // TODO: Implement
-          confidenceHeatmap: null // TODO: Implement
+          evidenceMap: null, // TODO: Implement
+          timeline: null, // TODO: Implement
+          confidenceHeatmap: null, // TODO: Implement
         },
         metadata: {
           processingTime,
           expertsConsulted: Array.from(expertAnalyses.keys()),
           expertSet: selectedExpertSetKey,
           modelVersions: this.getModelVersions(expertAnalyses),
-          language: context.language
-        }
+          language: context.language,
+        },
       };
 
-      logger.moe.info('MoE analysis completed', {
+      logger.moe.info("MoE analysis completed", {
         processingTime,
         expertSet: selectedExpertSetKey,
         diagnosesCount: result.analysis.diagnoses.length,
-        agreementScore: result.consensus.agreementScore
+        agreementScore: result.consensus.agreementScore,
       });
 
       return result;
     } catch (error) {
-      logger.moe.error('MoE analysis failed', { error });
+      logger.moe.error("MoE analysis failed", { error });
       throw error;
     }
   }
 
-  async *streamAnalysis(context: ExpertContext, expertSetKey?: string): AsyncGenerator<MoEUpdateEvent> {
+  async *streamAnalysis(
+    context: ExpertContext,
+    expertSetKey?: string,
+  ): AsyncGenerator<MoEUpdateEvent> {
     await this.initialize();
 
     // Use default expert set if none specified
@@ -212,83 +240,90 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
     const consensusConfig = getExpertSetConsensus(selectedExpertSetKey);
 
     if (!expertSetConfig.length) {
-      throw new Error(`No experts found for expert set: ${selectedExpertSetKey}`);
+      throw new Error(
+        `No experts found for expert set: ${selectedExpertSetKey}`,
+      );
     }
 
     const startTime = Date.now();
     const expertAnalyses = new Map<string, ExpertAnalysis>();
 
     // Start selected experts in parallel and yield updates as they complete
-    const expertPromises = expertSetConfig.map(
-      async (expertConfig) => {
-        const expert = this.experts.get(expertConfig.id);
-        if (!expert) {
-          logger.moe.error(`Expert not initialized: ${expertConfig.id}`);
-          return null;
-        }
-
-        yield {
-          type: 'expert_started',
-          expertId: expertConfig.id,
-          timestamp: Date.now()
-        };
-
-        try {
-          const analysis = await expert.analyze(context);
-          expertAnalyses.set(expertConfig.id, analysis);
-
-          yield {
-            type: 'expert_completed',
-            expertId: expertConfig.id,
-            data: analysis,
-            timestamp: Date.now()
-          };
-
-          return analysis;
-        } catch (error) {
-          logger.moe.error(`Expert ${expertConfig.id} failed during streaming`, { error });
-          return null;
-        }
+    const expertPromises = expertSetConfig.map(async (expertConfig) => {
+      const expert = this.experts.get(expertConfig.id);
+      if (!expert) {
+        logger.moe.error(`Expert not initialized: ${expertConfig.id}`);
+        return { expertConfig, analysis: null };
       }
-    );
 
-    // Wait for all experts to complete
-    await Promise.all(expertPromises);
+      try {
+        const analysis = await expert.analyze(context);
+        expertAnalyses.set(expertConfig.id, analysis);
+        return { expertConfig, analysis };
+      } catch (error) {
+        logger.moe.error(`Expert ${expertConfig.id} failed during streaming`, {
+          error,
+        });
+        return { expertConfig, analysis: null };
+      }
+    });
+
+    // Yield expert started events
+    for (const expertConfig of expertSetConfig) {
+      yield {
+        type: "expert_started",
+        expertId: expertConfig.id,
+        timestamp: Date.now(),
+      };
+    }
+
+    // Process expert results as they complete
+    for await (const result of expertPromises) {
+      const { expertConfig, analysis } = await result;
+      if (analysis) {
+        yield {
+          type: "expert_completed",
+          expertId: expertConfig.id,
+          data: analysis,
+          timestamp: Date.now(),
+        };
+      }
+    }
 
     // Build consensus
     yield {
-      type: 'consensus_building',
-      stage: 'building',
+      type: "consensus_building",
+      stage: "building",
       progress: 0.1,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     const consensusBuilder = new ConsensusBuilder(consensusConfig!);
     const consensus = await consensusBuilder.buildConsensus(expertAnalyses);
 
     yield {
-      type: 'consensus_building',
-      stage: 'complete',
+      type: "consensus_building",
+      stage: "complete",
       progress: 1.0,
       data: consensus,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Generate visualizations
     const sankeyData = await this.sankeyGenerator.generateSankeyData(
       consensus,
-      expertAnalyses
+      expertAnalyses,
     );
 
     yield {
-      type: 'visualization_ready',
+      type: "visualization_ready",
       data: { sankey: sankeyData },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Final complete event
     yield {
-      type: 'complete',
+      type: "complete",
       data: {
         analysis: {
           symptoms: this.aggregateSymptoms(expertAnalyses),
@@ -296,7 +331,7 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
           treatments: consensus.treatments,
           medications: this.extractMedications(consensus.treatments),
           inquiries: consensus.inquiries,
-          recommendations: this.generateRecommendations(consensus)
+          recommendations: this.generateRecommendations(consensus),
         },
         consensus,
         visualizations: { sankey: sankeyData },
@@ -305,22 +340,27 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
           expertsConsulted: Array.from(expertAnalyses.keys()),
           expertSet: selectedExpertSetKey,
           modelVersions: this.getModelVersions(expertAnalyses),
-          language: context.language
-        }
+          language: context.language,
+        },
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
-  private aggregateSymptoms(expertAnalyses: Map<string, ExpertAnalysis>): any[] {
+  private aggregateSymptoms(
+    expertAnalyses: Map<string, ExpertAnalysis>,
+  ): any[] {
     const symptomMap = new Map();
 
     for (const [_, analysis] of expertAnalyses) {
-      analysis.findings.symptoms.forEach(symptom => {
+      analysis.findings.symptoms.forEach((symptom) => {
         const existing = symptomMap.get(symptom.id) || symptom;
         symptomMap.set(symptom.id, {
           ...existing,
-          confidence: Math.max(existing.confidence || 0, symptom.confidence || 0)
+          confidence: Math.max(
+            existing.confidence || 0,
+            symptom.confidence || 0,
+          ),
         });
       });
     }
@@ -329,7 +369,7 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
   }
 
   private extractMedications(treatments: any[]): any[] {
-    return treatments.filter(t => t.type === 'medication');
+    return treatments.filter((t) => t.type === "medication");
   }
 
   private generateRecommendations(consensus: any): any[] {
@@ -338,35 +378,40 @@ class MoESessionAnalyzerImpl implements MoESessionAnalyzer {
 
     if (consensus.conflicts.length > 0) {
       recommendations.push({
-        id: 'review_conflicts',
-        recommendation: 'Review conflicting expert opinions for clinical correlation',
-        category: 'diagnostic_workup',
-        priority: 'high',
-        timeframe: 'immediate',
-        rationale: 'Significant disagreement between experts requires clinical judgment'
+        id: "review_conflicts",
+        recommendation:
+          "Review conflicting expert opinions for clinical correlation",
+        category: "diagnostic_workup",
+        priority: "high",
+        timeframe: "immediate",
+        rationale:
+          "Significant disagreement between experts requires clinical judgment",
       });
     }
 
     if (consensus.uncertainties.length > 0) {
       recommendations.push({
-        id: 'address_uncertainties',
-        recommendation: 'Obtain additional information to clarify uncertain diagnoses',
-        category: 'diagnostic_workup',
-        priority: 'medium',
-        timeframe: 'within_24h',
-        rationale: 'Low confidence areas need additional clinical data'
+        id: "address_uncertainties",
+        recommendation:
+          "Obtain additional information to clarify uncertain diagnoses",
+        category: "diagnostic_workup",
+        priority: "medium",
+        timeframe: "within_24h",
+        rationale: "Low confidence areas need additional clinical data",
       });
     }
 
     return recommendations;
   }
 
-  private getModelVersions(expertAnalyses: Map<string, ExpertAnalysis>): Record<string, string> {
+  private getModelVersions(
+    expertAnalyses: Map<string, ExpertAnalysis>,
+  ): Record<string, string> {
     const versions: Record<string, string> = {};
 
     for (const [key, _] of expertAnalyses) {
       const expert = this.experts.get(key);
-      versions[key] = expert?.modelConfig?.name || 'unknown';
+      versions[key] = expert?.modelConfig?.name || "unknown";
     }
 
     return versions;
@@ -434,7 +479,14 @@ export interface MoEAnalysisOutput {
 }
 
 // Export types and interfaces
-export type { ExpertContext as BaseExpertContext, ExpertAnalysis as BaseExpertAnalysis } from './experts/base';
-export type { ConsensusAnalysis } from './consensus/builder';
-export type { SankeyData, SankeyNode, SankeyLink } from './visualization/sankey-generator';
-export type { MoEConfig } from './config/loader';
+export type {
+  ExpertContext as BaseExpertContext,
+  ExpertAnalysis as BaseExpertAnalysis,
+} from "./experts/base";
+export type { ConsensusAnalysis } from "./consensus/builder";
+export type {
+  SankeyData,
+  SankeyNode,
+  SankeyLink,
+} from "./visualization/sankey-generator";
+export type { MoEConfig } from "./config/loader";

@@ -1,6 +1,6 @@
 /**
  * Multi-Node Workflow Orchestrator
- * 
+ *
  * Orchestrates parallel execution of specialized processing nodes based on
  * feature detection results, replacing the monolithic medical analysis approach.
  */
@@ -48,13 +48,17 @@ export class MultiNodeOrchestrator {
     await this.registerSpecializedNodes();
 
     this.isInitialized = true;
-    console.log(`✅ Multi-Node Orchestrator initialized with ${nodeRegistry.getAllNodes().length} nodes`);
+    console.log(
+      `✅ Multi-Node Orchestrator initialized with ${nodeRegistry.getAllNodes().length} nodes`,
+    );
   }
 
   /**
    * Main orchestration method - replaces monolithic medical analysis
    */
-  async orchestrateProcessing(state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> {
+  async orchestrateProcessing(
+    state: DocumentProcessingState,
+  ): Promise<Partial<DocumentProcessingState>> {
     try {
       await this.initialize();
 
@@ -65,22 +69,36 @@ export class MultiNodeOrchestrator {
 
       // Check if we have feature detection results
       if (!state.featureDetectionResults) {
-        console.warn("⚠️ No feature detection results - falling back to legacy processing");
+        console.warn(
+          "⚠️ No feature detection results - falling back to legacy processing",
+        );
         if (this.config.fallbackToLegacy) {
           return this.fallbackToLegacyProcessing(state);
         }
-        throw new Error("Feature detection results required for multi-node processing");
+        throw new Error(
+          "Feature detection results required for multi-node processing",
+        );
       }
 
       // Select nodes based on feature detection
-      this.emitProgress(state, 10, "Selecting processing nodes based on detected features");
-      
-      const selectedNodes = nodeRegistry.selectNodes(state.featureDetectionResults);
-      
-      console.log(`🎯 Selected ${selectedNodes.length} nodes: ${selectedNodes.map(n => n.nodeName).join(', ')}`);
+      this.emitProgress(
+        state,
+        10,
+        "Selecting processing nodes based on detected features",
+      );
+
+      const selectedNodes = nodeRegistry.selectNodes(
+        state.featureDetectionResults,
+      );
+
+      console.log(
+        `🎯 Selected ${selectedNodes.length} nodes: ${selectedNodes.map((n) => n.nodeName).join(", ")}`,
+      );
 
       if (selectedNodes.length === 0) {
-        console.log("📝 No specialized nodes selected - document may not contain processable medical sections");
+        console.log(
+          "📝 No specialized nodes selected - document may not contain processable medical sections",
+        );
         return {
           multiNodeResults: {
             processedNodes: [],
@@ -91,10 +109,16 @@ export class MultiNodeOrchestrator {
       }
 
       // Create execution plan
-      this.emitProgress(state, 20, `Creating execution plan for ${selectedNodes.length} nodes`);
+      this.emitProgress(
+        state,
+        20,
+        `Creating execution plan for ${selectedNodes.length} nodes`,
+      );
       const executionPlan = nodeRegistry.createExecutionPlan(selectedNodes);
 
-      console.log(`📋 Execution plan: ${executionPlan.totalNodes} nodes in ${executionPlan.parallelGroups.length} groups`);
+      console.log(
+        `📋 Execution plan: ${executionPlan.totalNodes} nodes in ${executionPlan.parallelGroups.length} groups`,
+      );
 
       // Execute nodes according to plan
       this.emitProgress(state, 30, "Executing specialized processing nodes");
@@ -103,56 +127,74 @@ export class MultiNodeOrchestrator {
       // Create a wrapped state that intercepts progress callbacks from child nodes
       const wrappedState = {
         ...state,
-        progressCallback: state.progressCallback ? (event: any) => {
-          // Intercept all progress events from child nodes and prevent them from reaching SSE directly
-          // The orchestrator will manage progress instead
-          if (event.type === "progress") {
-            console.log(`📊 Child node progress intercepted: ${event.stage} - ${event.progress}% - ${event.message}`);
-            return; // Block all progress events from child nodes
-          }
-          // For non-progress events (errors, etc), pass through
-          state.progressCallback!(event);
-        } : undefined,
+        progressCallback: state.progressCallback
+          ? (event: any) => {
+              // Intercept all progress events from child nodes and prevent them from reaching SSE directly
+              // The orchestrator will manage progress instead
+              if (event.type === "progress") {
+                console.log(
+                  `📊 Child node progress intercepted: ${event.stage} - ${event.progress}% - ${event.message}`,
+                );
+                return; // Block all progress events from child nodes
+              }
+              // For non-progress events (errors, etc), pass through
+              state.progressCallback!(event);
+            }
+          : undefined,
         emitProgress: (stage: string, progress: number, message: string) => {
           // Child nodes progress is ignored - orchestrator manages progress
-          console.log(`📊 Child node emitProgress intercepted: ${stage} - ${progress}% - ${message}`);
+          console.log(
+            `📊 Child node emitProgress intercepted: ${stage} - ${progress}% - ${message}`,
+          );
         },
         emitComplete: (stage: string, message: string, data?: any) => {
           // Child nodes completion is ignored - orchestrator manages completion
-          console.log(`✅ Child node completion intercepted: ${stage} - ${message}`);
-        }
+          console.log(
+            `✅ Child node completion intercepted: ${stage} - ${message}`,
+          );
+        },
       };
-      
+
       const processedState = await this.executeWithPlan(
         executionPlan,
         wrappedState,
         (progress, message) => {
           // Map node execution progress to 30-90% of total progress
-          const totalProgress = 30 + (progress * 0.6);
+          const totalProgress = 30 + progress * 0.6;
           this.emitProgress(state, totalProgress, message);
-        }
+        },
       );
 
       const executionTime = Date.now() - startTime;
 
       // Final validation and aggregation
       this.emitProgress(state, 90, "Finalizing multi-node processing results");
-      const finalResults = this.aggregateResults(processedState, executionPlan, executionTime);
+      const finalResults = this.aggregateResults(
+        processedState,
+        executionPlan,
+        executionTime,
+      );
 
-      this.emitProgress(state, 100, "Multi-node processing completed successfully");
+      this.emitProgress(
+        state,
+        100,
+        "Multi-node processing completed successfully",
+      );
 
       return finalResults;
-
     } catch (error) {
       log.analysis.error("Multi-node orchestration error:", error);
-      
+
       // Emit error progress
       if (state.progressCallback) {
         state.progressCallback({
           type: "error",
           stage: "multi_node_orchestration",
           progress: 0,
-          message: error instanceof Error ? error.message : "Multi-node processing failed",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Multi-node processing failed",
           timestamp: Date.now(),
         });
       }
@@ -176,7 +218,7 @@ export class MultiNodeOrchestrator {
 
     // Register all nodes from the universal factory configuration
     const allConfigurations = UniversalNodeFactory.getAllConfigurations();
-    
+
     for (const [nodeId, config] of Object.entries(allConfigurations)) {
       // Register all nodes through universal factory (no more legacy exceptions)
       const universalNode: NodeDefinition = {
@@ -194,7 +236,9 @@ export class MultiNodeOrchestrator {
       nodeRegistry.registerNode(node);
     }
 
-    console.log(`📝 Registered ${nodesToRegister.length} processing nodes (all universal)`);
+    console.log(
+      `📝 Registered ${nodesToRegister.length} processing nodes (all universal)`,
+    );
   }
 
   /**
@@ -203,10 +247,10 @@ export class MultiNodeOrchestrator {
   private async executeWithPlan(
     executionPlan: any,
     state: DocumentProcessingState,
-    progressCallback: (progress: number, message: string) => void
+    progressCallback: (progress: number, message: string) => void,
   ): Promise<DocumentProcessingState> {
     const executionStats = nodeRegistry.getExecutionStats(executionPlan);
-    
+
     console.log("🚀 Starting multi-node execution:", executionStats);
 
     if (this.config.enableParallelExecution) {
@@ -223,7 +267,7 @@ export class MultiNodeOrchestrator {
   private async executeSequentially(
     executionPlan: any,
     state: DocumentProcessingState,
-    progressCallback: (progress: number, message: string) => void
+    progressCallback: (progress: number, message: string) => void,
   ): Promise<DocumentProcessingState> {
     let currentState = { ...state };
     let completedNodes = 0;
@@ -242,13 +286,18 @@ export class MultiNodeOrchestrator {
           currentState = { ...currentState, ...nodeResult };
           completedNodes++;
 
-          const progress = Math.round((completedNodes / executionPlan.totalNodes) * 100);
-          progressCallback(progress, `Completed ${node.nodeName} (${completedNodes}/${executionPlan.totalNodes})`);
+          const progress = Math.round(
+            (completedNodes / executionPlan.totalNodes) * 100,
+          );
+          progressCallback(
+            progress,
+            `Completed ${node.nodeName} (${completedNodes}/${executionPlan.totalNodes})`,
+          );
 
           console.log(`✅ ${node.nodeName} completed`);
         } catch (error) {
           console.error(`❌ Failed ${node.nodeName}:`, error);
-          
+
           // Add error to state but continue processing
           currentState = {
             ...currentState,
@@ -275,7 +324,11 @@ export class MultiNodeOrchestrator {
   private createNodeTimeout(nodeName: string): Promise<never> {
     return new Promise((_, reject) => {
       setTimeout(() => {
-        reject(new Error(`Node ${nodeName} timed out after ${this.config.timeoutPerNode}ms`));
+        reject(
+          new Error(
+            `Node ${nodeName} timed out after ${this.config.timeoutPerNode}ms`,
+          ),
+        );
       }, this.config.timeoutPerNode);
     });
   }
@@ -286,11 +339,13 @@ export class MultiNodeOrchestrator {
   private aggregateResults(
     processedState: DocumentProcessingState,
     executionPlan: any,
-    executionTime: number
+    executionTime: number,
   ): Partial<DocumentProcessingState> {
     const processedNodes = executionPlan.executionOrder;
     const errors = processedState.errors || [];
-    const successful = processedNodes.length - errors.filter(e => processedNodes.includes(e.node)).length;
+    const successful =
+      processedNodes.length -
+      errors.filter((e) => processedNodes.includes(e.node)).length;
 
     // Get output mappings from node configurations instead of hardcoded map
     const outputMappings = UniversalNodeFactory.getAllOutputMappings();
@@ -341,13 +396,20 @@ export class MultiNodeOrchestrator {
     };
 
     console.log("📊 Aggregating results from processed nodes");
-    console.log("🔍 Available keys in processedState:", Object.keys(processedState));
+    console.log(
+      "🔍 Available keys in processedState:",
+      Object.keys(processedState),
+    );
     console.log("🔍 ProcessedState data structure:");
     for (const [key, value] of Object.entries(processedState)) {
-      if (value && typeof value === 'object' && !Array.isArray(value)) {
-        console.log(`  ${key}: ${Object.keys(value).slice(0, 5).join(', ')}${Object.keys(value).length > 5 ? '...' : ''}`);
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        console.log(
+          `  ${key}: ${Object.keys(value).slice(0, 5).join(", ")}${Object.keys(value).length > 5 ? "..." : ""}`,
+        );
       } else {
-        console.log(`  ${key}: ${typeof value} (${Array.isArray(value) ? `array[${value.length}]` : String(value).slice(0, 50)})`);
+        console.log(
+          `  ${key}: ${typeof value} (${Array.isArray(value) ? `array[${value.length}]` : String(value).slice(0, 50)})`,
+        );
       }
     }
     console.log("🔍 Output mappings:", outputMappings);
@@ -355,38 +417,61 @@ export class MultiNodeOrchestrator {
     // Map each processed node result to the correct interface property using configuration
     for (const [nodeId, mapping] of Object.entries(outputMappings)) {
       console.log(`🔍 Checking for nodeId: ${nodeId} in processedState`);
-      
+
       // The key in processedState is the reportField from output mapping
       // Get the actual storage key used by the node
-      const storageKey = mapping?.reportField || nodeId.replace('-processing', '');
-      const actualKey = (processedState as any)[storageKey] ? storageKey : 
-                        (processedState as any)[nodeId] ? nodeId : null;
-      
-      console.log(`🔍 Looking for data under key: ${actualKey} (nodeId: ${nodeId}, storageKey: ${storageKey})`);
-      
+      const storageKey =
+        mapping?.reportField || nodeId.replace("-processing", "");
+      const actualKey = (processedState as any)[storageKey]
+        ? storageKey
+        : (processedState as any)[nodeId]
+          ? nodeId
+          : null;
+
+      console.log(
+        `🔍 Looking for data under key: ${actualKey} (nodeId: ${nodeId}, storageKey: ${storageKey})`,
+      );
+
       if (actualKey && (processedState as any)[actualKey]) {
-        console.log(`✅ Adding ${nodeId} to report (found data under key: ${actualKey})`);
-        
+        console.log(
+          `✅ Adding ${nodeId} to report (found data under key: ${actualKey})`,
+        );
+
         let nodeData = (processedState as any)[actualKey];
-        
+
         // Handle unwrapping if specified in configuration
         if (mapping?.unwrapField) {
-          if (nodeData && typeof nodeData === 'object' && nodeData[mapping.unwrapField]) {
+          if (
+            nodeData &&
+            typeof nodeData === "object" &&
+            nodeData[mapping.unwrapField]
+          ) {
             nodeData = nodeData[mapping.unwrapField];
-            console.log(`🔧 Unwrapped ${nodeId} data from field: ${mapping.unwrapField}`);
+            console.log(
+              `🔧 Unwrapped ${nodeId} data from field: ${mapping.unwrapField}`,
+            );
           }
         }
-        
+
         // Handle main report data (medical-analysis)
         if (mapping?.isMainReport) {
           // Fix: If medical data came back as an array, extract the first object
           if (Array.isArray(nodeData)) {
-            console.log(`⚠️ Main report data returned as array, extracting first element`);
-            nodeData = nodeData.length > 0 && typeof nodeData[0] === 'object' ? nodeData[0] : {};
+            console.log(
+              `⚠️ Main report data returned as array, extracting first element`,
+            );
+            nodeData =
+              nodeData.length > 0 && typeof nodeData[0] === "object"
+                ? nodeData[0]
+                : {};
           }
-          
+
           // Only merge if we have a valid object, but EXCLUDE any 'report' field to prevent override
-          if (nodeData && typeof nodeData === 'object' && !Array.isArray(nodeData)) {
+          if (
+            nodeData &&
+            typeof nodeData === "object" &&
+            !Array.isArray(nodeData)
+          ) {
             // Create a copy without the report field to prevent override
             const { report: _, ...dataWithoutReport } = nodeData;
             Object.assign(reportObject, dataWithoutReport);
@@ -395,35 +480,39 @@ export class MultiNodeOrchestrator {
           // For specialized sections, add to report object under the correct property name
           if (mapping?.reportField) {
             reportObject[mapping.reportField] = nodeData;
-            
+
             // Also add as separate field for backward compatibility
             structuredResults[mapping.reportField] = nodeData;
           }
         }
       } else {
-        console.log(`❌ No data found for nodeId: ${nodeId} (checked keys: ${storageKey}, ${nodeId})`);
+        console.log(
+          `❌ No data found for nodeId: ${nodeId} (checked keys: ${storageKey}, ${nodeId})`,
+        );
       }
     }
 
     // Set the main report object
     structuredResults.report = reportObject;
-    
-    console.log(`📋 Report object created with ${Object.keys(reportObject).length} sections`);
 
+    console.log(
+      `📋 Report object created with ${Object.keys(reportObject).length} sections`,
+    );
 
     // Build aggregated results carefully to avoid conflicts
     const aggregatedResults = {
       // Start with basic state properties (excluding conflicting report data)
       ...Object.fromEntries(
-        Object.entries(processedState).filter(([key]) => 
-          !['report', 'medical-analysis'].includes(key) && 
-          !Object.keys(structuredResults).includes(key)
-        )
+        Object.entries(processedState).filter(
+          ([key]) =>
+            !["report", "medical-analysis"].includes(key) &&
+            !Object.keys(structuredResults).includes(key),
+        ),
       ),
-      
+
       // Apply our properly structured results (this should include the correct report object)
       ...structuredResults,
-      
+
       // Add multi-node execution metadata
       multiNodeResults: {
         processedNodes,
@@ -433,21 +522,26 @@ export class MultiNodeOrchestrator {
         parallelGroups: executionPlan.parallelGroups.length,
         executionStats: nodeRegistry.getExecutionStats(executionPlan),
       },
-      
+
       // FORCE our report object to override any conflicts
       report: reportObject,
     };
-    
+
     // CRITICAL: Delete any existing report property that might be an array and force our object
     if (Array.isArray(aggregatedResults.report)) {
-      console.log("🚨 CRITICAL: Report is still an array after aggregation, forcing object override");
+      console.log(
+        "🚨 CRITICAL: Report is still an array after aggregation, forcing object override",
+      );
       aggregatedResults.report = reportObject;
-    };
-    
+    }
+
     console.log("✅ Multi-node orchestration completed");
 
     if (isLangGraphDebuggingEnabled()) {
-      log.analysis.debug("Multi-node execution results:", aggregatedResults.multiNodeResults);
+      log.analysis.debug(
+        "Multi-node execution results:",
+        aggregatedResults.multiNodeResults,
+      );
       log.analysis.debug("Structured results mapping:", structuredResults);
     }
 
@@ -457,25 +551,27 @@ export class MultiNodeOrchestrator {
   /**
    * Fallback to legacy processing
    */
-  private async fallbackToLegacyProcessing(state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> {
+  private async fallbackToLegacyProcessing(
+    state: DocumentProcessingState,
+  ): Promise<Partial<DocumentProcessingState>> {
     console.log("🔄 Using legacy medical analysis processing");
-    
+
     try {
       // Import legacy analyze function
       const { analyze } = await import("$lib/import.server/analyzeReport");
-      
+
       this.emitProgress(state, 10, "Using legacy medical analysis");
-      
+
       // Convert state.content to text for legacy processing
       let textContent = state.text || "";
       if (state.content && Array.isArray(state.content)) {
         const textParts = state.content
-          .filter(item => item.type === "text")
-          .map(item => item.text)
+          .filter((item) => item.type === "text")
+          .map((item) => item.text)
           .join("\n");
         textContent = textParts || textContent;
       }
-      
+
       const legacyData = {
         images: [], // Legacy function expects this structure
         text: textContent,
@@ -483,7 +579,7 @@ export class MultiNodeOrchestrator {
       };
 
       const result = await analyze(legacyData);
-      
+
       this.emitProgress(state, 100, "Legacy medical analysis completed");
 
       // Convert ReportAnalysis to MedicalAnalysis format
@@ -492,7 +588,7 @@ export class MultiNodeOrchestrator {
         tokenUsage: result.tokenUsage || { total: 0 },
         provider: "legacy-analysis",
       };
-      
+
       return {
         medicalAnalysis,
         multiNodeResults: {
@@ -514,7 +610,11 @@ export class MultiNodeOrchestrator {
   /**
    * Emit progress updates
    */
-  private emitProgress(state: DocumentProcessingState, progress: number, message: string): void {
+  private emitProgress(
+    state: DocumentProcessingState,
+    progress: number,
+    message: string,
+  ): void {
     // Use the state's emitProgress function which handles cumulative progress
     // The unified workflow wrapper will handle the progress range calculation
     state.emitProgress?.("multi_node_processing", progress, message);
@@ -528,7 +628,7 @@ export class MultiNodeOrchestrator {
       isInitialized: this.isInitialized,
       registeredNodes: nodeRegistry.getAllNodes().length,
       config: this.config,
-      availableNodes: nodeRegistry.getAllNodes().map(n => n.nodeName),
+      availableNodes: nodeRegistry.getAllNodes().map((n) => n.nodeName),
     };
   }
 }
@@ -542,7 +642,7 @@ export const multiNodeOrchestrator = new MultiNodeOrchestrator();
  * Convenience function for use in workflows
  */
 export const executeMultiNodeProcessing = async (
-  state: DocumentProcessingState
+  state: DocumentProcessingState,
 ): Promise<Partial<DocumentProcessingState>> => {
   return multiNodeOrchestrator.orchestrateProcessing(state);
 };

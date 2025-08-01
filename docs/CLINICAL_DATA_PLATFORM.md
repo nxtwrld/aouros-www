@@ -7,6 +7,7 @@ The Clinical Data Platform (CDP) is Mediqom's comprehensive medical data managem
 **Current Status**: Core architecture implemented with basic functionality. Advanced querying, compression algorithms, and system integrations in development.
 
 **Key Capabilities**:
+
 - ✅ Unified entry system for all medical data types
 - ✅ Hybrid storage optimized for time-series data
 - ✅ Encrypted document storage with multi-user access
@@ -39,13 +40,14 @@ interface ClinicalDataEntry {
   data: any; // Type-specific clinical data
   tags: string[];
   category: string;
-  clinicalSignificance?: 'critical' | 'high' | 'medium' | 'low';
+  clinicalSignificance?: "critical" | "high" | "medium" | "low";
   confidence: number;
   sourceDocumentIds: string[];
 }
 ```
 
 **Entry Types Include**:
+
 - **Medications**: Prescriptions, adherence, effectiveness, adverse events
 - **Measurements**: Vitals, labs, imaging, device data
 - **Clinical Events**: Diagnoses, procedures, symptoms
@@ -57,11 +59,13 @@ interface ClinicalDataEntry {
 ### Three-Tier Storage Strategy
 
 1. **Active Entries** (Regular medical events)
+
    - Stored as encrypted document collections
    - Optimized for querying and filtering
    - Includes medications, diagnoses, procedures
 
 2. **Current Data** (Real-time measurements)
+
    - High-resolution recent data
    - In-memory statistics and anomaly detection
    - Automatic overflow to archives
@@ -91,14 +95,14 @@ src/lib/health/
 async function processHealthData(
   data: Signal[] | ExtractedDocument,
   profileId: string,
-  sourceDocumentId: string
+  sourceDocumentId: string,
 ) {
   // Convert to CDP entries
   const entries = convertToCDP(data, profileId, sourceDocumentId);
-  
+
   // Store based on data type
   await insertClinicalEntries(entries);
-  
+
   // Update real-time signals
   await updateHealthSignals(entries);
 }
@@ -110,20 +114,20 @@ async function processHealthData(
 // Automatic categorization and clinical significance
 function convertExtractedDataToEntries(data: any): ClinicalDataEntry[] {
   const entries = [];
-  
+
   // Medications with clinical context
   if (data.medications) {
     entries.push(...processMedications(data.medications));
     entries.push(...detectAdverseReactions(data.medications));
     entries.push(...assessEffectiveness(data.medications));
   }
-  
+
   // Measurements with anomaly detection
   if (data.labResults || data.vitalSigns) {
     entries.push(...processMeasurements(data));
     entries.push(...detectAnomalies(data));
   }
-  
+
   return entries;
 }
 ```
@@ -135,23 +139,23 @@ function convertExtractedDataToEntries(data: any): ClinicalDataEntry[] {
 const MEASUREMENT_THRESHOLDS = {
   heart_rate: {
     archivalTriggers: {
-      maxPoints: 86400,      // 24 hours at 1Hz
+      maxPoints: 86400, // 24 hours at 1Hz
       maxAge: "24h",
-      maxSizeBytes: 2_000_000
+      maxSizeBytes: 2_000_000,
     },
     sampling: {
       rawFrequency: "1s",
       archiveFrequency: "1m",
-      preserveRules: ["anomalies", "clinical_events"]
-    }
+      preserveRules: ["anomalies", "clinical_events"],
+    },
   },
   blood_glucose: {
     archivalTriggers: {
-      maxPoints: 2016,       // 1 week at 5-min intervals
+      maxPoints: 2016, // 1 week at 5-min intervals
       maxAge: "7d",
-      preserveRules: ["all"] // Keep all glucose readings
-    }
-  }
+      preserveRules: ["all"], // Keep all glucose readings
+    },
+  },
 };
 ```
 
@@ -175,7 +179,7 @@ interface ClinicalAnomaly {
   timestamp: string;
   measurementType: string;
   value: number;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   context: {
     recentMedications?: string[];
     concurrentSymptoms?: string[];
@@ -188,6 +192,7 @@ interface ClinicalAnomaly {
 ### 3. Predictive Analytics
 
 Future development will include:
+
 - Risk scoring algorithms
 - Disease progression modeling
 - Treatment response prediction
@@ -206,7 +211,7 @@ const cardiacRiskData = await queryCDP({
   timeRange: { start: "2023-01-01", end: "2024-01-01" },
   clinicalSignificance: ["high", "critical"],
   orderBy: "clinicalSignificance",
-  orderDirection: "desc"
+  orderDirection: "desc",
 });
 ```
 
@@ -219,7 +224,7 @@ const medicationOutcomes = await aggregateCDP({
   entryTypes: ["medication_effectiveness"],
   groupBy: "medication_name",
   metrics: ["effectiveness_score", "side_effects_count"],
-  timeRange: { start: "2023-01-01", end: "2024-01-01" }
+  timeRange: { start: "2023-01-01", end: "2024-01-01" },
 });
 ```
 
@@ -230,16 +235,13 @@ const medicationOutcomes = await aggregateCDP({
 ```typescript
 // Automatic CDP population from imported documents
 // src/components/import/SSEIndex.svelte
-await processHealthData(
-  doc.content.signals,
-  group.profile.id,
-  doc.id
-);
+await processHealthData(doc.content.signals, group.profile.id, doc.id);
 ```
 
 ### 2. LangGraph Medical Configurations
 
 CDP automatically processes data from:
+
 - `medications.ts` - Medication extraction and analysis
 - `laboratory.ts` - Lab result interpretation
 - `allergies.ts` - Allergy and reaction tracking
@@ -252,19 +254,23 @@ CDP now provides intelligent context for AI interactions through the Context Man
 
 ```typescript
 // MCP tools provide structured medical data access
-const medicalContext = await secureMcpTools.getPatientTimeline(securityContext, {
-  startDate: '2023-01-01',
-  endDate: '2024-01-01',
-  eventTypes: ['medication', 'diagnosis', 'lab_result']
-});
+const medicalContext = await secureMcpTools.getPatientTimeline(
+  securityContext,
+  {
+    startDate: "2023-01-01",
+    endDate: "2024-01-01",
+    eventTypes: ["medication", "diagnosis", "lab_result"],
+  },
+);
 
 const patterns = await secureMcpTools.identifyMedicalPatterns(securityContext, {
-  patternType: 'medication_effects',
-  focusArea: 'cardiovascular'
+  patternType: "medication_effects",
+  focusArea: "cardiovascular",
 });
 ```
 
 **Integration Features**:
+
 - **12 MCP Medical Tools**: Complete medical data access for AI
 - **Semantic Search**: Natural language queries across medical data
 - **Context Assembly**: AI-optimized medical context compilation
@@ -277,7 +283,7 @@ CDP events can trigger real-time updates:
 
 ```typescript
 // Live updates during consultations
-sessionManager.on('transcription:processed', async (data) => {
+sessionManager.on("transcription:processed", async (data) => {
   const entries = await extractClinicalData(data);
   await insertClinicalEntries(entries);
   // Notify connected clients
@@ -300,11 +306,11 @@ sessionManager.on('transcription:processed', async (data) => {
 ```typescript
 // Granular sharing controls
 interface CDPSharingPolicy {
-  sharedWith: string[];  // User IDs
-  dataTypes: string[];   // Specific entry types
+  sharedWith: string[]; // User IDs
+  dataTypes: string[]; // Specific entry types
   timeRange?: DateRange; // Limited time window
-  purpose: string;       // Research, emergency, family
-  expiration?: Date;     // Auto-revoke
+  purpose: string; // Research, emergency, family
+  expiration?: Date; // Auto-revoke
 }
 ```
 
@@ -327,24 +333,28 @@ interface CDPSharingPolicy {
 ## Development Roadmap
 
 ### Phase 1: Foundation (✅ Complete)
+
 - Flat entry architecture
 - Basic storage implementation
 - Document import integration
 - Signal processing
 
 ### Phase 2: Query Engine (🚧 In Progress)
+
 - Advanced filtering
 - Aggregation queries
 - Cross-entry correlations
 - Performance optimization
 
 ### Phase 3: Clinical Intelligence (📋 Planned)
+
 - Pattern recognition algorithms
 - Anomaly detection
 - Risk scoring
 - Predictive models
 
 ### Phase 4: System Integration (✅ Complete)
+
 - ✅ Context system for AI
 - ✅ MCP tool access
 - ✅ Real-time updates
@@ -379,7 +389,7 @@ const entry = createClinicalEntry({
   data: medicationData,
   confidence: calculateConfidence(medicationData),
   clinicalSignificance: assessSignificance(medicationData),
-  tags: generateSmartTags(medicationData)
+  tags: generateSmartTags(medicationData),
 });
 ```
 
@@ -390,7 +400,7 @@ const entry = createClinicalEntry({
 const labResult = createLabEntry(data);
 labResult.relatedEntries = [
   medicationId, // Related medication
-  diagnosisId   // Related condition
+  diagnosisId, // Related condition
 ];
 ```
 
@@ -410,11 +420,13 @@ if (isHighFrequency(data)) {
 ### Common Issues
 
 1. **Missing Data**
+
    - Check encryption keys
    - Verify document permissions
    - Validate entry structure
 
 2. **Slow Queries**
+
    - Use time range filters
    - Limit result sets
    - Check index usage
@@ -436,7 +448,7 @@ console.log({
   totalEntries: stats.entryCount,
   storageSize: stats.totalSize,
   oldestEntry: stats.dateRange.start,
-  newestEntry: stats.dateRange.end
+  newestEntry: stats.dateRange.end,
 });
 
 // Validate data integrity
@@ -449,7 +461,7 @@ console.log(validation.issues);
 The Clinical Data Platform transforms Mediqom from a document storage system into an intelligent medical data platform. By unifying all clinical data under a single, queryable structure with advanced storage strategies, CDP enables:
 
 - **Comprehensive Patient Views**: Complete medical timeline with cross-domain insights
-- **Real-Time Intelligence**: Immediate processing of device data with anomaly detection  
+- **Real-Time Intelligence**: Immediate processing of device data with anomaly detection
 - **Clinical Decision Support**: Pattern recognition and predictive analytics
 - **Future-Ready Architecture**: Extensible design for emerging medical technologies
 

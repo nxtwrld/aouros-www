@@ -71,11 +71,13 @@ The current implementation demonstrates functional capabilities but requires arc
 #### Critical Limitations
 
 1. **Single Perspective Analysis**
+
    - One AI model provides all insights
    - No cross-validation of findings
    - Limited differential diagnosis capability
 
 2. **Linear Decision Making**
+
    - No parallel exploration of possibilities
    - Missing inquiry categorization
    - No visual representation of reasoning
@@ -96,7 +98,7 @@ graph TB
     subgraph "Input Processing"
         A[Audio Chunks] --> B[Transcript + Context]
     end
-    
+
     subgraph "Context Assembly System"
         C[Patient Documents] --> D[Embedding Search]
         E[Medical History] --> D
@@ -104,27 +106,27 @@ graph TB
         D --> G[Context Assembly]
         G --> H[Assembled Context]
     end
-    
+
     subgraph "Context-Enhanced MoE Expert System"
         B --> I[Input Extraction]
         H --> I
         I --> J{Changes Detected?}
         J -->|Yes| K[Context-Aware Expert Analysis]
         J -->|No| L[Wait for Updates]
-        
+
         K --> M[GP Expert + Context]
         K --> N[Diagnostic Specialist + Context]
         K --> O[Treatment Planner + Context]
         K --> P[Clinical Inquiry + Context]
         K --> Q[Safety Monitor + Context]
-        
+
         M --> R[Context-Enhanced Consensus Builder]
         N --> R
         O --> R
         P --> R
         Q --> R
     end
-    
+
     subgraph "Context-Enhanced Output Generation"
         R --> S[Unified Analysis]
         S --> T[Context-Enhanced Sankey Visualization]
@@ -136,6 +138,7 @@ graph TB
 ### Expert Agents (Per Workflow Specification)
 
 #### 1. GP Expert (General Practitioner)
+
 - **Role**: Holistic patient assessment and care coordination
 - **Focus**: Pattern matching, common conditions, preventive care
 - **Capabilities**:
@@ -146,6 +149,7 @@ graph TB
 - **Output**: Primary assessment with urgency levels
 
 #### 2. Diagnostic Specialist Expert
+
 - **Role**: Systematic differential diagnosis generation
 - **Focus**: Probability-based ranking with evidence correlation
 - **Capabilities**:
@@ -156,6 +160,7 @@ graph TB
 - **Output**: Ranked diagnoses with supporting/contradicting evidence
 
 #### 3. Treatment Planner Expert
+
 - **Role**: Evidence-based treatment recommendations
 - **Focus**: Risk-benefit analysis with alternatives
 - **Capabilities**:
@@ -166,6 +171,7 @@ graph TB
 - **Output**: Treatment plans with contraindications and monitoring
 
 #### 4. Clinical Inquiry Expert
+
 - **Role**: Strategic question generation for diagnostic optimization
 - **Focus**: High-yield questions categorized by intent
 - **Capabilities**:
@@ -176,6 +182,7 @@ graph TB
 - **Output**: Prioritized questions with probability impact predictions
 
 #### 5. Safety Monitor Expert
+
 - **Role**: Critical safety assessment and risk mitigation
 - **Focus**: Red flags, drug interactions, contraindications
 - **Capabilities**:
@@ -192,12 +199,14 @@ The Context Assembly system provides intelligent context retrieval and compilati
 #### Core Components
 
 1. **Embedding-Based Search**
+
    - **Real-time Embedding Generation**: Convert current conversation content to vectors
    - **Semantic Similarity Search**: Find relevant historical documents using vector similarity
    - **Multi-document Retrieval**: Search across patient's complete medical history
    - **Privacy-Preserving**: Client-side search with encrypted embeddings
 
 2. **Context Assembly Engine**
+
    - **Key Point Extraction**: Identify medical findings, medications, procedures, and risks
    - **Pattern Recognition**: Detect recurring symptoms and treatment responses
    - **Timeline Construction**: Build chronological medical event sequences
@@ -214,24 +223,28 @@ The Context Assembly system provides intelligent context retrieval and compilati
 **Enhanced Expert Capabilities with Context:**
 
 1. **GP Expert + Context**
+
    - Historical consultation patterns inform current assessment
    - Previous treatment outcomes guide recommendations
    - Chronic condition progression tracking
    - Preventive care opportunities based on historical gaps
 
 2. **Diagnostic Specialist + Context**
+
    - Historical differential diagnoses and outcomes
    - Previous diagnostic test results and interpretations
    - Pattern recognition across multiple consultations
    - Probability adjustments based on historical accuracy
 
 3. **Treatment Planner + Context**
+
    - Historical treatment effectiveness and side effects
    - Medication response patterns and contraindications
    - Patient compliance history and preferences
    - Alternative therapy success rates from patient history
 
 4. **Clinical Inquiry Expert + Context**
+
    - Historical question effectiveness and patient responses
    - Symptom inquiry patterns that yielded diagnostic breakthroughs
    - Question prioritization based on patient's communication style
@@ -255,16 +268,19 @@ The Context Assembly system provides intelligent context retrieval and compilati
 As specified in the workflow, the consensus builder implements sophisticated aggregation:
 
 1. **Weighted Voting Algorithm**
+
    - Expert-specific weights based on specialty relevance
    - Confidence-adjusted scoring
    - Dynamic weight adjustment based on case type
 
 2. **Conflict Detection and Resolution**
+
    - Identifies expert disagreements exceeding threshold
    - Flags conflicting diagnoses/treatments
    - Presents alternative viewpoints to users
 
 3. **Uncertainty Quantification**
+
    - Calculates agreement scores across experts
    - Identifies low-confidence areas
    - Suggests additional data needs
@@ -285,8 +301,9 @@ Per the workflow specification, the Sankey diagram provides comprehensive visual
 ```
 
 **Visual Encoding System**:
+
 - **Node Size**: Reflects priority/probability values
-- **Node Colors**: 
+- **Node Colors**:
   - Red = Critical urgency
   - Orange = High priority
   - Yellow = Medium priority
@@ -298,6 +315,7 @@ Per the workflow specification, the Sankey diagram provides comprehensive visual
 - **Question Nodes**: Small dots that expand on hover
 
 **Interactive Features**:
+
 - Click nodes for detailed information
 - Hover questions to see impact predictions
 - Accept (green highlight) or suppress (gray out) nodes
@@ -319,7 +337,7 @@ interface MoEAnalysisOutput {
     inquiries: ClinicalInquiry[];
     recommendations: DoctorRecommendation[];
   };
-  
+
   // Expert consensus metrics
   consensus: {
     agreementScore: number;
@@ -327,7 +345,7 @@ interface MoEAnalysisOutput {
     highConfidenceFindings: Finding[];
     uncertainAreas: UncertainArea[];
   };
-  
+
   // Multiple visualization formats
   visualizations: {
     sankey: SankeyData;
@@ -336,7 +354,7 @@ interface MoEAnalysisOutput {
     timeline: TimelineData;
     confidenceHeatmap: HeatmapData;
   };
-  
+
   // Processing metadata
   metadata: {
     processingTime: number;
@@ -365,20 +383,34 @@ interface SankeyData {
 interface SankeyNode {
   id: string; // Unique identifier
   name: string; // Short title (1-3 words)
-  category: 'symptom' | 'signal' | 'history' | 'diagnosis' | 'treatment' | 'medication' | 'investigation' | 'question';
+  category:
+    | "symptom"
+    | "signal"
+    | "history"
+    | "diagnosis"
+    | "treatment"
+    | "medication"
+    | "investigation"
+    | "question";
   level: number; // 0: inputs, 1: diagnoses, 2: treatments
   details: {
     description: string;
     confidence: number;
-    origin: 'transcript' | 'history' | 'context' | 'previous' | 'expert' | 'consensus';
-    urgency?: 'critical' | 'high' | 'medium' | 'low';
+    origin:
+      | "transcript"
+      | "history"
+      | "context"
+      | "previous"
+      | "expert"
+      | "consensus";
+    urgency?: "critical" | "high" | "medium" | "low";
     evidence?: string[];
     reasoning?: string;
     priority?: number;
     probability?: number;
     icdCode?: string; // For diagnoses
     dosing?: string; // For medications
-    acceptanceState?: 'none' | 'accepted' | 'suppressed';
+    acceptanceState?: "none" | "accepted" | "suppressed";
     suppressionCoefficient?: number;
   };
 }
@@ -387,7 +419,14 @@ interface SankeyLink {
   source: string; // node id
   target: string; // node id
   value: number; // strength of connection (0-1)
-  type: 'supports' | 'contradicts' | 'confirms' | 'suggests' | 'requires' | 'treats' | 'rules_out';
+  type:
+    | "supports"
+    | "contradicts"
+    | "confirms"
+    | "suggests"
+    | "requires"
+    | "treats"
+    | "rules_out";
   reasoning: string;
   expertIds: string[]; // which experts suggested this link
   evidenceStrength: number;
@@ -401,9 +440,20 @@ interface SankeyLink {
 interface ClinicalInquiry {
   id: string;
   question: string;
-  category: 'symptom_characterization' | 'temporal_pattern' | 'severity_assessment' | 'red_flag_screening' | 'differential_diagnosis' | 'risk_assessment' | 'treatment_response';
-  intent: 'confirmatory' | 'exclusionary' | 'exploratory' | 'risk_stratification';
-  priority: 'critical' | 'high' | 'medium' | 'low';
+  category:
+    | "symptom_characterization"
+    | "temporal_pattern"
+    | "severity_assessment"
+    | "red_flag_screening"
+    | "differential_diagnosis"
+    | "risk_assessment"
+    | "treatment_response";
+  intent:
+    | "confirmatory"
+    | "exclusionary"
+    | "exploratory"
+    | "risk_stratification";
+  priority: "critical" | "high" | "medium" | "low";
   relatedDiagnoses: string[]; // diagnosis IDs this inquiry affects
   diagnosticImpact: {
     ifPositive: {
@@ -414,7 +464,7 @@ interface ClinicalInquiry {
         newProbability: number;
       }>;
       nextSteps: string[];
-      action: 'prove' | 'disprove' | 'redirect';
+      action: "prove" | "disprove" | "redirect";
       redirectTarget?: string; // For redirect actions
     };
     ifNegative: {
@@ -425,14 +475,14 @@ interface ClinicalInquiry {
         newProbability: number;
       }>;
       nextSteps: string[];
-      action: 'prove' | 'disprove' | 'redirect';
+      action: "prove" | "disprove" | "redirect";
       redirectTarget?: string;
     };
   };
   suggestedBy: string[]; // expert IDs
-  answerStatus?: 'pending' | 'answered' | 'partial';
+  answerStatus?: "pending" | "answered" | "partial";
   patientResponse?: string;
-  displayMode: 'always' | 'on_hover' | 'on_click'; // Based on priority
+  displayMode: "always" | "on_hover" | "on_click"; // Based on priority
 }
 ```
 
@@ -448,11 +498,11 @@ interface SessionAnalysisState {
   transcript: string;
   patientHistory: any;
   language: string;
-  
+
   // Expert Analysis Results
   expertAnalyses: Map<string, ExpertAnalysis>;
   consensusAnalysis: ConsensusAnalysis;
-  
+
   // Visualization Data
   sankeyData: SankeyData;
   views: {
@@ -471,32 +521,32 @@ export const moeSessionAnalysisWorkflow = new StateGraph<SessionAnalysisState>({
     expertAnalyses: { value: new Map() },
     consensusAnalysis: { value: null },
     sankeyData: { value: null },
-    views: { value: {} }
-  }
+    views: { value: {} },
+  },
 })
   // Input validation
   .addNode("input_validator", validateSessionInput)
-  
+
   // Parallel expert analysis
   .addNode("gp_expert", generalPractitionerExpert)
   .addNode("diagnostic_expert", diagnosticSpecialistExpert)
   .addNode("treatment_expert", treatmentPlannerExpert)
   .addNode("differential_expert", differentialDiagnosisExpert)
   .addNode("inquiry_expert", clinicalInquiryExpert)
-  
+
   // Consensus and visualization
   .addNode("consensus_builder", buildConsensusAnalysis)
   .addNode("sankey_generator", generateSankeyData)
   .addNode("view_generator", generateMultipleViews)
-  
+
   // Workflow edges
   .addEdge("input_validator", "parallel_experts")
   .addParallelEdges("parallel_experts", [
     "gp_expert",
-    "diagnostic_expert", 
+    "diagnostic_expert",
     "treatment_expert",
     "differential_expert",
-    "inquiry_expert"
+    "inquiry_expert",
   ])
   .addEdge("parallel_experts", "consensus_builder")
   .addEdge("consensus_builder", "sankey_generator")
@@ -515,12 +565,14 @@ The MoE approach leverages existing Mediqom infrastructure:
 ## Benefits Over Current Implementation
 
 ### 1. Enhanced Reliability with Context
+
 - **Multiple Perspectives**: 5 experts vs 1 analysis, enhanced with historical context
 - **Context-Weighted Consensus**: Quantified confidence levels adjusted by context quality
 - **Historical Validation**: Conflict detection informed by previous similar cases
 - **Pattern Recognition**: Long-term medical patterns reduce diagnostic uncertainty
 
 ### 2. Superior Clinical Intelligence
+
 - **Context-Aware Analysis**: Expert analysis informed by complete medical history
 - **Historical Pattern Recognition**: Identify recurring symptoms and treatment responses
 - **Inquiry Optimization**: Questions prioritized by context relevance and historical effectiveness
@@ -528,18 +580,21 @@ The MoE approach leverages existing Mediqom infrastructure:
 - **Evidence Chains with Context**: Clear reasoning paths supported by historical precedents
 
 ### 3. Intelligent Context Integration
+
 - **Semantic Medical History Search**: Find relevant past consultations using AI embeddings
 - **Automated Context Assembly**: Intelligent compilation of medical insights and patterns
 - **Privacy-Preserving Context**: Client-side search with encrypted embeddings
 - **Token-Optimized Context**: Relevant context fit within AI model limits for optimal performance
 
 ### 4. Enhanced Visual Communication
+
 - **Context-Enhanced Sankey Diagrams**: Intuitive flow visualization with historical context indicators
 - **Context Attribution**: Visual indicators showing which historical documents influenced analysis
 - **Multiple Context Views**: Different temporal and thematic perspectives on medical history
 - **Real-time Context Updates**: Progressive rendering with context assembly progress
 
 ### 5. Advanced Scalability and Intelligence
+
 - **Parallel Processing with Context**: Faster analysis enhanced by intelligent context retrieval
 - **Modular Context Integration**: Easy to add/modify context assembly components
 - **Provider Flexibility**: Different models for different experts and context assembly
@@ -548,6 +603,7 @@ The MoE approach leverages existing Mediqom infrastructure:
 ## Implementation Status and Next Steps
 
 ### Completed Components
+
 1. ✅ Enhanced workflow specification with context assembly ([AI_SESSION_WORKFLOW.md](./AI_SESSION_WORKFLOW.md))
 2. ✅ Schema-based expert system design with context integration ([AI_SESSION_MOE_IMPLEMENTATION.md](./AI_SESSION_MOE_IMPLEMENTATION.md))
 3. ✅ Expert configurations and schemas with context utilization
@@ -563,6 +619,7 @@ The MoE approach leverages existing Mediqom infrastructure:
 ### Current Implementation Phase
 
 #### Phase 1: Core MoE Infrastructure (In Progress)
+
 1. Schema-based expert base class implementation
 2. Five core expert implementations:
    - GP Expert (gp-core.ts)
@@ -574,18 +631,21 @@ The MoE approach leverages existing Mediqom infrastructure:
 4. AI provider abstraction usage
 
 #### Phase 2: Consensus & Visualization (Upcoming)
+
 1. Weighted voting consensus implementation
 2. Interactive Sankey diagram generator
 3. SSE streaming for progressive updates
 4. Client-side visualization components
 
 #### Phase 3: Integration & Testing (Planned)
+
 1. API endpoint updates for MoE analysis
 2. Session manager MoE state handling
 3. Comprehensive test coverage
 4. Performance benchmarking
 
 #### Phase 4: Production Rollout (Future)
+
 1. Feature flag integration
 2. A/B testing framework
 3. Monitoring and analytics
@@ -594,6 +654,7 @@ The MoE approach leverages existing Mediqom infrastructure:
 ## Success Metrics (Aligned with Workflow and Context Assembly)
 
 ### Technical Performance Metrics
+
 - **Response Time**: < 3s for initial expert results via parallel processing with context
 - **Context Assembly Time**: < 2s for context retrieval and assembly
 - **Streaming Latency**: < 500ms for SSE updates including context metadata
@@ -601,6 +662,7 @@ The MoE approach leverages existing Mediqom infrastructure:
 - **System Availability**: 99.9% uptime for critical path including context assembly
 
 ### Context Assembly Performance Metrics
+
 - **Context Relevance**: > 85% of assembled context rated as medically relevant
 - **Context Accuracy**: > 90% of key medical insights correctly extracted from history
 - **Context Coverage**: > 95% of relevant historical medical events identified
@@ -608,6 +670,7 @@ The MoE approach leverages existing Mediqom infrastructure:
 - **Embedding Quality**: > 0.7 average similarity score for relevant document retrieval
 
 ### Clinical Effectiveness Metrics with Context
+
 - **Diagnostic Coverage**: 2-3x more differential diagnoses considered with historical validation
 - **Safety Detection**: 100% critical red flags identified including historical risk factors
 - **Question Relevance**: > 90% of generated questions rated clinically useful and historically informed
@@ -616,6 +679,7 @@ The MoE approach leverages existing Mediqom infrastructure:
 - **Pattern Recognition**: > 75% of recurring medical patterns identified and factored into analysis
 
 ### User Experience Metrics with Context
+
 - **Context Interaction Rate**: > 70% users interact with context-enhanced features
 - **Context Explorer Usage**: > 50% users drill down into historical context sources
 - **Question Utilization**: > 70% of high-priority context-informed questions asked
@@ -624,6 +688,7 @@ The MoE approach leverages existing Mediqom infrastructure:
 - **Context Confidence**: > 80% physician confidence in context-assembled medical history
 
 ### Outcome Metrics Enhanced by Context
+
 - **Diagnostic Accuracy**: 20% improvement over baseline enhanced by historical pattern recognition
 - **Treatment Appropriateness**: 15% better alignment with guidelines and historical effectiveness
 - **Preventive Care**: 35% increase in appropriate screenings based on historical gaps
@@ -646,11 +711,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 0: Context-Enhanced Multi-Expert Clinical Decision Support
 
 #### Story 0.0: Intelligent Medical History Integration
+
 **As a** Doctor treating any patient  
 **I want to** have relevant medical history automatically identified and integrated into my current analysis  
-**So that** I can make informed decisions based on the complete clinical picture without manually searching through records  
+**So that** I can make informed decisions based on the complete clinical picture without manually searching through records
 
 **Acceptance Criteria:**
+
 - System automatically searches patient's complete medical history using semantic similarity
 - Relevant historical consultations, diagnoses, and treatments are identified and presented
 - Context assembly provides key medical insights (findings, medications, procedures, risks) from history
@@ -662,11 +729,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Dramatically improves diagnostic accuracy and treatment continuity by ensuring comprehensive historical context is always considered
 
 #### Story 0.1: Pattern Recognition Across Time
+
 **As a** Doctor managing patients with chronic conditions  
 **I want to** see patterns in symptoms, treatments, and outcomes across multiple consultations  
-**So that** I can identify trends, treatment effectiveness, and early warning signs  
+**So that** I can identify trends, treatment effectiveness, and early warning signs
 
 **Acceptance Criteria:**
+
 - System identifies recurring symptoms and their frequency patterns over time
 - Treatment response patterns are automatically detected and summarized
 - Medication effectiveness and side effect patterns are highlighted
@@ -680,11 +749,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 0A: Foundational Multi-Expert Clinical Decision Support
 
 #### Story 0.1: Comprehensive Multi-Expert Medical Analysis
+
 **As a** Doctor (any specialty)  
 **I want to** receive additional expert analysis and insights from multiple AI medical specialists  
-**So that** I can make better clinical decisions with comprehensive perspectives I might not have considered  
+**So that** I can make better clinical decisions with comprehensive perspectives I might not have considered
 
 **Acceptance Criteria:**
+
 - System automatically analyzes patient consultation using 5+ specialized AI experts (GP, Diagnostic Specialist, Treatment Planner, Differential Expert, Clinical Inquiry Expert)
 - Each expert provides analysis from their specific medical domain perspective
 - Expert analyses are synthesized into a unified consensus view with confidence scoring
@@ -695,11 +766,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Enhances clinical decision-making by providing comprehensive multi-perspective analysis that reduces diagnostic blind spots and improves patient outcomes
 
 #### Story 0.2: Intelligent Medical History Integration
+
 **As a** Doctor treating a patient with complex medical history  
 **I want to** have the system consider all stored medical history and highlight important details that might be overlooked  
-**So that** I can make more informed decisions based on the complete clinical picture  
+**So that** I can make more informed decisions based on the complete clinical picture
 
 **Acceptance Criteria:**
+
 - System automatically retrieves and analyzes complete patient medical history from stored records
 - Historical symptoms, diagnoses, treatments, and outcomes are contextualized with current presentation
 - Important historical patterns and connections are highlighted (e.g., recurring symptoms, medication responses, family history relevance)
@@ -712,11 +785,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Prevents medical errors by ensuring comprehensive history consideration and identifying subtle patterns that might be missed in busy clinical practice
 
 #### Story 0.3: Critical Detail Recognition and Prioritization
+
 **As a** Doctor conducting a consultation  
 **I want to** be alerted to critical details in the patient's current presentation and history that require immediate attention  
-**So that** I don't miss important clinical indicators that could impact patient safety or outcomes  
+**So that** I don't miss important clinical indicators that could impact patient safety or outcomes
 
 **Acceptance Criteria:**
+
 - System scans current consultation transcript and identifies critical symptoms or patient statements
 - High-priority medical history elements that relate to current symptoms are flagged
 - Red flag symptoms requiring immediate investigation are highlighted with urgency indicators
@@ -729,11 +804,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Improves patient safety by ensuring critical details are never overlooked and enhances diagnostic accuracy through comprehensive detail analysis
 
 #### Story 0.4: Evidence-Based Decision Support with Historical Context
+
 **As a** Doctor making treatment decisions  
 **I want to** receive evidence-based recommendations that consider both current symptoms and historical patient response patterns  
-**So that** I can choose treatments most likely to be effective for this specific patient  
+**So that** I can choose treatments most likely to be effective for this specific patient
 
 **Acceptance Criteria:**
+
 - Treatment recommendations are personalized based on patient's historical response to similar treatments
 - Previous medication effectiveness and side effects inform current prescribing decisions
 - Patient compliance history influences treatment complexity and monitoring recommendations
@@ -746,11 +823,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Increases treatment effectiveness and reduces adverse outcomes by leveraging complete patient history for personalized, evidence-based care
 
 #### Story 0.5: Comprehensive Risk Assessment and Prevention
+
 **As a** Doctor focused on preventive care  
 **I want to** identify potential health risks and prevention opportunities based on comprehensive patient analysis  
-**So that** I can proactively address health issues before they become serious problems  
+**So that** I can proactively address health issues before they become serious problems
 
 **Acceptance Criteria:**
+
 - System analyzes patient history, current symptoms, and demographics to identify health risks
 - Preventive care opportunities are suggested based on age, gender, family history, and risk factors
 - Early warning signs of potential complications are identified from current and historical data
@@ -765,11 +844,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 1: Visual Diagnostic Flow Understanding
 
 #### Story 1.1: See the Complete Diagnostic Journey
+
 **As a** General Practitioner  
 **I want to** see a visual flow from patient symptoms to potential diagnoses to recommended actions  
-**So that** I can quickly understand the AI's reasoning and validate the diagnostic pathway  
+**So that** I can quickly understand the AI's reasoning and validate the diagnostic pathway
 
 **Acceptance Criteria:**
+
 - Sankey diagram displays symptoms on the left, diagnoses in the middle, treatments/inquiries on the right
 - Node sizes reflect confidence levels and severity
 - Link thickness shows correlation strength between elements
@@ -779,11 +860,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Reduces cognitive load and provides immediate visual understanding of complex diagnostic relationships
 
 #### Story 1.2: Identify Diagnostic Confidence Gaps
+
 **As a** Specialist  
 **I want to** see which diagnostic connections have low confidence or high uncertainty  
-**So that** I can focus my attention on areas that need additional clinical investigation  
+**So that** I can focus my attention on areas that need additional clinical investigation
 
 **Acceptance Criteria:**
+
 - Low-confidence links appear as dashed lines
 - Uncertain areas are highlighted with warning indicators
 - Conflicting expert opinions are marked with conflict icons
@@ -793,11 +876,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Helps prioritize clinical focus and identifies areas requiring additional investigation
 
 #### Story 1.3: Compare Multiple Expert Perspectives
+
 **As a** Emergency Medicine Physician  
 **I want to** see how different AI experts (GP, Diagnostic Specialist, etc.) contribute to the analysis  
-**So that** I can understand the breadth of medical perspectives considered  
+**So that** I can understand the breadth of medical perspectives considered
 
 **Acceptance Criteria:**
+
 - Expert contributions are color-coded or labeled on the diagram
 - Toggle functionality to show/hide individual expert contributions
 - Expert agreement indicators show consensus levels
@@ -809,11 +894,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 2: Strategic Clinical Questioning
 
 #### Story 2.1: Distinguish Question Types Visually
+
 **As a** General Practitioner  
 **I want to** immediately see which follow-up questions will confirm diagnoses vs. rule them out  
-**So that** I can efficiently prioritize my clinical inquiries  
+**So that** I can efficiently prioritize my clinical inquiries
 
 **Acceptance Criteria:**
+
 - Confirmatory questions appear in green with "+" indicators
 - Exclusionary questions appear in red with "-" indicators
 - Exploratory questions appear in blue with "?" indicators
@@ -823,11 +910,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Optimizes consultation efficiency and improves diagnostic accuracy
 
 #### Story 2.2: Understand Question Impact
+
 **As a** Medical Student  
 **I want to** see how each potential question would change the diagnostic probabilities  
-**So that** I can learn strategic clinical reasoning  
+**So that** I can learn strategic clinical reasoning
 
 **Acceptance Criteria:**
+
 - Hover over questions shows probability changes for related diagnoses
 - "If Yes" and "If No" scenarios are displayed with percentage impacts
 - Educational tooltips explain the clinical reasoning behind each question
@@ -837,11 +926,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Enhances medical education and develops clinical reasoning skills
 
 #### Story 2.3: Prioritize Critical Safety Questions
+
 **As a** Emergency Medicine Physician  
 **I want to** immediately identify questions that screen for life-threatening conditions  
-**So that** I can ensure patient safety is always prioritized  
+**So that** I can ensure patient safety is always prioritized
 
 **Acceptance Criteria:**
+
 - Critical safety questions appear at the top with urgent visual indicators
 - Red flag symptoms are prominently highlighted
 - Time-sensitive inquiries have countdown indicators
@@ -853,11 +944,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 3: Treatment and Medication Guidance
 
 #### Story 3.1: Explore Treatment Alternatives
+
 **As a** General Practitioner  
 **I want to** see multiple treatment options for each diagnosis with their effectiveness ratings  
-**So that** I can choose the most appropriate treatment for my patient's specific situation  
+**So that** I can choose the most appropriate treatment for my patient's specific situation
 
 **Acceptance Criteria:**
+
 - Treatment nodes show effectiveness percentages
 - Alternative treatments are grouped and compared
 - Side effects and contraindications are highlighted
@@ -867,11 +960,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Supports personalized treatment decisions and improves patient outcomes
 
 #### Story 3.2: Understand Medication Interactions
+
 **As a** Specialist  
 **I want to** see how recommended medications interact with the patient's current medications  
-**So that** I can avoid dangerous drug interactions  
+**So that** I can avoid dangerous drug interactions
 
 **Acceptance Criteria:**
+
 - Medication interaction warnings are prominently displayed
 - Risk levels (minor, moderate, severe) are color-coded
 - Alternative medications are suggested for problematic interactions
@@ -883,11 +978,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 4: Real-Time Analysis and Streaming
 
 #### Story 4.1: Watch Analysis Progress Live
+
 **As a** General Practitioner  
 **I want to** see the AI analysis building up in real-time as experts complete their assessments  
-**So that** I can start reviewing early results while the analysis continues  
+**So that** I can start reviewing early results while the analysis continues
 
 **Acceptance Criteria:**
+
 - Sankey diagram updates progressively as each expert completes analysis
 - Loading indicators show which experts are still processing
 - Partial results are clearly marked as preliminary
@@ -897,11 +994,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Reduces perceived wait time and enables parallel physician review
 
 #### Story 4.2: Receive Priority Alerts
+
 **As a** Emergency Medicine Physician  
 **I want to** be immediately notified if any expert identifies critical findings  
-**So that** I can take urgent action without waiting for complete analysis  
+**So that** I can take urgent action without waiting for complete analysis
 
 **Acceptance Criteria:**
+
 - Critical findings trigger immediate pop-up alerts
 - Red flag symptoms generate instant notifications
 - Emergency protocols are automatically suggested
@@ -913,11 +1012,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 5: Data Export and Documentation
 
 #### Story 5.1: Export Analysis Results
+
 **As a** Healthcare Administrator  
 **I want to** export the complete analysis including visualizations for documentation  
-**So that** I can include AI insights in patient records and quality reviews  
+**So that** I can include AI insights in patient records and quality reviews
 
 **Acceptance Criteria:**
+
 - PDF export includes Sankey diagram and detailed findings
 - JSON export provides structured data for integration
 - FHIR-compliant formats for EHR integration
@@ -927,11 +1028,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Supports documentation requirements and quality assurance processes
 
 #### Story 5.2: Track Diagnostic Accuracy Over Time
+
 **As a** Medical Quality Manager  
 **I want to** analyze patterns in AI recommendations vs. final diagnoses  
-**So that** I can assess and improve the system's clinical accuracy  
+**So that** I can assess and improve the system's clinical accuracy
 
 **Acceptance Criteria:**
+
 - Analytics dashboard shows accuracy trends
 - Expert performance comparisons over time
 - False positive/negative rate tracking
@@ -943,11 +1046,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 6: Accessibility and Customization
 
 #### Story 6.1: Customize Visual Preferences
+
 **As a** Physician with visual impairments  
 **I want to** adjust the Sankey diagram colors, sizes, and contrast  
-**So that** I can effectively use the system despite accessibility challenges  
+**So that** I can effectively use the system despite accessibility challenges
 
 **Acceptance Criteria:**
+
 - High contrast mode for improved visibility
 - Customizable color schemes including colorblind-friendly options
 - Adjustable text sizes and node scaling
@@ -957,11 +1062,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Ensures inclusive access for all medical professionals
 
 #### Story 6.2: Configure Expert Sets by Specialty
+
 **As a** Cardiologist  
 **I want to** use a specialized expert set focused on cardiac conditions  
-**So that** I get more relevant and detailed analysis for my specific practice area  
+**So that** I get more relevant and detailed analysis for my specific practice area
 
 **Acceptance Criteria:**
+
 - Specialty-specific expert configurations available
 - Ability to create custom expert combinations
 - Different visualization layouts for different medical domains
@@ -973,11 +1080,13 @@ This section outlines the user stories that drive the design and implementation 
 ### Epic 7: Educational and Training Features
 
 #### Story 7.1: Learn from AI Reasoning
+
 **As a** Medical Resident  
 **I want to** understand why the AI made specific connections in the Sankey diagram  
-**So that** I can improve my own clinical reasoning skills  
+**So that** I can improve my own clinical reasoning skills
 
 **Acceptance Criteria:**
+
 - Educational mode with detailed explanations
 - Links to relevant medical literature and case studies
 - Step-by-step reasoning breakdowns
@@ -987,11 +1096,13 @@ This section outlines the user stories that drive the design and implementation 
 **Value:** Enhances medical education and develops clinical expertise
 
 #### Story 7.2: Compare with Teaching Cases
+
 **As a** Medical Educator  
 **I want to** compare current analyses with established teaching cases  
-**So that** I can use real consultations as learning opportunities  
+**So that** I can use real consultations as learning opportunities
 
 **Acceptance Criteria:**
+
 - Library of reference cases for comparison
 - Side-by-side analysis comparison views
 - Discussion prompts for educational sessions
@@ -1003,6 +1114,7 @@ This section outlines the user stories that drive the design and implementation 
 ### Success Metrics for User Stories
 
 #### Foundational Clinical Decision Support Metrics
+
 - **Multi-Expert Analysis Value**: > 85% of doctors report finding additional expert insights helpful
 - **Medical History Integration**: 90% of relevant historical details are automatically identified and flagged
 - **Critical Detail Recognition**: 100% of red flag symptoms and contraindications are identified
@@ -1012,6 +1124,7 @@ This section outlines the user stories that drive the design and implementation 
 - **Patient Safety**: 95% reduction in medication errors and contraindications missed
 
 #### Usability Metrics
+
 - **Time to Understanding**: < 30 seconds to comprehend diagnostic flow
 - **Interaction Rate**: > 80% of users interact with Sankey diagrams
 - **Task Completion**: > 95% successful completion of diagnostic review tasks
@@ -1020,6 +1133,7 @@ This section outlines the user stories that drive the design and implementation 
 - **Critical Alert Response**: < 5 seconds to identify and respond to urgent findings
 
 #### Clinical Impact Metrics
+
 - **Diagnostic Confidence**: 20% increase in physician confidence scores
 - **Question Efficiency**: 30% reduction in unnecessary follow-up questions
 - **Safety Improvements**: 100% detection rate for critical conditions
@@ -1029,6 +1143,7 @@ This section outlines the user stories that drive the design and implementation 
 - **Medication Safety**: 90% reduction in adverse drug interaction risks
 
 #### System Adoption Metrics
+
 - **User Engagement**: > 70% daily active users among target physicians
 - **Feature Utilization**: > 60% use of advanced Sankey features
 - **Feedback Scores**: > 4.5/5 average user satisfaction rating
@@ -1042,12 +1157,14 @@ These user stories drive the development priorities and ensure that the MoE Sank
 ## Implementation Guidelines
 
 ### Development Priorities
+
 1. **Safety First**: Prioritize Safety Monitor expert and contraindication detection
 2. **Progressive Enhancement**: Basic analysis available immediately, advanced features load async
 3. **User Control**: Accept/suppress functionality for physician oversight
 4. **Transparency**: Clear evidence chains and expert attribution
 
 ### Integration Considerations
+
 1. **Existing Infrastructure**: Leverage current SSE, session management, and AI providers
 2. **Backward Compatibility**: Maintain support for current analysis endpoints
 3. **Feature Flags**: Use PUBLIC_ENABLE_MOE for gradual rollout

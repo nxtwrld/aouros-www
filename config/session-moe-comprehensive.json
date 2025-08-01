@@ -2,7 +2,7 @@
   "name": "Comprehensive Medical Analysis",
   "description": "Advanced multi-expert analysis for complex cases",
   "targetAudience": "specialists",
-  "complexity": "advanced", 
+  "complexity": "advanced",
   "experts": [
     "gp_core",
     "diagnostic_specialist",

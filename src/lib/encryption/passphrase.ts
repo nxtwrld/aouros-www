@@ -118,15 +118,15 @@ export function generatePassphrase(length: number = 10): string {
   let p = window.crypto
     .getRandomValues(new BigUint64Array(length))
     .reduce(
-      (prev, curr, index) =>
-        (!index ? prev : prev.toString(36)) +
+      (prev: string, curr, index) =>
+        (!index ? prev : prev) +
         (index % 2
           ? curr
               .toString(36)
               .toUpperCase()
               .replace(regx, (key) => ".,:;-_()=*".charAt(parseInt(key)))
           : curr.toString(36)),
-      "",
+      "" as string,
     )
     .split("")
     .sort(() => 128 - window.crypto.getRandomValues(new Uint8Array(1))[0])

@@ -12,7 +12,7 @@ import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from "$lib/types.d";
 import { DEBUG_CONVERSATION } from "$env/static/private";
 import { logger } from "$lib/logging/logger";
-import { getSessionAnalysisContext } from './manager';
+import { getSessionAnalysisContext } from "./manager";
 
 // Select diagnosis configuration based on environment variable
 const PROMPT_CONFIG = "enhanced"; // or 'fast' or 'enhanced'
@@ -120,14 +120,15 @@ interface ExtendedFunctionDefinition extends FunctionDefinition {
   required?: string[];
 }
 
-((signals as ExtendedFunctionDefinition).items!.properties.signal.enum as string[]) =
-  Object.keys(propertiesDefition);
+((signals as ExtendedFunctionDefinition).items!.properties.signal
+  .enum as string[]) = Object.keys(propertiesDefition);
 // Only add signals to diagnosis schema if it has the signals property
 if (
   (diagnosis as ExtendedFunctionDefinition).parameters?.properties &&
   "signals" in (diagnosis as ExtendedFunctionDefinition).parameters.properties
 ) {
-  (diagnosis as ExtendedFunctionDefinition).parameters.properties.signals = signals;
+  (diagnosis as ExtendedFunctionDefinition).parameters.properties.signals =
+    signals;
 }
 
 const schemas: {
@@ -140,8 +141,8 @@ const schemas: {
 let localizedSchemas = updateLanguage(JSON.parse(JSON.stringify(schemas)));
 
 // extend common schemas
-((transcript as ExtendedFunctionDefinition).parameters.properties.symptoms.items.properties.bodyParts.items
-  .enum as string[]) = [...tags];
+((transcript as ExtendedFunctionDefinition).parameters.properties.symptoms.items
+  .properties.bodyParts.items.enum as string[]) = [...tags];
 
 export async function analyze(input: Input): Promise<Analysis> {
   const tokenUsage: TokenUsage = {
@@ -157,39 +158,39 @@ export async function analyze(input: Input): Promise<Analysis> {
     hasPreviousAnalysis: !!input.previousAnalysis,
     hasSessionId: !!input.sessionId,
   });
-  
+
   // Get medical context if session ID is provided
   let medicalContext: {
     medicalHistory: any[];
     relevantDocuments: any[];
     contextSummary: string;
   } | null = null;
-  
+
   if (input.sessionId && input.type === Types.diagnosis) {
     try {
       medicalContext = await getSessionAnalysisContext(
         input.sessionId,
-        'diagnosis'
+        "diagnosis",
       );
-      
+
       if (medicalContext && medicalContext.medicalHistory.length > 0) {
-        logger.analysis.info('Medical context retrieved for analysis', {
+        logger.analysis.info("Medical context retrieved for analysis", {
           sessionId: input.sessionId,
           historyItems: medicalContext.medicalHistory.length,
-          relevantDocs: medicalContext.relevantDocuments.length
+          relevantDocs: medicalContext.relevantDocuments.length,
         });
       }
     } catch (error) {
-      logger.analysis.warn('Failed to get medical context for analysis', {
+      logger.analysis.warn("Failed to get medical context for analysis", {
         sessionId: input.sessionId,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
   // Create enhanced content with previous context and medical history
   let analysisText = input.text || "";
-  
+
   // Add previous analysis context
   if (input.previousAnalysis && input.type === Types.diagnosis) {
     const contextSummary = createPreviousContextSummary(input.previousAnalysis);
@@ -199,7 +200,7 @@ export async function analyze(input: Input): Promise<Analysis> {
       contextSummary.substring(0, 200) + "...",
     );
   }
-  
+
   // Add medical history context from session
   if (medicalContext && medicalContext.medicalHistory.length > 0) {
     const medicalHistoryContext = createMedicalHistoryContext(medicalContext);
@@ -285,7 +286,12 @@ export async function evaluate(
 
   if (!schema) error(500, { message: "Invalid type " + type });
 
-  return (await fetchGptEnhanced(content, schema, tokenUsage, language)) as Analysis;
+  return (await fetchGptEnhanced(
+    content,
+    schema,
+    tokenUsage,
+    language,
+  )) as Analysis;
 }
 
 const TEST_DATA = {
@@ -622,45 +628,49 @@ function createPreviousContextSummary(
 }
 
 // Utility function to create medical history context for analysis
-function createMedicalHistoryContext(
-  medicalContext: {
-    medicalHistory: any[];
-    relevantDocuments: any[];
-    contextSummary: string;
-  }
-): string {
+function createMedicalHistoryContext(medicalContext: {
+  medicalHistory: any[];
+  relevantDocuments: any[];
+  contextSummary: string;
+}): string {
   const contextParts: string[] = [];
-  
-  contextParts.push('\n\nRELEVANT MEDICAL HISTORY:');
+
+  contextParts.push("\n\nRELEVANT MEDICAL HISTORY:");
   contextParts.push(medicalContext.contextSummary);
-  
+
   if (medicalContext.medicalHistory.length > 0) {
     const historyItems = medicalContext.medicalHistory
       .slice(0, 10) // Limit to top 10 items
-      .map(item => {
-        if (typeof item === 'string') return `- ${item}`;
-        if (item.text) return `- ${item.date || 'Unknown date'}: ${item.text} (${item.type || 'medical'})`;
+      .map((item) => {
+        if (typeof item === "string") return `- ${item}`;
+        if (item.text)
+          return `- ${item.date || "Unknown date"}: ${item.text} (${item.type || "medical"})`;
         return `- ${JSON.stringify(item).substring(0, 100)}...`;
       })
-      .join('\n');
-    
-    contextParts.push('\nKey Medical History Points:');
+      .join("\n");
+
+    contextParts.push("\nKey Medical History Points:");
     contextParts.push(historyItems);
   }
-  
+
   if (medicalContext.relevantDocuments.length > 0) {
     const docSummary = medicalContext.relevantDocuments
       .slice(0, 5)
-      .map(doc => `- ${doc.date || 'Unknown date'}: ${doc.type} - ${doc.excerpt || 'Medical document'}`)
-      .join('\n');
-      
-    contextParts.push('\nRelevant Medical Documents:');
+      .map(
+        (doc) =>
+          `- ${doc.date || "Unknown date"}: ${doc.type} - ${doc.excerpt || "Medical document"}`,
+      )
+      .join("\n");
+
+    contextParts.push("\nRelevant Medical Documents:");
     contextParts.push(docSummary);
   }
-  
-  contextParts.push('\nINSTRUCTIONS: Consider the above medical history when analyzing the current consultation. Build upon existing conditions, medications, and treatments. Cross-reference symptoms with patient\'s medical background.\n\n');
-  
-  return contextParts.join('\n');
+
+  contextParts.push(
+    "\nINSTRUCTIONS: Consider the above medical history when analyzing the current consultation. Build upon existing conditions, medications, and treatments. Cross-reference symptoms with patient's medical background.\n\n",
+  );
+
+  return contextParts.join("\n");
 }
 
 // Utility function to merge two analysis objects

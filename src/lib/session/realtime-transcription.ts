@@ -21,7 +21,10 @@ export async function transcribeAudioChunk(
 
     // Use configured transcription provider for real-time transcription
     await transcriptionProvider.initialize();
-    const result = await transcriptionProvider.transcribeAudioCompatible(audioFile, { lang: language });
+    const result = await transcriptionProvider.transcribeAudioCompatible(
+      audioFile,
+      { lang: language },
+    );
 
     if (result.text && result.text.trim().length > 0) {
       return {

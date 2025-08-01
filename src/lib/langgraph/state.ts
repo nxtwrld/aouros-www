@@ -211,7 +211,6 @@ export interface DocumentProcessingState {
     message?: string;
   };
 
-
   // Medical terms generation results
   medicalTermsGeneration?: {
     success?: boolean;

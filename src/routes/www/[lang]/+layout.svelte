@@ -106,6 +106,7 @@
 	overflow: auto;
 }
 
+/* Unused styles - removed
 .page {
     margin: 0 auto;
     padding: 0 1rem;
@@ -119,19 +120,21 @@
     align-items: center;
     text-align: center;
 }
+*/
 
 
 
+/* Unused typography styles - these should be in global CSS if needed
 h1 {
     font-family: 'Baloo Thambi 2', cursive;
     font-size: 2.5em;
-    color: var(--color-primary-dark); /* Your primary color for headers */
+    color: var(--color-primary-dark);
 }
 
 h3 {
     font-size: 1.6em;
-    color: var(--color-primary-dark); /* Your primary color for headers */
-    border-bottom: 1px dotted var(--color-primary); /* Dashed line for a slight eerie feel */
+    color: var(--color-primary-dark);
+    border-bottom: 1px dotted var(--color-primary);
     margin-bottom: 20px;
     padding-bottom: 10px;
     font-family: 'Baloo Thambi 2', cursive;
@@ -139,7 +142,7 @@ h3 {
 
 h4 {
     font-size: 1.6em;
-    color: var(--color-primary-dark); /* Your primary color for headers */
+    color: var(--color-primary-dark);
     font-family: 'Baloo Thambi 2', cursive;
 }
 
@@ -147,18 +150,21 @@ p {
     font-size: 1.1em;
     line-height: 1.5em;
     margin-bottom: 20px;
-    transition: color 0.5s; /* Transition effect for color change on hover */
+    transition: color 0.5s;
     text-align: justify;
 }
+*/
 
+/* Unused - removed
 p strong {
     display: inline-block;
     font-weight: 700;
     text-transform: uppercase;
-    background-color: var(--color-primary-dark); /* Primary color for bold text */
+    background-color: var(--color-primary-dark);
     color: #FFF;
     padding: 0 .5em;
 }
+*/
 
 
 a {
@@ -175,6 +181,7 @@ a:hover {
 
 
 
+/* Unused button style - removed
 .button {
     background-color: var(--color-primary);
     border: 0;
@@ -184,6 +191,7 @@ a:hover {
     font-size: 1.25rem;
     padding: .5rem 1rem;
 }
+*/
 
 	.www-layout {
 		min-height: 100vh;

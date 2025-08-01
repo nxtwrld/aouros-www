@@ -36,16 +36,18 @@ export const load: LayoutLoad = async ({ parent, params, fetch }) => {
   // Initialize profile context with simplified medical terms approach
   if (documents.length > 0) {
     try {
-      await profileContextManager.initializeProfileContext(
-        params.profile,
-        {
-          onProgress: (status, progress) => {
-            console.log(`Profile context init: ${status} ${progress ? `(${progress}%)` : ''}`);
-          }
-        }
-      );
+      await profileContextManager.initializeProfileContext(params.profile, {
+        onProgress: (status, progress) => {
+          console.log(
+            `Profile context init: ${status} ${progress ? `(${progress}%)` : ""}`,
+          );
+        },
+      });
     } catch (error) {
-      console.warn(`Failed to initialize context for profile ${params.profile}:`, error);
+      console.warn(
+        `Failed to initialize context for profile ${params.profile}:`,
+        error,
+      );
     }
   }
 
