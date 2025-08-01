@@ -15,6 +15,12 @@ export enum DocumentState {
   CANCELED = "CANCELED",
 }
 
+export enum TemporalType {
+  LATEST = "latest",
+  RECENT = "recent",
+  HISTORICAL = "historical",
+}
+
 export interface DocumentPreload {
   id: string;
   key: string;
@@ -28,6 +34,10 @@ export interface DocumentPreload {
   content?: string | undefined;
   author_id?: string;
   owner_id: string;
+
+  // Unified medical terms for search
+  medicalTerms?: string[]; // Single array: categories + bodyParts + diagnoses + temporal + procedures
+  temporalType?: TemporalType; // Simple temporal classification
 }
 
 export interface DocumentEncrypted {
@@ -40,6 +50,7 @@ export interface DocumentEncrypted {
   keys: { key: string; owner_id: string }[];
   author_id?: string;
   owner_id: string;
+  created_at?: string; // Document creation timestamp
 }
 
 export interface Document {
@@ -60,6 +71,11 @@ export interface Document {
   attachments: Attachment[];
   author_id?: string;
   owner_id: string;
+  created_at?: string; // Document creation timestamp
+
+  // Unified medical terms for search
+  medicalTerms?: string[]; // Single array: categories + bodyParts + diagnoses + temporal + procedures
+  temporalType?: TemporalType; // Simple temporal classification
 }
 
 export interface DocumentNew {
@@ -74,6 +90,9 @@ export interface DocumentNew {
   };
   attachments?: Attachment[];
   user_id?: string;
+  // Optional medical terms from analysis
+  medicalTerms?: string[];
+  temporalType?: TemporalType;
 }
 
 export interface Attachment {

@@ -45,40 +45,51 @@ export class OpenAIProvider {
     options: AnalysisOptions = {},
   ): Promise<any> {
     const startTime = Date.now();
-    const flowType = options.flowType || 'medical_analysis';
+    const flowType = options.flowType || "medical_analysis";
 
     try {
       // Get model configuration for this flow
-      const { provider, modelInfo, config } = modelConfig.getModelForFlow(flowType);
-      
-      if (provider !== 'openai') {
-        throw new Error(`Flow '${flowType}' is configured for '${provider}' but only OpenAI is supported`);
+      const { provider, modelInfo, config } =
+        modelConfig.getModelForFlow(flowType);
+
+      if (provider !== "openai") {
+        throw new Error(
+          `Flow '${flowType}' is configured for '${provider}' but only OpenAI is supported`,
+        );
       }
 
       // Get API key
-      const apiKey = modelConfig.getProviderApiKey('openai');
-      
-      const result = await this.executeOpenAI(
-        content,
-        schema,
-        tokenUsage,
-        {
-          ...options,
-          modelId: modelInfo.model_id,
-          apiKey,
-          temperature: options.temperature ?? modelInfo.temperature,
-          maxTokens: modelInfo.max_tokens,
-        }
-      );
+      const apiKey = modelConfig.getProviderApiKey("openai");
+
+      const result = await this.executeOpenAI(content, schema, tokenUsage, {
+        ...options,
+        modelId: modelInfo.model_id,
+        apiKey,
+        temperature: options.temperature ?? modelInfo.temperature,
+        maxTokens: modelInfo.max_tokens,
+      });
 
       const executionTime = Date.now() - startTime;
       const tokensUsed = tokenUsage[schema.description] || 0;
-      const cost = modelConfig.calculateCost('openai', modelInfo.model_id.replace('gpt-4o-2024-08-06', 'gpt4'), tokensUsed);
+      const cost = modelConfig.calculateCost(
+        "openai",
+        modelInfo.model_id.replace("gpt-4o-2024-08-06", "gpt4"),
+        tokensUsed,
+      );
 
       // Log usage for monitoring
-      modelConfig.logModelUsage(flowType, 'openai', modelInfo.model_id, tokensUsed, cost, executionTime);
+      modelConfig.logModelUsage(
+        flowType,
+        "openai",
+        modelInfo.model_id,
+        tokensUsed,
+        cost,
+        executionTime,
+      );
 
-      console.log(`✅ OpenAI analysis (${flowType}) completed in ${executionTime}ms | ${tokensUsed} tokens | $${cost.toFixed(4)}`);
+      console.log(
+        `✅ OpenAI analysis (${flowType}) completed in ${executionTime}ms | ${tokensUsed} tokens | $${cost.toFixed(4)}`,
+      );
 
       return result;
     } catch (error) {
@@ -110,8 +121,10 @@ export class OpenAIProvider {
       apiKey: options.apiKey,
       temperature: options.temperature || 0,
       maxTokens: options.maxTokens,
-      timeout: options.timeoutMs || modelConfig.getPerformanceSettings().timeout_ms,
-      maxRetries: options.maxRetries || modelConfig.getPerformanceSettings().max_retries,
+      timeout:
+        options.timeoutMs || modelConfig.getPerformanceSettings().timeout_ms,
+      maxRetries:
+        options.maxRetries || modelConfig.getPerformanceSettings().max_retries,
       callbacks: [
         {
           handleLLMEnd(output, runId, parentRunId, tags) {
@@ -156,7 +169,7 @@ export class OpenAIProvider {
     schema: FunctionDefinition,
     tokenUsage: TokenUsage,
     language: string = "English",
-    flowType: FlowType = 'medical_analysis'
+    flowType: FlowType = "medical_analysis",
   ): Promise<any> {
     return this.analyzeDocument(content, schema, tokenUsage, {
       language,
@@ -168,7 +181,7 @@ export class OpenAIProvider {
    * Check if OpenAI is available
    */
   isAvailable(): boolean {
-    return modelConfig.isProviderAvailable('openai');
+    return modelConfig.isProviderAvailable("openai");
   }
 
   /**
@@ -176,7 +189,7 @@ export class OpenAIProvider {
    */
   getAvailableModels(): string[] {
     try {
-      const { modelInfo } = modelConfig.getModelForFlow('medical_analysis');
+      const { modelInfo } = modelConfig.getModelForFlow("medical_analysis");
       return [modelInfo.model_id];
     } catch {
       return [];
@@ -193,7 +206,13 @@ export async function fetchGpt(
   schema: FunctionDefinition,
   tokenUsage: TokenUsage,
   language: string = "English",
-  flowType: FlowType = 'medical_analysis'
+  flowType: FlowType = "medical_analysis",
 ): Promise<any> {
-  return openaiProvider.fetchGptCompatible(content, schema, tokenUsage, language, flowType);
+  return openaiProvider.fetchGptCompatible(
+    content,
+    schema,
+    tokenUsage,
+    language,
+    flowType,
+  );
 }

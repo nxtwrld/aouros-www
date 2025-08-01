@@ -17,7 +17,7 @@ export const state: Writable<{
 class UIEvents extends EventEmitter {
   context: string | null = null;
   private latestEvents = new Map<string, { data: any; timestamp: Date }>();
-  
+
   constructor() {
     super();
 
@@ -35,7 +35,7 @@ class UIEvents extends EventEmitter {
 
   emit(event: string | symbol, ...args: any[]) {
     // Store the latest event data for string events
-    if (typeof event === 'string') {
+    if (typeof event === "string") {
       this.latestEvents.set(event, { data: args[0], timestamp: new Date() });
     }
     return super.emit(event, ...args);

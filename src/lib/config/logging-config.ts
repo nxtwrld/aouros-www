@@ -26,7 +26,7 @@ function parseLogLevel(level: string): LogLevel {
   if (isNaN(numLevel)) {
     return LogLevel.WARN; // Default
   }
-  
+
   // Clamp to valid range
   return Math.max(0, Math.min(5, numLevel)) as LogLevel;
 }
@@ -38,12 +38,15 @@ function parseNamespaces(namespaces: string): string[] {
   if (!namespaces || namespaces.trim() === "") {
     return ["*"]; // Default to all
   }
-  
+
   if (namespaces === "*") {
     return ["*"];
   }
-  
-  return namespaces.split(",").map(ns => ns.trim()).filter(ns => ns.length > 0);
+
+  return namespaces
+    .split(",")
+    .map((ns) => ns.trim())
+    .filter((ns) => ns.length > 0);
 }
 
 /**
@@ -62,10 +65,18 @@ export function getLoggingConfig(): LoggingConfig {
     namespaces: parseNamespaces((env as any).PUBLIC_LOG_NAMESPACES || "*"),
     verboseAI: parseBoolean((env as any).PUBLIC_VERBOSE_AI_LOGGING || "false"),
     debugSSE: parseBoolean((env as any).PUBLIC_DEBUG_SSE_PROGRESS || "false"),
-    debugStateTransitions: parseBoolean((env as any).PUBLIC_DEBUG_STATE_TRANSITIONS || "false"),
-    debugLangGraph: parseBoolean((env as any).PUBLIC_DEBUG_LANGGRAPH || "false"),
-    logAIResponses: parseBoolean((env as any).PUBLIC_LOG_AI_RESPONSES || "false"),
-    enableWorkflowTracing: parseBoolean((env as any).PUBLIC_ENABLE_WORKFLOW_TRACING || "false"),
+    debugStateTransitions: parseBoolean(
+      (env as any).PUBLIC_DEBUG_STATE_TRANSITIONS || "false",
+    ),
+    debugLangGraph: parseBoolean(
+      (env as any).PUBLIC_DEBUG_LANGGRAPH || "false",
+    ),
+    logAIResponses: parseBoolean(
+      (env as any).PUBLIC_LOG_AI_RESPONSES || "false",
+    ),
+    enableWorkflowTracing: parseBoolean(
+      (env as any).PUBLIC_ENABLE_WORKFLOW_TRACING || "false",
+    ),
   };
 }
 
@@ -74,17 +85,17 @@ export function getLoggingConfig(): LoggingConfig {
  */
 export function applyLoggingConfig(config?: LoggingConfig) {
   const loggingConfig = config || getLoggingConfig();
-  
+
   // Set log level
   logger.setLevel(loggingConfig.level);
-  
+
   // Enable namespaces
   if (loggingConfig.namespaces.includes("*")) {
     logger.enableNamespaces("*");
   } else {
     logger.enableNamespaces(...loggingConfig.namespaces);
   }
-  
+
   // Log the configuration (only in browser to avoid server-side spam)
   if (browser) {
     console.log("🔧 Logging configuration applied:", {

@@ -61,6 +61,26 @@ export default {
               ],
               description: "Overall outcome of the procedure",
             },
+            procedureCategory: {
+              type: "string",
+              enum: [
+                "surgical",
+                "diagnostic",
+                "therapeutic",
+                "interventional",
+                "emergency",
+                "minimally_invasive",
+                "endoscopic",
+                "imaging_guided",
+              ],
+              description: "Category of procedure for classification",
+            },
+            searchKeywords: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Search-optimized keywords: CPT codes, procedure types, anatomical regions, specialties",
+            },
           },
           required: ["name"],
         },

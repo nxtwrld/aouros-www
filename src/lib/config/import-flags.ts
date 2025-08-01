@@ -7,16 +7,19 @@ export const IMPORT_FEATURE_FLAGS = {
   ENABLE_SSE_IMPORT: (env as any).PUBLIC_ENABLE_SSE_IMPORT === "true",
 
   // Enhanced progress tracking with detailed file-level progress
-  ENABLE_ENHANCED_PROGRESS: (env as any).PUBLIC_ENABLE_ENHANCED_PROGRESS === "true",
+  ENABLE_ENHANCED_PROGRESS:
+    (env as any).PUBLIC_ENABLE_ENHANCED_PROGRESS === "true",
 
   // LangGraph workflow integration for medical analysis
-  ENABLE_LANGGRAPH_IMPORT: (env as any).PUBLIC_ENABLE_LANGGRAPH_IMPORT === "true",
+  ENABLE_LANGGRAPH_IMPORT:
+    (env as any).PUBLIC_ENABLE_LANGGRAPH_IMPORT === "true",
 
   // Automatic fallback to traditional import if SSE fails
   ENABLE_SSE_FALLBACK: (env as any).PUBLIC_ENABLE_SSE_FALLBACK === "true",
 
   // Parallel file processing for multiple uploads
-  ENABLE_PARALLEL_PROCESSING: (env as any).PUBLIC_ENABLE_PARALLEL_PROCESSING === "true",
+  ENABLE_PARALLEL_PROCESSING:
+    (env as any).PUBLIC_ENABLE_PARALLEL_PROCESSING === "true",
 
   // Advanced retry mechanisms for failed imports
   ENABLE_ADVANCED_RETRY: (env as any).PUBLIC_ENABLE_ADVANCED_RETRY === "true",
@@ -25,13 +28,15 @@ export const IMPORT_FEATURE_FLAGS = {
   ENABLE_LIVE_PREVIEW: (env as any).PUBLIC_ENABLE_LIVE_PREVIEW === "true",
 
   // Progress persistence across page refreshes
-  ENABLE_PROGRESS_PERSISTENCE: (env as any).PUBLIC_ENABLE_PROGRESS_PERSISTENCE === "true",
+  ENABLE_PROGRESS_PERSISTENCE:
+    (env as any).PUBLIC_ENABLE_PROGRESS_PERSISTENCE === "true",
 
   // Enhanced error reporting with detailed diagnostics
   ENABLE_DETAILED_ERRORS: (env as any).PUBLIC_ENABLE_DETAILED_ERRORS === "true",
 
   // Experimental features for testing
-  ENABLE_EXPERIMENTAL_FEATURES: (env as any).PUBLIC_ENABLE_EXPERIMENTAL_FEATURES === "true",
+  ENABLE_EXPERIMENTAL_FEATURES:
+    (env as any).PUBLIC_ENABLE_EXPERIMENTAL_FEATURES === "true",
 };
 
 // Helper function to check if a specific import feature is enabled
@@ -109,7 +114,9 @@ export const DevUtils =
         showConfig(): void {
           const config = getImportConfig();
           console.log("📋 Current Import Configuration:", config);
-          console.log("💡 To change configuration, update your .env.development.local file");
+          console.log(
+            "💡 To change configuration, update your .env.development.local file",
+          );
         },
 
         // Test SSE endpoint availability
@@ -140,12 +147,24 @@ export const DevUtils =
         showEnvHelp(): void {
           console.log("🔧 Environment Configuration Help:");
           console.log("Add these to your .env.development.local file:");
-          console.log("  PUBLIC_ENABLE_SSE_IMPORT=true          # Enable SSE import");
-          console.log("  PUBLIC_ENABLE_LANGGRAPH_IMPORT=true    # Enable LangGraph workflow");
-          console.log("  PUBLIC_ENABLE_ENHANCED_PROGRESS=true   # Enable enhanced progress");
-          console.log("  PUBLIC_VERBOSE_AI_LOGGING=true         # Enable verbose AI logging");
-          console.log("  PUBLIC_DEBUG_SSE_PROGRESS=true         # Enable SSE debugging");
-          console.log("  PUBLIC_LOG_LEVEL=4                     # Set log level (0-5)");
+          console.log(
+            "  PUBLIC_ENABLE_SSE_IMPORT=true          # Enable SSE import",
+          );
+          console.log(
+            "  PUBLIC_ENABLE_LANGGRAPH_IMPORT=true    # Enable LangGraph workflow",
+          );
+          console.log(
+            "  PUBLIC_ENABLE_ENHANCED_PROGRESS=true   # Enable enhanced progress",
+          );
+          console.log(
+            "  PUBLIC_VERBOSE_AI_LOGGING=true         # Enable verbose AI logging",
+          );
+          console.log(
+            "  PUBLIC_DEBUG_SSE_PROGRESS=true         # Enable SSE debugging",
+          );
+          console.log(
+            "  PUBLIC_LOG_LEVEL=4                     # Set log level (0-5)",
+          );
           console.log("💡 Restart the dev server after changing .env files");
         },
       }
@@ -169,8 +188,6 @@ export const {
 if (browser && dev && DevUtils) {
   (window as any).ImportDevUtils = DevUtils;
   console.log("🛠️ Import DevUtils available at window.ImportDevUtils");
-  console.log(
-    "   Commands: showConfig(), testSSEEndpoints(), showEnvHelp()",
-  );
+  console.log("   Commands: showConfig(), testSSEEndpoints(), showEnvHelp()");
   console.log("💡 Configuration is now controlled via .env files only");
 }

@@ -1,9 +1,9 @@
 // AI Chat Types
-export type ChatMode = 'patient' | 'clinical';
-export type ChatMessageRole = 'user' | 'assistant' | 'system';
+export type ChatMode = "patient" | "clinical";
+export type ChatMessageRole = "user" | "assistant" | "system";
 
 export interface ContextPrompt {
-  type: 'document' | 'profile';
+  type: "document" | "profile" | "tool";
   id: string;
   title: string;
   messageKey: string;
@@ -14,6 +14,11 @@ export interface ContextPrompt {
   timestamp: Date;
   onAccept: () => void;
   onDecline: () => void;
+  // Tool-specific fields
+  toolName?: string;
+  toolParameters?: any;
+  securityLevel?: "low" | "medium" | "high";
+  dataAccessDescription?: string[];
 }
 
 export interface ChatMessage {
@@ -29,6 +34,14 @@ export interface ChatMessage {
     contextPrompt?: ContextPrompt;
     translationKey?: string;
     translationParams?: any;
+    // Context assembly metadata
+    contextAvailable?: boolean;
+    documentCount?: number;
+    contextConfidence?: number;
+    availableTools?: string[];
+    shouldEnhanceGreeting?: boolean;
+    // Tool execution result
+    toolResult?: ToolCallResult;
     // Keep legacy support temporarily
     documentPrompt?: {
       documentId: string;
@@ -53,6 +66,10 @@ export interface ChatContext {
   pageContext: PageContext;
   anatomyContext?: AnatomyContext;
   isOwnProfile: boolean;
+  // Context assembly integration
+  assembledContext?: any; // AssembledContext from context assembly system
+  availableTools?: string[];
+  mcpTools?: any; // MCP tools for AI to access medical data
 }
 
 export interface PageContext {
@@ -85,7 +102,7 @@ export interface ChatState {
   focusedBodyPart: string | null;
   conversationHistory: Map<string, ChatMessage[]>; // profileId -> messages
   currentConversationId: string | null;
-  syncStatus: 'synced' | 'syncing' | 'error';
+  syncStatus: "synced" | "syncing" | "error";
   lastSyncTime: Date | null;
 }
 
@@ -118,18 +135,32 @@ export interface ChatConversation {
 }
 
 export interface ConsentRequest {
-  type: 'document_access' | 'anatomy_integration';
+  type: "document_access" | "anatomy_integration";
   message: string;
   documentIds?: string[];
   bodyParts?: string[];
   reason: string;
 }
 
+export interface ToolCallRequest {
+  name: string;
+  parameters: any;
+  reason: string;
+}
+
+export interface ToolCallResult {
+  toolName: string;
+  success: boolean;
+  data?: any;
+  error?: string;
+  timestamp: Date;
+}
+
 export interface ChatResponse {
   message: string;
   anatomyReferences?: string[];
   documentReferences?: string[];
-  toolCalls?: any[];
+  toolCalls?: ToolCallRequest[];
   suggestions?: AnatomySuggestion[];
   consentRequests?: ConsentRequest[];
 }

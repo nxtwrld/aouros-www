@@ -1,9 +1,10 @@
-import chatConfig from '../../../config/chat.json';
+import chatConfig from "../../../config/chat.json";
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { modelConfig } from './model-config';
-import anatomyObjects from '$components/anatomy/objects.json';
+import { modelConfig } from "./model-config";
+import anatomyObjects from "$components/anatomy/objects.json";
+import { classificationConfig } from "./classification";
 
 export interface ChatProvider {
   name: string;
@@ -54,6 +55,7 @@ export interface PromptConfig {
     anatomyInstructions: string[];
     boundaries?: string[];
     focus?: string[];
+    toolInstructions?: string[];
   };
   responseSchema: {
     additionalProperties: Record<string, any>;
@@ -75,7 +77,7 @@ class ChatConfigManager {
    */
   getAvailableProviders(): string[] {
     return Object.keys(this.config.providers).filter(
-      provider => this.config.providers[provider].enabled
+      (provider) => this.config.providers[provider].enabled,
     );
   }
 
@@ -95,7 +97,7 @@ class ChatConfigManager {
   createStreamingModel(provider?: string): any {
     const providerName = provider || this.config.defaultProvider;
     const providerConfig = this.getProviderConfig(providerName);
-    
+
     if (!providerConfig.enabled) {
       throw new Error(`Provider '${providerName}' is not enabled`);
     }
@@ -103,28 +105,28 @@ class ChatConfigManager {
     const modelConfig = providerConfig.models.streaming;
 
     switch (providerName) {
-      case 'openai':
+      case "openai":
         return new ChatOpenAI({
           model: modelConfig.name,
-          apiKey: this.getProviderApiKey('openai'),
+          apiKey: this.getProviderApiKey("openai"),
           temperature: modelConfig.temperature,
           maxTokens: modelConfig.maxTokens,
           streaming: true,
         });
 
-      case 'gemini':
+      case "gemini":
         return new ChatGoogleGenerativeAI({
           model: modelConfig.name,
-          apiKey: this.getProviderApiKey('gemini'),
+          apiKey: this.getProviderApiKey("gemini"),
           temperature: modelConfig.temperature,
           maxOutputTokens: modelConfig.maxTokens,
           streaming: true,
         });
 
-      case 'anthropic':
+      case "anthropic":
         return new ChatAnthropic({
           model: modelConfig.name,
-          apiKey: this.getProviderApiKey('anthropic'),
+          apiKey: this.getProviderApiKey("anthropic"),
           temperature: modelConfig.temperature,
           maxTokens: modelConfig.maxTokens,
           streaming: true,
@@ -141,7 +143,7 @@ class ChatConfigManager {
   createStructuredModel(provider?: string): any {
     const providerName = provider || this.config.defaultProvider;
     const providerConfig = this.getProviderConfig(providerName);
-    
+
     if (!providerConfig.enabled) {
       throw new Error(`Provider '${providerName}' is not enabled`);
     }
@@ -149,26 +151,26 @@ class ChatConfigManager {
     const modelConfig = providerConfig.models.structured;
 
     switch (providerName) {
-      case 'openai':
+      case "openai":
         return new ChatOpenAI({
           model: modelConfig.name,
-          apiKey: this.getProviderApiKey('openai'),
+          apiKey: this.getProviderApiKey("openai"),
           temperature: modelConfig.temperature,
           maxTokens: modelConfig.maxTokens,
         });
 
-      case 'gemini':
+      case "gemini":
         return new ChatGoogleGenerativeAI({
           model: modelConfig.name,
-          apiKey: this.getProviderApiKey('gemini'),
+          apiKey: this.getProviderApiKey("gemini"),
           temperature: modelConfig.temperature,
           maxOutputTokens: modelConfig.maxTokens,
         });
 
-      case 'anthropic':
+      case "anthropic":
         return new ChatAnthropic({
           model: modelConfig.name,
-          apiKey: this.getProviderApiKey('anthropic'),
+          apiKey: this.getProviderApiKey("anthropic"),
           temperature: modelConfig.temperature,
           maxTokens: modelConfig.maxTokens,
         });
@@ -181,71 +183,161 @@ class ChatConfigManager {
   /**
    * Build system prompt from configuration
    */
-  buildSystemPrompt(mode: 'patient' | 'clinical', language: string, pageContext: any): string {
+  buildSystemPrompt(
+    mode: "patient" | "clinical",
+    language: string,
+    pageContext: any,
+    assembledContext?: any,
+  ): string {
     const basePrompt = this.config.prompts.base.instruction;
     const modeConfig = this.config.prompts[mode];
-    
+
     let systemPrompt = `${basePrompt}\n\n${modeConfig.systemPrompt.title}:\n`;
-    
+
     // Add guidelines
-    modeConfig.systemPrompt.guidelines.forEach(guideline => {
-      systemPrompt += `- ${this.interpolateString(guideline, { language, profileName: pageContext?.profileName || 'Patient' })}\n`;
+    modeConfig.systemPrompt.guidelines.forEach((guideline) => {
+      systemPrompt += `- ${this.interpolateString(guideline, { language, profileName: pageContext?.profileName || "Patient" })}\n`;
     });
-    
-    systemPrompt += '\n';
-    
+
+    systemPrompt += "\n";
+
     // Add anatomy instructions
-    modeConfig.systemPrompt.anatomyInstructions.forEach(instruction => {
+    modeConfig.systemPrompt.anatomyInstructions.forEach((instruction) => {
       systemPrompt += `${instruction}\n`;
     });
-    
-    // Add document context if enabled
+
+    // Add document context if enabled (includes formatted signals data)
     if (this.config.documentContext.enabled) {
       const documentContext = this.buildDocumentContext(pageContext);
       if (documentContext) {
         systemPrompt += `\n${documentContext}`;
       }
     }
-    
-    systemPrompt += '\n';
-    
+
+    // Add assembled context from embedding search if available
+    if (assembledContext) {
+      systemPrompt += "\n\n## Additional Medical Context\n";
+
+      // Add summary if available
+      if (assembledContext.summary) {
+        systemPrompt += `**Patient Summary:**\n${assembledContext.summary}\n\n`;
+      }
+
+      // Add key points by type
+      if (assembledContext.keyPoints && assembledContext.keyPoints.length > 0) {
+        const pointsByType = assembledContext.keyPoints.reduce(
+          (acc: any, point: any) => {
+            if (!acc[point.type]) acc[point.type] = [];
+            acc[point.type].push(point);
+            return acc;
+          },
+          {},
+        );
+
+        Object.entries(pointsByType).forEach(
+          ([type, points]: [string, any]) => {
+            const pointsList = points
+              .slice(0, 3) // Limit to top 3 per type
+              .map((p: any) => `- ${p.text} (${p.date || "unknown date"})`)
+              .join("\n");
+            systemPrompt += `**${type.charAt(0).toUpperCase() + type.slice(1)}s:**\n${pointsList}\n\n`;
+          },
+        );
+      }
+
+      // Add recent changes
+      if (assembledContext.medicalContext?.recentChanges?.length) {
+        const recentList = assembledContext.medicalContext.recentChanges
+          .slice(0, 3)
+          .map((change: any) => `- ${change.date}: ${change.description}`)
+          .join("\n");
+        systemPrompt += `**Recent Changes:**\n${recentList}\n\n`;
+      }
+    }
+
+    systemPrompt += "\n";
+
     // Add mode-specific sections
     if (modeConfig.systemPrompt.boundaries) {
-      systemPrompt += '\nIMPORTANT BOUNDARIES:\n';
-      modeConfig.systemPrompt.boundaries.forEach(boundary => {
+      systemPrompt += "\nIMPORTANT BOUNDARIES:\n";
+      modeConfig.systemPrompt.boundaries.forEach((boundary) => {
         systemPrompt += `- ${boundary}\n`;
       });
     }
-    
+
     if (modeConfig.systemPrompt.focus) {
-      systemPrompt += '\nCLINICAL FOCUS:\n';
-      modeConfig.systemPrompt.focus.forEach(focus => {
+      systemPrompt += "\nCLINICAL FOCUS:\n";
+      modeConfig.systemPrompt.focus.forEach((focus) => {
         systemPrompt += `- ${focus}\n`;
       });
     }
-    
+
+    // Add tool instructions if available
+    if (modeConfig.systemPrompt.toolInstructions) {
+      systemPrompt += "\nMEDICAL DATA TOOLS:\n";
+      modeConfig.systemPrompt.toolInstructions.forEach(
+        (instruction: string) => {
+          systemPrompt += `- ${instruction}\n`;
+        },
+      );
+    }
+
     return systemPrompt;
   }
 
   /**
    * Create response schema from configuration
    */
-  createResponseSchema(mode: 'patient' | 'clinical'): any {
+  createResponseSchema(mode: "patient" | "clinical"): any {
     const schema = JSON.parse(JSON.stringify(this.config.responseSchema.base));
-    
+
     // Add anatomy objects to enum
     const allAnatomyObjects: string[] = [];
     Object.values(anatomyObjects).forEach((system: any) => {
       allAnatomyObjects.push(...system.objects);
     });
-    schema.parameters.properties.anatomyReferences.items.enum = allAnatomyObjects;
-    
+    schema.parameters.properties.anatomyReferences.items.enum =
+      allAnatomyObjects;
+
     // Add mode-specific properties
     const modeConfig = this.config.prompts[mode];
-    Object.entries(modeConfig.responseSchema.additionalProperties).forEach(([key, value]) => {
-      schema.parameters.properties[key] = value;
-    });
-    
+    Object.entries(modeConfig.responseSchema.additionalProperties).forEach(
+      ([key, value]) => {
+        schema.parameters.properties[key] = value;
+      },
+    );
+
+    // Enhance tool calls with dynamic categories from classification config
+    if (
+      schema.parameters.properties.toolCalls?.items?.properties?.parameters
+        ?.properties
+    ) {
+      const toolParams =
+        schema.parameters.properties.toolCalls.items.properties.parameters
+          .properties;
+
+      // Update documentTypes description with actual categories
+      if (toolParams.documentTypes) {
+        const categoryList = Object.values(classificationConfig.categories)
+          .map((cat) => `'${cat.id}'`)
+          .join(", ");
+        toolParams.documentTypes.description = `Filter by document categories. Use exact category IDs: ${categoryList}. These map to the metadata.category field in documents.`;
+      }
+
+      // Update terms description with temporal terms
+      if (toolParams.terms) {
+        const temporalTerms = Object.keys(classificationConfig.temporalTerms)
+          .map((term) => `"${term}"`)
+          .join(", ");
+        const currentDescription = toolParams.terms.description;
+        // Replace the temporal terms section
+        toolParams.terms.description = currentDescription.replace(
+          /TEMPORAL: "[^"]*"(?:, "[^"]*")*/,
+          `TEMPORAL: ${temporalTerms}`,
+        );
+      }
+    }
+
     return schema;
   }
 
@@ -253,7 +345,7 @@ class ChatConfigManager {
    * Get language name from code
    */
   getLanguageName(languageCode: string): string {
-    return this.config.languages[languageCode] || this.config.languages['en'];
+    return this.config.languages[languageCode] || this.config.languages["en"];
   }
 
   /**
@@ -270,52 +362,135 @@ class ChatConfigManager {
     return modelConfig.getProviderApiKey(provider);
   }
 
-  private interpolateString(template: string, variables: Record<string, string>): string {
+  private interpolateString(
+    template: string,
+    variables: Record<string, string>,
+  ): string {
     return template.replace(/\{(\w+)\}/g, (match, key) => {
       return variables[key] || match;
     });
   }
 
+  /**
+   * Extract the best available text content from document, avoiding duplication
+   */
+  private extractBestTextContent(documentContent: any): string {
+    let content = "";
+
+    // Priority 1: Use localized text if available (user's language)
+    if (
+      documentContent.localizedContent &&
+      typeof documentContent.localizedContent === "string"
+    ) {
+      content = documentContent.localizedContent;
+    }
+    // Priority 2: Fall back to original content
+    else if (
+      documentContent.content &&
+      typeof documentContent.content === "string"
+    ) {
+      content = documentContent.content;
+    }
+    // Priority 3: Legacy fields for backward compatibility
+    else if (documentContent.text && typeof documentContent.text === "string") {
+      content = documentContent.text;
+    } else if (
+      documentContent.original &&
+      typeof documentContent.original === "string"
+    ) {
+      content = documentContent.original;
+    }
+
+    // Always prepend title if available and not already included
+    if (documentContent.title && !content.includes(documentContent.title)) {
+      content = documentContent.title + "\n\n" + content;
+    }
+
+    // Always append tags for structured metadata
+    if (
+      documentContent.tags &&
+      Array.isArray(documentContent.tags) &&
+      documentContent.tags.length > 0
+    ) {
+      content += "\n\nTags: " + documentContent.tags.join(", ");
+    }
+
+    return content.trim();
+  }
+
   private buildDocumentContext(pageContext: any): string {
-    if (!pageContext?.documentsContent || !Array.isArray(pageContext.documentsContent)) {
-      return '';
+    if (
+      !pageContext?.documentsContent ||
+      !Array.isArray(pageContext.documentsContent)
+    ) {
+      return "";
     }
 
-    const documents = pageContext.documentsContent.slice(0, this.config.documentContext.maxDocuments);
+    const documents = pageContext.documentsContent.slice(
+      0,
+      this.config.documentContext.maxDocuments,
+    );
     if (documents.length === 0) {
-      return '';
+      return "";
     }
 
-    let documentContext = '\n\nAVAILABLE MEDICAL DOCUMENTS:\n';
-    
-    documents.forEach(([docId, doc]: [string, any]) => {
-      if (doc?.content) {
-        documentContext += `\nDocument: ${doc.content.title || doc.metadata?.title || 'Untitled'}\n`;
-        
-        // Include configured fields
-        this.config.documentContext.includeFields.forEach(field => {
-          if (doc.content[field]) {
-            documentContext += `- ${field.charAt(0).toUpperCase() + field.slice(1)}: ${JSON.stringify(doc.content[field])}\n`;
+    let documentContext = "\n\nAVAILABLE MEDICAL DOCUMENTS:\n";
+
+    documents.forEach(([_docId, doc]: [string, any]) => {
+      if (doc) {
+        documentContext += `\nDocument: ${doc.title || "Untitled"}\n`;
+
+        // Include configured fields - doc IS the content object
+        this.config.documentContext.includeFields.forEach((field) => {
+          if (doc[field]) {
+            if (field === "content") {
+              // Special handling for content field - use smart text extraction
+              const smartText = this.extractBestTextContent(doc);
+              if (smartText) {
+                documentContext += `- Content: ${smartText}\n`;
+              }
+            } else if (field === "signals") {
+              // Special handling for signals data - format for better readability
+              const signals = doc[field];
+              if (signals && Array.isArray(signals)) {
+                documentContext += `- Lab/Vital Signs:\n`;
+                signals.forEach((signal: any) => {
+                  if (signal.signal && signal.value !== undefined) {
+                    const unit = signal.unit ? ` ${signal.unit}` : "";
+                    const reference = signal.reference
+                      ? ` (ref: ${signal.reference})`
+                      : "";
+                    documentContext += `  • ${signal.signal}: ${signal.value}${unit}${reference}\n`;
+                  }
+                });
+              }
+            } else {
+              // Use JSON.stringify for other structured fields
+              documentContext += `- ${field.charAt(0).toUpperCase() + field.slice(1)}: ${JSON.stringify(doc[field])}\n`;
+            }
           }
         });
-        
+
         // Include additional content if enabled
         if (this.config.documentContext.includeAdditionalContent) {
-          const excludeFields = ['title', ...this.config.documentContext.includeFields];
-          const otherContent = Object.keys(doc.content)
-            .filter(key => !excludeFields.includes(key))
+          const excludeFields = [
+            "title",
+            ...this.config.documentContext.includeFields,
+          ];
+          const otherContent = Object.keys(doc)
+            .filter((key) => !excludeFields.includes(key))
             .reduce((obj, key) => {
-              obj[key] = doc.content[key];
+              obj[key] = doc[key];
               return obj;
             }, {} as any);
-            
+
           if (Object.keys(otherContent).length > 0) {
             documentContext += `- Additional Information: ${JSON.stringify(otherContent)}\n`;
           }
         }
       }
     });
-    
+
     return documentContext;
   }
 }

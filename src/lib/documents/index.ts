@@ -27,6 +27,8 @@ import {
 } from "$lib/documents/types.d";
 import { base64ToArrayBuffer } from "$lib/arrays";
 import { logger } from "$lib/logging/logger";
+import { profileContextManager } from "$lib/context/integration/profile-context";
+// Removed embedding migration import - now using medical terms classification
 
 const documents: Writable<(DocumentPreload | Document)[]> = writable([]);
 
@@ -100,7 +102,7 @@ export async function loadDocuments(
 
 export async function importDocuments(
   documentsEncrypted: DocumentEncrypted[] = [],
-): Promise<DocumentPreload[]> {
+): Promise<(Document | DocumentPreload)[]> {
   const documentsPreload: (DocumentPreload | Document)[] = await Promise.all(
     documentsEncrypted.map(async (document) => {
       const key = document.keys[0].key;
@@ -111,16 +113,25 @@ export async function importDocuments(
       }
       const enc = await decrypt(encrypted, key);
 
+      const parsedMetadata = JSON.parse(enc[0]);
+      const embeddings = parsedMetadata.embeddings || {};
+
       const doc: Document | DocumentPreload = {
         key,
         id: document.id,
         user_id: document.user_id,
         type: document.type,
-        metadata: JSON.parse(enc[0]),
+        metadata: parsedMetadata,
         content: undefined,
         owner_id: document.keys[0].owner_id,
         author_id: document.author_id,
         attachments: document.attachments || [],
+        // Extract embedding fields from metadata subsection
+        embedding_summary: embeddings.summary,
+        embedding_vector: embeddings.vector,
+        embedding_provider: embeddings.provider,
+        embedding_model: embeddings.model,
+        embedding_timestamp: embeddings.timestamp,
       };
 
       if (enc[1]) {
@@ -198,7 +209,37 @@ export async function loadDocument(
   });
   updateIndex();
 
-  return byID[id] as Document;
+  // Ensure document has embeddings before returning
+  const loadedDocument = byID[id] as Document;
+  if (loadedDocument.content) {
+    try {
+      // Medical terms are now generated during LangGraph workflow processing
+      // No need for separate embedding generation step
+      const documentWithTerms = loadedDocument;
+
+      // Document is already processed with medical terms
+      if (documentWithTerms !== loadedDocument) {
+        documents.update((docs) => {
+          const index = docs.findIndex((doc) => doc.id === id);
+          if (index >= 0) {
+            docs[index] = documentWithTerms;
+            byID[id] = documentWithTerms;
+          }
+          return docs;
+        });
+        updateIndex();
+        return documentWithTerms;
+      }
+    } catch (error) {
+      logger.documents.warn("Failed to process document with medical terms", {
+        documentId: id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Continue with original document if medical terms processing fails
+    }
+  }
+
+  return loadedDocument;
 }
 
 export async function updateDocument(documentData: Document) {
@@ -378,7 +419,23 @@ export async function addDocument(document: DocumentNew): Promise<Document> {
     });
 
   // update local documents
-  return await loadDocument(data.id, profile_id || user_id);
+  const newDocument = await loadDocument(data.id, profile_id || user_id);
+
+  // Add document to context (simplified for medical terms system)
+  try {
+    await profileContextManager.addDocumentToContext(
+      profile_id || user_id,
+      newDocument,
+    );
+  } catch (error) {
+    logger.documents.warn("Failed to add document to context", {
+      documentId: data.id,
+      profileId: profile_id || user_id,
+      error,
+    });
+  }
+
+  return newDocument;
 }
 
 export async function removeDocument(id: string): Promise<void> {
@@ -412,6 +469,17 @@ export async function removeDocument(id: string): Promise<void> {
     }
     return docs;
   });
+
+  // Remove document from context
+  try {
+    profileContextManager.removeDocumentFromContext(document.user_id, id);
+  } catch (error) {
+    logger.documents.warn("Failed to remove document from context", {
+      documentId: id,
+      profileId: document.user_id,
+      error,
+    });
+  }
 
   delete byID[id];
   return;
@@ -545,11 +613,16 @@ function deriveMetadata(
   document: Document | DocumentNew,
   metadata?: { [key: string]: any },
 ): { [key: string]: any } {
-  let result = {
+  let result: { [key: string]: any } = {
     title: document.content.title,
     tags: document.content.tags || [],
     date: document.content.date || new Date().toISOString(),
     ...metadata,
   };
+
+  // Include embeddings if available from server analysis
+  // Medical terms are now generated during workflow processing
+  // No need for separate embedding handling
+
   return result;
 }

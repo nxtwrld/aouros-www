@@ -322,7 +322,7 @@
                     })*/
 
 
-        checkVisibility(data);
+        checkVisibility(processedData);
     }
 
     function clearSelectedEvent() {
@@ -346,15 +346,15 @@
     }
 
     // add visible flag to data in not present
-    let data = $derived(data.map(d => {
+    let processedData = $derived(data.map(d => {
         if (d.visible === undefined) {
             d.visible = (d.data.length > 0) ? true : false;
         }
         return d;
     }))
     run(() => {
-        if (svgElement && data) {
-            checkVisibility(data);
+        if (svgElement && processedData) {
+            checkVisibility(processedData);
 
         }
     });

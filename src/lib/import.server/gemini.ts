@@ -1,9 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { GOOGLE_GENERATE_API_KEY } from "$env/static/private";
+import { GOOGLE_API_KEY } from "$env/static/private";
 
-console.log(GOOGLE_GENERATE_API_KEY);
-
-const genAI = new GoogleGenerativeAI(GOOGLE_GENERATE_API_KEY);
+const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
 
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 

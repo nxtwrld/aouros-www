@@ -97,27 +97,30 @@ export class SSEImportClient {
             language: language || "English",
           };
 
-          console.log(`🔬 Analyzing document "${document.title}" individually:`, {
-            documentTitle: document.title,
-            textLength: documentText.length,
-            pages: document.pages,
-            hasText: !!documentText
-          });
+          console.log(
+            `🔬 Analyzing document "${document.title}" individually:`,
+            {
+              documentTitle: document.title,
+              textLength: documentText.length,
+              pages: document.pages,
+              hasText: !!documentText,
+            },
+          );
 
           const fileId = `doc-${document.title}-${Date.now()}`;
           const result = await this.analyzeSingleDocument(
             analysisInput,
             fileId,
           );
-          
+
           console.log(`✅ Analysis completed for "${document.title}":`, {
             documentTitle: document.title,
             resultType: result.type,
             isMedical: result.isMedical,
             hasReport: !!result.report,
-            reportKeys: result.report ? Object.keys(result.report) : []
+            reportKeys: result.report ? Object.keys(result.report) : [],
           });
-          
+
           results.push(result);
         }
       } catch (error) {
@@ -130,11 +133,11 @@ export class SSEImportClient {
 
     console.log(`📊 Document-by-document analysis completed:`, {
       totalDocuments: results.length,
-      results: results.map(r => ({ 
-        type: r.type, 
-        isMedical: r.isMedical, 
-        title: r.report?.title 
-      }))
+      results: results.map((r) => ({
+        type: r.type,
+        isMedical: r.isMedical,
+        title: r.report?.title,
+      })),
     });
 
     return results;
@@ -198,21 +201,21 @@ export class SSEImportClient {
                   try {
                     const jsonData = line.slice(6);
                     console.log("🔍 SSE raw data:", jsonData);
-                    
-                    if (!jsonData || jsonData.trim() === '') {
+
+                    if (!jsonData || jsonData.trim() === "") {
                       console.warn("Empty SSE data received, skipping");
                       continue;
                     }
-                    
+
                     const eventData = JSON.parse(jsonData);
                     console.log("📨 SSE parsed event:", eventData);
-                    
+
                     this.handleSSEEvent(eventData, fileId, resolve, reject);
                   } catch (parseError) {
                     console.error("Failed to parse SSE event:", {
                       parseError,
                       rawLine: line,
-                      jsonData: line.slice(6)
+                      jsonData: line.slice(6),
                     });
                   }
                 }
@@ -244,7 +247,7 @@ export class SSEImportClient {
     reject: (reason: any) => void,
   ): void {
     // Safety check for undefined eventData
-    if (!eventData || typeof eventData !== 'object') {
+    if (!eventData || typeof eventData !== "object") {
       console.error("SSE received invalid eventData:", eventData);
       const error = new Error("Invalid SSE event data received");
       this.onErrorCallback?.(error, fileId);

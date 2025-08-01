@@ -1,12 +1,16 @@
 /**
  * Imaging Processing Node
- * 
- * Specialized processing for medical imaging reports including CT, MRI, X-ray, 
+ *
+ * Specialized processing for medical imaging reports including CT, MRI, X-ray,
  * ultrasound, and other imaging modalities.
  */
 
 import type { DocumentProcessingState } from "../state";
-import { BaseProcessingNode, type BaseProcessingNodeConfig, type ProcessingNodeResult } from "./_base-processing-node";
+import {
+  BaseProcessingNode,
+  type BaseProcessingNodeConfig,
+  type ProcessingNodeResult,
+} from "./_base-processing-node";
 
 export class ImagingProcessingNode extends BaseProcessingNode {
   constructor() {
@@ -15,14 +19,23 @@ export class ImagingProcessingNode extends BaseProcessingNode {
       description: "Medical imaging analysis",
       schemaImportPath: "$lib/configurations/imaging",
       progressStages: [
-        { stage: "imaging_schema_loading", progress: 10, message: "Loading imaging analysis schema" },
-        { stage: "imaging_ai_processing", progress: 30, message: "Analyzing imaging findings with AI" },
-        { stage: "imaging_validation", progress: 80, message: "Validating imaging data and measurements" },
+        {
+          stage: "imaging_schema_loading",
+          progress: 10,
+          message: "Loading imaging analysis schema",
+        },
+        {
+          stage: "imaging_ai_processing",
+          progress: 30,
+          message: "Analyzing imaging findings with AI",
+        },
+        {
+          stage: "imaging_validation",
+          progress: 80,
+          message: "Validating imaging data and measurements",
+        },
       ],
-      featureDetectionTriggers: [
-        "hasImaging",
-        "hasImagingFindings",
-      ],
+      featureDetectionTriggers: ["hasImaging", "hasImagingFindings"],
     };
     super(config);
   }
@@ -36,14 +49,14 @@ export class ImagingProcessingNode extends BaseProcessingNode {
    */
   protected async validateAndEnhance(
     aiResult: any,
-    state: DocumentProcessingState
+    state: DocumentProcessingState,
   ): Promise<ProcessingNodeResult> {
     const processingTime = Date.now();
     const tokensUsed = state.tokenUsage?.[this.config.nodeName] || 0;
 
     // Validate imaging-specific fields
     const validatedData = this.validateImagingData(aiResult);
-    
+
     // Enhance with imaging-specific metadata
     const enhancedData = this.enhanceImagingData(validatedData, state);
 
@@ -92,7 +105,9 @@ export class ImagingProcessingNode extends BaseProcessingNode {
         description: finding.description || finding,
         location: finding.location || "",
         severity: finding.severity || "mild",
-        measurements: Array.isArray(finding.measurements) ? finding.measurements : [],
+        measurements: Array.isArray(finding.measurements)
+          ? finding.measurements
+          : [],
         followUp: finding.followUp || false,
         ...finding,
       }));
@@ -109,7 +124,8 @@ export class ImagingProcessingNode extends BaseProcessingNode {
 
     // Add document context
     enhanced.documentContext = {
-      documentType: state.featureDetectionResults?.documentType || "imaging_report",
+      documentType:
+        state.featureDetectionResults?.documentType || "imaging_report",
       language: state.language || "English",
       extractedFrom: "AI analysis",
     };
@@ -136,14 +152,20 @@ export class ImagingProcessingNode extends BaseProcessingNode {
    */
   private detectModalityFromContent(content: string): string {
     const text = content.toLowerCase();
-    
+
     const modalityPatterns = [
       { pattern: /\b(ct|computed tomography|cat scan)\b/i, modality: "CT" },
       { pattern: /\b(mri|magnetic resonance|mr imaging)\b/i, modality: "MRI" },
       { pattern: /\b(x-ray|xray|radiograph|plain film)\b/i, modality: "X-ray" },
-      { pattern: /\b(ultrasound|sonography|doppler|echo)\b/i, modality: "Ultrasound" },
+      {
+        pattern: /\b(ultrasound|sonography|doppler|echo)\b/i,
+        modality: "Ultrasound",
+      },
       { pattern: /\b(pet|positron emission)\b/i, modality: "PET" },
-      { pattern: /\b(nuclear medicine|scintigraphy)\b/i, modality: "Nuclear Medicine" },
+      {
+        pattern: /\b(nuclear medicine|scintigraphy)\b/i,
+        modality: "Nuclear Medicine",
+      },
       { pattern: /\b(mammography|mammo)\b/i, modality: "Mammography" },
       { pattern: /\b(fluoroscopy|fluoro)\b/i, modality: "Fluoroscopy" },
     ];
@@ -166,15 +188,40 @@ export class ImagingProcessingNode extends BaseProcessingNode {
 
     // Check for urgent imaging findings
     const urgentKeywords = [
-      { pattern: /\b(hemorrhage|bleeding|hematoma)\b/i, urgency: 5, description: "Active bleeding detected" },
-      { pattern: /\b(pneumothorax|collapsed lung)\b/i, urgency: 5, description: "Pneumothorax detected" },
-      { pattern: /\b(aortic dissection|aortic rupture)\b/i, urgency: 5, description: "Aortic emergency" },
-      { pattern: /\b(stroke|infarct|acute)\b/i, urgency: 4, description: "Acute finding" },
-      { pattern: /\b(mass|tumor|malignancy)\b/i, urgency: 3, description: "Mass or tumor detected" },
-      { pattern: /\b(fracture|break|broken)\b/i, urgency: 3, description: "Fracture detected" },
+      {
+        pattern: /\b(hemorrhage|bleeding|hematoma)\b/i,
+        urgency: 5,
+        description: "Active bleeding detected",
+      },
+      {
+        pattern: /\b(pneumothorax|collapsed lung)\b/i,
+        urgency: 5,
+        description: "Pneumothorax detected",
+      },
+      {
+        pattern: /\b(aortic dissection|aortic rupture)\b/i,
+        urgency: 5,
+        description: "Aortic emergency",
+      },
+      {
+        pattern: /\b(stroke|infarct|acute)\b/i,
+        urgency: 4,
+        description: "Acute finding",
+      },
+      {
+        pattern: /\b(mass|tumor|malignancy)\b/i,
+        urgency: 3,
+        description: "Mass or tumor detected",
+      },
+      {
+        pattern: /\b(fracture|break|broken)\b/i,
+        urgency: 3,
+        description: "Fracture detected",
+      },
     ];
 
-    const allText = `${data.impression} ${JSON.stringify(data.findings)}`.toLowerCase();
+    const allText =
+      `${data.impression} ${JSON.stringify(data.findings)}`.toLowerCase();
 
     for (const { pattern, urgency, description } of urgentKeywords) {
       if (pattern.test(allText)) {
@@ -189,7 +236,8 @@ export class ImagingProcessingNode extends BaseProcessingNode {
       level: maxUrgency,
       findings: urgentFindings,
       requiresFollowUp: maxUrgency > 2,
-      timeframe: maxUrgency >= 4 ? "immediate" : maxUrgency >= 3 ? "urgent" : "routine",
+      timeframe:
+        maxUrgency >= 4 ? "immediate" : maxUrgency >= 3 ? "urgent" : "routine",
     };
   }
 
@@ -253,10 +301,10 @@ export class ImagingProcessingNode extends BaseProcessingNode {
     // Analyze findings for clinical significance
     if (data.findings && data.findings.length > 0) {
       let totalScore = 0;
-      
+
       for (const finding of data.findings) {
         let findingScore = 1; // Base score
-        
+
         // Increase score based on severity
         if (finding.severity === "severe" || finding.severity === "critical") {
           findingScore += 3;
@@ -282,13 +330,17 @@ export class ImagingProcessingNode extends BaseProcessingNode {
       const averageScore = totalScore / data.findings.length;
       if (averageScore >= 4) {
         significance.level = "high";
-        significance.recommendations.push("Immediate clinical correlation recommended");
+        significance.recommendations.push(
+          "Immediate clinical correlation recommended",
+        );
       } else if (averageScore >= 3) {
         significance.level = "moderate";
         significance.recommendations.push("Clinical follow-up recommended");
       } else {
         significance.level = "low";
-        significance.recommendations.push("Routine follow-up as clinically indicated");
+        significance.recommendations.push(
+          "Routine follow-up as clinically indicated",
+        );
       }
 
       significance.score = Math.round(averageScore * 10) / 10;
@@ -311,8 +363,8 @@ export class ImagingProcessingNode extends BaseProcessingNode {
 
     // Increase confidence if we have structured findings
     if (data.findings) {
-      const structuredFindings = data.findings.filter((f: any) => 
-        f.description && f.location && f.severity
+      const structuredFindings = data.findings.filter(
+        (f: any) => f.description && f.location && f.severity,
       );
       if (structuredFindings.length === data.findings.length) {
         confidence += 0.1;
@@ -336,7 +388,9 @@ export class ImagingProcessingNode extends BaseProcessingNode {
 /**
  * Export the node function for use in the workflow
  */
-export const imagingProcessingNode = async (state: DocumentProcessingState): Promise<Partial<DocumentProcessingState>> => {
+export const imagingProcessingNode = async (
+  state: DocumentProcessingState,
+): Promise<Partial<DocumentProcessingState>> => {
   const node = new ImagingProcessingNode();
   return node.process(state);
 };

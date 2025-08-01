@@ -1,6 +1,6 @@
 /**
  * Dynamic Node Registry
- * 
+ *
  * Manages registration and conditional execution of specialized processing nodes
  * based on feature detection results.
  */
@@ -13,7 +13,9 @@ export interface NodeDefinition {
   featureDetectionTriggers: string[];
   priority: number; // 1-5, where 1 is highest priority
   dependencies?: string[]; // Other nodes this depends on
-  nodeFunction: (state: DocumentProcessingState) => Promise<Partial<DocumentProcessingState>>;
+  nodeFunction: (
+    state: DocumentProcessingState,
+  ) => Promise<Partial<DocumentProcessingState>>;
 }
 
 export interface NodeExecutionPlan {
@@ -66,7 +68,9 @@ export class NodeRegistry {
         selectedNodes.push(node);
         console.log(`✅ Selected node for execution: ${node.nodeName}`);
       } else {
-        console.log(`⏭️ Skipping node: ${node.nodeName} (features not detected)`);
+        console.log(
+          `⏭️ Skipping node: ${node.nodeName} (features not detected)`,
+        );
       }
     }
 
@@ -78,16 +82,18 @@ export class NodeRegistry {
    */
   createExecutionPlan(selectedNodes: NodeDefinition[]): NodeExecutionPlan {
     // Sort by priority (lower number = higher priority)
-    const sortedNodes = [...selectedNodes].sort((a, b) => a.priority - b.priority);
-    
+    const sortedNodes = [...selectedNodes].sort(
+      (a, b) => a.priority - b.priority,
+    );
+
     // Group nodes for parallel execution
     const parallelGroups: NodeDefinition[][] = [];
     const executionOrder: string[] = [];
-    
+
     // Simple grouping by priority for now
     // In the future, we can implement more sophisticated dependency resolution
     const priorityGroups = new Map<number, NodeDefinition[]>();
-    
+
     for (const node of sortedNodes) {
       if (!priorityGroups.has(node.priority)) {
         priorityGroups.set(node.priority, []);
@@ -96,7 +102,9 @@ export class NodeRegistry {
     }
 
     // Convert priority groups to parallel execution groups
-    for (const [priority, nodes] of Array.from(priorityGroups.entries()).sort(([a], [b]) => a - b)) {
+    for (const [priority, nodes] of Array.from(priorityGroups.entries()).sort(
+      ([a], [b]) => a - b,
+    )) {
       parallelGroups.push(nodes);
       for (const node of nodes) {
         executionOrder.push(node.nodeName);
@@ -124,17 +132,25 @@ export class NodeRegistry {
   async executeNodes(
     plan: NodeExecutionPlan,
     initialState: DocumentProcessingState,
-    progressCallback?: (progress: number, message: string) => void
+    progressCallback?: (progress: number, message: string) => void,
   ): Promise<DocumentProcessingState> {
     let currentState = { ...initialState };
     let completedNodes = 0;
 
-    console.log(`🚀 Starting execution of ${plan.totalNodes} nodes in ${plan.parallelGroups.length} parallel groups`);
+    console.log(
+      `🚀 Starting execution of ${plan.totalNodes} nodes in ${plan.parallelGroups.length} parallel groups`,
+    );
 
-    for (let groupIndex = 0; groupIndex < plan.parallelGroups.length; groupIndex++) {
+    for (
+      let groupIndex = 0;
+      groupIndex < plan.parallelGroups.length;
+      groupIndex++
+    ) {
       const group = plan.parallelGroups[groupIndex];
-      
-      console.log(`🔄 Executing parallel group ${groupIndex + 1}/${plan.parallelGroups.length} with ${group.length} nodes`);
+
+      console.log(
+        `🔄 Executing parallel group ${groupIndex + 1}/${plan.parallelGroups.length} with ${group.length} nodes`,
+      );
 
       // Execute all nodes in this group in parallel
       const groupPromises = group.map(async (node) => {
@@ -145,8 +161,8 @@ export class NodeRegistry {
           return { nodeName: node.nodeName, result: nodeResult, success: true };
         } catch (error) {
           console.error(`❌ Failed ${node.nodeName}:`, error);
-          return { 
-            nodeName: node.nodeName, 
+          return {
+            nodeName: node.nodeName,
             result: {
               errors: [
                 ...(currentState.errors || []),
@@ -156,8 +172,8 @@ export class NodeRegistry {
                   timestamp: new Date().toISOString(),
                 },
               ],
-            }, 
-            success: false 
+            },
+            success: false,
           };
         }
       });
@@ -172,7 +188,10 @@ export class NodeRegistry {
 
         // Update progress
         const progress = Math.round((completedNodes / plan.totalNodes) * 100);
-        progressCallback?.(progress, `Completed ${nodeName} (${completedNodes}/${plan.totalNodes})`);
+        progressCallback?.(
+          progress,
+          `Completed ${nodeName} (${completedNodes}/${plan.totalNodes})`,
+        );
 
         if (success) {
           console.log(`✅ Successfully merged results from ${nodeName}`);
@@ -181,7 +200,9 @@ export class NodeRegistry {
         }
       }
 
-      console.log(`✅ Completed parallel group ${groupIndex + 1}/${plan.parallelGroups.length}`);
+      console.log(
+        `✅ Completed parallel group ${groupIndex + 1}/${plan.parallelGroups.length}`,
+      );
     }
 
     console.log(`🎉 Completed execution of all ${plan.totalNodes} nodes`);
@@ -191,10 +212,13 @@ export class NodeRegistry {
   /**
    * Check if a node should execute based on feature detection
    */
-  private shouldNodeExecute(node: NodeDefinition, featureDetectionResults: any): boolean {
+  private shouldNodeExecute(
+    node: NodeDefinition,
+    featureDetectionResults: any,
+  ): boolean {
     if (!featureDetectionResults) return false;
 
-    return node.featureDetectionTriggers.some(trigger => {
+    return node.featureDetectionTriggers.some((trigger) => {
       const result = featureDetectionResults[trigger];
       return result === true;
     });
@@ -205,17 +229,20 @@ export class NodeRegistry {
    */
   getExecutionStats(plan: NodeExecutionPlan): any {
     const nodesByPriority = new Map<number, number>();
-    
+
     for (const group of plan.parallelGroups) {
       for (const node of group) {
-        nodesByPriority.set(node.priority, (nodesByPriority.get(node.priority) || 0) + 1);
+        nodesByPriority.set(
+          node.priority,
+          (nodesByPriority.get(node.priority) || 0) + 1,
+        );
       }
     }
 
     return {
       totalNodes: plan.totalNodes,
       parallelGroups: plan.parallelGroups.length,
-      maxParallelNodes: Math.max(...plan.parallelGroups.map(g => g.length)),
+      maxParallelNodes: Math.max(...plan.parallelGroups.map((g) => g.length)),
       averageParallelNodes: plan.totalNodes / plan.parallelGroups.length,
       nodesByPriority: Object.fromEntries(nodesByPriority),
     };

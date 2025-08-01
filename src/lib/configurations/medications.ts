@@ -200,6 +200,18 @@ export default {
               type: "string",
               description: "Date prescription was written",
             },
+            therapeuticClass: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Therapeutic classes: antibiotic, analgesic, antihypertensive, etc.",
+            },
+            searchTerms: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Search-optimized terms: generic names, brand names, drug classes, indications",
+            },
           },
           required: ["medicationName", "dosage", "route", "form"],
         },
@@ -286,6 +298,18 @@ export default {
             notes: {
               type: "string",
               description: "Additional notes about this medication",
+            },
+            therapeuticClass: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Therapeutic classes: antibiotic, analgesic, antihypertensive, etc.",
+            },
+            searchTerms: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Search-optimized terms: generic names, brand names, drug classes, indications",
             },
           },
           required: ["medicationName"],

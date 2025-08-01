@@ -65,6 +65,28 @@ export default {
         description:
           "Date of the measurement or lab test in the format YYYY-MM-DD. Derive date from context. If the date is not available, leave empty.",
       },
+      labCategory: {
+        type: "string",
+        enum: [
+          "hematology",
+          "chemistry",
+          "immunology",
+          "microbiology",
+          "molecular",
+          "toxicology",
+          "endocrinology",
+          "cardiology",
+          "oncology",
+          "genetics",
+        ],
+        description: "Laboratory category for classification",
+      },
+      searchTerms: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Search-optimized terms: LOINC codes, test abbreviations, medical terms, biomarkers",
+      },
     },
     required: ["signal", "date", "value", "valueType", "unit", "reference"],
   },

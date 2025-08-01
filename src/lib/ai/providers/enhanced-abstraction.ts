@@ -10,9 +10,9 @@ import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import type { Content, TokenUsage } from "$lib/ai/types.d";
 import { modelConfig, type FlowType } from "$lib/config/model-config";
 import { log } from "$lib/logging/logger";
-import { 
-  isVerboseAILoggingEnabled, 
-  isAIResponseLoggingEnabled 
+import {
+  isVerboseAILoggingEnabled,
+  isAIResponseLoggingEnabled,
 } from "$lib/config/logging-config";
 import { workflowRecorder } from "$lib/debug/workflow-recorder";
 
@@ -59,11 +59,11 @@ export class EnhancedAIProvider {
     // 1. Use schema.name if it exists
     // 2. Fallback to "extractor" for backward compatibility
     // 3. Last resort: "extract_data"
-    
+
     if (schema.name && schema.name.trim()) {
       return schema.name;
     }
-    
+
     aiLogger.warn('Schema missing name field, using fallback "extractor"');
     return "extractor";
   }
@@ -73,7 +73,7 @@ export class EnhancedAIProvider {
    */
   private normalizeSchema(schema: FunctionDefinition): FunctionDefinition {
     const functionName = this.resolveFunctionName(schema);
-    
+
     return {
       ...schema,
       name: functionName,
@@ -90,7 +90,7 @@ export class EnhancedAIProvider {
     options: AnalysisOptions = {},
   ): Promise<any> {
     const startTime = Date.now();
-    const flowType = options.flowType || 'medical_analysis';
+    const flowType = options.flowType || "medical_analysis";
 
     // CRITICAL: Prevent AI calls during replay mode
     if (workflowRecorder.isReplayMode()) {
@@ -99,31 +99,48 @@ export class EnhancedAIProvider {
         flowType,
         replayFile: replayFilePath,
         schemaName: schema.name,
-        stack: new Error().stack
+        stack: new Error().stack,
       });
-      throw new Error(`AI calls are not allowed during replay mode. Replay file: ${replayFilePath}. This suggests the replay mechanism is not working correctly.`);
+      throw new Error(
+        `AI calls are not allowed during replay mode. Replay file: ${replayFilePath}. This suggests the replay mechanism is not working correctly.`,
+      );
     }
 
     try {
       // Emit progress: Starting AI analysis
-      options.progressCallback?.(flowType, 0, `Initializing ${flowType} with AI provider`);
+      options.progressCallback?.(
+        flowType,
+        0,
+        `Initializing ${flowType} with AI provider`,
+      );
 
       // Get model configuration for this flow
-      const { provider, modelInfo, config } = modelConfig.getModelForFlow(flowType);
-      
-      options.progressCallback?.(flowType, 10, `Configured ${provider} provider`);
-      
+      const { provider, modelInfo, config } =
+        modelConfig.getModelForFlow(flowType);
+
+      options.progressCallback?.(
+        flowType,
+        10,
+        `Configured ${provider} provider`,
+      );
+
       // Normalize schema with proper function name
       const normalizedSchema = this.normalizeSchema(schema);
       const functionName = normalizedSchema.name;
 
-      aiLogger.info(`Using function "${functionName}" with provider "${provider}"`);
+      aiLogger.info(
+        `Using function "${functionName}" with provider "${provider}"`,
+      );
 
       // Get API key
       const apiKey = modelConfig.getProviderApiKey(provider);
-      
-      options.progressCallback?.(flowType, 30, `Sending request to ${provider} AI`);
-      
+
+      options.progressCallback?.(
+        flowType,
+        30,
+        `Sending request to ${provider} AI`,
+      );
+
       // Execute with the appropriate provider
       const result = await this.executeWithProvider(
         provider,
@@ -136,10 +153,14 @@ export class EnhancedAIProvider {
           apiKey,
           temperature: options.temperature ?? modelInfo.temperature,
           maxTokens: modelInfo.max_tokens,
-        }
+        },
       );
 
-      options.progressCallback?.(flowType, 80, `Processing ${provider} AI response`);
+      options.progressCallback?.(
+        flowType,
+        80,
+        `Processing ${provider} AI response`,
+      );
 
       // Log the actual AI response for debugging (only if enabled)
       if (isAIResponseLoggingEnabled()) {
@@ -148,7 +169,7 @@ export class EnhancedAIProvider {
           functionName,
           resultPreview: JSON.stringify(result).substring(0, 300) + "...",
           resultKeys: Object.keys(result || {}),
-          hasResult: !!result
+          hasResult: !!result,
         });
       }
 
@@ -157,30 +178,49 @@ export class EnhancedAIProvider {
         aiLogger.trace(`${provider} full response`, {
           flowType,
           functionName,
-          fullResult: result
+          fullResult: result,
         });
       }
 
       const executionTime = Date.now() - startTime;
       const tokensUsed = tokenUsage[schema.description] || 0;
-      const cost = modelConfig.calculateCost(provider, modelInfo.model_id.replace('gpt-4o-2024-08-06', 'gpt4'), tokensUsed);
+      const cost = modelConfig.calculateCost(
+        provider,
+        modelInfo.model_id.replace("gpt-4o-2024-08-06", "gpt4"),
+        tokensUsed,
+      );
 
       // Log usage for monitoring
-      modelConfig.logModelUsage(flowType, provider, modelInfo.model_id, tokensUsed, cost, executionTime);
+      modelConfig.logModelUsage(
+        flowType,
+        provider,
+        modelInfo.model_id,
+        tokensUsed,
+        cost,
+        executionTime,
+      );
 
       aiLogger.info(`${provider} analysis (${flowType}) completed`, {
         executionTime,
         tokensUsed,
         cost: cost.toFixed(4),
         functionName,
-        flowType
+        flowType,
       });
 
-      options.progressCallback?.(flowType, 100, `${flowType} completed successfully`);
+      options.progressCallback?.(
+        flowType,
+        100,
+        `${flowType} completed successfully`,
+      );
 
       return result;
     } catch (error) {
-      options.progressCallback?.(flowType, 0, `${flowType} failed: ${error instanceof Error ? error.message : String(error)}`);
+      options.progressCallback?.(
+        flowType,
+        0,
+        `${flowType} failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       aiLogger.error(`Enhanced provider analysis (${flowType}) failed:`, error);
       throw error;
     }
@@ -201,15 +241,15 @@ export class EnhancedAIProvider {
     },
   ): Promise<any> {
     switch (provider) {
-      case 'openai':
+      case "openai":
         return this.executeOpenAI(content, schema, tokenUsage, options);
-      
-      case 'google':
+
+      case "google":
         return this.executeGemini(content, schema, tokenUsage, options);
-      
-      case 'anthropic':
+
+      case "anthropic":
         return this.executeClaude(content, schema, tokenUsage, options);
-      
+
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
@@ -237,7 +277,7 @@ export class EnhancedAIProvider {
       function: functionName,
       language,
       temperature: options.temperature || 0,
-      maxTokens: options.maxTokens
+      maxTokens: options.maxTokens,
     });
 
     const model = new ChatOpenAI({
@@ -245,8 +285,10 @@ export class EnhancedAIProvider {
       apiKey: options.apiKey,
       temperature: options.temperature || 0,
       maxTokens: options.maxTokens,
-      timeout: options.timeoutMs || modelConfig.getPerformanceSettings().timeout_ms,
-      maxRetries: options.maxRetries || modelConfig.getPerformanceSettings().max_retries,
+      timeout:
+        options.timeoutMs || modelConfig.getPerformanceSettings().timeout_ms,
+      maxRetries:
+        options.maxRetries || modelConfig.getPerformanceSettings().max_retries,
       callbacks: [
         {
           handleLLMEnd(output, runId, parentRunId, tags) {
@@ -257,7 +299,7 @@ export class EnhancedAIProvider {
               tokens,
               runId,
               model: options.modelId,
-              function: functionName
+              function: functionName,
             });
           },
         },
@@ -287,12 +329,15 @@ export class EnhancedAIProvider {
       model: options.modelId,
       language: language,
       functions: [schema],
-      function_call: { name: functionName }
+      function_call: { name: functionName },
     };
     //console.log("AI REQUEST:", JSON.stringify(requestData, null, 2));
 
     const requestStartTime = Date.now();
-    const result = await modelWithoutParser.invoke([systemMessage, humanMessage]);
+    const result = await modelWithoutParser.invoke([
+      systemMessage,
+      humanMessage,
+    ]);
     const requestDuration = Date.now() - requestStartTime;
 
     // Record AI request for debugging if recording is enabled
@@ -303,7 +348,7 @@ export class EnhancedAIProvider {
         requestData,
         result,
         tokenUsage,
-        requestDuration
+        requestDuration,
       );
     }
 
@@ -311,18 +356,18 @@ export class EnhancedAIProvider {
     let parsedResult = result;
     if (result?.additional_kwargs?.function_call) {
       const functionCallData = result.additional_kwargs.function_call;
-      
+
       try {
         parsedResult = JSON.parse(functionCallData.arguments);
       } catch (parseError) {
         aiLogger.error("Failed to parse function call arguments:", {
-          error: parseError instanceof Error ? parseError.message : 'Unknown error',
-          functionName: functionCallData.name
+          error:
+            parseError instanceof Error ? parseError.message : "Unknown error",
+          functionName: functionCallData.name,
         });
         parsedResult = result;
       }
     }
-
 
     return parsedResult;
   }
@@ -347,11 +392,11 @@ export class EnhancedAIProvider {
       model: options.modelId,
       function: functionName,
       language,
-      temperature: options.temperature || 0
+      temperature: options.temperature || 0,
     });
 
     const model = new ChatGoogleGenerativeAI({
-      model: options.modelId.replace('gpt-4o-2024-08-06', 'gemini-pro-vision'), // Map to actual Gemini model
+      model: options.modelId.replace("gpt-4o-2024-08-06", "gemini-pro-vision"), // Map to actual Gemini model
       apiKey: options.apiKey,
       temperature: options.temperature || 0,
       callbacks: [
@@ -364,7 +409,7 @@ export class EnhancedAIProvider {
               estimatedTokens,
               runId,
               model: options.modelId,
-              function: functionName
+              function: functionName,
             });
           },
         },
@@ -422,11 +467,14 @@ export class EnhancedAIProvider {
       function: functionName,
       language,
       temperature: options.temperature || 0,
-      maxTokens: options.maxTokens
+      maxTokens: options.maxTokens,
     });
 
     const model = new ChatAnthropic({
-      model: options.modelId.replace('gpt-4o-2024-08-06', 'claude-3-sonnet-20240229'), // Map to actual Claude model
+      model: options.modelId.replace(
+        "gpt-4o-2024-08-06",
+        "claude-3-sonnet-20240229",
+      ), // Map to actual Claude model
       apiKey: options.apiKey,
       temperature: options.temperature || 0,
       maxTokens: options.maxTokens,
@@ -440,7 +488,7 @@ export class EnhancedAIProvider {
               estimatedTokens,
               runId,
               model: options.modelId,
-              function: functionName
+              function: functionName,
             });
           },
         },
@@ -449,7 +497,9 @@ export class EnhancedAIProvider {
 
     // Claude uses schema-in-prompt approach (function name is less critical)
     const systemMessage = new SystemMessage({
-      content: this.createSystemMessage(language) + this.createClaudeSchemaInstructions(schema, functionName),
+      content:
+        this.createSystemMessage(language) +
+        this.createClaudeSchemaInstructions(schema, functionName),
     });
 
     const humanMessage = new HumanMessage({
@@ -471,7 +521,10 @@ export class EnhancedAIProvider {
   /**
    * Create Claude-specific schema instructions
    */
-  private createClaudeSchemaInstructions(schema: FunctionDefinition, functionName: string): string {
+  private createClaudeSchemaInstructions(
+    schema: FunctionDefinition,
+    functionName: string,
+  ): string {
     return `\n\nYou must analyze the medical content and respond with a JSON object that follows this schema for the "${functionName}" function:\n\n${JSON.stringify(schema.parameters, null, 2)}\n\nRespond ONLY with the JSON object, no additional text.`;
   }
 
@@ -499,11 +552,13 @@ export class EnhancedAIProvider {
         return JSON.parse(result.additional_kwargs.function_call.arguments);
       }
 
-      throw new Error("Unable to parse Gemini result - no valid function call found");
+      throw new Error(
+        "Unable to parse Gemini result - no valid function call found",
+      );
     } catch (error) {
       aiLogger.error("Failed to parse Gemini result:", {
         error,
-        rawResult: JSON.stringify(result, null, 2)
+        rawResult: JSON.stringify(result, null, 2),
       });
       throw error;
     }
@@ -520,7 +575,7 @@ export class EnhancedAIProvider {
         if (jsonMatch) {
           return JSON.parse(jsonMatch[0]);
         }
-        
+
         // Try parsing the entire content as JSON
         return JSON.parse(result.content);
       }
@@ -529,7 +584,7 @@ export class EnhancedAIProvider {
     } catch (error) {
       aiLogger.error("Failed to parse Claude result:", {
         error,
-        rawResult: JSON.stringify(result, null, 2)
+        rawResult: JSON.stringify(result, null, 2),
       });
       throw error;
     }
@@ -560,8 +615,12 @@ export class EnhancedAIProvider {
     schema: FunctionDefinition,
     tokenUsage: TokenUsage,
     language: string = "English",
-    flowType: FlowType = 'medical_analysis',
-    progressCallback?: (stage: string, progress: number, message: string) => void
+    flowType: FlowType = "medical_analysis",
+    progressCallback?: (
+      stage: string,
+      progress: number,
+      message: string,
+    ) => void,
   ): Promise<any> {
     return this.analyzeDocument(content, schema, tokenUsage, {
       language,
@@ -580,8 +639,15 @@ export async function fetchGptEnhanced(
   schema: FunctionDefinition,
   tokenUsage: TokenUsage,
   language: string = "English",
-  flowType: FlowType = 'medical_analysis',
-  progressCallback?: (stage: string, progress: number, message: string) => void
+  flowType: FlowType = "medical_analysis",
+  progressCallback?: (stage: string, progress: number, message: string) => void,
 ): Promise<any> {
-  return enhancedAIProvider.fetchGptCompatible(content, schema, tokenUsage, language, flowType, progressCallback);
+  return enhancedAIProvider.fetchGptCompatible(
+    content,
+    schema,
+    tokenUsage,
+    language,
+    flowType,
+    progressCallback,
+  );
 }

@@ -17,7 +17,7 @@
     import ImportProfile from './ImportProfile.svelte';
     import ScreenOverlay from '$components/ui/ScreenOverlay.svelte';
     import LoaderThinking from '$components/ui/LoaderThinking.svelte';
-    import { updateSignals } from '$lib/health/signals';
+    import { processHealthData } from '$lib/health/signals';
     import DocumentTile from '$components/documents/DocumentTile.svelte';
     
     // Attachment processing imports
@@ -487,8 +487,10 @@
                 // 3. add documents to the database
                 const newSavedDocument = await addDocument(documentNew);
                 console.log('newSavedDocument', newSavedDocument);
-                // 4. update the signalas as well
-                if (signals.length > 0) await updateSignals(signals, profileDetected.profile.id, newSavedDocument.id);
+                
+                // 4. process all health data including META_HISTORIES entries
+                // Pass the entire document content instead of just signals array
+                await processHealthData(document.content, profileDetected.profile.id, newSavedDocument.id);
 
                 // remove the document from the list
                 profileDetected.reports = profileDetected.reports.slice(1);

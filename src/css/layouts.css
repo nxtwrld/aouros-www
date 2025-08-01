@@ -76,9 +76,12 @@ main.layout.chat-open section.layout-content {
 @media (max-width: 768px) {
   /* Smooth transitions for viewer state changes */
   section.layout-viewer {
-    transition: transform 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease;
+    transition:
+      transform 0.3s ease-out,
+      height 0.3s ease-out,
+      opacity 0.3s ease;
   }
-  
+
   /* Ensure content area has smooth transitions too */
   section.layout-content {
     transition: padding-bottom 0.3s ease-out;
@@ -91,11 +94,11 @@ main.layout.chat-open section.layout-content {
   main.layout.-viewer section.layout-content {
     margin-left: 0;
   }
-  
+
   main.layout.chat-open section.layout-content {
     margin-right: 0;
   }
-  
+
   /* Viewer becomes bottom sheet on mobile */
   section.layout-viewer {
     position: fixed;
@@ -113,18 +116,18 @@ main.layout.chat-open section.layout-content {
     transform: translateY(0);
     z-index: 1000;
   }
-  
+
   /* Resize handle is already hidden by the rule above */
-  
+
   /* Content area adjustments */
   section.layout-content {
     padding-bottom: 20px; /* Default padding */
   }
-  
+
   main.layout.-viewer section.layout-content {
     padding-bottom: var(--mobile-viewer-height, 60vh);
   }
-  
+
   /* Mobile pull handle for bottom sheet */
   .mobile-pull-handle {
     position: absolute;
@@ -138,18 +141,18 @@ main.layout.chat-open section.layout-content {
     cursor: grab;
     touch-action: none;
   }
-  
+
   .mobile-pull-handle:active {
     cursor: grabbing;
   }
-  
+
   .pull-handle-bar {
     width: 40px;
     height: 4px;
     background: var(--color-gray-600);
     border-radius: 2px;
   }
-  
+
   /* Chat sidebar stays as overlay */
   .chat-sidebar {
     width: 100vw !important;

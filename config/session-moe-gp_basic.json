@@ -1,0 +1,21 @@
+{
+  "name": "GP Basic Analysis",
+  "description": "Essential medical analysis for general practice settings",
+  "targetAudience": "general_practitioners",
+  "complexity": "basic",
+  "experts": ["gp_core", "basic_diagnosis", "basic_inquiry"],
+  "consensus": {
+    "algorithm": "weighted_voting",
+    "expertWeights": {
+      "gp_core": 1.0,
+      "basic_diagnosis": 0.8,
+      "basic_inquiry": 0.7
+    },
+    "settings": {
+      "minimumAgreement": 0.5,
+      "conflictThreshold": 0.4,
+      "requireMajorityForCritical": false,
+      "uncertaintyThreshold": 0.6
+    }
+  }
+}

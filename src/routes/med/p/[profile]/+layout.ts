@@ -3,6 +3,7 @@ import type { LayoutLoad } from "./$types";
 import type { Profile } from "$lib/types.d";
 import { profiles, profile } from "$lib/profiles";
 import { importDocuments } from "$lib/documents";
+import { profileContextManager } from "$lib/context/integration/profile-context";
 
 export const load: LayoutLoad = async ({ parent, params, fetch }) => {
   await parent();
@@ -31,6 +32,24 @@ export const load: LayoutLoad = async ({ parent, params, fetch }) => {
   }
 
   const documents = await importDocuments(await documentsResponse.json());
+
+  // Initialize profile context with simplified medical terms approach
+  if (documents.length > 0) {
+    try {
+      await profileContextManager.initializeProfileContext(params.profile, {
+        onProgress: (status, progress) => {
+          console.log(
+            `Profile context init: ${status} ${progress ? `(${progress}%)` : ""}`,
+          );
+        },
+      });
+    } catch (error) {
+      console.warn(
+        `Failed to initialize context for profile ${params.profile}:`,
+        error,
+      );
+    }
+  }
 
   return {};
 };

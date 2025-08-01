@@ -1,0 +1,31 @@
+{
+  "name": "Comprehensive Medical Analysis",
+  "description": "Advanced multi-expert analysis for complex cases",
+  "targetAudience": "specialists",
+  "complexity": "advanced",
+  "experts": [
+    "gp_core",
+    "diagnostic_specialist",
+    "treatment_planner",
+    "differential_expert",
+    "clinical_inquiry",
+    "safety_monitor"
+  ],
+  "consensus": {
+    "algorithm": "weighted_voting",
+    "expertWeights": {
+      "gp_core": 0.8,
+      "diagnostic_specialist": 1.0,
+      "treatment_planner": 0.9,
+      "differential_expert": 0.95,
+      "clinical_inquiry": 0.85,
+      "safety_monitor": 1.1
+    },
+    "settings": {
+      "minimumAgreement": 0.6,
+      "conflictThreshold": 0.3,
+      "requireMajorityForCritical": true,
+      "uncertaintyThreshold": 0.5
+    }
+  }
+}

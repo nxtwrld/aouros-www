@@ -4,7 +4,7 @@ import { get } from "svelte/store";
 
 const defaultLocale = "en";
 
-const lanaguages = {
+const languages = {
   en: "English",
   cs: "Czech",
   de: "German",
@@ -28,7 +28,8 @@ function getLanguage() {
 }
 
 function getLanguageEnglishName() {
-  return lanaguages[getLocale()];
+  const locale = getLocale();
+  return locale ? languages[locale as keyof typeof languages] : "English";
 }
 
 export { _, t, getLocale, getLanguage, getLanguageEnglishName };

@@ -69,12 +69,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Technology Stack & Dependencies
 
 ### Core Framework
+
 - **SvelteKit 2.x** with Svelte 5.x (uses new runes syntax)
 - **Vite** for build tooling and development server
 - **TypeScript** with strict type checking enabled
 - **Vercel** deployment adapter with 300s timeout for complex medical analysis
 
 ### AI & Language Processing
+
 - **LangChain** ecosystem (@langchain/core, @langchain/openai, @langchain/anthropic, @langchain/google-genai)
 - **LangGraph** (@langchain/langgraph) for orchestrating complex AI workflows
 - **OpenAI GPT-4** as primary AI provider with multi-provider fallback support
@@ -82,23 +84,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Whisper** integration for offline transcription capabilities
 
 ### Audio Processing
+
 - **@ricky0123/vad-web** for Voice Activity Detection
 - **Howler.js** for audio playback and sound effects
 - **LameJS** for MP3 encoding
 - **Meyda** for audio feature extraction and analysis
 
 ### UI & Styling
+
 - **Custom CSS architecture** with modular stylesheets (no external CSS framework)
 - **CSS custom properties** for theming and consistent spacing
 - **Responsive design** with mobile-first approach
 - **3D visualization** using Three.js for anatomical models
 
 ### Database & Storage
+
 - **Supabase** for authentication, database, and real-time features
 - **Vercel Blob** for file storage and document management
 - **Local storage** for session persistence and user preferences
 
 ### Development & Testing
+
 - **Playwright** for end-to-end testing
 - **Vitest** for unit testing
 - **ESLint** and **Prettier** for code formatting
@@ -107,24 +113,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Code Patterns & Conventions
 
 ### Component Architecture
+
 - **Feature-based organization**: Components grouped by functionality (anatomy, charts, documents, forms, etc.)
 - **Svelte 5 runes syntax**: Use `$state()`, `$props()`, `$bindable()` for reactive state management
 - **Snippet-based composition**: Components use `children?: import('svelte').Snippet` for content projection
 - **Event dispatcher pattern**: Components emit custom events for parent communication
 
 ### TypeScript Patterns
+
 - **Strict typing**: All code uses TypeScript with strict compiler options
 - **Interface-first design**: Types defined in `.d.ts` files for reusability
 - **Enum usage**: Medical data uses TypeScript enums (e.g., `BloodType`, `SexEnum`)
 - **Generic types**: AI providers use generic interfaces for flexibility
 
 ### State Management
+
 - **Centralized stores**: Global state managed via Svelte stores in `src/lib/*/store.ts`
 - **Session management**: Real-time sessions use EventEmitter pattern with in-memory storage
 - **Local storage persistence**: User preferences and session data persisted locally
 - **Supabase integration**: Auth state synchronized with Supabase session management
 
 ### API Design
+
 - **RESTful conventions**: API routes follow `/v1/` versioning pattern
 - **Type-safe endpoints**: All API responses use TypeScript interfaces
 - **Error handling**: Standardized error responses with proper HTTP status codes
@@ -133,17 +143,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Configuration System
 
 ### Feature Flags
+
 - **Environment-based flags**: Features controlled via `PUBLIC_ENABLE_*` environment variables
 - **Runtime toggles**: Feature flags accessible at `src/lib/config/feature-flags.ts`
 - **Key features**: Enhanced signals, LangGraph workflows, multi-provider AI, external validation
 
 ### AI Model Configuration
+
 - **YAML-based config**: AI models defined in `src/lib/config/models.yaml`
 - **Provider abstraction**: Support for OpenAI, Google, Anthropic with fallback chains
 - **Flow-specific models**: Different models for extraction, analysis, feature detection, etc.
 - **Cost optimization**: Automatic model selection based on task complexity
 
 ### Medical Configuration Schema
+
 - **FHIR compliance**: All medical data structures follow FHIR standards
 - **Structured schemas**: Medical configurations in `src/lib/configurations/` with TypeScript interfaces
 - **Multi-language support**: Schemas support Czech, German, and English localization
@@ -152,21 +165,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Component Development Guidelines
 
 ### Styling Conventions
+
 - **CSS custom properties**: Use `--color-*`, `--font-*`, `--ui-*` variables for consistency
 - **Modular CSS**: Separate stylesheets for different component types (buttons, forms, documents, etc.)
 - **No external frameworks**: Custom CSS architecture without Bootstrap, Tailwind, etc.
 - **Responsive design**: Mobile-first approach with consistent spacing units
 
 ### Component Structure
+
 ```svelte
 <script lang="ts">
     import { createBubbler } from 'svelte/legacy';
     const bubble = createBubbler();
-    
+
     interface Props {
         // Define props interface
     }
-    
+
     let { prop1, prop2 }: Props = $props();
     let localState = $state(initialValue);
 </script>
@@ -182,6 +197,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 
 ### Form Components
+
 - **Unified Input component**: Single `Input.svelte` handles multiple input types
 - **Common UI components**: Placed in the `src/components/ui`
 - **Validation patterns**: Client-side validation with visual feedback
@@ -190,7 +206,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Styling
 
-- **common styles**: All common styles are loaded from  `src/css`
+- **common styles**: All common styles are loaded from `src/css`
 - **css varaibles**: The common css variables are loaded from `src/css/core.css`
 
 ### Localisation
@@ -204,12 +220,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Database & API Patterns
 
 ### Supabase Integration
+
 - **Server-side client**: Created in `hooks.server.ts` with cookie-based session management
 - **Client-side client**: Managed via `src/lib/supabase.ts` with client registry pattern
 - **Protected routes**: Authentication checks in `+layout.server.ts` files
 - **Session validation**: Use `safeGetSession()` for JWT validation
 
 ### API Route Structure
+
 ```typescript
 export const POST: RequestHandler = async ({
   request,
@@ -218,16 +236,17 @@ export const POST: RequestHandler = async ({
   // Auth check
   const { session } = await safeGetSession();
   if (!session) error(401, { message: "Unauthorized" });
-  
+
   // Request processing
   const data = await request.json();
-  
+
   // Response
   return json(result);
 };
 ```
 
 ### Real-time Features
+
 - **SSE endpoints**: Server-Sent Events for streaming AI analysis results
 - **Session tracking**: Real-time session management with EventEmitter updates
 - **Progress tracking**: Incremental updates for long-running operations
@@ -235,12 +254,14 @@ export const POST: RequestHandler = async ({
 ## Security & Privacy
 
 ### Data Protection
+
 - **Multi-layer encryption**: AES/RSA encryption for sensitive health data
 - **Public key cryptography**: User-controlled encryption keys
 - **Secure storage**: Encrypted data storage with Supabase RLS policies
 - **Session security**: Secure cookie handling with proper expiration
 
 ### Authentication Flow
+
 - **Supabase Auth**: Email/password authentication with session management
 - **Protected routes**: Server-side authentication checks
 - **Client-side guards**: Route protection with redirect handling
@@ -249,12 +270,14 @@ export const POST: RequestHandler = async ({
 ## Performance & Optimization
 
 ### Build Configuration
+
 - **Vite optimization**: Custom excludes for ONNX runtime and large dependencies
 - **Static copying**: Automatic copying of WASM files and worker scripts
 - **Code splitting**: Lazy loading for heavy components and AI models
 - **Bundle analysis**: Optimized imports and tree shaking
 
 ### Runtime Performance
+
 - **Lazy loading**: PDF.js and other heavy libraries loaded on demand
 - **Worker threads**: Audio processing and VAD in web workers
 - **Caching strategies**: Local storage caching for frequently accessed data
@@ -263,12 +286,14 @@ export const POST: RequestHandler = async ({
 ## Error Handling & Logging
 
 ### Centralized Logging
+
 - **Namespace-based logging**: Organized by feature (Session, Audio, Analysis, etc.)
 - **Environment awareness**: Different log levels for development vs production
 - **Runtime configuration**: Logging configurable via `window.logger` object
 - **Structured logging**: Consistent format with timestamps and context
 
 ### Error Handling Patterns
+
 - **Type-safe errors**: Standardized error interfaces with proper HTTP status codes
 - **Graceful degradation**: Fallback mechanisms for AI provider failures
 - **User feedback**: Clear error messages with actionable guidance
@@ -277,12 +302,14 @@ export const POST: RequestHandler = async ({
 ## Development Workflow
 
 ### Code Quality
+
 - **Pre-commit hooks**: Automated formatting and linting
 - **Type checking**: Strict TypeScript compilation with `svelte-check`
 - **Test coverage**: Unit and integration tests with clear separation
 - **Documentation**: Comprehensive inline documentation for complex logic
 
 ### Deployment
+
 - **Vercel deployment**: Automatic deployments with preview environments
 - **Environment management**: Separate staging and production configurations
 - **Performance monitoring**: Built-in analytics and performance tracking

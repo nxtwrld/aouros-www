@@ -24,16 +24,16 @@ export const POST: RequestHandler = async ({ request }) => {
   // Create SSE stream for real-time progress
   const stream = new ReadableStream({
     async start(controller) {
-      log.sse.info("SSE report analysis stream started", { 
+      log.sse.info("SSE report analysis stream started", {
         hasImages: !!data.images,
         hasText: !!data.text,
         language: data.language,
-        useWorkflow: LANGGRAPH_WORKFLOW
+        useWorkflow: LANGGRAPH_WORKFLOW,
       });
 
       const sendEvent = (event: ProgressEvent) => {
         const message = `data: ${JSON.stringify(event)}\n\n`;
-        
+
         // Log all progress events for debugging (only if enabled)
         if (isSSEProgressDebuggingEnabled()) {
           log.sse.debug("Sending SSE progress event", {
@@ -41,10 +41,10 @@ export const POST: RequestHandler = async ({ request }) => {
             stage: event.stage,
             progress: event.progress,
             message: event.message,
-            hasData: !!event.data
+            hasData: !!event.data,
           });
         }
-        
+
         try {
           controller.enqueue(new TextEncoder().encode(message));
         } catch (err) {
@@ -78,17 +78,20 @@ export const POST: RequestHandler = async ({ request }) => {
             },
             sendEvent, // Pass the progress callback
           );
-          
+
           // Convert LangGraph workflow result to ReportAnalysis format
           // This ensures compatibility with SSE client expectations
-          
+
           console.log("📦 SSE: Processing workflow result for client");
-          
+
           // Use structured data from multi-node processing if available, otherwise fall back to legacy
-          const useStructuredData = workflowResult.report && typeof workflowResult.report === 'object' && !Array.isArray(workflowResult.report);
-          
+          const useStructuredData =
+            workflowResult.report &&
+            typeof workflowResult.report === "object" &&
+            !Array.isArray(workflowResult.report);
+
           let actualContent;
-          
+
           if (useStructuredData) {
             console.log("✅ Using structured report");
             // Use the structured data from multi-node processing
@@ -97,49 +100,63 @@ export const POST: RequestHandler = async ({ request }) => {
               // Ensure backward compatibility fields are present
               type: workflowResult.report?.type || "report",
               category: workflowResult.report?.category || "report",
-              isMedical: workflowResult.report?.isMedical !== undefined ? workflowResult.report.isMedical : true,
+              isMedical:
+                workflowResult.report?.isMedical !== undefined
+                  ? workflowResult.report.isMedical
+                  : true,
             };
           } else {
             console.log("⚠️ Falling back to legacy structure");
             // Fall back to legacy structure
             const medicalAnalysis = workflowResult.medicalAnalysis;
-            const analysisContent = medicalAnalysis?.content || workflowResult.content || {};
+            const analysisContent =
+              medicalAnalysis?.content || workflowResult.content || {};
             actualContent = analysisContent;
           }
-          
+
           result = {
             // Preserve the original ReportAnalysis structure if it exists
             type: actualContent.type || "report",
-            fhirType: actualContent.fhirType || "DiagnosticReport", 
+            fhirType: actualContent.fhirType || "DiagnosticReport",
             fhir: actualContent.fhir || {},
             category: actualContent.category || "report",
-            isMedical: actualContent.isMedical !== undefined ? actualContent.isMedical : true,
+            isMedical:
+              actualContent.isMedical !== undefined
+                ? actualContent.isMedical
+                : true,
             tags: actualContent.tags || [],
             hasPrescription: actualContent.hasPrescription || false,
             hasImmunization: actualContent.hasImmunization || false,
             hasLabOrVitals: actualContent.hasLabOrVitals || false,
             content: actualContent.content || data.text,
-            
+
             // Use structured report data if available, otherwise fall back
-            report: useStructuredData ? workflowResult.report : (actualContent.report || [{ type: "text", text: actualContent.text || data.text }]),
-            
+            report: useStructuredData
+              ? workflowResult.report
+              : actualContent.report || [
+                  { type: "text", text: actualContent.text || data.text },
+                ],
+
             text: actualContent.text || data.text || "",
-            tokenUsage: workflowResult.tokenUsage || actualContent.tokenUsage || { total: 0 },
-            
+            tokenUsage: workflowResult.tokenUsage ||
+              actualContent.tokenUsage || { total: 0 },
+
             // Include additional fields from analysis if available
             results: actualContent.results,
             recommendations: actualContent.recommendations,
-            
+
             // Include enhanced fields from workflow
             documentType: actualContent.documentType,
             schemaUsed: actualContent.schemaUsed,
             confidence: actualContent.confidence,
             processingComplexity: actualContent.processingComplexity,
-            enhancedFields: actualContent.enhancedFields
+            enhancedFields: actualContent.enhancedFields,
           };
-          
-          console.log(`📤 SSE: Sending ${useStructuredData ? 'structured' : 'legacy'} report to client`);
-          
+
+          console.log(
+            `📤 SSE: Sending ${useStructuredData ? "structured" : "legacy"} report to client`,
+          );
+
           //log.analysis.info("LangGraph workflow result converted to ReportAnalysis format", workflowResult);
         } else {
           // Fall back to existing analyze function with manual progress events
@@ -204,7 +221,7 @@ export const POST: RequestHandler = async ({ request }) => {
             timestamp: Date.now(),
           });
         }
-        
+
         // For LangGraph workflow, we need to send the completion event with the converted result
         if (LANGGRAPH_WORKFLOW) {
           sendEvent({

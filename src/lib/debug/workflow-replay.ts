@@ -6,7 +6,7 @@ import { sleep } from "$lib/utils";
 
 /**
  * Workflow Replay System
- * 
+ *
  * Provides step-by-step replay functionality for recorded workflows:
  * - Load and replay complete workflows
  * - Step through individual workflow steps
@@ -45,7 +45,7 @@ export class WorkflowReplay {
     this.recording = workflowRecorder.loadRecording(filePath);
     this.currentStepIndex = 0;
     this.replayResults = [];
-    
+
     if (!this.recording) {
       log.analysis.error("Failed to load workflow for replay", { filePath });
       return false;
@@ -55,7 +55,7 @@ export class WorkflowReplay {
       recordingId: this.recording.recordingId,
       phase: this.recording.phase,
       totalSteps: this.recording.steps.length,
-      recordedAt: this.recording.timestamp
+      recordedAt: this.recording.timestamp,
     });
 
     return true;
@@ -76,7 +76,7 @@ export class WorkflowReplay {
       language: this.recording.input.language,
       content: [],
       tokenUsage: { total: 0 },
-      metadata: this.recording.input.metadata
+      metadata: this.recording.input.metadata,
     };
   }
 
@@ -84,7 +84,10 @@ export class WorkflowReplay {
    * Get the next step in the workflow
    */
   getNextStep(): WorkflowStep | null {
-    if (!this.recording || this.currentStepIndex >= this.recording.steps.length) {
+    if (
+      !this.recording ||
+      this.currentStepIndex >= this.recording.steps.length
+    ) {
       return null;
     }
 
@@ -102,14 +105,14 @@ export class WorkflowReplay {
       stepId: step.stepId,
       stepName: step.stepName,
       index: this.currentStepIndex + 1,
-      total: this.recording!.steps.length
+      total: this.recording!.steps.length,
     });
 
     const result: ReplayResult = {
       stepId: step.stepId,
       stepName: step.stepName,
       recordedState: step.outputState,
-      success: true
+      success: true,
     };
 
     this.replayResults.push(result);
@@ -121,7 +124,9 @@ export class WorkflowReplay {
   /**
    * Replay the entire workflow and reconstruct the final state
    */
-  async replayWorkflowWithStateReconstruction(options: ReplayOptions = {}): Promise<{
+  async replayWorkflowWithStateReconstruction(
+    options: ReplayOptions = {},
+  ): Promise<{
     finalState: Partial<DocumentProcessingState>;
     replayResults: ReplayResult[];
     recording: WorkflowRecording;
@@ -133,13 +138,13 @@ export class WorkflowReplay {
     // Start with the initial state
     let currentState = this.getInitialState();
     const results: ReplayResult[] = [];
-    
-    const { 
-      stepDelay, 
-      stopAtStep, 
-      skipSteps = [], 
+
+    const {
+      stepDelay,
+      stopAtStep,
+      skipSteps = [],
       verbose = false,
-      useEnvironmentDelay = true 
+      useEnvironmentDelay = true,
     } = options;
 
     // Determine the delay to use
@@ -156,7 +161,7 @@ export class WorkflowReplay {
       stepDelay: delayMs,
       stopAtStep,
       skipSteps,
-      useEnvironmentDelay
+      useEnvironmentDelay,
     });
 
     // Replay each step and build up the state progressively
@@ -165,7 +170,9 @@ export class WorkflowReplay {
 
       // Check if we should stop at this step
       if (stopAtStep && step.stepName === stopAtStep) {
-        log.analysis.info("Stopping replay at requested step", { stepName: stopAtStep });
+        log.analysis.info("Stopping replay at requested step", {
+          stepName: stopAtStep,
+        });
         break;
       }
 
@@ -182,7 +189,7 @@ export class WorkflowReplay {
           stepId: step.stepId,
           stepName: step.stepName,
           duration: step.duration,
-          tokenUsage: step.tokenUsage.total
+          tokenUsage: step.tokenUsage.total,
         });
       }
 
@@ -190,21 +197,21 @@ export class WorkflowReplay {
       const result = this.executeNextStep();
       if (result) {
         results.push(result);
-        
+
         // Apply the recorded outputState to build the progressive state
         // This reconstructs the state as it would have been after each step
         currentState = {
           ...currentState,
-          ...result.recordedState
+          ...result.recordedState,
         };
 
         if (verbose) {
           log.analysis.debug("State updated after step", {
             stepName: step.stepName,
             stateKeys: Object.keys(currentState),
-            hasSignals: !!(currentState.signals?.length),
+            hasSignals: !!currentState.signals?.length,
             hasMedicalAnalysis: !!currentState.medicalAnalysis,
-            tokenUsage: currentState.tokenUsage?.total
+            tokenUsage: currentState.tokenUsage?.total,
           });
         }
       }
@@ -217,15 +224,15 @@ export class WorkflowReplay {
 
     log.analysis.info("Workflow replay with state reconstruction completed", {
       totalSteps: results.length,
-      successful: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length,
-      finalStateKeys: Object.keys(currentState)
+      successful: results.filter((r) => r.success).length,
+      failed: results.filter((r) => !r.success).length,
+      finalStateKeys: Object.keys(currentState),
     });
 
     return {
       finalState: currentState,
       replayResults: results,
-      recording: this.recording
+      recording: this.recording,
     };
   }
 
@@ -238,12 +245,12 @@ export class WorkflowReplay {
     }
 
     const results: ReplayResult[] = [];
-    const { 
-      stepDelay, 
-      stopAtStep, 
-      skipSteps = [], 
+    const {
+      stepDelay,
+      stopAtStep,
+      skipSteps = [],
       verbose = false,
-      useEnvironmentDelay = true 
+      useEnvironmentDelay = true,
     } = options;
 
     // Determine the delay to use
@@ -262,7 +269,7 @@ export class WorkflowReplay {
       stepDelay: delayMs,
       stopAtStep,
       skipSteps,
-      useEnvironmentDelay
+      useEnvironmentDelay,
     });
 
     for (let i = 0; i < this.recording.steps.length; i++) {
@@ -270,7 +277,9 @@ export class WorkflowReplay {
 
       // Check if we should stop at this step
       if (stopAtStep && step.stepName === stopAtStep) {
-        log.analysis.info("Stopping replay at requested step", { stepName: stopAtStep });
+        log.analysis.info("Stopping replay at requested step", {
+          stepName: stopAtStep,
+        });
         break;
       }
 
@@ -287,7 +296,7 @@ export class WorkflowReplay {
           stepId: step.stepId,
           stepName: step.stepName,
           duration: step.duration,
-          tokenUsage: step.tokenUsage.total
+          tokenUsage: step.tokenUsage.total,
         });
       }
 
@@ -304,8 +313,8 @@ export class WorkflowReplay {
 
     log.analysis.info("Workflow replay completed", {
       totalSteps: results.length,
-      successful: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length
+      successful: results.filter((r) => r.success).length,
+      failed: results.filter((r) => !r.success).length,
     });
 
     return results;
@@ -317,7 +326,7 @@ export class WorkflowReplay {
   getStateAtStep(stepName: string): Partial<DocumentProcessingState> | null {
     if (!this.recording) return null;
 
-    const step = this.recording.steps.find(s => s.stepName === stepName);
+    const step = this.recording.steps.find((s) => s.stepName === stepName);
     return step ? step.outputState : null;
   }
 
@@ -327,12 +336,17 @@ export class WorkflowReplay {
   restoreToStep(stepName: string): boolean {
     if (!this.recording) return false;
 
-    const stepIndex = this.recording.steps.findIndex(s => s.stepName === stepName);
+    const stepIndex = this.recording.steps.findIndex(
+      (s) => s.stepName === stepName,
+    );
     if (stepIndex === -1) return false;
 
     this.currentStepIndex = stepIndex;
-    log.analysis.info("Workflow restored to step", { stepName, index: stepIndex });
-    
+    log.analysis.info("Workflow restored to step", {
+      stepName,
+      index: stepIndex,
+    });
+
     return true;
   }
 
@@ -350,14 +364,14 @@ export class WorkflowReplay {
       totalDuration: this.recording.totalDuration,
       totalTokenUsage: this.recording.totalTokenUsage,
       input: this.recording.input,
-      steps: this.recording.steps.map(step => ({
+      steps: this.recording.steps.map((step) => ({
         stepId: step.stepId,
         stepName: step.stepName,
         duration: step.duration,
         tokenUsage: step.tokenUsage.total,
         hasErrors: step.errors && step.errors.length > 0,
-        aiRequestsCount: step.aiRequests?.length || 0
-      }))
+        aiRequestsCount: step.aiRequests?.length || 0,
+      })),
     };
   }
 
@@ -366,18 +380,26 @@ export class WorkflowReplay {
    */
   compareStates(state1: any, state2: any): any {
     const differences: any = {};
-    
+
     // Simple deep comparison for demonstration
     // In production, you might want a more sophisticated diff algorithm
     const compare = (obj1: any, obj2: any, path: string = "") => {
       if (typeof obj1 !== typeof obj2) {
-        differences[path] = { recorded: obj1, live: obj2, type: "type_mismatch" };
+        differences[path] = {
+          recorded: obj1,
+          live: obj2,
+          type: "type_mismatch",
+        };
         return;
       }
 
       if (obj1 === null || obj2 === null) {
         if (obj1 !== obj2) {
-          differences[path] = { recorded: obj1, live: obj2, type: "null_mismatch" };
+          differences[path] = {
+            recorded: obj1,
+            live: obj2,
+            type: "null_mismatch",
+          };
         }
         return;
       }
@@ -390,15 +412,27 @@ export class WorkflowReplay {
         for (const key of allKeys) {
           const newPath = path ? `${path}.${key}` : key;
           if (!(key in obj1)) {
-            differences[newPath] = { recorded: undefined, live: obj2[key], type: "missing_in_recorded" };
+            differences[newPath] = {
+              recorded: undefined,
+              live: obj2[key],
+              type: "missing_in_recorded",
+            };
           } else if (!(key in obj2)) {
-            differences[newPath] = { recorded: obj1[key], live: undefined, type: "missing_in_live" };
+            differences[newPath] = {
+              recorded: obj1[key],
+              live: undefined,
+              type: "missing_in_live",
+            };
           } else {
             compare(obj1[key], obj2[key], newPath);
           }
         }
       } else if (obj1 !== obj2) {
-        differences[path] = { recorded: obj1, live: obj2, type: "value_mismatch" };
+        differences[path] = {
+          recorded: obj1,
+          live: obj2,
+          type: "value_mismatch",
+        };
       }
     };
 
@@ -413,7 +447,7 @@ export class WorkflowReplay {
     return {
       recording: this.recording,
       replayResults: this.replayResults,
-      summary: this.getWorkflowSummary()
+      summary: this.getWorkflowSummary(),
     };
   }
 
@@ -438,7 +472,7 @@ export function createWorkflowReplay(filePath: string): WorkflowReplay | null {
 // Helper function to replay a workflow with full state reconstruction
 export async function replayWorkflowWithStateReconstruction(
   filePath: string,
-  options: ReplayOptions = {}
+  options: ReplayOptions = {},
 ): Promise<{
   finalState: Partial<DocumentProcessingState>;
   replayResults: ReplayResult[];
@@ -448,7 +482,7 @@ export async function replayWorkflowWithStateReconstruction(
   if (!replay) {
     return null;
   }
-  
+
   return await replay.replayWorkflowWithStateReconstruction(options);
 }
 
@@ -456,15 +490,16 @@ export async function replayWorkflowWithStateReconstruction(
 export function getAvailableRecordings(): string[] {
   const fs = require("fs");
   const path = require("path");
-  
+
   const debugDir = path.join(process.cwd(), "test-data", "workflows");
-  
+
   try {
     if (!fs.existsSync(debugDir)) {
       return [];
     }
-    
-    return fs.readdirSync(debugDir)
+
+    return fs
+      .readdirSync(debugDir)
       .filter((file: string) => file.endsWith(".json"))
       .map((file: string) => path.join(debugDir, file));
   } catch (error) {

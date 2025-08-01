@@ -211,6 +211,27 @@ export interface DocumentProcessingState {
     message?: string;
   };
 
+  // Medical terms generation results
+  medicalTermsGeneration?: {
+    success?: boolean;
+    error?: string;
+    skipped?: boolean;
+    reason?: string;
+    termsCount?: number;
+    temporalType?: string;
+    timestamp: string;
+    medicalTermsData?: {
+      medicalTerms: string[];
+      temporalType: string;
+      metadata: {
+        language: string;
+        documentType: string;
+        processingDate: string;
+        extractionMethod: string;
+      };
+    };
+  };
+
   // Progress tracking methods
   emitProgress?: (
     stage: string,

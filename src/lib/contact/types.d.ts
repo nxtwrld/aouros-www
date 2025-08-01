@@ -28,4 +28,4 @@ export interface VCard {
     countryName?: string;
   }>;
   specialty?: string[];
-} 
+}

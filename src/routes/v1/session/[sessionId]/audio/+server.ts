@@ -8,7 +8,10 @@ import {
 import { transcribeAudioChunk } from "$lib/session/realtime-transcription";
 import type { PartialTranscript } from "$lib/session/manager";
 import OpenAI from "openai";
-import { OPENAI_API_KEY, OPENAI_MEDICAL_ASSISTANT_ID } from "$env/static/private";
+import {
+  OPENAI_API_KEY,
+  OPENAI_MEDICAL_ASSISTANT_ID,
+} from "$env/static/private";
 import { getFeedbackForAI } from "$lib/ai/feedback.js";
 
 // Initialize OpenAI client

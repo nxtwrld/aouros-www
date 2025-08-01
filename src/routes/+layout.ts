@@ -48,8 +48,14 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
           fetch,
         },
         cookies: {
-          getAll() {
-            return data?.cookies || [];
+          get(key: string) {
+            return data?.cookies?.find((cookie) => cookie.name === key)?.value;
+          },
+          set(key: string, value: string, options?: any) {
+            // Server-side cookie setting not implemented in client context
+          },
+          remove(key: string, options?: any) {
+            // Server-side cookie removal not implemented in client context
           },
         },
       });

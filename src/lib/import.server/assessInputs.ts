@@ -5,7 +5,11 @@ import { fetchGptEnhanced } from "$lib/ai/providers/enhanced-abstraction";
 import { type Content, type TokenUsage } from "$lib/ai/types.d";
 import { sleep } from "$lib/utils";
 import { DEBUG_ASSESSER } from "$env/static/private";
-import { type Assessment, type AssessmentDocument, type AssessmentPage } from "$lib/import/types";
+import {
+  type Assessment,
+  type AssessmentDocument,
+  type AssessmentPage,
+} from "$lib/import/types";
 
 const DEBUG = DEBUG_ASSESSER === "true";
 
@@ -16,7 +20,11 @@ type Input = {
 };
 
 // Re-export types from shared types
-export type { Assessment, AssessmentDocument, AssessmentPage } from "$lib/import/types";
+export type {
+  Assessment,
+  AssessmentDocument,
+  AssessmentPage,
+} from "$lib/import/types";
 
 export default async function assess(input: Input): Promise<Assessment> {
   const tokenUsage: TokenUsage = {

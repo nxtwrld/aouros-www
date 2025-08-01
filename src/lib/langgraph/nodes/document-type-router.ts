@@ -50,7 +50,10 @@ export class DocumentTypeRouter {
       detectedSections: [],
       confidence: 0.9, // High confidence since AI did the detection
       documentType: aiDetectionResults.documentType || "clinical_report",
-      detectedType: aiDetectionResults.detectedType || aiDetectionResults.documentType || "clinical_report",
+      detectedType:
+        aiDetectionResults.detectedType ||
+        aiDetectionResults.documentType ||
+        "clinical_report",
       medicalSpecialty: aiDetectionResults.medicalSpecialty || [
         "general_medicine",
       ],
@@ -479,8 +482,10 @@ export class DocumentTypeRouter {
 export async function documentTypeRouterNode(
   state: DocumentProcessingState,
 ): Promise<Partial<DocumentProcessingState>> {
-  log.analysis.info("Analyzing AI feature detection results for processing routing");
-  
+  log.analysis.info(
+    "Analyzing AI feature detection results for processing routing",
+  );
+
   // Debug logging: what state do we have? (only if enabled)
   if (isStateTransitionDebuggingEnabled()) {
     log.analysis.debug("Document router received state", {
@@ -489,7 +494,7 @@ export async function documentTypeRouterNode(
       featureDetectionType: state.featureDetection?.type,
       featureDetectionConfidence: state.featureDetection?.confidence,
       featureResultsIsMedical: state.featureDetectionResults?.isMedical,
-      featureResultsDocType: state.featureDetectionResults?.documentType
+      featureResultsDocType: state.featureDetectionResults?.documentType,
     });
   }
 
@@ -510,12 +515,15 @@ export async function documentTypeRouterNode(
 
     const aiResults = state.featureDetectionResults;
     if (!aiResults || !aiResults.isMedical) {
-      log.analysis.warn("No AI feature detection results or not medical content", {
-        hasFeatureDetection: !!state.featureDetection,
-        confidence: state.featureDetection?.confidence,
-        type: state.featureDetection?.type,
-        features: state.featureDetection?.features
-      });
+      log.analysis.warn(
+        "No AI feature detection results or not medical content",
+        {
+          hasFeatureDetection: !!state.featureDetection,
+          confidence: state.featureDetection?.confidence,
+          type: state.featureDetection?.type,
+          features: state.featureDetection?.features,
+        },
+      );
       state.emitComplete?.(
         "document_type_router",
         "Document identified as non-medical",

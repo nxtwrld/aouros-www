@@ -47,6 +47,28 @@ export default {
         description:
           "Date of the report. Format: YYYY-MM-DD HH:MM:SS. Leave as undefined if the date is not available.",
       },
+      imagingCategory: {
+        type: "string",
+        enum: [
+          "x-ray",
+          "ct",
+          "mri",
+          "ultrasound",
+          "mammography",
+          "pet",
+          "nuclear",
+          "fluoroscopy",
+          "angiography",
+          "interventional",
+        ],
+        description: "Type of imaging study performed",
+      },
+      searchKeywords: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Search-optimized keywords: imaging modalities, anatomical regions, findings, radiological terms",
+      },
     },
     required: [
       "observation_type",

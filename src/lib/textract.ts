@@ -42,4 +42,4 @@ export interface DiagnosisExtractor extends Extractor {
       chat_response: any;
     };
   };
-} 
+}

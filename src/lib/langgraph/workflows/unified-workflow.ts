@@ -1,7 +1,7 @@
 /**
  * Unified Workflow - Clean Implementation
- * 
- * This replaces the existing document-processing.ts with a cleaner, 
+ *
+ * This replaces the existing document-processing.ts with a cleaner,
  * unified approach using the multi-node orchestrator for ALL specialized processing.
  */
 
@@ -12,9 +12,9 @@ import type {
   ProgressCallback,
 } from "../state";
 // Logging config no longer needed here - using workflow recorder's debug state
-import { 
-  startWorkflowRecording, 
-  finishWorkflowRecording, 
+import {
+  startWorkflowRecording,
+  finishWorkflowRecording,
   isWorkflowReplayMode,
   isWorkflowRecordingEnabled,
   workflowRecorder,
@@ -28,6 +28,7 @@ import { providerSelectionNode } from "../nodes/provider-selection";
 import { externalValidationNode } from "../nodes/external-validation";
 import { qualityGateNode } from "../nodes/quality-gate";
 import { documentTypeRouterNode } from "../nodes/document-type-router";
+import { medicalTermsGenerationNode } from "../nodes/medical-terms-generation";
 
 // Import unified multi-node processing
 import { executeMultiNodeProcessing } from "./multi-node-orchestrator";
@@ -40,11 +41,14 @@ const shouldProcessMedical = (state: DocumentProcessingState): string => {
   }
 
   // Check if medical processing is needed
-  const isMedical = state.featureDetectionResults?.isMedical || 
-                   (state.featureDetection && state.featureDetection.confidence > 0.5);
+  const isMedical =
+    state.featureDetectionResults?.isMedical ||
+    (state.featureDetection && state.featureDetection.confidence > 0.5);
 
   if (isMedical) {
-    console.log("✅ Medical content detected - proceeding to multi-node processing");
+    console.log(
+      "✅ Medical content detected - proceeding to multi-node processing",
+    );
     return "medical";
   }
 
@@ -58,19 +62,28 @@ const shouldValidateExternally = (state: DocumentProcessingState): string => {
   return "skip";
 };
 
-// Create the unified document processing workflow  
-export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig, progressCallback?: ProgressCallback) => {
+// Create the unified document processing workflow
+export const createUnifiedDocumentProcessingWorkflow = (
+  config?: WorkflowConfig,
+  progressCallback?: ProgressCallback,
+) => {
   // Create wrapper functions for nodes that have access to the progress callback
   // Each node gets assigned a progress range to avoid conflicts
-  const createNodeWrapper = (nodeFn: any, nodeProgressRange: { start: number; end: number }) => {
+  const createNodeWrapper = (
+    nodeFn: any,
+    nodeProgressRange: { start: number; end: number },
+  ) => {
     return async (state: DocumentProcessingState) => {
       const enhancedState = {
         ...state,
         progressCallback: progressCallback || state.progressCallback,
         emitProgress: (stage: string, progress: number, message: string) => {
           // Calculate cumulative progress for this node
-          const nodeProgress = nodeProgressRange.start + (progress * (nodeProgressRange.end - nodeProgressRange.start) / 100);
-          
+          const nodeProgress =
+            nodeProgressRange.start +
+            (progress * (nodeProgressRange.end - nodeProgressRange.start)) /
+              100;
+
           if (state.progressCallback) {
             state.progressCallback({
               type: "progress",
@@ -80,7 +93,7 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
               timestamp: Date.now(),
             });
           }
-          
+
           // Also call the original emitProgress if it exists
           state.emitProgress?.(stage, Math.min(nodeProgress, 100), message);
         },
@@ -89,55 +102,111 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
     };
   };
 
-  // Create state graph with simplified channels
-  const workflow = new StateGraph({
+  // Create state graph with state interface
+  const workflow = new StateGraph<DocumentProcessingState>({
     channels: {
-      // Input
-      images: null,
-      text: null,
-      language: null,
-      metadata: null,
-      content: null,
-      
-      // Core processing
-      tokenUsage: null,
-      featureDetection: null,
-      featureDetectionResults: null,
-      
-      // Multi-node results (replaces individual medical analysis, signals, etc.)
-      medicalAnalysis: null,
-      signals: null,
-      imaging: null,
-      medications: null,
-      procedures: null,
-      multiNodeResults: null,
-      report: null, // Add report channel
-      
-      // Workflow control
-      documentTypeAnalysis: null,
-      selectedProvider: null,
-      providerMetadata: null,
-      validationResults: null,
-      confidence: null,
-      errors: null,
-      
-      // Progress tracking
-      progressCallback: null,
-      currentStage: null,
-      emitProgress: null,
-      emitComplete: null,
-      emitError: null,
+      // Input channels
+      images: { reducer: (current: any, update: any) => update ?? current },
+      text: { reducer: (current: any, update: any) => update ?? current },
+      language: { reducer: (current: any, update: any) => update ?? current },
+      metadata: { reducer: (current: any, update: any) => update ?? current },
+      content: { reducer: (current: any, update: any) => update ?? current },
+
+      // Core processing channels
+      tokenUsage: { reducer: (current: any, update: any) => update ?? current },
+      featureDetection: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      featureDetectionResults: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+
+      // Multi-node results channels
+      medicalAnalysis: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      signals: { reducer: (current: any, update: any) => update ?? current },
+      imaging: { reducer: (current: any, update: any) => update ?? current },
+      medications: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      procedures: { reducer: (current: any, update: any) => update ?? current },
+      multiNodeResults: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      report: { reducer: (current: any, update: any) => update ?? current },
+
+      // Medical terms generation channel
+      medicalTermsGeneration: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+
+      // Workflow control channels
+      documentTypeAnalysis: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      selectedProvider: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      providerMetadata: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      validationResults: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      confidence: { reducer: (current: any, update: any) => update ?? current },
+      errors: { reducer: (current: any, update: any) => update ?? current },
+
+      // Progress tracking channels
+      progressCallback: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      currentStage: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      emitProgress: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      emitComplete: {
+        reducer: (current: any, update: any) => update ?? current,
+      },
+      emitError: { reducer: (current: any, update: any) => update ?? current },
     },
   });
 
   // Add essential workflow nodes with progress ranges
-  workflow.addNode("input_validation", createNodeWrapper(inputValidationNode, { start: 30, end: 40 }));
-  workflow.addNode("document_type_router", createNodeWrapper(documentTypeRouterNode, { start: 40, end: 50 }));
-  workflow.addNode("provider_selection", createNodeWrapper(providerSelectionNode, { start: 50, end: 60 }));
-  workflow.addNode("feature_detection", createNodeWrapper(featureDetectionNode, { start: 60, end: 70 }));
-  workflow.addNode("multi_node_processing", createNodeWrapper(executeMultiNodeProcessing, { start: 70, end: 95 }));
-  workflow.addNode("external_validation", createNodeWrapper(externalValidationNode, { start: 95, end: 98 }));
-  workflow.addNode("quality_gate", createNodeWrapper(qualityGateNode, { start: 98, end: 100 }));
+  workflow.addNode(
+    "input_validation",
+    createNodeWrapper(inputValidationNode, { start: 30, end: 40 }),
+  );
+  workflow.addNode(
+    "document_type_router",
+    createNodeWrapper(documentTypeRouterNode, { start: 40, end: 50 }),
+  );
+  workflow.addNode(
+    "provider_selection",
+    createNodeWrapper(providerSelectionNode, { start: 50, end: 60 }),
+  );
+  workflow.addNode(
+    "feature_detection",
+    createNodeWrapper(featureDetectionNode, { start: 60, end: 70 }),
+  );
+  workflow.addNode(
+    "multi_node_processing",
+    createNodeWrapper(executeMultiNodeProcessing, { start: 70, end: 85 }),
+  );
+  workflow.addNode(
+    "medical_terms_generation",
+    createNodeWrapper(medicalTermsGenerationNode, { start: 85, end: 90 }),
+  );
+  workflow.addNode(
+    "external_validation",
+    createNodeWrapper(externalValidationNode, { start: 95, end: 98 }),
+  );
+  workflow.addNode(
+    "quality_gate",
+    createNodeWrapper(qualityGateNode, { start: 98, end: 100 }),
+  );
 
   // Define clean workflow flow
   workflow.addEdge("input_validation", "document_type_router");
@@ -150,11 +219,18 @@ export const createUnifiedDocumentProcessingWorkflow = (config?: WorkflowConfig,
     error: END,
   });
 
+  // Add medical terms generation after multi-node processing
+  workflow.addEdge("multi_node_processing", "medical_terms_generation");
+
   // External validation (optional)
-  workflow.addConditionalEdges("multi_node_processing", shouldValidateExternally, {
-    validate: "external_validation",
-    skip: "quality_gate",
-  });
+  workflow.addConditionalEdges(
+    "medical_terms_generation",
+    shouldValidateExternally,
+    {
+      validate: "external_validation",
+      skip: "quality_gate",
+    },
+  );
 
   workflow.addEdge("external_validation", "quality_gate");
   workflow.addEdge("quality_gate", END);
@@ -175,7 +251,7 @@ export async function runUnifiedDocumentProcessingWorkflow(
   progressCallback?: ProgressCallback,
 ): Promise<DocumentProcessingState> {
   const debugEnabled = isWorkflowRecordingEnabled();
-  
+
   console.log("🎯 Starting Unified Document Processing Workflow", {
     hasImages: images && images.length > 0,
     hasText: !!text,
@@ -191,22 +267,28 @@ export async function runUnifiedDocumentProcessingWorkflow(
       console.log("🔄 Using workflow replay mode with file:", replayFilePath);
       return await replayWorkflowFromFile(replayFilePath, progressCallback);
     } else {
-      console.warn("⚠️ Replay mode enabled but no replay file path found, falling back to live execution");
+      console.warn(
+        "⚠️ Replay mode enabled but no replay file path found, falling back to live execution",
+      );
     }
   }
 
   // Start recording if debugging enabled
   let recordingId: string | undefined;
   if (debugEnabled) {
-    recordingId = startWorkflowRecording("analysis", {
-      workflowType: "unified-document-processing",
-      inputs: { images, text, language, config },
-    }) || undefined;
+    recordingId =
+      startWorkflowRecording("analysis", {
+        workflowType: "unified-document-processing",
+        inputs: { images, text, language, config },
+      }) || undefined;
   }
 
   try {
     // Create workflow
-    const workflow = createUnifiedDocumentProcessingWorkflow(config, progressCallback);
+    const workflow = createUnifiedDocumentProcessingWorkflow(
+      config,
+      progressCallback,
+    );
 
     // Create initial state
     const initialState: DocumentProcessingState = {
@@ -223,12 +305,12 @@ export async function runUnifiedDocumentProcessingWorkflow(
     };
 
     console.log("🚀 Executing unified workflow...");
-    
+
     // Execute workflow
     const result = await workflow.invoke(initialState);
 
     console.log("✅ Unified workflow completed successfully");
-    
+
     if (debugEnabled) {
       console.log("📊 Final workflow result:", {
         hasMultiNodeResults: !!result.multiNodeResults,
@@ -240,30 +322,38 @@ export async function runUnifiedDocumentProcessingWorkflow(
 
     // Finish recording if we started one
     if (recordingId && debugEnabled) {
-      console.log("WorkflowRecorder: 🎬 Attempting to finish workflow recording:", recordingId);
+      console.log(
+        "WorkflowRecorder: 🎬 Attempting to finish workflow recording:",
+        recordingId,
+      );
       const savedFile = finishWorkflowRecording(result);
       if (savedFile) {
-        console.log("WorkflowRecorder: 📹 Workflow recording saved to:", savedFile);
+        console.log(
+          "WorkflowRecorder: 📹 Workflow recording saved to:",
+          savedFile,
+        );
       } else {
         console.log("WorkflowRecorder: ❌ Failed to save workflow recording");
       }
     }
 
     return result;
-
   } catch (error) {
     console.error("❌ Unified workflow error:", error);
-    
+
     // Still save recording on error
     if (recordingId && debugEnabled) {
-      console.log("WorkflowRecorder: 💥 Saving recording on error for:", recordingId);
+      console.log(
+        "WorkflowRecorder: 💥 Saving recording on error for:",
+        recordingId,
+      );
       const errorResult = {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       };
       finishWorkflowRecording(errorResult);
     }
-    
+
     throw error;
   }
 }
@@ -273,7 +363,7 @@ export async function runUnifiedDocumentProcessingWorkflow(
  */
 async function replayWorkflowFromFile(
   filePath: string,
-  progressCallback?: ProgressCallback
+  progressCallback?: ProgressCallback,
 ): Promise<any> {
   const replay = createWorkflowReplay(filePath);
   if (!replay) {
@@ -286,7 +376,7 @@ async function replayWorkflowFromFile(
     phase: summary.phase,
     steps: summary.totalSteps,
     originalDuration: summary.totalDuration,
-    originalTokens: summary.totalTokenUsage.total
+    originalTokens: summary.totalTokenUsage.total,
   });
 
   // Emit initial progress - continue from where extraction left off
@@ -296,10 +386,10 @@ async function replayWorkflowFromFile(
       stage: "analysis_start",
       progress: 30, // Continue from extraction progress
       message: `Starting analysis replay: ${summary.recordingId}`,
-      data: { 
+      data: {
         originalSteps: summary.totalSteps,
         originalDuration: summary.totalDuration,
-        phase: "analysis" 
+        phase: "analysis",
       },
       timestamp: Date.now(),
     });
@@ -321,18 +411,18 @@ async function replayWorkflowFromFile(
     if (progressCallback) {
       // Calculate progress as continuation from extraction (assume extraction was ~30% of total)
       const analysisProgress = (stepIndex / totalSteps) * 100;
-      const overallProgress = 30 + (analysisProgress * 0.7); // Analysis takes remaining 70%
-      
+      const overallProgress = 30 + analysisProgress * 0.7; // Analysis takes remaining 70%
+
       progressCallback({
         type: "progress",
         stage: result.stepName,
         progress: Math.min(overallProgress, 100),
         message: `Replaying step: ${result.stepName}`,
-        data: { 
+        data: {
           stepId: result.stepId,
           success: result.success,
           stepIndex,
-          totalSteps
+          totalSteps,
         },
         timestamp: Date.now(),
       });
@@ -340,26 +430,27 @@ async function replayWorkflowFromFile(
 
     // Add configurable delay between steps to show progress
     const delayMs = workflowRecorder.getReplayDelay();
-    await new Promise(resolve => setTimeout(resolve, delayMs));
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 
   // Get the final result from the recording
   const recording = replay.exportResults().recording;
-  
+
   // Use the recorded final result directly - don't re-run multi-node processing
-  console.log("🔄 Using recorded workflow result directly (no duplicate processing)");
+  console.log(
+    "🔄 Using recorded workflow result directly (no duplicate processing)",
+  );
   const finalState = recording.steps[recording.steps.length - 1].outputState;
-  
+
   // The workflow was already completed during recording, so use that result
   const aggregatedResult = recording.finalResult || finalState;
-  
-  
+
   console.log("✅ Workflow replay completed with updated aggregation:", {
     stepsReplayed: replayResults.length,
-    successful: replayResults.filter(r => r.success).length,
-    failed: replayResults.filter(r => !r.success).length,
+    successful: replayResults.filter((r) => r.success).length,
+    failed: replayResults.filter((r) => !r.success).length,
     hasReport: !!(aggregatedResult as any)?.report,
-    reportType: typeof (aggregatedResult as any)?.report
+    reportType: typeof (aggregatedResult as any)?.report,
   });
 
   // Emit completion
@@ -372,7 +463,7 @@ async function replayWorkflowFromFile(
       data: {
         stepsReplayed: replayResults.length,
         originalTokens: recording.totalTokenUsage.total,
-        phase: "analysis"
+        phase: "analysis",
       },
       timestamp: Date.now(),
     });
@@ -384,20 +475,22 @@ async function replayWorkflowFromFile(
     ...finalState,
     ...(aggregatedResult || {}),
     // Fallback values if aggregation failed
-    tokenUsage: aggregatedResult?.tokenUsage || finalState.tokenUsage || { total: 0 },
+    tokenUsage: aggregatedResult?.tokenUsage ||
+      finalState.tokenUsage || { total: 0 },
     errors: aggregatedResult?.errors || finalState.errors || [],
   };
-  
+
   console.log("🎯 Final result being returned:", {
     resultType: typeof finalResult,
     hasTokenUsage: !!finalResult.tokenUsage,
     hasReport: !!(finalResult as any).report,
     reportType: typeof (finalResult as any).report,
-    keysCount: Object.keys(finalResult).length
+    keysCount: Object.keys(finalResult).length,
   });
-  
+
   return finalResult;
 }
 
 // Backward compatibility export
-export const runDocumentProcessingWorkflow = runUnifiedDocumentProcessingWorkflow;
+export const runDocumentProcessingWorkflow =
+  runUnifiedDocumentProcessingWorkflow;

@@ -121,6 +121,7 @@
         width: 40rem;
     }
 
+    /* Unused - price element is commented out in template
     .price {
         background-color: var(--color-shade);
         padding: .2rem .5rem;
@@ -129,10 +130,13 @@
         white-space: nowrap;
         font-weight: bold;
     }
+    */
+    /* Unused - price element is commented out in template
     .price.-insufficent-credit {
         background-color: var(--color-negative);
         color: var(--color-negative-contrast);
     }
+    */
 
     .app-details {
         display: flex;

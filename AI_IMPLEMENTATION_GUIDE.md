@@ -18,7 +18,7 @@ Medical Document → AI Feature Detection → Multi-Node Orchestration → Schem
 
 - **Universal Node Factory**: Dynamic node generation from schema configurations
 - **AI-Driven Detection**: Multi-language AI determines which sections are present
-- **Parallel Processing**: Multiple specialized nodes execute simultaneously 
+- **Parallel Processing**: Multiple specialized nodes execute simultaneously
 - **Schema-Based Processing**: Each medical section uses dedicated schemas
 - **Cost-Effective Debugging**: Workflow recording/replay without AI costs
 - **Pure Data-Driven UI**: UI automatically renders structured medical sections
@@ -28,25 +28,33 @@ Medical Document → AI Feature Detection → Multi-Node Orchestration → Schem
 ## 🚀 MAJOR BREAKTHROUGHS ACHIEVED
 
 ### **Universal Node Factory Architecture**
+
 **Impact**: Eliminated the need for 15+ individual node files (medical-analysis.ts, signal-processing.ts, etc.)
+
 - **Before**: Each medical section required a separate TypeScript file with duplicated boilerplate
 - **After**: Single configuration-driven factory generates all nodes dynamically
 - **Result**: 90% reduction in code maintenance, instant addition of new medical sections
 
 ### **Multi-Node Parallel Processing**
+
 **Impact**: 3-5x performance improvement through parallel execution
+
 - **Before**: Sequential processing of medical sections (10-25 seconds)
 - **After**: Parallel processing of only detected sections (3-8 seconds)
 - **Result**: Faster analysis, lower costs, better user experience
 
 ### **Cost-Effective Debugging System**
+
 **Impact**: Zero-cost development and testing through workflow replay
+
 - **Before**: Every test required expensive AI calls for debugging
 - **After**: Record once, replay unlimited times for testing aggregation logic
 - **Result**: 95% reduction in development AI costs, faster iteration cycles
 
 ### **Structured Result Architecture**
+
 **Impact**: Proper medical data structure flows to UI instead of self-referencing arrays
+
 - **Before**: Complex result mapping with inconsistent data structures
 - **After**: Clean medical report object with nested sections
 - **Result**: Reliable UI rendering, easier frontend development
@@ -57,7 +65,8 @@ Medical Document → AI Feature Detection → Multi-Node Orchestration → Schem
 
 ### 1. **Universal Node Factory & Multi-Node Orchestration** - ✅ COMPLETED
 
-**Files**: 
+**Files**:
+
 - `src/lib/langgraph/factories/universal-node-factory.ts`
 - `src/lib/langgraph/workflows/multi-node-orchestrator.ts`
 - `src/lib/langgraph/registry/node-registry.ts`
@@ -74,6 +83,7 @@ Medical Document → AI Feature Detection → Multi-Node Orchestration → Schem
 - ✅ **Fallback Support**: Graceful degradation to legacy processing if needed
 
 **Current Node Types**:
+
 ```typescript
 NODE_CONFIGURATIONS = {
   "medical-analysis": { priority: 1, triggers: ["hasSummary", "hasDiagnosis"] },
@@ -82,10 +92,11 @@ NODE_CONFIGURATIONS = {
   "signal-processing": { priority: 1, triggers: ["hasSignals"] },
   "imaging-processing": { priority: 2, triggers: ["hasImaging"] },
   // ... 8 more specialized nodes
-}
+};
 ```
 
 **Performance Benefits**:
+
 - **Parallel Processing**: 3-5x faster than sequential processing
 - **Cost Optimization**: Only process detected sections (40-60% token savings)
 - **Scalability**: Easy to add new medical sections without code changes
@@ -93,7 +104,8 @@ NODE_CONFIGURATIONS = {
 
 ### 2. **Workflow Recording & Replay System** - ✅ COMPLETED
 
-**Files**: 
+**Files**:
+
 - `src/lib/debug/workflow-recorder.ts`
 - `src/lib/debug/workflow-replay.ts`
 - `debug-workflow.js` (CLI tool)
@@ -101,6 +113,7 @@ NODE_CONFIGURATIONS = {
 **Cost-Effective Debugging**: Complete workflow capture and replay system for development without AI costs.
 
 **Features**:
+
 - ✅ **Complete Workflow Recording**: Captures all steps, inputs, outputs, and timing
 - ✅ **Replay Functionality**: Re-execute workflows with recorded data instead of AI calls
 - ✅ **Debug Analysis Tool**: `node debug-workflow.js <recording-file>` for detailed analysis
@@ -108,11 +121,12 @@ NODE_CONFIGURATIONS = {
 - ✅ **Cost Optimization**: Test aggregation logic changes without burning AI tokens
 
 **Usage**:
+
 ```bash
 # Enable recording mode
 DEBUG_ANALYSIS="true"
 
-# Enable replay mode  
+# Enable replay mode
 DEBUG_ANALYSIS="test-data/workflows/workflow-analysis-2025-07-13T11-31-01-543Z.json"
 
 # Analyze recordings
@@ -121,7 +135,8 @@ node debug-workflow.js test-data/workflows/workflow-analysis-TIMESTAMP.json
 
 ### 3. **Real-Time SSE Integration** - ✅ COMPLETED
 
-**Files**: 
+**Files**:
+
 - `src/lib/import/sse-client.ts`
 - `src/components/import/SSEIndex.svelte`
 - `/v1/import/report/stream` (API endpoint)
@@ -130,6 +145,7 @@ node debug-workflow.js test-data/workflows/workflow-analysis-TIMESTAMP.json
 **Real-Time Progress Updates**: Complete Server-Sent Events implementation for live processing feedback.
 
 **Features**:
+
 - ✅ **Dual-Stage Progress**: Extract and analysis progress tracking
 - ✅ **File-Level Progress**: Individual file processing status
 - ✅ **Error Handling**: Comprehensive error recovery and fallback

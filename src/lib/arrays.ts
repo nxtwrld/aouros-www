@@ -1,9 +1,14 @@
 // convert typed array (Uint8Array) to ArrayBuffer
 export function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
-  return array.buffer.slice(
-    array.byteOffset,
-    array.byteLength + array.byteOffset,
-  );
+  // Handle both ArrayBuffer and SharedArrayBuffer
+  const buffer = array.buffer;
+  if (buffer instanceof SharedArrayBuffer) {
+    // Convert SharedArrayBuffer to ArrayBuffer
+    const arrayBuffer = new ArrayBuffer(array.byteLength);
+    new Uint8Array(arrayBuffer).set(array);
+    return arrayBuffer;
+  }
+  return buffer.slice(array.byteOffset, array.byteLength + array.byteOffset);
 }
 
 export async function toBase64(array: ArrayBuffer): Promise<string> {

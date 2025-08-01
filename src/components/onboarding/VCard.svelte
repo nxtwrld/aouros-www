@@ -201,15 +201,19 @@
         align-items: flex-start;
         gap: .5rem;
     }
+    /* Unused - no .flex class in template
     .flex > select {
       width: 5rem;
     }
+    */
     .flex > div {
         flex-grow: 1;
     }
+    /* Unused - no .flex class in template
     .flex > div > input {
         width: 100%;
     }
+    */
     .contact-item > button {
         width: var(--input-height);
         height: var(--input-height);
@@ -225,7 +229,9 @@
         margin: 1rem 0;
     }
 
+    /* Unused - no .tabs-head class in template
     .tabs-head {
         margin-bottom: 1rem;
     }
+    */
 </style>
