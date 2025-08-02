@@ -4,18 +4,40 @@
 
 This document describes the complete workflow for AI-powered medical session analysis using a Mixture of Experts (MoE) architecture. The system processes real-time medical conversations, extracts clinical insights, and generates interactive visualizations for diagnostic decision support.
 
+## Real-Time Continuous Assistant Nature
+
+This system is designed as a **continuous, real-time assistant** that works alongside doctors during live patient consultations. Key characteristics:
+
+- **Live Conversation Support**: The AI analyzes the ongoing doctor-patient dialogue as it happens, not as a post-consultation tool
+- **Continuous Analysis Loop**: As new information emerges in the conversation, the AI continuously re-analyzes and updates its insights
+- **Non-Intrusive Assistance**: Suggestions and insights are presented without interrupting the natural flow of conversation
+- **Doctor-Driven Interaction**: The physician remains in full control, choosing which AI suggestions to explore or ignore
+- **Progressive Refinement**: Each new patient response or symptom description triggers refined analysis, building a progressively clearer clinical picture
+- **No "Final" State**: There is no concept of a "completed" analysis - the system provides ongoing support throughout the entire consultation
+
+The workflow described below operates in a continuous loop, with each phase feeding back into the next as the conversation evolves.
+
 ## High-Level Architecture
 
 ```mermaid
 graph TB
     subgraph "Input Layer"
         A[Audio Chunks] --> B[Speech-to-Text]
-        B --> C[Transcript Builder]
-        C --> D[Transcript with Context]
+        B --> C[Transcript Builder with Medical Relevance Detection]
+        C --> D[Transcript + Medical Relevance Metadata]
+    end
+
+    subgraph "Client-Side Decision"
+        D --> Y[Client Receives Transcript]
+        Y --> Z{Medical Content Detected?}
+        Z -->|No: Small Talk| AA[Continue Monitoring]
+        AA --> A
+        Z -->|Yes: Medical Relevance| AB[Trigger MoE Analysis]
     end
 
     subgraph "Context Assembly System"
-        E[Patient Documents] --> F[Embedding Search]
+        AB --> E[Patient Documents]
+        E --> F[Term-Based Search]
         G[Medical History] --> F
         H[Previous Analysis] --> F
         F --> I[Context Assembly]
@@ -23,8 +45,7 @@ graph TB
     end
 
     subgraph "Enhanced Context Integration"
-        D --> K[Input Extraction]
-        J --> K
+        J --> K[Input Extraction]
         K --> L{New Inputs?}
         L -->|No| M[Wait for Updates]
         L -->|Yes| N[Context-Aware Expert Analysis]
@@ -68,37 +89,91 @@ graph TB
    - Speaker diarization identifies doctor vs patient
    - Timestamps and confidence scores are preserved
 
-3. **Transcript Reconstruction**
+3. **Transcript Reconstruction with Medical Relevance Detection**
 
    - Individual chunks are assembled into coherent transcript
    - Speaker changes and pauses are marked
    - Medical terminology is validated and corrected
+   - **Medical relevance classification** performed during assembly:
+     - Lightweight ML model identifies medical content vs small talk
+     - Relevance score (0-1) indicates medical significance
+     - Categories detected: symptom_mention, medication_reference, medical_history, clinical_observation, small_talk
+     - Trigger words/phrases extracted for client visibility
+   - Transcript sent to client with medical relevance metadata for decision-making
 
-4. **Context Integration**
+3.5. **Transcript Output with Medical Relevance Metadata**
+
+   The reconstructed transcript is sent to the client with the following structure:
+   ```json
+   {
+     "sessionId": "session_id",
+     "timestamp": "2024-03-15T14:25:00Z",
+     "transcript": {
+       "text": "Doctor: How are you feeling today?\nPatient: I've had a terrible headache for three days...",
+       "speakers": ["doctor", "patient"],
+       "duration": 120
+     },
+     "medicalRelevance": {
+       "isRelevant": true,
+       "confidence": 0.85,
+       "categories": ["symptom_mention", "medication_reference"],
+       "triggers": ["headache", "three days", "pain medication"],
+       "requiresAnalysis": true
+     }
+   }
+   ```
+
+4. **Client-Side Decision Point**
+
+   - Client receives transcript with medical relevance metadata
+   - If `medicalRelevance.isRelevant` is true and confidence > threshold:
+     - Client triggers MoE analysis request
+     - Proceeds to Context Integration (Step 5)
+   - If small talk or low relevance:
+     - Client continues transcript monitoring
+     - MoE analysis is not triggered
+     - Returns to Audio Capture (Step 1)
+
+5. **Context Integration** (Triggered by Client)
    - Patient medical history is retrieved and attached
    - Previous MoE analyses from current session are included
    - Relevant medical records are incorporated
    - Family history and genetic factors are considered
    - Current medications and allergies are highlighted
 
-### Phase 1.5: Intelligent Context Assembly
+### Phase 1.5: Intelligent Context Assembly (When Triggered by Client)
 
-5. **Semantic Context Search**
+6. **Classification-Based Context Search**
 
-   - Real-time embedding generation for current conversation content
-   - Vector similarity search across patient's encrypted medical documents
-   - Identification of relevant historical consultations and analyses
+   - Medical term extraction from current conversation content
+   - Classification-based term matching using medical-expert-tools
+   - Search across patient's encrypted medical documents using standardized medical terms
+   - Identification of relevant historical consultations through term matching
    - Pattern recognition for recurring symptoms and treatment responses
+   - Document categorization and relevance scoring without embeddings
+   
+   **Classification Approach Details:**
+   - Uses `MedicalExpertTools.searchDocuments()` with extracted medical terms
+   - Documents contain pre-classified medical terms arrays for efficient matching
+   - Relevance calculated by term frequency and document type matching
+   - No vector embeddings required - direct term-to-term comparison
+   - Supports filtering by document types (lab-results, prescriptions, medical-records)
+   - Returns structured results with relevance scores and metadata
 
-6. **Context Assembly and Optimization**
+7. **Context Assembly and Optimization**
 
-   - Assembly of relevant medical context using ContextAssembler
+   - Assembly of relevant medical context using ContextAssembler with term-based results
+   - Document search using `searchDocumentsByTerms` method:
+     - Medical terms extracted from conversation
+     - Relevance scoring based on term matching frequency
+     - Document type filtering (lab-results, medical-records, prescriptions, etc.)
+     - Threshold-based filtering (default 0.6)
    - Extraction of key medical insights (findings, medications, procedures, risks)
    - Token optimization to fit within AI model limits (default 4000 tokens)
    - Confidence scoring for assembled context relevance
    - Structured sections: patient summary, relevant history, recent changes
 
-7. **Context Enhancement with Medical Intelligence**
+8. **Context Enhancement with Medical Intelligence**
    - Clinical Data Platform (CDP) integration for structured medical data
    - Timeline construction of significant medical events
    - Risk factor analysis based on historical patterns
@@ -107,7 +182,7 @@ graph TB
 
 ### Phase 2: Enhanced Analysis and Input Extraction
 
-8. **Context-Aware Input Extraction**
+9. **Context-Aware Input Extraction**
 
    - LLM analyzes transcript enhanced with assembled context
    - Medical entities are identified with historical context awareness
@@ -115,7 +190,7 @@ graph TB
    - Each input receives a unique ID to prevent duplicates
    - Context relevance scoring for each extracted input
 
-9. **Input Enhancement with Assembled Context**
+10. **Input Enhancement with Assembled Context**
 
    - Assembled context provides rich historical perspective
    - Previous symptoms and treatments are automatically linked
@@ -127,7 +202,7 @@ graph TB
      - `previous`: From earlier in session
      - `assembled`: From context assembly system
 
-10. **Question-Answer Evaluation with Context**
+11. **Question-Answer Evaluation with Context**
 
     - If MoE previously generated questions, scan for answers
     - Map patient responses to specific questions using context
@@ -135,7 +210,7 @@ graph TB
     - Extract follow-up information from answers
     - Context assembly informs question prioritization
 
-11. **Real-time Client Updates with Context**
+12. **Real-time Client Updates with Context**
     - Send discovered inputs via SSE to client with context metadata
     - Update answer statuses in real-time
     - Provide context relevance indicators in UI
@@ -143,7 +218,7 @@ graph TB
 
 ### Phase 3: Conditional MoE Analysis
 
-12. **Change Detection with Context Awareness**
+13. **Change Detection with Context Awareness**
 
 - Compare current inputs with previous analysis
 - Check if answer set has changed
@@ -154,7 +229,7 @@ graph TB
 
 ### Phase 4: Context-Enhanced Mixture of Experts Analysis
 
-13. **Context-Aware Parallel Expert Analysis**
+14. **Context-Aware Parallel Expert Analysis**
 
     - Multiple specialized experts analyze inputs with assembled context:
 
@@ -198,7 +273,7 @@ graph TB
     - Critical condition alerts informed by patient's risk factors
     - Context-aware safety protocol recommendations
 
-14. **Context-Enhanced Consensus Building**
+15. **Context-Enhanced Consensus Building**
     - Weighted voting based on expert confidence and context relevance
     - Conflict detection and resolution using historical precedents
     - Uncertainty quantification enhanced by context quality scores
@@ -208,7 +283,7 @@ graph TB
 
 ### Phase 5: Structured Output Generation
 
-12. **MoE Analysis Structure**
+16. **MoE Analysis Structure**
 
     - Each element receives a unique ID for tracking
     - Bidirectional linkages are established
@@ -253,7 +328,7 @@ graph TB
       - Disprove and suppress links
       - Redirect to alternative paths
 
-13. **Relationship Mapping**
+17. **Relationship Mapping**
 
     - Create comprehensive node linkages:
       ```
@@ -264,7 +339,7 @@ graph TB
     - Track which experts suggested each connection
     - Bidirectional reasoning chains
 
-14. **Risk and Safety Integration**
+18. **Risk and Safety Integration**
     - Evaluate treatment risks based on:
       - Patient medical history
       - Current medications
@@ -277,7 +352,7 @@ graph TB
 
 ### Phase 6: Context-Enhanced Visualization and Delivery
 
-15. **Context-Enhanced Sankey Diagram Generation**
+19. **Context-Enhanced Sankey Diagram Generation**
 
     - **Column 1**: Symptoms/Signals/History nodes with context indicators
     - **Column 2**: Diagnosis nodes (sized by probability + context confidence)
@@ -295,7 +370,7 @@ graph TB
     - Question dots: Small indicators on paths with context priority scoring
     - Context sources: Subtle indicators showing which historical documents contributed
 
-16. **Progressive Streaming with Context Updates**
+20. **Progressive Streaming with Context Updates**
 
     - Send completed expert analyses as they finish with context metadata
     - Update visualization incrementally including context confidence changes
@@ -303,7 +378,7 @@ graph TB
     - Prioritize critical findings enhanced by context relevance for immediate display
     - Stream context assembly progress and completion status
 
-17. **Interactive Features Enhanced with Context**
+21. **Interactive Features Enhanced with Context**
     - Click nodes for detailed information including context sources
     - Hover questions to see impact predictions and historical patterns
     - Accept/suppress functionality with context awareness:
