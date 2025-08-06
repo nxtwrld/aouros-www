@@ -51,18 +51,22 @@ graph TB
         L -->|Yes| N[Context-Aware Expert Analysis]
     end
 
-    subgraph "MoE Expert System"
-        N --> O[GP Expert + Context]
-        N --> P[Diagnostic Expert + Context]
-        N --> Q[Treatment Expert + Context]
-        N --> R[Inquiry Expert + Context]
-        N --> S[Safety Monitor + Context]
-
-        O --> T[Consensus Builder]
-        P --> T
-        Q --> T
-        R --> T
-        S --> T
+    subgraph "DAG-Based MoE Expert System"
+        N --> N1[transcript_parser]
+        N1 --> N2[symptom_extractor]
+        N2 --> N3[diagnosis_mapper]
+        N3 --> N4[treatment_recommender]
+        N3 --> N5[question_generator]
+        N3 --> N6[warning_annotator]
+        N2 --> N7[relationship_builder]
+        N3 --> N7
+        N4 --> N7
+        N5 --> N7
+        N6 --> N7
+        N7 --> N8[schema_merger]
+        N8 --> N9[user_feedback_applier]
+        N9 --> N10[node_cleaner]
+        N10 --> T[Enhanced JSON Output]
     end
 
     subgraph "Output Generation"
@@ -227,119 +231,254 @@ graph TB
   - No changes → Return to step 1 (wait for new transcript)
   - Changes detected → Proceed to MoE analysis
 
-### Phase 4: Context-Enhanced Mixture of Experts Analysis
+### Phase 4: DAG-Based Mixture of Experts Analysis
 
-14. **Context-Aware Parallel Expert Analysis**
+14. **Sequential Expert Node Execution**
 
-    - Multiple specialized experts analyze inputs with assembled context:
+    The system processes each transcript chunk through a directed acyclic graph (DAG) of specialized expert nodes. Each node receives the new transcript chunk plus the previous JSON output, enabling true conversational evolution.
 
-    **a) GP Expert (General Practitioner) + Context**
+    **Input**: New transcript chunk + Previous analysis JSON + Context
+    **Output**: Enhanced JSON with incremental improvements and versioning
 
-    - Holistic patient assessment enhanced with historical patterns
-    - Initial clinical impressions informed by previous consultations
-    - Care coordination recommendations based on treatment history
-    - Preventive care opportunities identified from context patterns
-    - Context confidence scoring for historical relevance
+15. **Core Expert Node Definitions**
 
-    **b) Diagnostic Specialist Expert + Context**
+    **Node 1: transcript_parser**
+    - **Role**: Parser and Structural Analyzer
+    - **Input**: Raw transcript chunk with timestamps
+    - **Processing**: 
+      - Extracts structured utterances with speaker identification
+      - Preserves exact quotes with timestamps and confidence scores
+      - Identifies speaker turns and conversation flow
+      - Normalizes medical terminology and abbreviations
+    - **Output**: Structured transcript segments ready for medical analysis
+    - **Schema Impact**: Provides accurate quotes for symptom nodes
 
-    - Differential diagnosis generation with historical differential patterns
-    - Probability-based ranking enhanced by previous diagnostic outcomes
-    - Evidence correlation across current and historical findings
-    - Pattern recognition leveraging long-term medical history
-    - Context-aware probability adjustments
+    **Node 2: symptom_extractor** 
+    - **Role**: Medical NER and Clinical Inference Engine
+    - **Input**: Structured transcript + Previous symptoms + Context
+    - **Processing**:
+      - Identifies explicit symptoms mentioned in conversation
+      - Infers implied symptoms from patient descriptions
+      - Extracts severity indicators, duration, characteristics
+      - Maps symptoms to appropriate source categories (transcript, history, suspected)
+      - Assigns confidence scores based on certainty of identification
+    - **Output**: New symptom nodes with embedded metadata
+    - **Schema Impact**: Populates nodes.symptoms array with comprehensive symptom data
 
-    **c) Treatment Planner Expert + Context**
+    **Node 3: diagnosis_mapper**
+    - **Role**: Differential Diagnosis Engine
+    - **Input**: Current symptoms + Previous diagnoses + Medical context
+    - **Processing**:
+      - Maps symptom constellations to possible diagnoses
+      - Calculates probability scores using Bayesian reasoning
+      - Considers epidemiological factors and patient demographics
+      - Flags diagnoses for exclusion vs confirmation
+      - Updates existing diagnosis probabilities based on new evidence
+    - **Output**: Ranked differential diagnoses with reasoning
+    - **Schema Impact**: Creates/updates nodes.diagnoses with probabilities and clinical reasoning
 
-    - Evidence-based treatment options informed by previous responses
-    - Medication recommendations considering historical effectiveness
-    - Risk-benefit analysis enhanced with past treatment outcomes
-    - Alternative therapies based on patient's historical preferences
-    - Context-driven contraindication checking
+    **Node 4: treatment_recommender**
+    - **Role**: Clinical Decision Support Engine  
+    - **Input**: Confirmed/probable diagnoses + Patient history + Previous treatments
+    - **Processing**:
+      - Suggests evidence-based treatments per diagnosis
+      - Considers patient-specific factors (allergies, contraindications, preferences)
+      - Ranks treatments by priority, effectiveness, and urgency
+      - Evaluates treatment interactions and safety profiles
+      - Accounts for previous treatment responses
+    - **Output**: Prioritized treatment recommendations with detailed rationale
+    - **Schema Impact**: Populates nodes.treatments with comprehensive treatment plans
 
-    **d) Clinical Inquiry Expert + Context**
+    **Node 5: question_generator**
+    - **Role**: Strategic Clinical Interrogator
+    - **Input**: Current differential + Diagnostic uncertainty + Previous Q&A
+    - **Processing**:
+      - Generates targeted questions to disambiguate differential diagnoses
+      - Creates confirmatory questions to strengthen high-probability diagnoses  
+      - Develops exclusionary questions to rule out serious conditions
+      - Prioritizes questions by diagnostic yield and clinical impact
+      - Avoids redundant questions from previous iterations
+    - **Output**: Strategic questions with expected diagnostic impact
+    - **Schema Impact**: Adds questions to nodes.actions with impact predictions
 
-    - Strategic question generation informed by historical patterns
-    - Confirmatory vs exclusionary questions prioritized by context
-    - Diagnostic yield optimization based on historical question effectiveness
-    - Question prioritization enhanced by context relevance scoring
-    - Historical question-answer pattern analysis
+    **Node 6: warning_annotator**
+    - **Role**: Clinical Risk and Safety Monitor
+    - **Input**: Diagnoses + Treatments + Patient profile + Drug database
+    - **Processing**:
+      - Identifies drug interactions and contraindications
+      - Flags red flag symptoms requiring immediate attention
+      - Generates allergy and adverse reaction alerts
+      - Monitors for critical condition development
+      - Creates safety protocols and monitoring recommendations
+    - **Output**: Prioritized safety alerts with action recommendations
+    - **Schema Impact**: Adds safety alerts to nodes.actions with urgency levels
 
-    **e) Safety Monitor Expert + Context**
+    **Node 7: relationship_builder**
+    - **Role**: Semantic Graph Constructor
+    - **Input**: All nodes from previous experts + Relationship ontology
+    - **Processing**:
+      - Creates semantic relationships between symptoms, diagnoses, and treatments
+      - Assigns relationship types (supports, contradicts, treats, investigates, etc.)
+      - Calculates relationship strength based on clinical evidence
+      - Determines relationship direction (incoming/outgoing/bidirectional)
+      - Provides clinical reasoning for each relationship
+    - **Output**: Comprehensive relationship mappings
+    - **Schema Impact**: Populates relationships arrays in all node types
 
-    - Drug interaction checking enhanced with complete medication history
-    - Contraindication identification using comprehensive context
-    - Red flag symptoms cross-referenced with historical alerts
-    - Critical condition alerts informed by patient's risk factors
-    - Context-aware safety protocol recommendations
+    **Node 8: schema_merger**
+    - **Role**: Version Control and Integration Engine
+    - **Input**: New analysis + Previous JSON + Change tracking
+    - **Processing**:
+      - Merges new findings with existing schema structure
+      - Updates confidence scores and probabilities
+      - Tracks changes and increments analysisVersion
+      - Maintains node ID consistency across iterations
+      - Preserves user interactions and preferences
+    - **Output**: Integrated schema with version tracking
+    - **Schema Impact**: Creates unified, versioned analysis output
 
-15. **Context-Enhanced Consensus Building**
-    - Weighted voting based on expert confidence and context relevance
-    - Conflict detection and resolution using historical precedents
-    - Uncertainty quantification enhanced by context quality scores
-    - Evidence aggregation across experts with context weighting
-    - Generation of unified recommendations with context attribution
-    - Context confidence integration in final consensus scoring
+    **Node 9: user_feedback_applier**
+    - **Role**: Human-AI Interaction Processor
+    - **Input**: Merged schema + User actions (suppress, accept, modify)
+    - **Processing**:
+      - Applies doctor's suppress/accept decisions to node visibility
+      - Updates node states based on user feedback
+      - Incorporates manual corrections and additions
+      - Adjusts confidence scores based on clinical validation
+      - Tracks user interaction patterns for learning
+    - **Output**: User-validated analysis with interaction tracking
+    - **Schema Impact**: Updates node states and userActions array
+
+    **Node 10: node_cleaner**
+    - **Role**: Relevance Filter and Optimization Engine
+    - **Input**: User-validated schema + Relevance thresholds
+    - **Processing**:
+      - Removes obsolete or ruled-out diagnoses
+      - Prunes low-confidence relationships
+      - Eliminates duplicate or redundant suggestions
+      - Optimizes schema size for visualization performance
+      - Maintains critical information regardless of confidence
+    - **Output**: Clean, optimized analysis ready for visualization
+    - **Schema Impact**: Final pruned schema with optimal node set
+
+16. **DAG Execution Flow and Dependencies**
+
+    **Sequential Dependencies:**
+    ```
+    transcript_parser → symptom_extractor → diagnosis_mapper
+                                         ↓
+    relationship_builder ← treatment_recommender
+           ↓              ← question_generator  
+    schema_merger         ← warning_annotator
+           ↓
+    user_feedback_applier
+           ↓
+    node_cleaner → Enhanced JSON Output
+    ```
+
+    **Parallel Execution Opportunities:**
+    - treatment_recommender, question_generator, and warning_annotator can run in parallel after diagnosis_mapper
+    - relationship_builder waits for all parallel nodes to complete
+    - Context assembly can run in parallel with transcript_parser
+
+17. **Incremental Conversational Processing**
+
+    **Version Control:**
+    - Each iteration increments analysisVersion
+    - Node IDs persist across conversations for tracking
+    - Confidence scores evolve with new evidence
+    - Relationship strengths adapt to clinical developments
+
+    **Memory Management:**
+    - Previous analysis provides conversational context
+    - User actions influence subsequent reasoning
+    - Clinical patterns learned from interaction history
+    - Schema grows incrementally rather than rebuilding entirely
+
+    **Real-time Adaptation:**
+    - New symptoms modify existing diagnosis probabilities
+    - Treatment recommendations adjust to patient responses
+    - Questions evolve based on previous answers
+    - Safety alerts adapt to changing clinical picture
+
+    **Schema Integration:**
+    - Node IDs persist across DAG executions for consistent tracking
+    - relationships arrays populated by relationship_builder expert node
+    - analysisVersion incremented by schema_merger for version control
+    - userActions array maintained by user_feedback_applier expert node
+    - Priority scale (1-10) consistent across all expert node outputs
 
 ### Phase 5: Structured Output Generation
 
-16. **MoE Analysis Structure**
+18. **Schema-Driven Analysis Structure**
 
     - Each element receives a unique ID for tracking
-    - Bidirectional linkages are established
-    - Confidence scores and priorities are assigned
+    - All nodes contain embedded relationships arrays
+    - Confidence scores and priorities are assigned using 1-10 scale
+    
+    **Unified Node Structure:**
+    - All symptoms (current, historical, suspected) in single symptom array with source indicators:
+      - `transcript`: From current conversation
+      - `medical_history`: From patient records
+      - `family_history`: From family medical history
+      - `social_history`: From social/lifestyle factors
+      - `medication_history`: From medication records
+      - `suspected`: AI-suggested symptoms based on diagnoses
+    - Questions and safety alerts unified in actions array with actionType field
+    - Relationships embedded in each node with direction indicators
+    - Priority scale: 1 (critical) to 10 (low) across all node types
 
     **a) Diagnosis Nodes**
 
-    - Unique diagnosis ID
+    - Unique diagnosis ID (diag_*)
     - Short title (1-3 words)
     - Detailed description
     - Clinical reasoning
-    - Priority level (critical/high/medium/low)
+    - Priority level (1=critical to 10=low)
     - Probability score (0-1)
     - ICD-10 codes
-    - Supporting evidence links
+    - Embedded relationships with other nodes
 
     **b) Treatment Nodes**
 
-    - Unique treatment ID
-    - Treatment type:
-      - Text recommendations
-      - Medications (with dosing)
-      - Follow-up investigations
-      - Procedures
+    - Unique treatment ID (treat_*)
+    - Treatment type: medication, procedure, therapy, lifestyle, investigation, immediate
+    - Treatment name and dosing details
+    - Priority (1=critical to 10=low)
     - Risk assessment
     - Contraindications
     - Expected outcomes
-    - Alternative options
+    - Embedded relationships with diagnoses and symptoms
 
-    **c) Question Nodes**
+    **c) Action Nodes (Questions and Safety Alerts)**
 
-    - Question ID and text
-    - Question type:
-      - `confirmatory`: Strengthen diagnosis
-      - `exclusionary`: Rule out conditions
-      - `exploratory`: Gather more data
-      - `risk_assessment`: Evaluate severity
-    - Priority (critical/high/medium/low)
+    - Action ID (q_* for questions, safety_* for alerts)
+    - Action text
+    - Action type: "question" or "alert"
+    - Category:
+      - Questions: symptom_exploration, diagnostic_clarification, treatment_selection, risk_assessment
+      - Alerts: drug_interaction, contraindication, allergy, warning, red_flag
+    - Priority (1=critical to 10=low)
+    - Status (pending/answered/acknowledged/skipped/resolved)
     - Expected impact on diagnosis probabilities
-    - Possible answers with actions:
-      - Prove and prioritize links
-      - Disprove and suppress links
-      - Redirect to alternative paths
+    - Embedded relationships with connected nodes
 
-17. **Relationship Mapping**
+19. **Embedded Relationship Mapping**
 
-    - Create comprehensive node linkages:
+    - Each node contains its own relationships array with:
+      - Target node ID
+      - Relationship type (supports, contradicts, confirms, treats, etc.)
+      - Direction (incoming/outgoing/bidirectional)
+      - Strength/confidence score (0.0-1.0)
+      - Clinical reasoning for relationship
+    - Support complex diagnostic chains:
       ```
-      [Input/Symptom] → [Question] → [Diagnosis] → [Question] → [Treatment]
+      [Symptom] ↔ [Action] ↔ [Diagnosis] ↔ [Action] ↔ [Treatment]
       ```
-    - Support 1:N relationships (one symptom → multiple diagnoses)
-    - Include evidence strength for each link
-    - Track which experts suggested each connection
-    - Bidirectional reasoning chains
+    - Track bidirectional evidence flows
+    - No separate links array - all relationships embedded in nodes
 
-18. **Risk and Safety Integration**
+20. **Risk and Safety Integration**
     - Evaluate treatment risks based on:
       - Patient medical history
       - Current medications
@@ -352,43 +491,61 @@ graph TB
 
 ### Phase 6: Context-Enhanced Visualization and Delivery
 
-19. **Context-Enhanced Sankey Diagram Generation**
+21. **DAG-Enhanced Sankey Diagram Generation**
 
-    - **Column 1**: Symptoms/Signals/History nodes with context indicators
+    - **Column 1**: Symptom nodes (current, historical, suspected) with source indicators
     - **Column 2**: Diagnosis nodes (sized by probability + context confidence)
     - **Column 3**: Treatment nodes (sized by priority + historical effectiveness)
-    - **Between columns**: Question nodes for path modification with context prioritization
+    - **Between columns**: Action nodes (questions/alerts) for diagnostic chain modification
 
     **Context-Enhanced Visual Encoding**:
 
-    - Node size: Reflects priority/probability weighted by context relevance
+    - Node size: Reflects priority (1-10 scale) weighted by context relevance
     - Node color: Indicates urgency with context confidence overlay
-      - Red=critical, orange=high, yellow=medium, green=low
+      - Priority 1-2=red (critical), 3-4=orange (high), 5-6=yellow (medium), 7-10=green (low)
       - Context confidence shown as border thickness or pattern
-    - Link thickness: Shows connection strength enhanced by historical evidence
-    - Link style: Solid=strong evidence, dashed=weak evidence, dotted=context-inferred
-    - Question dots: Small indicators on paths with context priority scoring
-    - Context sources: Subtle indicators showing which historical documents contributed
+    - Relationship visualization: Lines between nodes showing embedded relationships
+      - Thickness shows relationship strength (0.0-1.0)
+      - Style indicates direction (solid=bidirectional, arrow=directional)
+    - Action nodes: Interactive elements showing questions and safety alerts
+    - Suspected symptoms: Distinctive styling with "suspected" source indicator
 
-20. **Progressive Streaming with Context Updates**
+22. **Progressive DAG Execution Streaming**
 
-    - Send completed expert analyses as they finish with context metadata
-    - Update visualization incrementally including context confidence changes
-    - Show loading states for pending experts and context assembly
-    - Prioritize critical findings enhanced by context relevance for immediate display
-    - Stream context assembly progress and completion status
+    - Stream individual expert node completions as they finish processing
+    - Show real-time progress through the DAG execution pipeline:
+      - transcript_parser → symptom_extractor → diagnosis_mapper (parallel) → relationship_builder → schema_merger → user_feedback_applier → node_cleaner
+    - Update visualization incrementally as each expert contributes new nodes
+    - Display loading states for pending expert nodes with estimated completion times
+    - Prioritize critical findings (priority 1-2) for immediate streaming regardless of DAG position
+    - Show dependency relationships visually while nodes are processing
+    - Stream version updates (analysisVersion increments) with change highlights
 
-21. **Interactive Features Enhanced with Context**
-    - Click nodes for detailed information including context sources
-    - Hover questions to see impact predictions and historical patterns
-    - Accept/suppress functionality with context awareness:
-      - Accept: Highlight in green, lock as primary with context boost
-      - Suppress: Gray out with opacity reduction, note context conflicts
-      - Suppression coefficient affects priority display and context weighting
-    - Filter by expert consensus level and context confidence
-    - Show/hide evidence chains with context source attribution
-    - Context explorer: Drill down into specific historical documents and analyses
-    - Context timeline: View temporal progression of symptoms and treatments
+23. **Interactive Features Enhanced with DAG Processing**
+    - **Node Interaction with Expert Provenance:**
+      - Click nodes to see which expert nodes contributed to their creation
+      - View expert reasoning chain and confidence evolution across iterations
+      - See DAG execution timestamps for each node's creation/modification
+    - **Real-time DAG Execution Monitoring:**
+      - Visual progress indicators showing current expert node processing
+      - Hover over processing indicators to see expert node dependencies
+      - Real-time updates as nodes flow through the DAG pipeline
+    - **Enhanced Accept/Suppress with DAG Awareness:**
+      - Accept: Triggers immediate re-processing through relevant expert nodes
+      - Suppress: Updates node states and triggers downstream DAG re-evaluation
+      - User actions influence subsequent DAG executions for incremental learning
+    - **Incremental Analysis Features:**
+      - Version comparison: Compare analysisVersion iterations side-by-side
+      - Change highlighting: Visual indicators for nodes modified in latest iteration
+      - Conversation timeline: Scrub through analysis evolution over transcript chunks
+    - **Advanced Relationship Exploration:**
+      - Trace relationship creation back to specific expert nodes
+      - Filter relationships by strength, direction, and expert provenance
+      - Show relationship evolution over conversation iterations
+    - **Expert Node Performance Metrics:**
+      - Display processing time and confidence scores for each expert
+      - Show expert node contribution statistics (nodes created/modified)
+      - Performance optimization suggestions based on DAG execution patterns
 
 ## UI Design Implementation
 

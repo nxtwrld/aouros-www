@@ -9,6 +9,8 @@ This document provides a comprehensive plan for implementing the visual componen
 There will be a new path at `src/routes/med/p/[profile]/session-moe` where we will implment this new
 medicl session analysis system.
 
+New Svelte and d3 components will be created in `src/components/session/` folder
+
 
 ## Design Principles
 
@@ -24,8 +26,11 @@ medicl session analysis system.
 - **Progressive Rendering**: Show partial results immediately
 - **Smooth Transitions**: Animated updates that don't distract
 - **Optimistic UI**: Immediate visual feedback for all actions
+- **Discoverability**: Major symptoms, diagnosis and treatments are visible. Others are collapsed and visibility is toggle on click/hover. Same applies for question nodes.
 
 ## Sample JSON Data Structures
+
+> **Note**: This schema follows the unified MoE visualization format defined in `config/session-moe-output.json`. All relationships are embedded within nodes using the `relationships` property, eliminating the need for separate links.
 
 ### Initial Analysis (T1 - First 2 minutes of consultation)
 
@@ -34,47 +39,116 @@ medicl session analysis system.
   "sessionId": "session_20240315_142300",
   "timestamp": "2024-03-15T14:25:00Z",
   "analysisVersion": 1,
-  "metadata": {
-    "duration": 120,
-    "expertsCompleted": ["gp_expert", "diagnostic_expert", "inquiry_expert"],
-    "totalConfidence": 0.72,
-    "contextSources": 3
-  },
   "nodes": {
     "symptoms": [
       {
         "id": "sym_1",
         "text": "Severe headache",
-        "severity": "high",
-        "duration": "3 days",
+        "severity": 8,
+        "duration": 3,
         "confidence": 0.95,
         "source": "transcript",
-        "timestamp": "00:45"
+        "quote": "I've had this terrible headache for three days now",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Primary symptom consistent with migraine"
+          },
+          {
+            "nodeId": "diag_2",
+            "relationship": "supports", 
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Could indicate tension headache but less likely"
+          },
+          {
+            "nodeId": "diag_3",
+            "relationship": "supports",
+            "direction": "outgoing", 
+            "strength": 0.3,
+            "reasoning": "Severe headache can be sign of meningitis"
+          }
+        ]
       },
       {
         "id": "sym_2",
         "text": "Sensitivity to light",
-        "severity": "moderate",
+        "severity": 6,
         "confidence": 0.88,
         "source": "transcript",
-        "timestamp": "01:15"
+        "quote": "Bright lights really bother me",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "confirms",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Photophobia is classic migraine symptom"
+          },
+          {
+            "nodeId": "diag_2",
+            "relationship": "contradicts",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Photophobia uncommon in tension headaches"
+          }
+        ]
       },
       {
         "id": "sym_3",
         "text": "Nausea",
-        "severity": "moderate",
+        "severity": 5,
         "confidence": 0.92,
         "source": "transcript",
-        "timestamp": "01:30"
-      }
-    ],
-    "contextInputs": [
+        "quote": "I feel sick to my stomach",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Nausea commonly accompanies migraines"
+          }
+        ]
+      },
       {
-        "id": "ctx_1",
+        "id": "sym_4",
         "text": "History of migraines",
-        "relevance": 0.85,
+        "severity": 4,
+        "confidence": 0.95,
         "source": "medical_history",
-        "documentId": "doc_2023_11_15"
+        "relevance": 0.85,
+        "documentId": "doc_2023_11_15",
+        "quote": "Patient has documented history of chronic migraines",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "confirms",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Strong predictor for recurrent migraine episodes"
+          }
+        ]
+      },
+      {
+        "id": "sym_5", 
+        "text": "Possible neck stiffness",
+        "severity": 7,
+        "confidence": 0.3,
+        "source": "suspected",
+        "suggestedBy": "diag_3",
+        "relationships": [
+          {
+            "nodeId": "diag_3",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Neck stiffness is key sign of meningeal irritation"
+          }
+        ]
       }
     ],
     "diagnoses": [
@@ -82,57 +156,80 @@ medicl session analysis system.
         "id": "diag_1",
         "name": "Migraine",
         "probability": 0.78,
-        "priority": "high",
+        "priority": 3,
         "icd10": "G43.909",
-        "reasoning": "Classic presentation with photophobia and nausea",
-        "supportingSymptoms": ["sym_1", "sym_2", "sym_3"],
-        "contextSupport": ["ctx_1"]
+        "reasoning": "Classic presentation with photophobia and nausea plus history",
+        "relationships": [
+          {
+            "nodeId": "sym_1",
+            "relationship": "supports",
+            "direction": "incoming", 
+            "strength": 0.9,
+            "reasoning": "Severe headache supports migraine diagnosis"
+          },
+          {
+            "nodeId": "sym_2",
+            "relationship": "confirms",
+            "direction": "incoming",
+            "strength": 0.85, 
+            "reasoning": "Photophobia confirms migraine"
+          },
+          {
+            "nodeId": "sym_3",
+            "relationship": "supports",
+            "direction": "incoming",
+            "strength": 0.7,
+            "reasoning": "Nausea supports migraine"
+          },
+          {
+            "nodeId": "sym_4",
+            "relationship": "confirms",
+            "direction": "incoming",
+            "strength": 0.8,
+            "reasoning": "Previous history confirms pattern"
+          }
+        ]
       },
       {
-        "id": "diag_2",
+        "id": "diag_2", 
         "name": "Tension headache",
         "probability": 0.45,
-        "priority": "medium",
+        "priority": 6,
         "icd10": "G44.209",
-        "reasoning": "Duration and severity match, but photophobia less common",
-        "supportingSymptoms": ["sym_1"],
-        "contradictingSymptoms": ["sym_2"]
+        "reasoning": "Duration matches but photophobia contradicts",
+        "relationships": [
+          {
+            "nodeId": "sym_1",
+            "relationship": "supports",
+            "direction": "incoming",
+            "strength": 0.6,
+            "reasoning": "Headache could be tension-type"
+          },
+          {
+            "nodeId": "sym_2", 
+            "relationship": "contradicts",
+            "direction": "incoming",
+            "strength": 0.8,
+            "reasoning": "Photophobia uncommon in tension headaches"
+          }
+        ]
       },
       {
         "id": "diag_3",
         "name": "Meningitis",
         "probability": 0.15,
-        "priority": "critical",
-        "icd10": "G03.9",
-        "reasoning": "Low probability but high severity condition to rule out",
-        "supportingSymptoms": ["sym_1", "sym_2", "sym_3"],
-        "redFlags": ["Requires immediate evaluation if fever present"]
-      }
-    ],
-    "questions": [
-      {
-        "id": "q_1",
-        "text": "Do you have a fever?",
-        "type": "exclusionary",
-        "priority": "critical",
-        "targetDiagnosis": "diag_3",
-        "impact": {
-          "yes": {"diag_3": 0.65, "diag_1": -0.1},
-          "no": {"diag_3": -0.12, "diag_1": 0.05}
-        },
-        "status": "pending"
-      },
-      {
-        "id": "q_2",
-        "text": "Is the pain on one side of your head?",
-        "type": "confirmatory",
-        "priority": "high",
-        "targetDiagnosis": "diag_1",
-        "impact": {
-          "yes": {"diag_1": 0.15, "diag_2": -0.2},
-          "no": {"diag_2": 0.1, "diag_1": -0.05}
-        },
-        "status": "pending"
+        "priority": 1,
+        "icd10": "G03.9", 
+        "reasoning": "Low probability but critical to rule out",
+        "relationships": [
+          {
+            "nodeId": "sym_1",
+            "relationship": "supports",
+            "direction": "incoming",
+            "strength": 0.3,
+            "reasoning": "Severe headache can indicate meningitis"
+          }
+        ]
       }
     ],
     "treatments": [
@@ -140,264 +237,370 @@ medicl session analysis system.
         "id": "treat_1",
         "type": "medication",
         "name": "Sumatriptan",
-        "dosage": "50mg oral",
-        "priority": "high",
-        "forDiagnosis": ["diag_1"],
-        "contraindications": [],
-        "confidence": 0.82
+        "dosage": "50mg oral", 
+        "priority": 3,
+        "confidence": 0.82,
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.85,
+            "reasoning": "Sumatriptan is first-line migraine treatment"
+          }
+        ]
       },
       {
         "id": "treat_2",
         "type": "investigation",
-        "name": "Neurological examination",
+        "name": "Neurological examination", 
         "urgency": "immediate",
-        "forDiagnosis": ["diag_3"],
-        "reasoning": "Rule out meningeal signs"
+        "priority": 1,
+        "relationships": [
+          {
+            "nodeId": "diag_3",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.95,
+            "reasoning": "Essential to rule out meningeal signs"
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "q_1",
+        "text": "Do you have a fever?",
+        "category": "diagnostic_clarification",
+        "actionType": "question",
+        "priority": 1,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "diag_3",
+            "relationship": "excludes",
+            "direction": "outgoing", 
+            "strength": 0.95,
+            "reasoning": "Fever presence critical for meningitis assessment"
+          }
+        ],
+        "impact": {
+          "yes": {"diag_3": 0.65, "diag_1": -0.1},
+          "no": {"diag_3": -0.12, "diag_1": 0.05}
+        }
+      },
+      {
+        "id": "q_2", 
+        "text": "Is the pain on one side of your head?",
+        "category": "symptom_exploration",
+        "actionType": "question",
+        "priority": 3,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "clarifies",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Unilateral pain supports migraine diagnosis"
+          }
+        ],
+        "impact": {
+          "yes": {"diag_1": 0.15, "diag_2": -0.2},
+          "no": {"diag_2": 0.1, "diag_1": -0.05}
+        }
+      },
+      {
+        "id": "safety_1",
+        "text": "Monitor for meningeal signs",
+        "category": "red_flag",
+        "actionType": "alert",
+        "priority": 1,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "diag_3",
+            "relationship": "monitors",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Critical safety monitoring for meningitis"
+          }
+        ],
+        "recommendation": "Immediate neurological assessment if fever develops"
       }
     ]
-  },
-  "links": [
-    {
-      "source": "sym_1",
-      "target": "diag_1",
-      "strength": 0.9,
-      "type": "supports"
-    },
-    {
-      "source": "sym_2",
-      "target": "diag_1",
-      "strength": 0.85,
-      "type": "supports"
-    },
-    {
-      "source": "sym_3",
-      "target": "diag_1",
-      "strength": 0.7,
-      "type": "supports"
-    },
-    {
-      "source": "ctx_1",
-      "target": "diag_1",
-      "strength": 0.8,
-      "type": "confirms"
-    },
-    {
-      "source": "sym_1",
-      "target": "diag_2",
-      "strength": 0.6,
-      "type": "supports"
-    },
-    {
-      "source": "sym_2",
-      "target": "diag_2",
-      "strength": 0.2,
-      "type": "contradicts"
-    },
-    {
-      "source": "diag_1",
-      "target": "treat_1",
-      "strength": 0.85,
-      "type": "treats"
-    },
-    {
-      "source": "diag_3",
-      "target": "treat_2",
-      "strength": 0.95,
-      "type": "requires"
-    },
-    {
-      "source": "diag_1",
-      "target": "q_2",
-      "strength": 0.8,
-      "type": "clarifies"
-    },
-    {
-      "source": "diag_3",
-      "target": "q_1",
-      "strength": 0.95,
-      "type": "excludes"
-    }
-  ]
+  }
 }
 ```
 
 ### Updated Analysis (T2 - After 5 minutes, with answered questions)
+
+This example shows the same case after questions have been answered and new symptoms have been discovered, following our unified schema with embedded relationships.
 
 ```json
 {
   "sessionId": "session_20240315_142300",
   "timestamp": "2024-03-15T14:28:00Z",
   "analysisVersion": 2,
-  "metadata": {
-    "duration": 300,
-    "expertsCompleted": ["gp_expert", "diagnostic_expert", "treatment_expert", "inquiry_expert", "safety_monitor"],
-    "totalConfidence": 0.86,
-    "contextSources": 5,
-    "questionsAnswered": 2,
-    "newFindings": 3
-  },
   "nodes": {
     "symptoms": [
       {
         "id": "sym_1",
-        "text": "Severe headache",
-        "severity": "high",
-        "duration": "3 days",
+        "text": "Severe headache", 
+        "severity": 8,
+        "duration": 3,
         "confidence": 0.95,
         "source": "transcript",
-        "timestamp": "00:45"
+        "quote": "I've had this terrible headache for three days now",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Primary symptom consistent with migraine"
+          },
+          {
+            "nodeId": "diag_2",
+            "relationship": "supports",
+            "direction": "outgoing", 
+            "strength": 0.4,
+            "reasoning": "Headache could indicate tension type but other symptoms contradict"
+          },
+          {
+            "nodeId": "diag_4",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Consistent with medication overuse headache"
+          }
+        ]
       },
       {
         "id": "sym_2",
         "text": "Sensitivity to light",
-        "severity": "moderate",
+        "severity": 6, 
         "confidence": 0.88,
         "source": "transcript",
-        "timestamp": "01:15"
+        "quote": "Bright lights really bother me",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "confirms",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Photophobia is classic migraine symptom"
+          },
+          {
+            "nodeId": "diag_2",
+            "relationship": "contradicts",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Photophobia uncommon in tension headaches"
+          }
+        ]
       },
       {
         "id": "sym_3",
         "text": "Nausea",
-        "severity": "moderate",
+        "severity": 5,
         "confidence": 0.92,
-        "source": "transcript",
-        "timestamp": "01:30"
+        "source": "transcript", 
+        "quote": "I feel sick to my stomach",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Nausea commonly accompanies migraines"
+          }
+        ]
       },
       {
-        "id": "sym_4",
-        "text": "Unilateral pain (right side)",
-        "severity": "high",
-        "confidence": 0.94,
-        "source": "transcript",
-        "timestamp": "03:45",
-        "fromQuestion": "q_2"
+        "id": "sym_4", 
+        "text": "History of migraines",
+        "severity": 4,
+        "confidence": 0.95,
+        "source": "medical_history",
+        "relevance": 0.85,
+        "documentId": "doc_2023_11_15",
+        "quote": "Patient has documented history of chronic migraines",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "confirms",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Strong predictor for recurrent migraine episodes"
+          }
+        ]
       },
       {
         "id": "sym_5",
-        "text": "No fever",
-        "confidence": 0.98,
-        "source": "transcript",
-        "timestamp": "03:20",
-        "fromQuestion": "q_1"
+        "text": "Previous sumatriptan use",
+        "severity": 3,
+        "confidence": 0.92, 
+        "source": "medication_history",
+        "documentId": "rx_2023_11_20",
+        "relevance": 0.92,
+        "quote": "Previously prescribed sumatriptan 50mg",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.75,
+            "reasoning": "Previous migraine treatment supports diagnosis"
+          },
+          {
+            "nodeId": "diag_4",
+            "relationship": "suggests",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Previous medication use raises overuse concern"
+          }
+        ]
       },
       {
         "id": "sym_6",
+        "text": "Unilateral right-sided pain",
+        "severity": 8,
+        "confidence": 0.94,
+        "source": "transcript",
+        "fromQuestion": "q_2",
+        "quote": "Yes, it's mostly on the right side of my head",
+        "relationships": [
+          {
+            "nodeId": "diag_1", 
+            "relationship": "confirms",
+            "direction": "outgoing",
+            "strength": 0.95,
+            "reasoning": "Unilateral pain strongly supports migraine diagnosis"
+          },
+          {
+            "nodeId": "diag_2",
+            "relationship": "contradicts",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Unilateral pattern less common in tension headaches"
+          }
+        ]
+      },
+      {
+        "id": "sym_7",
+        "text": "No fever",
+        "severity": 1,
+        "confidence": 0.98,
+        "source": "transcript",
+        "fromQuestion": "q_1", 
+        "quote": "No, I don't have a fever",
+        "relationships": [
+          {
+            "nodeId": "diag_3",
+            "relationship": "rules_out",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Absence of fever strongly against meningitis"
+          }
+        ]
+      },
+      {
+        "id": "sym_8",
         "text": "Throbbing quality",
-        "severity": "moderate",
+        "severity": 7,
         "confidence": 0.89,
         "source": "transcript",
-        "timestamp": "04:30"
-      }
-    ],
-    "contextInputs": [
-      {
-        "id": "ctx_1",
-        "text": "History of migraines",
-        "relevance": 0.85,
-        "source": "medical_history",
-        "documentId": "doc_2023_11_15"
-      },
-      {
-        "id": "ctx_2",
-        "text": "Previous sumatriptan prescription",
-        "relevance": 0.92,
-        "source": "medication_history",
-        "documentId": "rx_2023_11_20"
-      },
-      {
-        "id": "ctx_3",
-        "text": "Mother has chronic migraines",
-        "relevance": 0.75,
-        "source": "family_history",
-        "confidence": 0.88
+        "quote": "It feels like pounding or throbbing",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "supports",
+            "direction": "outgoing", 
+            "strength": 0.88,
+            "reasoning": "Throbbing quality characteristic of migraine"
+          }
+        ]
       }
     ],
     "diagnoses": [
       {
         "id": "diag_1",
-        "name": "Migraine",
+        "name": "Migraine", 
         "probability": 0.92,
-        "priority": "high",
+        "priority": 3,
         "icd10": "G43.909",
-        "reasoning": "Classic migraine presentation with unilateral throbbing pain, photophobia, and positive family history",
-        "supportingSymptoms": ["sym_1", "sym_2", "sym_3", "sym_4", "sym_6"],
-        "contextSupport": ["ctx_1", "ctx_2", "ctx_3"],
-        "confidence": 0.91
+        "reasoning": "Classic migraine with unilateral throbbing pain, photophobia, nausea, and positive history",
+        "confidence": 0.91,
+        "relationships": [
+          {
+            "nodeId": "treat_1",
+            "relationship": "treats",
+            "direction": "outgoing",
+            "strength": 0.92,
+            "reasoning": "Sumatriptan is first-line migraine treatment"
+          },
+          {
+            "nodeId": "treat_3",
+            "relationship": "manages",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Migraine diary helps identify triggers"
+          },
+          {
+            "nodeId": "treat_4", 
+            "relationship": "prevents",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Prophylaxis appropriate for frequent migraines"
+          },
+          {
+            "nodeId": "treat_5",
+            "relationship": "relieves",
+            "direction": "outgoing",
+            "strength": 0.95,
+            "reasoning": "Dark quiet environment provides immediate relief"
+          }
+        ]
       },
       {
         "id": "diag_2",
         "name": "Tension headache",
         "probability": 0.22,
-        "priority": "low",
-        "icd10": "G44.209",
-        "reasoning": "Unilateral and throbbing nature inconsistent with tension pattern",
-        "supportingSymptoms": ["sym_1"],
-        "contradictingSymptoms": ["sym_2", "sym_4", "sym_6"],
-        "confidence": 0.78
+        "priority": 8,
+        "icd10": "G44.209", 
+        "reasoning": "Unilateral throbbing nature and photophobia inconsistent with tension pattern",
+        "confidence": 0.78,
+        "relationships": []
       },
       {
         "id": "diag_3",
         "name": "Meningitis",
         "probability": 0.02,
-        "priority": "low",
+        "priority": 1,
         "icd10": "G03.9",
-        "reasoning": "Ruled out by absence of fever and normal neurological status",
-        "contradictingSymptoms": ["sym_5"],
+        "reasoning": "Effectively ruled out by absence of fever and normal presentation",
         "suppressed": true,
-        "suppressionReason": "No fever or meningeal signs"
+        "suppressionReason": "No fever or meningeal signs",
+        "relationships": []
       },
       {
         "id": "diag_4",
         "name": "Medication overuse headache",
         "probability": 0.35,
-        "priority": "medium",
+        "priority": 5,
         "icd10": "G44.41",
         "reasoning": "Consider given history of migraine treatment",
-        "supportingSymptoms": ["sym_1"],
-        "contextSupport": ["ctx_2"],
-        "requiresInvestigation": true
-      }
-    ],
-    "questions": [
-      {
-        "id": "q_1",
-        "text": "Do you have a fever?",
-        "type": "exclusionary",
-        "priority": "critical",
-        "status": "answered",
-        "answer": "no",
-        "timestamp": "03:20"
-      },
-      {
-        "id": "q_2",
-        "text": "Is the pain on one side of your head?",
-        "type": "confirmatory",
-        "priority": "high",
-        "status": "answered",
-        "answer": "yes, right side",
-        "timestamp": "03:45"
-      },
-      {
-        "id": "q_3",
-        "text": "How often do you take pain medication?",
-        "type": "exploratory",
-        "priority": "high",
-        "targetDiagnosis": "diag_4",
-        "impact": {
-          "daily": {"diag_4": 0.4, "diag_1": -0.05},
-          "weekly": {"diag_4": 0.1},
-          "rarely": {"diag_4": -0.3}
-        },
-        "status": "pending"
-      },
-      {
-        "id": "q_4",
-        "text": "Do you experience visual auras before the headache?",
-        "type": "confirmatory",
-        "priority": "medium",
-        "targetDiagnosis": "diag_1",
-        "subtype": "migraine_with_aura",
-        "status": "pending"
+        "requiresInvestigation": true,
+        "relationships": [
+          {
+            "nodeId": "treat_3",
+            "relationship": "investigates", 
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Medication diary helps assess overuse"
+          }
+        ]
       }
     ],
     "treatments": [
@@ -406,176 +609,198 @@ medicl session analysis system.
         "type": "medication",
         "name": "Sumatriptan",
         "dosage": "50mg oral",
-        "priority": "high",
-        "forDiagnosis": ["diag_1"],
-        "contraindications": [],
+        "priority": 3,
         "confidence": 0.92,
         "historicalEffectiveness": 0.85,
-        "basedOnContext": ["ctx_2"]
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.92,
+            "reasoning": "Sumatriptan is first-line migraine treatment"
+          },
+          {
+            "nodeId": "sym_5",
+            "relationship": "suggests",
+            "direction": "incoming",
+            "strength": 0.8,
+            "reasoning": "Previous prescription indicates effectiveness"
+          }
+        ]
       },
       {
         "id": "treat_3",
         "type": "lifestyle",
         "name": "Migraine diary and trigger identification",
-        "priority": "medium",
-        "forDiagnosis": ["diag_1", "diag_4"],
+        "priority": 5,
         "duration": "ongoing",
-        "confidence": 0.88
+        "confidence": 0.88,
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "manages",
+            "direction": "incoming",
+            "strength": 0.8,
+            "reasoning": "Diary helps manage migraine triggers"
+          },
+          {
+            "nodeId": "diag_4",
+            "relationship": "investigates",
+            "direction": "incoming", 
+            "strength": 0.85,
+            "reasoning": "Tracks medication usage patterns"
+          }
+        ]
       },
       {
         "id": "treat_4",
         "type": "medication",
         "name": "Prophylactic therapy evaluation",
         "description": "Consider beta-blockers or anticonvulsants if frequency >4/month",
-        "priority": "medium",
-        "forDiagnosis": ["diag_1"],
-        "requiresFollowUp": true
+        "priority": 6,
+        "requiresFollowUp": true,
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "prevents",
+            "direction": "incoming",
+            "strength": 0.7,
+            "reasoning": "Prophylaxis prevents frequent migraines"
+          }
+        ]
       },
       {
         "id": "treat_5",
         "type": "immediate",
         "name": "Dark, quiet room rest",
-        "priority": "high",
-        "forDiagnosis": ["diag_1"],
-        "confidence": 0.95
+        "priority": 2,
+        "confidence": 0.95,
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "relieves",
+            "direction": "incoming",
+            "strength": 0.95,
+            "reasoning": "Environmental modification provides immediate relief"
+          }
+        ]
       }
     ],
-    "safetyAlerts": [
+    "actions": [
+      {
+        "id": "q_1",
+        "text": "Do you have a fever?",
+        "category": "diagnostic_clarification",
+        "actionType": "question",
+        "priority": 1,
+        "status": "answered",
+        "answer": "no",
+        "relationships": [
+          {
+            "nodeId": "diag_3",
+            "relationship": "excludes",
+            "direction": "outgoing",
+            "strength": 0.95,
+            "reasoning": "Fever absence critical for ruling out meningitis"
+          }
+        ]
+      },
+      {
+        "id": "q_2",
+        "text": "Is the pain on one side of your head?",
+        "category": "symptom_exploration", 
+        "actionType": "question",
+        "priority": 3,
+        "status": "answered",
+        "answer": "yes, right side",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "clarifies",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Unilateral location supports migraine diagnosis"
+          }
+        ]
+      },
+      {
+        "id": "q_3", 
+        "text": "How often do you take pain medication?",
+        "category": "treatment_selection",
+        "actionType": "question",
+        "priority": 4,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "diag_4",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Medication frequency critical for overuse assessment"
+          }
+        ],
+        "impact": {
+          "daily": {"diag_4": 0.4, "diag_1": -0.05},
+          "weekly": {"diag_4": 0.1},
+          "rarely": {"diag_4": -0.3}
+        }
+      },
+      {
+        "id": "q_4",
+        "text": "Do you experience visual auras before the headache?",
+        "category": "diagnostic_clarification",
+        "actionType": "question", 
+        "priority": 6,
+        "status": "pending",
+        "subtype": "migraine_with_aura",
+        "relationships": [
+          {
+            "nodeId": "diag_1",
+            "relationship": "clarifies",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Aura presence would specify migraine subtype"
+          }
+        ]
+      },
       {
         "id": "safety_1",
-        "type": "drug_interaction",
-        "severity": "low",
-        "message": "Monitor sumatriptan frequency to avoid medication overuse",
-        "relatedTreatments": ["treat_1"],
-        "relatedDiagnoses": ["diag_4"]
+        "text": "Monitor sumatriptan frequency",
+        "category": "drug_interaction",
+        "actionType": "alert",
+        "priority": 7,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "treat_1",
+            "relationship": "monitors",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Prevent medication overuse"
+          },
+          {
+            "nodeId": "diag_4",
+            "relationship": "prevents",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Early warning prevents medication overuse headache"
+          }
+        ],
+        "recommendation": "Track usage to avoid overuse pattern"
       }
     ]
   },
-  "links": [
-    {
-      "source": "sym_1",
-      "target": "diag_1",
-      "strength": 0.9,
-      "type": "supports"
-    },
-    {
-      "source": "sym_2",
-      "target": "diag_1",
-      "strength": 0.85,
-      "type": "supports"
-    },
-    {
-      "source": "sym_3",
-      "target": "diag_1",
-      "strength": 0.7,
-      "type": "supports"
-    },
-    {
-      "source": "sym_4",
-      "target": "diag_1",
-      "strength": 0.95,
-      "type": "confirms"
-    },
-    {
-      "source": "sym_6",
-      "target": "diag_1",
-      "strength": 0.88,
-      "type": "supports"
-    },
-    {
-      "source": "ctx_1",
-      "target": "diag_1",
-      "strength": 0.8,
-      "type": "confirms"
-    },
-    {
-      "source": "ctx_2",
-      "target": "diag_1",
-      "strength": 0.75,
-      "type": "supports"
-    },
-    {
-      "source": "ctx_3",
-      "target": "diag_1",
-      "strength": 0.7,
-      "type": "supports"
-    },
-    {
-      "source": "sym_1",
-      "target": "diag_2",
-      "strength": 0.4,
-      "type": "supports"
-    },
-    {
-      "source": "sym_4",
-      "target": "diag_2",
-      "strength": 0.2,
-      "type": "contradicts"
-    },
-    {
-      "source": "sym_5",
-      "target": "diag_3",
-      "strength": 0.9,
-      "type": "contradicts"
-    },
-    {
-      "source": "ctx_2",
-      "target": "diag_4",
-      "strength": 0.6,
-      "type": "suggests"
-    },
-    {
-      "source": "diag_1",
-      "target": "treat_1",
-      "strength": 0.92,
-      "type": "treats"
-    },
-    {
-      "source": "diag_1",
-      "target": "treat_3",
-      "strength": 0.8,
-      "type": "manages"
-    },
-    {
-      "source": "diag_1",
-      "target": "treat_4",
-      "strength": 0.7,
-      "type": "prevents"
-    },
-    {
-      "source": "diag_1",
-      "target": "treat_5",
-      "strength": 0.95,
-      "type": "relieves"
-    },
-    {
-      "source": "diag_4",
-      "target": "treat_3",
-      "strength": 0.85,
-      "type": "investigates"
-    },
-    {
-      "source": "diag_1",
-      "target": "q_4",
-      "strength": 0.7,
-      "type": "clarifies"
-    },
-    {
-      "source": "diag_4",
-      "target": "q_3",
-      "strength": 0.9,
-      "type": "investigates"
-    }
-  ],
   "userActions": [
     {
       "timestamp": "04:45",
       "action": "suppress",
-      "targetId": "diag_3",
-      "reason": "No clinical indicators"
+      "targetId": "diag_3", 
+      "reason": "No clinical indicators",
+      "confidence": 0.95
     },
     {
-      "timestamp": "04:50",
+      "timestamp": "04:50", 
       "action": "accept",
       "targetId": "diag_1",
       "confidence": 0.95

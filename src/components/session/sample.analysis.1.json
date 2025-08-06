@@ -1,0 +1,1142 @@
+{
+    "sessionId": "session_20250806_143110",
+    "timestamp": "2025-08-06T14:34:45Z",
+    "analysisVersion": 1,
+    "nodes": {
+      "symptoms": [
+        {
+          "id": "sym_fatigue_non_restorative",
+          "text": "non-restorative fatigue",
+          "severity": 3,
+          "duration": 60,
+          "confidence": 0.95,
+          "source": "transcript",
+          "quote": "I wake up tired, and by midday I feel like I can barely function.",
+          "characteristics": ["worsening", "persistent"],
+          "relationships": [
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.85,
+              "reasoning": "Persistent fatigue with heavy menstruation suggests iron loss."
+            },
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Non-restorative sleep and fatigue are common in hypothyroidism."
+            },
+            {
+              "nodeId": "diag_long_covid",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Symptoms started weeks after a COVID infection."
+            },
+            {
+              "nodeId": "diag_depression",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Persistent fatigue can be a manifestation of depression."
+            }
+          ]
+        },
+        {
+          "id": "sym_brain_fog",
+          "text": "difficulty concentrating / brain fog",
+          "severity": 4,
+          "confidence": 0.9,
+          "source": "transcript",
+          "quote": "It's like my brain is in a fog.",
+          "relationships": [
+            {
+              "nodeId": "diag_depression",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.75,
+              "reasoning": "Cognitive difficulties and emotional flatness suggest possible depression."
+            },
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Hypothyroidism can cause cognitive slowing."
+            },
+            {
+              "nodeId": "diag_long_covid",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.65,
+              "reasoning": "Post-viral cognitive symptoms are common in long COVID."
+            }
+          ]
+        },
+        {
+          "id": "sym_heavy_menstruation",
+          "text": "heavy menstrual periods",
+          "severity": 6,
+          "duration": 180,
+          "confidence": 0.9,
+          "source": "transcript",
+          "quote": "My periods have been really heavy for the past few months, lasting 7-8 days.",
+          "characteristics": ["worsening", "cyclical"],
+          "relationships": [
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Heavy menstruation is a primary cause of iron deficiency in women."
+            },
+            {
+              "nodeId": "diag_fibroids",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Uterine fibroids commonly cause heavy menstrual bleeding."
+            },
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Hypothyroidism can cause menorrhagia."
+            }
+          ]
+        },
+        {
+          "id": "sym_hair_thinning",
+          "text": "hair thinning and loss",
+          "severity": 7,
+          "duration": 120,
+          "confidence": 0.85,
+          "source": "transcript",
+          "quote": "I've noticed my hair getting thinner, especially around my temples.",
+          "characteristics": ["progressive"],
+          "relationships": [
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Iron deficiency commonly causes diffuse hair loss."
+            },
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Hypothyroidism causes brittle, thinning hair."
+            },
+            {
+              "nodeId": "diag_androgenetic_alopecia",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Pattern distribution suggests possible androgenetic component."
+            }
+          ]
+        },
+        {
+          "id": "sym_cold_intolerance",
+          "text": "cold intolerance",
+          "severity": 6,
+          "duration": 90,
+          "confidence": 0.8,
+          "source": "transcript",
+          "quote": "I'm always cold now, even when others are comfortable.",
+          "characteristics": ["progressive"],
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Cold intolerance is a classic symptom of hypothyroidism."
+            },
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Anemia can cause cold sensitivity due to poor circulation."
+            }
+          ]
+        },
+        {
+          "id": "sym_dry_skin",
+          "text": "dry, rough skin",
+          "severity": 7,
+          "duration": 120,
+          "confidence": 0.85,
+          "source": "transcript",
+          "quote": "My skin has become really dry and rough, especially on my arms and legs.",
+          "characteristics": ["progressive", "widespread"],
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.85,
+              "reasoning": "Dry, coarse skin is characteristic of hypothyroidism."
+            }
+          ]
+        },
+        {
+          "id": "sym_maternal_thyroid_disease",
+          "text": "mother had thyroid problems",
+          "severity": 8,
+          "confidence": 0.9,
+          "source": "family_history",
+          "quote": "Patient reports mother was treated for underactive thyroid in her 40s.",
+          "characteristics": ["genetic predisposition"],
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Family history of thyroid disease increases risk significantly."
+            },
+            {
+              "nodeId": "diag_hashimoto_thyroiditis",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Autoimmune thyroid conditions have strong genetic component."
+            }
+          ]
+        },
+        {
+          "id": "sym_previous_pregnancy_fatigue",
+          "text": "persistent fatigue since last pregnancy",
+          "severity": 6,
+          "confidence": 0.8,
+          "source": "medical_history",
+          "quote": "From medical records: Patient noted ongoing fatigue since delivery 18 months ago.",
+          "characteristics": ["postpartum", "persistent"],
+          "documentId": "medical_record_2023_11_15",
+          "relevance": 0.8,
+          "relationships": [
+            {
+              "nodeId": "diag_postpartum_thyroiditis",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Postpartum thyroiditis can cause persistent hypothyroidism."
+            },
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Pregnancy and breastfeeding can deplete iron stores."
+            }
+          ]
+        },
+        {
+          "id": "sym_weight_gain",
+          "text": "unexplained weight gain",
+          "severity": 6,
+          "duration": 150,
+          "confidence": 0.8,
+          "source": "transcript",
+          "quote": "I've gained about 15 pounds over the past few months without changing my diet.",
+          "characteristics": ["gradual", "unexplained"],
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Unexplained weight gain is common in hypothyroidism."
+            },
+            {
+              "nodeId": "diag_depression",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.5,
+              "reasoning": "Depression can cause changes in appetite and weight."
+            }
+          ]
+        },
+        {
+          "id": "sym_mood_changes",
+          "text": "irritability and mood swings",
+          "severity": 5,
+          "duration": 90,
+          "confidence": 0.7,
+          "source": "transcript",
+          "quote": "I've been more irritable lately, and my family has noticed I'm not myself.",
+          "characteristics": ["episodic", "interpersonal impact"],
+          "relationships": [
+            {
+              "nodeId": "diag_depression",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Mood changes and irritability are core symptoms of depression."
+            },
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Hypothyroidism can cause mood instability."
+            },
+            {
+              "nodeId": "diag_perimenopause",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.4,
+              "reasoning": "Hormonal changes in perimenopause can affect mood."
+            }
+          ]
+        },
+        {
+          "id": "sym_palpitations_suspected",
+          "text": "possible heart palpitations",
+          "severity": 7,
+          "confidence": 0.4,
+          "source": "suspected",
+          "suggestedBy": "diag_hyperthyroidism",
+          "characteristics": ["intermittent", "anxiety-provoking"],
+          "relationships": [
+            {
+              "nodeId": "diag_hyperthyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Palpitations are a cardinal symptom of hyperthyroidism."
+            },
+            {
+              "nodeId": "diag_anxiety_disorder",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Anxiety can manifest with palpitations and cardiac symptoms."
+            }
+          ]
+        },
+        {
+          "id": "sym_sleep_disturbance",
+          "text": "difficulty falling asleep",
+          "severity": 5,
+          "duration": 75,
+          "confidence": 0.85,
+          "source": "transcript",
+          "quote": "It takes me forever to fall asleep, and when I do, I don't feel rested.",
+          "characteristics": ["persistent", "non-restorative"],
+          "relationships": [
+            {
+              "nodeId": "diag_depression",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Sleep disturbances are common in depression."
+            },
+            {
+              "nodeId": "diag_anxiety_disorder",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Anxiety often manifests as difficulty initiating sleep."
+            },
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "supports",
+              "direction": "outgoing",
+              "strength": 0.4,
+              "reasoning": "Sleep quality can be affected by hypothyroidism."
+            }
+          ]
+        }
+      ],
+      "diagnoses": [
+        {
+          "id": "diag_iron_deficiency_anemia",
+          "name": "Iron Deficiency Anemia",
+          "probability": 0.85,
+          "priority": 2,
+          "icd10": "D50.9",
+          "reasoning": "Combination of fatigue, heavy menstruation, and hair thinning is highly suggestive. Classic triad of symptoms.",
+          "confidence": 0.9,
+          "requiresInvestigation": true,
+          "relationships": [
+            {
+              "nodeId": "treat_iron_supplementation",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "First-line treatment for confirmed iron deficiency."
+            },
+            {
+              "nodeId": "treat_dietary_counseling",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Dietary modification supports iron replacement therapy."
+            },
+            {
+              "nodeId": "treat_investigate_bleeding",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Must investigate underlying cause of iron loss."
+            }
+          ]
+        },
+        {
+          "id": "diag_hypothyroidism",
+          "name": "Primary Hypothyroidism",
+          "probability": 0.75,
+          "priority": 2,
+          "icd10": "E03.9",
+          "reasoning": "Multiple classic symptoms: dry skin, fatigue, hair loss, cold intolerance, weight gain, and family history.",
+          "confidence": 0.8,
+          "requiresInvestigation": true,
+          "relationships": [
+            {
+              "nodeId": "treat_levothyroxine",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Standard hormone replacement therapy for hypothyroidism."
+            },
+            {
+              "nodeId": "treat_thyroid_monitoring",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 1.0,
+              "reasoning": "Regular monitoring essential for thyroid hormone replacement."
+            }
+          ]
+        },
+        {
+          "id": "diag_depression",
+          "name": "Major Depressive Disorder",
+          "probability": 0.6,
+          "priority": 3,
+          "icd10": "F32.1",
+          "reasoning": "Mood changes, fatigue, cognitive symptoms, and sleep disturbance suggest possible depression. Could be secondary to medical conditions.",
+          "confidence": 0.7,
+          "requiresInvestigation": true,
+          "relationships": [
+            {
+              "nodeId": "treat_counseling",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Psychotherapy is first-line treatment for depression."
+            },
+            {
+              "nodeId": "treat_antidepressant",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "May require medication if symptoms persist after medical treatment."
+            },
+            {
+              "nodeId": "treat_lifestyle_modifications",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Exercise and lifestyle changes are crucial for depression management."
+            }
+          ]
+        },
+        {
+          "id": "diag_fibroids",
+          "name": "Uterine Fibroids",
+          "probability": 0.4,
+          "priority": 5,
+          "icd10": "D25.9",
+          "reasoning": "Heavy menstrual bleeding in reproductive-age woman suggests possible structural cause.",
+          "confidence": 0.5,
+          "requiresInvestigation": true,
+          "relationships": [
+            {
+              "nodeId": "treat_pelvic_ultrasound",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 1.0,
+              "reasoning": "Ultrasound is first-line imaging for suspected fibroids."
+            },
+            {
+              "nodeId": "treat_gynecology_referral",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Specialist evaluation needed for heavy menstrual bleeding."
+            }
+          ]
+        },
+        {
+          "id": "diag_long_covid",
+          "name": "Post-COVID Syndrome",
+          "probability": 0.3,
+          "priority": 6,
+          "icd10": "U09.9",
+          "reasoning": "Fatigue and cognitive symptoms following COVID infection, but timeline and symptom pattern less typical.",
+          "confidence": 0.4,
+          "requiresInvestigation": false,
+          "relationships": [
+            {
+              "nodeId": "treat_symptom_management",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Long COVID requires supportive symptomatic management."
+            }
+          ]
+        },
+        {
+          "id": "diag_hashimoto_thyroiditis",
+          "name": "Hashimoto's Thyroiditis",
+          "probability": 0.5,
+          "priority": 4,
+          "icd10": "E06.3",
+          "reasoning": "Family history and symptom pattern suggest possible autoimmune thyroid disease.",
+          "confidence": 0.6,
+          "requiresInvestigation": true,
+          "relationships": [
+            {
+              "nodeId": "treat_levothyroxine",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Treatment is the same as primary hypothyroidism."
+            },
+            {
+              "nodeId": "treat_antibody_monitoring",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Periodic monitoring of thyroid antibodies may be helpful."
+            }
+          ]
+        },
+        {
+          "id": "diag_hyperthyroidism",
+          "name": "Hyperthyroidism (to exclude)",
+          "probability": 0.1,
+          "priority": 8,
+          "icd10": "E05.9",
+          "reasoning": "Low probability but important to exclude given thyroid symptoms. Would present differently.",
+          "confidence": 0.3,
+          "requiresInvestigation": true,
+          "suppressed": false,
+          "relationships": [
+            {
+              "nodeId": "treat_thyroid_function_tests",
+              "relationship": "requires",
+              "direction": "outgoing",
+              "strength": 1.0,
+              "reasoning": "TSH will differentiate hypo from hyperthyroidism."
+            }
+          ]
+        }
+      ],
+      "treatments": [
+        {
+          "id": "treat_iron_supplementation",
+          "type": "medication",
+          "name": "Ferrous Sulfate 325mg daily",
+          "dosage": "325mg once daily, taken on empty stomach with vitamin C",
+          "priority": 2,
+          "confidence": 0.9,
+          "effectiveness": 0.85,
+          "duration": "3-6 months",
+          "urgency": "routine",
+          "reasoning": "Standard first-line treatment for iron deficiency anemia.",
+          "sideEffects": ["nausea", "constipation", "dark stools"],
+          "contraindications": ["hemochromatosis", "active peptic ulcer"],
+          "requiresFollowUp": true,
+          "relationships": [
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "treats",
+              "direction": "incoming",
+              "strength": 0.9,
+              "reasoning": "Direct treatment for iron deficiency."
+            }
+          ]
+        },
+        {
+          "id": "treat_levothyroxine",
+          "type": "medication",
+          "name": "Levothyroxine hormone replacement",
+          "dosage": "Start 50mcg daily, adjust based on TSH levels",
+          "priority": 2,
+          "confidence": 0.9,
+          "effectiveness": 0.9,
+          "duration": "Lifelong",
+          "urgency": "routine",
+          "reasoning": "Standard hormone replacement for hypothyroidism.",
+          "mechanism": "Synthetic T4 hormone replacement",
+          "sideEffects": ["palpitations if overdosed", "insomnia", "anxiety"],
+          "contraindications": ["untreated adrenal insufficiency", "recent MI"],
+          "requiresFollowUp": true,
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "treats",
+              "direction": "incoming",
+              "strength": 0.95,
+              "reasoning": "Gold standard treatment for hypothyroidism."
+            },
+            {
+              "nodeId": "diag_hashimoto_thyroiditis",
+              "relationship": "treats",
+              "direction": "incoming",
+              "strength": 0.95,
+              "reasoning": "Same treatment approach as primary hypothyroidism."
+            }
+          ]
+        },
+        {
+          "id": "treat_thyroid_function_tests",
+          "type": "investigation",
+          "name": "Comprehensive Thyroid Function Panel",
+          "priority": 1,
+          "confidence": 1.0,
+          "urgency": "urgent",
+          "description": "TSH, Free T4, Free T3, TPO antibodies",
+          "reasoning": "Essential for diagnosing thyroid dysfunction and guiding treatment.",
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 1.0,
+              "reasoning": "Definitive test for thyroid function."
+            },
+            {
+              "nodeId": "diag_hashimoto_thyroiditis",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "TPO antibodies help diagnose autoimmune thyroiditis."
+            },
+            {
+              "nodeId": "diag_hyperthyroidism",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 1.0,
+              "reasoning": "Will exclude hyperthyroidism definitively."
+            }
+          ]
+        },
+        {
+          "id": "treat_iron_studies",
+          "type": "investigation",
+          "name": "Complete Iron Studies",
+          "priority": 1,
+          "confidence": 1.0,
+          "urgency": "urgent",
+          "description": "Serum iron, TIBC, ferritin, transferrin saturation",
+          "reasoning": "Confirm iron deficiency and assess severity.",
+          "relationships": [
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 1.0,
+              "reasoning": "Definitive diagnosis requires laboratory confirmation."
+            }
+          ]
+        },
+        {
+          "id": "treat_counseling",
+          "type": "therapy",
+          "name": "Cognitive Behavioral Therapy",
+          "priority": 4,
+          "confidence": 0.8,
+          "effectiveness": 0.75,
+          "duration": "12-16 sessions",
+          "urgency": "routine",
+          "description": "Weekly sessions focusing on mood, coping strategies, and cognitive patterns",
+          "reasoning": "Evidence-based psychotherapy for depression and anxiety symptoms.",
+          "relationships": [
+            {
+              "nodeId": "diag_depression",
+              "relationship": "treats",
+              "direction": "incoming",
+              "strength": 0.85,
+              "reasoning": "First-line treatment for depression."
+            }
+          ]
+        },
+        {
+          "id": "treat_lifestyle_modifications",
+          "type": "lifestyle",
+          "name": "Exercise and Sleep Hygiene Program",
+          "priority": 5,
+          "confidence": 0.8,
+          "effectiveness": 0.7,
+          "duration": "Ongoing",
+          "urgency": "routine",
+          "description": "Regular exercise, sleep schedule, stress management techniques",
+          "reasoning": "Lifestyle interventions support treatment of depression and fatigue.",
+          "relationships": [
+            {
+              "nodeId": "diag_depression",
+              "relationship": "treats",
+              "direction": "incoming",
+              "strength": 0.7,
+              "reasoning": "Important adjunct to depression treatment."
+            },
+            {
+              "nodeId": "sym_fatigue_non_restorative",
+              "relationship": "relieves",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Exercise can improve energy levels and sleep quality."
+            }
+          ]
+        },
+        {
+          "id": "treat_pelvic_ultrasound",
+          "type": "investigation",
+          "name": "Transvaginal Pelvic Ultrasound",
+          "priority": 4,
+          "confidence": 0.8,
+          "urgency": "routine",
+          "description": "Imaging to evaluate uterine structure and identify fibroids",
+          "reasoning": "First-line imaging for heavy menstrual bleeding evaluation.",
+          "relationships": [
+            {
+              "nodeId": "diag_fibroids",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Best initial imaging modality for fibroids."
+            }
+          ]
+        },
+        {
+          "id": "treat_dietary_counseling",
+          "type": "lifestyle",
+          "name": "Iron-Rich Diet Consultation",
+          "priority": 6,
+          "confidence": 0.7,
+          "effectiveness": 0.6,
+          "duration": "Initial consultation + follow-up",
+          "urgency": "routine",
+          "description": "Nutritionist consultation for iron-rich foods and absorption optimization",
+          "reasoning": "Dietary changes support iron supplementation and long-term prevention.",
+          "relationships": [
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "treats",
+              "direction": "incoming",
+              "strength": 0.6,
+              "reasoning": "Supportive treatment for iron deficiency."
+            }
+          ]
+        }
+      ],
+      "actions": [
+        {
+          "id": "q_iron_labs",
+          "text": "Have iron levels or ferritin been tested recently?",
+          "category": "diagnostic_clarification",
+          "actionType": "question",
+          "priority": 1,
+          "status": "pending",
+          "relationships": [
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 1.0,
+              "reasoning": "Essential for confirming suspected iron deficiency."
+            }
+          ],
+          "impact": {
+            "diagnoses": {
+              "diag_iron_deficiency_anemia": 0.3
+            },
+            "yes": {
+              "diag_iron_deficiency_anemia": -0.2
+            },
+            "no": {
+              "diag_iron_deficiency_anemia": 0.3
+            }
+          }
+        },
+        {
+          "id": "q_thyroid_history",
+          "text": "Have you or family members ever had thyroid problems?",
+          "category": "diagnostic_clarification",
+          "actionType": "question",
+          "priority": 2,
+          "status": "answered",
+          "answer": "Yes, mother had underactive thyroid",
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Family history is important risk factor."
+            },
+            {
+              "nodeId": "diag_hashimoto_thyroiditis",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Family history relevant for autoimmune thyroid disease."
+            }
+          ],
+          "impact": {
+            "diagnoses": {
+              "diag_hypothyroidism": 0.2,
+              "diag_hashimoto_thyroiditis": 0.15
+            }
+          }
+        },
+        {
+          "id": "q_menstrual_pattern",
+          "text": "Can you describe your menstrual cycle - how many days, how heavy, any clots?",
+          "category": "symptom_exploration",
+          "actionType": "question",
+          "priority": 2,
+          "status": "pending",
+          "relationships": [
+            {
+              "nodeId": "sym_heavy_menstruation",
+              "relationship": "clarifies",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Need to quantify menstrual blood loss."
+            },
+            {
+              "nodeId": "diag_fibroids",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Menstrual pattern helps assess structural causes."
+            }
+          ],
+          "impact": {
+            "symptoms": ["sym_menorrhagia_quantified"],
+            "diagnoses": {
+              "diag_fibroids": 0.2,
+              "diag_iron_deficiency_anemia": 0.1
+            }
+          }
+        },
+        {
+          "id": "q_medication_history",
+          "text": "Are you currently taking any medications, including over-the-counter supplements?",
+          "category": "risk_assessment",
+          "actionType": "question",
+          "priority": 3,
+          "status": "pending",
+          "relationships": [
+            {
+              "nodeId": "treat_iron_supplementation",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Need to check for drug interactions and contraindications."
+            },
+            {
+              "nodeId": "treat_levothyroxine",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Many medications affect thyroid hormone absorption."
+            }
+          ],
+          "impact": {
+            "diagnoses": {
+              "diag_drug_induced_hypothyroidism": 0.1
+            }
+          }
+        },
+        {
+          "id": "q_mood_screening",
+          "text": "Over the past 2 weeks, how often have you felt down, depressed, or hopeless?",
+          "category": "diagnostic_clarification",
+          "actionType": "question",
+          "priority": 3,
+          "status": "pending",
+          "relationships": [
+            {
+              "nodeId": "diag_depression",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "PHQ-2 screening question for depression."
+            }
+          ],
+          "impact": {
+            "diagnoses": {
+              "diag_depression": 0.3
+            },
+            "yes": {
+              "diag_depression": 0.4
+            },
+            "no": {
+              "diag_depression": -0.3
+            }
+          }
+        },
+        {
+          "id": "q_weight_timeline",
+          "text": "When did the weight gain start, and how much have you gained?",
+          "category": "symptom_exploration",
+          "actionType": "question",
+          "priority": 4,
+          "status": "pending",
+          "relationships": [
+            {
+              "nodeId": "sym_weight_gain",
+              "relationship": "clarifies",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Timeline helps differentiate causes of weight gain."
+            },
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Rapid unexplained weight gain suggests metabolic cause."
+            }
+          ],
+          "impact": {
+            "diagnoses": {
+              "diag_hypothyroidism": 0.15
+            }
+          }
+        },
+        {
+          "id": "q_palpitations_check",
+          "text": "Have you experienced any heart palpitations, rapid heartbeat, or chest discomfort?",
+          "category": "symptom_exploration",
+          "actionType": "question",
+          "priority": 3,
+          "status": "pending",
+          "relationships": [
+            {
+              "nodeId": "sym_palpitations_suspected",
+              "relationship": "confirms",
+              "direction": "outgoing",
+              "strength": 1.0,
+              "reasoning": "Direct question to confirm or rule out cardiac symptoms."
+            },
+            {
+              "nodeId": "diag_hyperthyroidism",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Palpitations would suggest hyperthyroidism over hypothyroidism."
+            }
+          ],
+          "impact": {
+            "diagnoses": {
+              "diag_hyperthyroidism": 0.4,
+              "diag_hypothyroidism": -0.2
+            },
+            "yes": {
+              "diag_hyperthyroidism": 0.6,
+              "diag_anxiety_disorder": 0.3
+            },
+            "no": {
+              "diag_hypothyroidism": 0.1
+            }
+          }
+        },
+        {
+          "id": "q_sleep_quality",
+          "text": "How would you rate your sleep quality, and do you feel rested when you wake up?",
+          "category": "symptom_exploration",
+          "actionType": "question",
+          "priority": 5,
+          "status": "pending",
+          "relationships": [
+            {
+              "nodeId": "sym_sleep_disturbance",
+              "relationship": "clarifies",
+              "direction": "outgoing",
+              "strength": 0.9,
+              "reasoning": "Need to characterize sleep disturbance pattern."
+            },
+            {
+              "nodeId": "diag_depression",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.7,
+              "reasoning": "Sleep disturbance is key symptom of depression."
+            }
+          ]
+        },
+        {
+          "id": "q_treatment_preferences",
+          "text": "Do you have any concerns about taking medications long-term, or preferences for treatment approach?",
+          "category": "treatment_selection",
+          "actionType": "question",
+          "priority": 6,
+          "status": "pending",
+          "relationships": [
+            {
+              "nodeId": "treat_levothyroxine",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.8,
+              "reasoning": "Patient preferences important for lifelong treatment."
+            },
+            {
+              "nodeId": "treat_iron_supplementation",
+              "relationship": "investigates",
+              "direction": "outgoing",
+              "strength": 0.6,
+              "reasoning": "Alternative iron formulations available."
+            }
+          ]
+        },
+        {
+          "id": "safety_delay_diagnosis",
+          "text": "Delay in treating hypothyroidism or anemia can worsen cognitive symptoms and quality of life.",
+          "category": "red_flag",
+          "actionType": "alert",
+          "priority": 1,
+          "status": "pending",
+          "recommendation": "Obtain laboratory tests within 48-72 hours to guide treatment",
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.8,
+              "reasoning": "Untreated hypothyroidism can have serious consequences."
+            },
+            {
+              "nodeId": "diag_iron_deficiency_anemia",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.8,
+              "reasoning": "Severe anemia can cause cardiac complications."
+            }
+          ]
+        },
+        {
+          "id": "safety_drug_interaction",
+          "text": "Iron supplements can reduce absorption of thyroid medications - timing is important.",
+          "category": "drug_interaction",
+          "actionType": "alert",
+          "priority": 3,
+          "status": "pending",
+          "recommendation": "Take iron and levothyroxine at least 4 hours apart",
+          "relationships": [
+            {
+              "nodeId": "treat_iron_supplementation",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.9,
+              "reasoning": "Iron chelates thyroid hormone, reducing absorption."
+            },
+            {
+              "nodeId": "treat_levothyroxine",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.9,
+              "reasoning": "Thyroid hormone absorption affected by iron."
+            }
+          ]
+        },
+        {
+          "id": "safety_pregnancy_check",
+          "text": "Pregnancy should be ruled out before starting treatments - both conditions affect pregnancy outcomes.",
+          "category": "contraindication",
+          "actionType": "alert",
+          "priority": 2,
+          "status": "pending",
+          "recommendation": "Obtain pregnancy test if pregnancy possible",
+          "relationships": [
+            {
+              "nodeId": "treat_iron_supplementation",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.7,
+              "reasoning": "Iron requirements different in pregnancy."
+            },
+            {
+              "nodeId": "treat_levothyroxine",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.9,
+              "reasoning": "Thyroid hormone critical for fetal development."
+            }
+          ]
+        },
+        {
+          "id": "safety_depression_risk",
+          "text": "Monitor for worsening depression or suicidal ideation, especially during treatment initiation.",
+          "category": "warning",
+          "actionType": "alert",
+          "priority": 2,
+          "status": "pending",
+          "recommendation": "Establish safety plan and follow-up schedule",
+          "relationships": [
+            {
+              "nodeId": "diag_depression",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.9,
+              "reasoning": "Depression requires ongoing suicide risk assessment."
+            },
+            {
+              "nodeId": "treat_counseling",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.8,
+              "reasoning": "Therapy initiation can temporarily increase distress."
+            }
+          ]
+        },
+        {
+          "id": "safety_thyroid_crisis",
+          "text": "Watch for signs of myxedema crisis: confusion, hypothermia, or cardiovascular collapse.",
+          "category": "red_flag",
+          "actionType": "alert",
+          "priority": 1,
+          "status": "pending",
+          "recommendation": "Seek immediate medical attention if severe symptoms develop",
+          "relationships": [
+            {
+              "nodeId": "diag_hypothyroidism",
+              "relationship": "indicates",
+              "direction": "incoming",
+              "strength": 0.7,
+              "reasoning": "Severe hypothyroidism can progress to life-threatening crisis."
+            }
+          ]
+        }
+      ]
+    },
+    "userActions": [
+      {
+        "timestamp": "2025-08-06T14:35:22Z",
+        "action": "accept",
+        "targetId": "diag_iron_deficiency_anemia",
+        "reason": "Laboratory results confirm iron deficiency",
+        "confidence": 0.95
+      },
+      {
+        "timestamp": "2025-08-06T14:36:15Z",
+        "action": "suppress",
+        "targetId": "diag_long_covid",
+        "reason": "Timeline doesn't match COVID infection",
+        "confidence": 0.8
+      }
+    ]
+  }
+  
