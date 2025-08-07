@@ -1,36 +1,45 @@
 <script lang="ts">
+    import { COLORS } from './config/visual-config';
+
     export let detailed: boolean = false;
 
     const nodeTypes = [
-        { type: 'symptom', color: 'hsla(120, 60%, 60%, 0.8)', label: 'Symptoms' },
-        { type: 'diagnosis', color: 'hsla(220, 70%, 60%, 0.8)', label: 'Diagnoses' },
-        { type: 'treatment', color: 'hsla(160, 70%, 60%, 0.8)', label: 'Treatments' },
-        { type: 'question', color: 'hsla(40, 80%, 60%, 0.8)', label: 'Questions' },
-        { type: 'alert', color: 'hsla(0, 80%, 60%, 0.8)', label: 'Safety Alerts' }
+        { type: 'symptom', color: COLORS.LEGEND.SYMPTOM, label: 'Symptoms' },
+        { type: 'diagnosis', color: COLORS.LEGEND.DIAGNOSIS, label: 'Diagnoses' },
+        { type: 'treatment', color: COLORS.LEGEND.TREATMENT, label: 'Treatments' },
+        { type: 'question', color: COLORS.LEGEND.QUESTION, label: 'Questions' },
+        { type: 'alert', color: COLORS.LEGEND.ALERT, label: 'Safety Alerts' }
     ];
 
     const sources = [
-        { source: 'transcript', color: '#10b981', label: 'Current Conversation' },
-        { source: 'medical_history', color: '#3b82f6', label: 'Medical History' },
-        { source: 'family_history', color: '#8b5cf6', label: 'Family History' },
-        { source: 'social_history', color: '#f59e0b', label: 'Social History' },
-        { source: 'medication_history', color: '#06b6d4', label: 'Medication History' },
-        { source: 'suspected', color: '#f97316', label: 'AI Suspected' }
+        { source: 'transcript', color: COLORS.SOURCES.TRANSCRIPT, label: 'Current Conversation' },
+        { source: 'medical_history', color: COLORS.SOURCES.MEDICAL_HISTORY, label: 'Medical History' },
+        { source: 'family_history', color: COLORS.SOURCES.FAMILY_HISTORY, label: 'Family History' },
+        { source: 'social_history', color: COLORS.SOURCES.SOCIAL_HISTORY, label: 'Social History' },
+        { source: 'medication_history', color: COLORS.SOURCES.MEDICATION_HISTORY, label: 'Medication History' },
+        { source: 'suspected', color: COLORS.SOURCES.SUSPECTED, label: 'AI Suspected' }
     ];
 
     const relationships = [
-        { type: 'supports', color: '#4ade80', label: 'Supports' },
-        { type: 'contradicts', color: '#f87171', label: 'Contradicts' },
-        { type: 'treats', color: '#60a5fa', label: 'Treats' },
-        { type: 'investigates', color: '#a78bfa', label: 'Investigates' },
-        { type: 'confirms', color: '#34d399', label: 'Confirms' }
+        { type: 'supports', color: COLORS.RELATIONSHIPS.SUPPORTS, label: 'Supports' },
+        { type: 'confirms', color: COLORS.RELATIONSHIPS.CONFIRMS, label: 'Confirms' },
+        { type: 'suggests', color: COLORS.RELATIONSHIPS.SUGGESTS, label: 'Suggests' },
+        { type: 'indicates', color: COLORS.RELATIONSHIPS.INDICATES, label: 'Indicates' },
+        { type: 'contradicts', color: COLORS.RELATIONSHIPS.CONTRADICTS, label: 'Contradicts' },
+        { type: 'rules_out', color: COLORS.RELATIONSHIPS.RULES_OUT, label: 'Rules Out' },
+        { type: 'treats', color: COLORS.RELATIONSHIPS.TREATS, label: 'Treats' },
+        { type: 'manages', color: COLORS.RELATIONSHIPS.MANAGES, label: 'Manages' },
+        { type: 'requires', color: COLORS.RELATIONSHIPS.REQUIRES, label: 'Requires' },
+        { type: 'investigates', color: COLORS.RELATIONSHIPS.INVESTIGATES, label: 'Investigates' },
+        { type: 'clarifies', color: COLORS.RELATIONSHIPS.CLARIFIES, label: 'Clarifies' },
+        { type: 'explores', color: COLORS.RELATIONSHIPS.EXPLORES, label: 'Explores' }
     ];
 
     const priorities = [
-        { range: '1-2', color: '#dc2626', label: 'Critical' },
-        { range: '3-4', color: '#f59e0b', label: 'High' },
-        { range: '5-6', color: '#3b82f6', label: 'Medium' },
-        { range: '7-10', color: '#10b981', label: 'Low' }
+        { range: '1-2', color: COLORS.PRIORITY.HIGH, label: 'Critical' },
+        { range: '3-4', color: COLORS.PRIORITY.MEDIUM, label: 'High' },
+        { range: '5-6', color: COLORS.UI.INFO, label: 'Medium' },
+        { range: '7-10', color: COLORS.PRIORITY.LOW, label: 'Low' }
     ];
 </script>
 

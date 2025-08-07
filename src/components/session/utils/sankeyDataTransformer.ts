@@ -1,4 +1,5 @@
 import type { SessionAnalysis, SankeyData, SankeyNode, SankeyLink } from '../types/visualization';
+import { getNodeColor, getLinkColor } from '../config/visual-config';
 
 /**
  * Transform MoE session analysis JSON to D3 Sankey format
@@ -123,10 +124,8 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
     //     nodeMap.set(node.id, node);
     // });
 
-    // Create simple forward-flowing links only: symptoms -> diagnoses -> treatments
+    // Create links based on relationships: handle both forward and bidirectional flows
     nodes.forEach(sourceNode => {
-        if (sourceNode.type !== 'symptom' && sourceNode.type !== 'diagnosis') return;
-        
         const relationships = sourceNode.data.relationships || [];
         relationships.forEach((rel: any) => {
             const targetNode = nodeMap.get(rel.nodeId);
@@ -135,26 +134,57 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
                 return;
             }
             
-            // Only create forward-flowing links
+            // Determine if we should create this link based on relationship type and direction
             let shouldCreateLink = false;
-            if (sourceNode.type === 'symptom' && targetNode.type === 'diagnosis') {
-                shouldCreateLink = true;
-                console.log(`Creating symptom->diagnosis link: ${sourceNode.id} -> ${targetNode.id}`);
-            } else if (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment') {
-                shouldCreateLink = true;
-                console.log(`Creating diagnosis->treatment link: ${sourceNode.id} -> ${targetNode.id}`);
-            } else {
-                console.log(`Skipped link: ${sourceNode.type}(${sourceNode.id}) -> ${targetNode.type}(${targetNode.id}), direction: ${rel.direction}`);
+            let linkDirection = '';
+            
+            if (rel.direction === 'outgoing') {
+                // Forward-flowing relationships
+                if (sourceNode.type === 'symptom' && targetNode.type === 'diagnosis' && 
+                    ['supports', 'suggests', 'indicates', 'confirms'].includes(rel.relationship)) {
+                    shouldCreateLink = true;
+                    linkDirection = 'forward';
+                    console.log(`Creating symptom->diagnosis link: ${sourceNode.id} -> ${targetNode.id} (${rel.relationship})`);
+                } else if (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment' && 
+                          ['requires', 'treats', 'manages'].includes(rel.relationship)) {
+                    shouldCreateLink = true;
+                    linkDirection = 'forward';
+                    console.log(`Creating diagnosis->treatment link: ${sourceNode.id} -> ${targetNode.id} (${rel.relationship})`);
+                } else if (sourceNode.type === 'treatment' && targetNode.type === 'diagnosis' && 
+                          ['investigates', 'clarifies', 'explores'].includes(rel.relationship)) {
+                    // Investigation relationships: reverse the link direction to maintain left-to-right flow
+                    // Instead of treatment->diagnosis, create diagnosis->treatment for proper visual flow
+                    shouldCreateLink = true;
+                    linkDirection = 'investigation';
+                    console.log(`Creating reversed investigation link: ${targetNode.id} -> ${sourceNode.id} (${rel.relationship})`);
+                }
             }
             
-            if (shouldCreateLink && rel.direction === 'outgoing') {
-                const linkKey = `${sourceNode.id}-${targetNode.id}`;
+            if (!shouldCreateLink) {
+                console.log(`Skipped link: ${sourceNode.type}(${sourceNode.id}) -> ${targetNode.type}(${targetNode.id}), relationship: ${rel.relationship}, direction: ${rel.direction}`);
+            }
+            
+            if (shouldCreateLink) {
+                // For investigation relationships, reverse source and target to maintain visual flow
+                let actualSource, actualTarget, actualLinkKey;
+                
+                if (linkDirection === 'investigation') {
+                    // Reverse: diagnosis -> treatment (investigation)
+                    actualSource = targetNode.id;
+                    actualTarget = sourceNode.id;
+                    actualLinkKey = `${targetNode.id}-${sourceNode.id}`;
+                } else {
+                    // Normal: source -> target
+                    actualSource = sourceNode.id;
+                    actualTarget = targetNode.id;
+                    actualLinkKey = `${sourceNode.id}-${targetNode.id}`;
+                }
                 
                 // Avoid duplicates
-                if (!links.find(l => `${l.source}-${l.target}` === linkKey)) {
+                if (!links.find(l => `${l.source}-${l.target}` === actualLinkKey)) {
                     const link: SankeyLink = {
-                        source: sourceNode.id,
-                        target: targetNode.id,
+                        source: actualSource,
+                        target: actualTarget,
                         value: Math.max(1, rel.strength * 20), // Scale for visibility
                         type: rel.relationship,
                         strength: rel.strength,
@@ -163,14 +193,19 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
                     };
                     
                     links.push(link);
+                    console.log(`Created link: ${actualSource} -> ${actualTarget} (${rel.relationship})`);
                 }
             }
         });
     });
 
+    // Remove any cycles that might have been created by bidirectional relationships
+    const finalLinks = removeCycles(links, nodes);
+    console.log(`Cycle removal: ${links.length} -> ${finalLinks.length} links`);
+
     console.log('Transformation complete:', {
         nodeCount: nodes.length,
-        linkCount: links.length,
+        linkCount: finalLinks.length,
         nodeTypes: nodes.map(n => n.type),
         nodeValues: nodes.map(n => ({ 
             id: n.id, 
@@ -179,12 +214,12 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
             confidence: n.confidence, 
             value: n.value 
         })),
-        linksDetail: links.map(l => `${l.source} -> ${l.target} (${l.value})`)
+        linksDetail: finalLinks.map(l => `${l.source} -> ${l.target} (${l.value})`)
     });
 
     return {
         nodes,
-        links,
+        links: finalLinks,
         metadata: {
             sessionId: sessionData.sessionId,
             analysisVersion: sessionData.analysisVersion,
@@ -211,31 +246,7 @@ function calculateNodeValue(priority: number, probability: number): number {
     return baseValue + (severityWeight * probWeight * multiplier);
 }
 
-/**
- * Get appropriate color for node based on type and priority
- */
-function getNodeColor(type: string, priority: number = 5, source?: string): string {
-    // Priority-based intensity (1=critical/dark, 10=low/light)
-    const intensity = Math.max(0.3, 1 - (priority - 1) / 9 * 0.7);
-    
-    switch (type) {
-        case 'symptom':
-            if (source === 'suspected') return `hsla(30, 70%, 60%, ${intensity})`; // Orange for suspected
-            if (source === 'medical_history') return `hsla(200, 60%, 60%, ${intensity})`; // Blue for history
-            if (source === 'family_history') return `hsla(280, 60%, 60%, ${intensity})`; // Purple for family
-            return `hsla(120, 60%, 60%, ${intensity})`; // Green for transcript
-        case 'diagnosis':
-            return `hsla(220, 70%, 60%, ${intensity})`; // Blue
-        case 'treatment':
-            return `hsla(160, 70%, 60%, ${intensity})`; // Teal
-        case 'question':
-            return `hsla(40, 80%, 60%, ${intensity})`; // Yellow
-        case 'alert':
-            return `hsla(0, 80%, 60%, ${intensity})`; // Red
-        default:
-            return `hsla(0, 0%, 60%, ${intensity})`; // Gray
-    }
-}
+// Note: getNodeColor is now imported from visual-config
 
 /**
  * Determine which column an action should be positioned in based on its relationships
@@ -420,27 +431,4 @@ function hasCycle(graph: Map<string, Set<string>>, nodeIds: string[]): boolean {
     return false;
 }
 
-/**
- * Get link color based on relationship type
- */
-export function getLinkColor(relationship: string): string {
-    switch (relationship) {
-        case 'supports':
-        case 'confirms': 
-            return '#4ade80'; // Green
-        case 'contradicts':
-        case 'rules_out':
-            return '#f87171'; // Red  
-        case 'treats':
-        case 'manages':
-            return '#60a5fa'; // Blue
-        case 'investigates':
-        case 'clarifies':
-            return '#a78bfa'; // Purple
-        case 'suggests':
-        case 'indicates':
-            return '#fb923c'; // Orange
-        default:
-            return '#6b7280'; // Gray
-    }
-}
+// Note: getLinkColor is now imported from visual-config

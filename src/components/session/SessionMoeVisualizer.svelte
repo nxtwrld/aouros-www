@@ -1,26 +1,42 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { createEventDispatcher } from 'svelte';
     import SankeyDiagram from './SankeyDiagram.svelte';
     import NodeDetails from './NodeDetails.svelte';  
     import QuestionManager from './QuestionManager.svelte';
     import Legend from './Legend.svelte';
+    import Transcript from '../profile/Session/Transcript.svelte';
+    import Tabs from '../ui/Tabs.svelte';
+    import TabHead from '../ui/TabHead.svelte';
+    import TabHeads from '../ui/TabHeads.svelte';
+    import TabPanel from '../ui/TabPanel.svelte';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent, QuestionAnswerEvent } from './types/visualization';
 
-    export let sessionData: SessionAnalysis;
-    export let isRealTime: boolean = true;
-    export let showLegend: boolean = true;
-    export let enableInteractions: boolean = true;
+    interface Props {
+        sessionData: SessionAnalysis;
+        isRealTime?: boolean;
+        showLegend?: boolean;
+        enableInteractions?: boolean;
+        transcript?: any[];
+        onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
+        onnodeAction?: (event: CustomEvent<{ action: string; targetId: string; reason?: string }>) => void;
+    }
 
-    const dispatch = createEventDispatcher<{
-        questionAnswer: QuestionAnswerEvent;
-        nodeAction: { action: string; targetId: string; reason?: string };
-    }>();
+    let { 
+        sessionData, 
+        isRealTime = true, 
+        showLegend = true, 
+        enableInteractions = true,
+        transcript = [],
+        onquestionAnswer,
+        onnodeAction
+    }: Props = $props();
 
-    let selectedNodeId: string | null = null;
-    let isMobile = false;
-    let showSidebar = true;
-    let sidebarContent: 'questions' | 'details' | 'legend' = 'questions';
+    let selectedNodeId = $state<string | null>(null);
+    let isMobile = $state(false);
+    let showSidebar = $state(true);
+    let sidebarWidth = $state(400);
+    let isResizing = $state(false);
+    let tabsRef = $state<any>();
     
     // Responsive breakpoints
     const MOBILE_BREAKPOINT = 640;
@@ -45,11 +61,17 @@
 
     function handleNodeSelect(event: CustomEvent<NodeSelectEvent>) {
         selectedNodeId = event.detail.nodeId;
-        sidebarContent = 'details';
         
         // Auto-show sidebar when node is selected
         if (!showSidebar && !isMobile) {
             showSidebar = true;
+        }
+        
+        // Auto-select Details tab when node is selected
+        if (tabsRef?.selectTab) {
+            const hasTranscript = transcript && transcript.length > 0;
+            const detailsTabIndex = hasTranscript ? 2 : 1;
+            tabsRef.selectTab(detailsTabIndex);
         }
     }
 
@@ -59,32 +81,47 @@
     }
 
     function handleQuestionAnswer(event: CustomEvent<QuestionAnswerEvent>) {
-        dispatch('questionAnswer', event.detail);
+        onquestionAnswer?.(event);
     }
 
     function handleNodeAction(action: string, targetId: string, reason?: string) {
-        dispatch('nodeAction', { action, targetId, reason });
+        onnodeAction?.(new CustomEvent('nodeAction', { detail: { action, targetId, reason }}));
     }
 
     function toggleSidebar() {
         showSidebar = !showSidebar;
     }
 
-    function setSidebarContent(content: typeof sidebarContent) {
-        sidebarContent = content;
-        if (!showSidebar && !isMobile) {
-            showSidebar = true;
-        }
+    // Handle sidebar resize
+    function startResize(event: MouseEvent) {
+        if (isMobile) return;
+        isResizing = true;
+        document.addEventListener('mousemove', handleResize);
+        document.addEventListener('mouseup', stopResize);
+        event.preventDefault();
+    }
+
+    function handleResize(event: MouseEvent) {
+        if (!isResizing) return;
+        
+        const newWidth = window.innerWidth - event.clientX;
+        sidebarWidth = Math.max(320, Math.min(600, newWidth));
+    }
+
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', stopResize);
     }
 
     // Get counts for UI display
-    $: questionCount = sessionData.nodes.actions?.filter(a => a.actionType === 'question')?.length || 0;
-    $: pendingQuestions = sessionData.nodes.actions?.filter(a => a.actionType === 'question' && a.status === 'pending')?.length || 0;
-    $: alertCount = sessionData.nodes.actions?.filter(a => a.actionType === 'alert')?.length || 0;
-    $: selectedNode = selectedNodeId ? 
+    const questionCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question')?.length || 0);
+    const pendingQuestions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question' && a.status === 'pending')?.length || 0);
+    const alertCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'alert')?.length || 0);
+    const selectedNode = $derived(selectedNodeId ? 
         [...(sessionData.nodes.symptoms || []), ...(sessionData.nodes.diagnoses || []), 
          ...(sessionData.nodes.treatments || []), ...(sessionData.nodes.actions || [])]
-        .find(n => n.id === selectedNodeId) : null;
+        .find(n => n.id === selectedNodeId) : null);
 </script>
 
 <div class="session-visualizer" class:mobile={isMobile}>
@@ -103,101 +140,155 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button 
-                    class="action-btn"
-                    class:active={sidebarContent === 'questions'}
-                    on:click={() => setSidebarContent('questions')}
-                >
-                    Questions
-                    {#if pendingQuestions > 0}
-                        <span class="badge">{pendingQuestions}</span>
-                    {/if}
-                </button>
-                {#if selectedNode}
-                    <button 
-                        class="action-btn"
-                        class:active={sidebarContent === 'details'}
-                        on:click={() => setSidebarContent('details')}
-                    >
-                        Details
-                    </button>
-                {/if}
-                <button class="sidebar-toggle" on:click={toggleSidebar}>
-                    {showSidebar ? 'Hide' : 'Show'}
+                <button class="sidebar-toggle" onclick={toggleSidebar}>
+                    {showSidebar ? 'Hide' : 'Show'} Panel
                 </button>
             </div>
         </header>
     {/if}
 
-    <div class="visualization-container" class:sidebar-open={showSidebar}>
+    <div class="visualization-container">
         <!-- Main Sankey Diagram -->
         <div class="diagram-area">
             <SankeyDiagram 
                 data={sessionData}
                 {isMobile}
                 {selectedNodeId}
-                on:nodeSelect={handleNodeSelect}
-                on:linkSelect={handleLinkSelect}
+                onnodeSelect={handleNodeSelect}
+                onlinkSelect={handleLinkSelect}
             />
-
-            <!-- Legend overlay removed for better screen usage -->
         </div>
+
+        <!-- Desktop Sidebar -->
+        {#if showSidebar && !isMobile}
+            <aside class="sidebar desktop" style="width: {sidebarWidth}px">
+                <!-- Resize Handle -->
+                <div 
+                    class="resize-handle"
+                    onmousedown={startResize}
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="Resize sidebar"
+                ></div>
+                
+                <!-- Sidebar Header -->
+                <header class="sidebar-header">
+                    <h3>Session Details</h3>
+                    <button class="close-btn" onclick={toggleSidebar}>
+                        ✕
+                    </button>
+                </header>
+
+                <!-- Tabs Content -->
+                <div class="sidebar-content">
+                    <Tabs bind:this={tabsRef}>
+                        <TabHeads>
+                            <TabHead>
+                                Questions
+                                {#if pendingQuestions > 0}
+                                    <span class="badge">{pendingQuestions}</span>
+                                {/if}
+                            </TabHead>
+                            {#if transcript && transcript.length > 0}
+                                <TabHead>Transcript</TabHead>
+                            {/if}
+                            <TabHead>Details</TabHead>
+                            <TabHead>Legend</TabHead>
+                        </TabHeads>
+                        
+                        <TabPanel>
+                            <QuestionManager 
+                                questions={sessionData.nodes.actions?.filter(a => a.actionType === 'question') || []}
+                                alerts={sessionData.nodes.actions?.filter(a => a.actionType === 'alert') || []}
+                                onquestionAnswer={handleQuestionAnswer}
+                            />
+                        </TabPanel>
+                        
+                        {#if transcript && transcript.length > 0}
+                            <TabPanel>
+                                <Transcript conversation={transcript} />
+                            </TabPanel>
+                        {/if}
+                        
+                        <TabPanel>
+                            {#if selectedNode}
+                                <NodeDetails 
+                                    node={selectedNode}
+                                    allNodes={sessionData.nodes}
+                                    onnodeAction={(e) => handleNodeAction(e.detail.action, e.detail.targetId, e.detail.reason)}
+                                />
+                            {:else}
+                                <div class="empty-state">
+                                    <p>Select a node from the diagram to view details</p>
+                                </div>
+                            {/if}
+                        </TabPanel>
+                        
+                        <TabPanel>
+                            <Legend detailed={true} />
+                        </TabPanel>
+                    </Tabs>
+                </div>
+            </aside>
+        {/if}
     </div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar" class:open={showSidebar} class:mobile={isMobile}>
-        <!-- Desktop Sidebar Header -->
-        {#if !isMobile}
-            <header class="sidebar-header">
-                <div class="tabs">
-                    <button 
-                        class="tab"
-                        class:active={sidebarContent === 'questions'}
-                        on:click={() => setSidebarContent('questions')}
-                    >
-                        Questions ({questionCount})
-                        {#if pendingQuestions > 0}
-                            <span class="badge">{pendingQuestions}</span>
+    <!-- Mobile Sidebar -->
+    {#if showSidebar && isMobile}
+        <aside class="sidebar mobile">
+            <div class="mobile-sidebar-header">
+                <button class="close-btn" onclick={toggleSidebar}>✕</button>
+            </div>
+            <div class="sidebar-content">
+                <Tabs>
+                    <TabHeads>
+                        <TabHead>
+                            Questions
+                            {#if pendingQuestions > 0}
+                                <span class="badge">{pendingQuestions}</span>
+                            {/if}
+                        </TabHead>
+                        {#if transcript && transcript.length > 0}
+                            <TabHead>Transcript</TabHead>
                         {/if}
-                    </button>
-                    {#if selectedNode}
-                        <button 
-                            class="tab"
-                            class:active={sidebarContent === 'details'}
-                            on:click={() => setSidebarContent('details')}
-                        >
-                            Details
-                        </button>
+                        <TabHead>Details</TabHead>
+                    </TabHeads>
+                    
+                    <TabPanel>
+                        <QuestionManager 
+                            questions={sessionData.nodes.actions?.filter(a => a.actionType === 'question') || []}
+                            alerts={sessionData.nodes.actions?.filter(a => a.actionType === 'alert') || []}
+                            onquestionAnswer={handleQuestionAnswer}
+                        />
+                    </TabPanel>
+                    
+                    {#if transcript && transcript.length > 0}
+                        <TabPanel>
+                            <Transcript conversation={transcript} />
+                        </TabPanel>
                     {/if}
-                </div>
-                <button class="close-btn" on:click={toggleSidebar}>
-                    ✕
-                </button>
-            </header>
-        {/if}
-
-        <div class="sidebar-content">
-            {#if sidebarContent === 'questions'}
-                <QuestionManager 
-                    questions={sessionData.nodes.actions?.filter(a => a.actionType === 'question') || []}
-                    alerts={sessionData.nodes.actions?.filter(a => a.actionType === 'alert') || []}
-                    on:questionAnswer={handleQuestionAnswer}
-                />
-            {:else if sidebarContent === 'details' && selectedNode}
-                <NodeDetails 
-                    node={selectedNode}
-                    allNodes={sessionData.nodes}
-                    on:nodeAction={(e) => handleNodeAction(e.detail.action, e.detail.targetId, e.detail.reason)}
-                />
-            {:else if sidebarContent === 'legend'}
-                <Legend detailed={true} />
-            {/if}
-        </div>
-    </aside>
+                    
+                    <TabPanel>
+                        {#if selectedNode}
+                            <NodeDetails 
+                                node={selectedNode}
+                                allNodes={sessionData.nodes}
+                                onnodeAction={(e) => handleNodeAction(e.detail.action, e.detail.targetId, e.detail.reason)}
+                            />
+                        {:else}
+                            <div class="empty-state">
+                                <p>Select a node to view details</p>
+                            </div>
+                        {/if}
+                    </TabPanel>
+                </Tabs>
+            </div>
+        </aside>
+    {/if}
 
     <!-- Mobile sidebar overlay -->
     {#if isMobile && showSidebar}
-        <div class="mobile-overlay" on:click={toggleSidebar}></div>
+        <div class="mobile-overlay" onclick={toggleSidebar}></div>
     {/if}
 </div>
 
@@ -250,43 +341,19 @@
         align-items: center;
     }
 
-    .action-btn {
-        position: relative;
+    .sidebar-toggle {
         padding: 0.5rem 0.75rem;
         font-size: 0.875rem;
         border: 1px solid var(--color-border, #e2e8f0);
         background: var(--color-surface, #fff);
-        border-radius: 6px;
+        color: var(--color-text-secondary, #6b7280);
         cursor: pointer;
+        border-radius: 6px;
         transition: all 0.2s ease;
     }
 
-    .action-btn.active {
-        background: var(--color-primary, #3b82f6);
-        color: white;
-        border-color: var(--color-primary, #3b82f6);
-    }
-
-    .badge {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        background: var(--color-error, #dc2626);
-        color: white;
-        font-size: 0.75rem;
-        padding: 0.125rem 0.375rem;
-        border-radius: 10px;
-        min-width: 18px;
-        text-align: center;
-    }
-
-    .sidebar-toggle {
-        padding: 0.5rem;
-        font-size: 0.875rem;
-        border: none;
-        background: transparent;
-        color: var(--color-text-secondary, #6b7280);
-        cursor: pointer;
+    .sidebar-toggle:hover {
+        background: var(--color-surface-hover, #f1f5f9);
     }
 
     /* Main Layout */
@@ -300,53 +367,63 @@
     .diagram-area {
         flex: 1;
         position: relative;
-        transition: margin-right 0.3s ease;
+        overflow: auto;
+        min-width: 0;
     }
 
-    .sidebar-open .diagram-area {
-        margin-right: 320px;
-    }
-
-    .legend-overlay {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 6px;
-        padding: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        backdrop-filter: blur(4px);
-    }
-
-    /* Sidebar */
-    .sidebar {
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 320px;
-        height: 100vh;
+    /* Desktop Sidebar */
+    .sidebar.desktop {
+        position: relative;
+        flex-shrink: 0;
+        height: 100%;
         background: var(--color-surface, #fff);
         border-left: 1px solid var(--color-border, #e2e8f0);
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -2px 0 4px rgba(0,0,0,0.05);
+    }
+
+    /* Resize Handle */
+    .resize-handle {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: transparent;
+        cursor: col-resize;
+        z-index: 10;
+        transition: background-color 0.2s ease;
+    }
+
+    .resize-handle:hover {
+        background: var(--color-primary, #3b82f6);
+    }
+
+    /* Mobile Sidebar */
+    .sidebar.mobile {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        height: 60vh;
+        max-height: 400px;
+        background: var(--color-surface, #fff);
+        border-top: 1px solid var(--color-border, #e2e8f0);
+        border-radius: 12px 12px 0 0;
         z-index: 50;
         display: flex;
         flex-direction: column;
+        animation: slideUp 0.3s ease;
     }
 
-    .sidebar.open {
-        transform: translateX(0);
-    }
-
-    .sidebar.mobile {
-        width: 90vw;
-        max-width: 400px;
-        height: 60vh;
-        top: auto;
-        bottom: 0;
-        border-left: none;
-        border-top: 1px solid var(--color-border, #e2e8f0);
-        border-radius: 12px 12px 0 0;
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
     }
 
     .sidebar-header {
@@ -357,26 +434,18 @@
         border-bottom: 1px solid var(--color-border, #e2e8f0);
     }
 
-    .tabs {
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--color-text-primary, #1f2937);
+    }
+
+    .mobile-sidebar-header {
         display: flex;
-        gap: 0.25rem;
-    }
-
-    .tab {
-        position: relative;
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        border: none;
-        background: transparent;
-        color: var(--color-text-secondary, #6b7280);
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .tab.active {
-        background: var(--color-primary-bg, #dbeafe);
-        color: var(--color-primary, #3b82f6);
+        justify-content: flex-end;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
     }
 
     .close-btn {
@@ -387,6 +456,8 @@
         cursor: pointer;
         border-radius: 4px;
         transition: background-color 0.2s ease;
+        font-size: 1.25rem;
+        line-height: 1;
     }
 
     .close-btn:hover {
@@ -395,7 +466,65 @@
 
     .sidebar-content {
         flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Tab customization */
+    :global(.sidebar .tabs) {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    :global(.sidebar .tab-heads) {
+        flex-shrink: 0;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+        padding: 0 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    :global(.sidebar .tab-head) {
+        position: relative;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    :global(.sidebar .tab-panel) {
+        flex: 1;
         overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .badge {
+        position: absolute;
+        top: 0.25rem;
+        right: 0.25rem;
+        background: var(--color-error, #dc2626);
+        color: white;
+        font-size: 0.625rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--color-text-secondary, #6b7280);
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .empty-state p {
+        margin: 0;
     }
 
     /* Mobile Overlay */
@@ -418,17 +547,7 @@
         margin: 0.5rem;
     }
 
-    .mobile.sidebar-open .diagram-area {
-        margin-right: 0.5rem;
-    }
-
     /* Responsive breakpoints */
-    @media (min-width: 640px) and (max-width: 1023px) {
-        .sidebar {
-            width: 350px;
-        }
-    }
-
     @media (min-width: 1024px) {
         .session-visualizer {
             flex-direction: row;
@@ -440,16 +559,6 @@
 
         .visualization-container {
             flex: 1;
-        }
-
-        .sidebar-open .diagram-area {
-            margin-right: 1rem;
-        }
-    }
-
-    @media (min-width: 1280px) {
-        .sidebar {
-            width: 400px;
         }
     }
 </style>

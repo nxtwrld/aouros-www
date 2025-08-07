@@ -94,8 +94,8 @@
             isRealTime={false}
             showLegend={true}
             enableInteractions={true}
-            on:questionAnswer={handleQuestionAnswer}
-            on:nodeAction={handleNodeAction}
+            onquestionAnswer={handleQuestionAnswer}
+            onnodeAction={handleNodeAction}
         />
     {:else}
         <div class="empty-state">

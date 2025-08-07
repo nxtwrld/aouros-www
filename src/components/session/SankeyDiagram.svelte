@@ -1,28 +1,40 @@
 <script lang="ts">
-    import { onMount, afterUpdate } from 'svelte';
-    import { createEventDispatcher } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
+    import { mount, unmount } from 'svelte';
     import * as d3 from 'd3';
     import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
     import type { SessionAnalysis, SankeyNode, SankeyLink, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
-    import { transformToSankeyData, calculateNodeSize, getLinkColor } from './utils/sankeyDataTransformer';
+    import { transformToSankeyData, calculateNodeSize } from './utils/sankeyDataTransformer';
+    import { OPACITY, COLORS, getLinkColor } from './config/visual-config';
+    import LinkTooltip from './LinkTooltip.svelte';
 
-    export let data: SessionAnalysis;
-    export let isMobile: boolean = false;
-    export let selectedNodeId: string | null = null;
+    interface Props {
+        data: SessionAnalysis;
+        isMobile?: boolean;
+        selectedNodeId?: string | null;
+        onnodeSelect?: (event: CustomEvent<NodeSelectEvent>) => void;
+        onlinkSelect?: (event: CustomEvent<LinkSelectEvent>) => void;
+    }
 
-    const dispatch = createEventDispatcher<{
-        nodeSelect: NodeSelectEvent;
-        linkSelect: LinkSelectEvent;
-    }>();
+    let { 
+        data, 
+        isMobile = false, 
+        selectedNodeId = null,
+        onnodeSelect,
+        onlinkSelect
+    }: Props = $props();
 
-    let container: HTMLElement;
-    let svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
-    let width: number = 800;
-    let height: number = 600;
-    let sankeyData = transformToSankeyData(data);
-    let hoveredNodeId: string | null = null;
-    let hoveredLink: any = null;
-    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+    let container = $state<HTMLElement>();
+    let svg = $state<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
+    let width = $state(800);
+    let height = $state(600);
+    let sankeyData = $state(transformToSankeyData(data));
+    let hoveredNodeId = $state<string | null>(null);
+    let hoveredLink = $state<any>(null);
+    let tooltipComponent = $state<any>(null);
+    let tooltipContainer = $state<HTMLDivElement | null>(null);
+    let resizeTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
+    let resizeObserver = $state<ResizeObserver | null>(null);
 
     // Responsive margins based on screen size
     const margins = {
@@ -37,23 +49,58 @@
         requestAnimationFrame(() => {
             initializeSankey();
         });
-        window.addEventListener('resize', handleResize);
+        
+        // Set up ResizeObserver for container
+        if (container) {
+            resizeObserver = new ResizeObserver((entries) => {
+                for (const entry of entries) {
+                    if (resizeTimeout) clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(() => {
+                        handleContainerResize(entry.contentRect);
+                    }, 150);
+                }
+            });
+            resizeObserver.observe(container);
+        }
+        
         return () => {
-            window.removeEventListener('resize', handleResize);
             if (resizeTimeout) clearTimeout(resizeTimeout);
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
         };
     });
 
-    afterUpdate(() => {
-        if (svg && sankeyData) {
+    onDestroy(() => {
+        cleanupTooltipComponent();
+    });
+
+    // React to data changes and transform data (without triggering render)
+    $effect(() => {
+        if (data) {
+            // Create a fresh copy to avoid mutation issues
+            sankeyData = transformToSankeyData(JSON.parse(JSON.stringify(data)));
+        }
+    });
+
+    // React to sankeyData or svg changes and render (only when actually needed)
+    $effect(() => {
+        if (svg && sankeyData && container) {
             renderSankey();
         }
     });
 
-    $: if (data) {
-        sankeyData = transformToSankeyData(data);
-        if (svg) renderSankey();
-    }
+    // React to selectedNodeId changes to apply focus highlighting
+    $effect(() => {
+        if (svg && selectedNodeId) {
+            // Apply focus highlighting when a node is selected
+            applyFocusHighlighting(selectedNodeId);
+        } else if (svg && selectedNodeId === null && hoveredNodeId === null) {
+            // Only reset if we had a selection and now we don't (and not hovering)
+            // This prevents interfering with the initial state
+            resetHighlighting();
+        }
+    });
 
     function initializeSankey() {
         if (!container) return;
@@ -63,12 +110,12 @@
         width = Math.max(bounds.width, container.offsetWidth || 0);
         height = Math.max(bounds.height, container.offsetHeight || 0);
         
-        console.log('InitializeSankey dimensions:', {
+        /* console.log('InitializeSankey dimensions:', {
             boundsWidth: bounds.width,
             offsetWidth: container.offsetWidth,
             computedWidth: width,
             containerStyle: window.getComputedStyle(container).width
-        });
+        }); */
 
         // Clear any existing SVG
         d3.select(container).selectAll('*').remove();
@@ -122,7 +169,7 @@
         mainGroup.selectAll('*').remove();
 
         // Debug logging
-        console.log('Rendering Sankey with data:', {
+        /* console.log('Rendering Sankey with data:', {
             nodes: sankeyData.nodes.length,
             links: sankeyData.links.length,
             width: width,
@@ -132,7 +179,7 @@
             linkTypes: sankeyData.links.map(l => l.type),
             nodeDetails: sankeyData.nodes.map(n => ({ id: n.id, name: n.name, type: n.type })),
             linkDetails: sankeyData.links.map(l => ({ source: l.source, target: l.target, value: l.value }))
-        });
+        }); */
 
         const chartWidth = width - margins.left - margins.right;
         const chartHeight = height - margins.top - margins.bottom;
@@ -153,13 +200,13 @@
         // For D3 Sankey calculations, use a small nodeWidth since we override positioning
         const sankeyNodeWidth = 50; // Just for D3's internal calculations
         
-        console.log('Layout calculations:', {
+        /* console.log('Layout calculations:', {
             availableWidth,
             columnWidth,
             columnCenterX,
             htmlNodeWidth,
             htmlNodeHeight
-        });
+        }); */
         
         const sankeyGenerator = sankey<SankeyNode, SankeyLink>()
             .nodeWidth(sankeyNodeWidth)
@@ -191,23 +238,23 @@
                 value: d.value || 1
             }));
 
-            console.log('Input to D3 Sankey:', {
+            /* console.log('Input to D3 Sankey:', {
                 nodes: nodesForD3.length,
                 links: linksForD3.length,
                 firstNode: nodesForD3[0],
                 firstLink: linksForD3[0]
-            });
+            }); */
 
             sankeyResult = sankeyGenerator({
                 nodes: nodesForD3,
                 links: linksForD3
             });
 
-            console.log('D3 Sankey result (before override):', {
+            /* console.log('D3 Sankey result (before override):', {
                 nodes: sankeyResult.nodes?.length,
                 links: sankeyResult.links?.length,
                 firstProcessedNode: sankeyResult.nodes?.[0]
-            });
+            }); */
 
             // Override D3's positioning to force correct column placement and height
             if (sankeyResult && sankeyResult.nodes) {
@@ -221,7 +268,7 @@
                     node.x0 = centerX - (htmlNodeWidth / 2);
                     node.x1 = centerX + (htmlNodeWidth / 2);
                     
-                    console.log(`Fixed node ${node.id} (${node.type}): column ${node.column} -> ${targetColumn}, x: ${node.x0}-${node.x1}`);
+                    // console.log(`Fixed node ${node.id} (${node.type}): column ${node.column} -> ${targetColumn}, x: ${node.x0}-${node.x1}`);
                 });
 
                 // Sort nodes by type and value within each column, then position them
@@ -247,7 +294,7 @@
                         node.y1 = currentY + nodeHeight;
                         currentY = node.y1 + (isMobile ? 8 : 12); // Add padding between nodes
                         
-                        console.log(`Positioned node ${node.id}: y ${node.y0}-${node.y1} (height: ${nodeHeight}, value: ${node.value})`);
+                        // console.log(`Positioned node ${node.id}: y ${node.y0}-${node.y1} (height: ${nodeHeight}, value: ${node.value})`);
                     });
                 });
 
@@ -354,13 +401,13 @@
                             link.y0 = sourceY + link.width / 2;
                             link.y1 = targetY + link.width / 2;
                             
-                            console.log(`Updated link ${sourceNode.id} -> ${targetNode.id}: y ${link.y0} -> ${link.y1}, width: ${link.width}`);
+                            // console.log(`Updated link ${sourceNode.id} -> ${targetNode.id}: y ${link.y0} -> ${link.y1}, width: ${link.width}`);
                         }
                     });
                 }
             }
 
-            console.log('D3 Sankey result (after override):', {
+            /* console.log('D3 Sankey result (after override):', {
                 nodes: sankeyResult.nodes?.length,
                 links: sankeyResult.links?.length,
                 samplePositions: sankeyResult.nodes?.slice(0, 3).map((n: any) => ({
@@ -372,7 +419,7 @@
                     y1: n.y1,
                     value: n.value
                 }))
-            });
+            }); */
         } catch (error) {
             console.error('Error in D3 Sankey generation:', error);
             return;
@@ -393,9 +440,9 @@
             .attr('class', 'link')
             .merge(linkSelection as any)
             .attr('d', sankeyLinkHorizontal())
-            .style('stroke', '#000000') // Black color for all links
+            .style('stroke', (d: any) => getLinkColor(d.type || 'default')) // Relationship-based colors
             .style('stroke-width', (d: any) => Math.max(1, d.width || 2))
-            .style('stroke-opacity', 0.2) // Low opacity by default
+            .style('stroke-opacity', OPACITY.DEFAULT_LINK) // Low opacity by default
             .style('fill', 'none')
             .style('cursor', 'pointer')
             .attr('data-relationship-type', (d: any) => d.type || 'default')
@@ -477,62 +524,72 @@
         event.preventDefault();
         event.stopPropagation();
         
-        dispatch('nodeSelect', {
-            nodeId: node.id,
-            node: node,
-            event: event
-        });
+        onnodeSelect?.(new CustomEvent('nodeSelect', {
+            detail: {
+                nodeId: node.id,
+                node: node,
+                event: event
+            }
+        }));
     }
 
     function handleLinkClick(event: MouseEvent | TouchEvent, link: SankeyLink) {
         event.preventDefault();
         event.stopPropagation();
         
-        dispatch('linkSelect', {
-            link: link,
-            event: event
-        });
+        onlinkSelect?.(new CustomEvent('linkSelect', {
+            detail: {
+                link: link,
+                event: event
+            }
+        }));
     }
 
     function handleLinkHover(link: any, isEntering: boolean) {
         hoveredLink = isEntering ? link : null;
         
-        // Remove any existing action tooltips
+        // Remove any existing tooltips
         if (svg) {
-            svg.selectAll('.link-actions-tooltip').remove();
+            svg.selectAll('.link-unified-tooltip').remove();
+            cleanupTooltipComponent();
             
             if (hoveredLink) {
-                // Show actions for both diagnostic and treatment links
                 const sourceNode = hoveredLink.source;
                 const targetNode = hoveredLink.target;
                 
-                // Only show actions for symptom->diagnosis or diagnosis->treatment links
+                // Get relationship type for all links
+                const relationshipType = hoveredLink.type || 'connection';
+                const relationshipLabel = relationshipType.charAt(0).toUpperCase() + relationshipType.slice(1);
+                
+                // Get related actions (only for symptom->diagnosis or diagnosis->treatment links)
+                let relatedActions: any[] = [];
                 if ((sourceNode.type === 'symptom' && targetNode.type === 'diagnosis') ||
                     (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment')) {
-                    
-                    // Find related actions for this link
-                    const relatedActions = getRelatedActions(hoveredLink);
-                    
-                    if (relatedActions.length > 0) {
-                        // Calculate middle point of the link
-                        const midX = (sourceNode.x1 + targetNode.x0) / 2;
-                        const midY = (hoveredLink.y0 + hoveredLink.y1) / 2;
-                        
-                        // Create HTML content for actions
-                        const actionsHTML = createActionsHTML(relatedActions);
-                        
-                        // Add foreignObject for HTML content
-                        svg.select('g.main-group')
-                            .append('foreignObject')
-                            .attr('class', 'link-actions-tooltip')
-                            .attr('x', midX - (isMobile ? 100 : 150))
-                            .attr('y', midY - (relatedActions.length * (isMobile ? 12 : 15)) / 2)
-                            .attr('width', isMobile ? 200 : 300)
-                            .attr('height', relatedActions.length * (isMobile ? 24 : 30) + 10)
-                            .style('pointer-events', 'none')
-                            .html(actionsHTML);
-                    }
+                    relatedActions = getRelatedActions(hoveredLink);
                 }
+                
+                // Create tooltip using Svelte component
+                const tooltipHTML = createTooltipComponent(relationshipType, relationshipLabel, relatedActions);
+                
+                // Calculate position and size
+                const midX = (sourceNode.x1 + targetNode.x0) / 2;
+                const midY = (hoveredLink.y0 + hoveredLink.y1) / 2;
+                
+                // Dynamic sizing based on content
+                const baseHeight = 35; // Height for relationship header
+                const actionsHeight = relatedActions.length * (isMobile ? 24 : 30) + (relatedActions.length > 0 ? 25 : 0); // Add space for "Related Actions:" title
+                const totalHeight = baseHeight + actionsHeight;
+                
+                // Create unified tooltip
+                svg.select('g.main-group')
+                    .append('foreignObject')
+                    .attr('class', 'link-unified-tooltip')
+                    .attr('x', midX - (isMobile ? 100 : 150))
+                    .attr('y', midY - (totalHeight / 2)) // Center vertically on link
+                    .attr('width', isMobile ? 200 : 300)
+                    .attr('height', totalHeight)
+                    .style('pointer-events', 'none')
+                    .html(tooltipHTML);
             }
         }
     }
@@ -571,135 +628,474 @@
         return relatedActions.sort((a, b) => (a.priority || 10) - (b.priority || 10));
     }
 
-    function createActionsHTML(actions: any[]): string {
-        const actionItems = actions.map(action => {
-            const priorityClass = action.priority <= 2 ? 'high-priority' : 'normal-priority';
-            const typeClass = action.actionType === 'alert' ? 'action-alert' : 'action-question';
-            
-            return `
-                <div class="action-item ${priorityClass} ${typeClass}">
-                    <div class="action-text">${truncateText(action.text, isMobile ? 30 : 45)}</div>
-                    <div class="action-meta">
-                        <span class="action-type">${action.actionType}</span>
-                        <span class="action-priority">P${action.priority || 5}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
+    function createTooltipComponent(relationshipType: string, relationshipLabel: string, actions: any[]): string {
+        // Create a container for the tooltip component
+        tooltipContainer = document.createElement('div');
         
-        return `
-            <div class="actions-tooltip">
-                ${actionItems}
-            </div>
-        `;
+        // Mount the Svelte component
+        tooltipComponent = mount(LinkTooltip, {
+            target: tooltipContainer,
+            props: {
+                relationshipType,
+                relationshipLabel,
+                actions,
+                isMobile
+            }
+        });
+        
+        return tooltipContainer.innerHTML;
+    }
+    
+    function cleanupTooltipComponent() {
+        if (tooltipComponent) {
+            unmount(tooltipComponent);
+            tooltipComponent = null;
+        }
+        tooltipContainer = null;
+    }
+
+    function applyFocusHighlighting(focusedNodeId: string) {
+        if (!svg) return;
+        
+        // Find the node type
+        let focusedNodeType = '';
+        svg.selectAll('.node').each((d: any) => {
+            if (d.id === focusedNodeId) {
+                focusedNodeType = d.type;
+            }
+        });
+        
+        // Get logically connected nodes based on medical flow
+        const connectedNodeIds = new Set<string>();
+        const connectedLinkIds = new Set<string>();
+        
+        // Start with the focused node
+        connectedNodeIds.add(focusedNodeId);
+        
+        // Build connection maps for directional traversal
+        const nodeMap = new Map<string, any>();
+        const forwardMap = new Map<string, Set<string>>(); // source -> targets
+        const backwardMap = new Map<string, Set<string>>(); // target -> sources
+        
+        svg.selectAll('.node').each((d: any) => {
+            nodeMap.set(d.id, d);
+        });
+        
+        svg.selectAll('.link').each((d: any) => {
+            const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+            const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+            
+            if (!forwardMap.has(sourceId)) forwardMap.set(sourceId, new Set());
+            if (!backwardMap.has(targetId)) backwardMap.set(targetId, new Set());
+            
+            forwardMap.get(sourceId)!.add(targetId);
+            backwardMap.get(targetId)!.add(sourceId);
+        });
+        
+        // Helper function to find forward connections
+        const findForward = (nodeId: string, allowedTypes: string[]) => {
+            const targets = forwardMap.get(nodeId) || new Set();
+            targets.forEach(targetId => {
+                const targetNode = nodeMap.get(targetId);
+                if (targetNode && allowedTypes.includes(targetNode.type)) {
+                    connectedNodeIds.add(targetId);
+                    connectedLinkIds.add(`${nodeId}-${targetId}`);
+                    
+                    // Continue forward if we found a diagnosis and need treatments
+                    if (targetNode.type === 'diagnosis') {
+                        const treatmentTargets = forwardMap.get(targetId) || new Set();
+                        treatmentTargets.forEach(treatmentId => {
+                            const treatmentNode = nodeMap.get(treatmentId);
+                            if (treatmentNode && treatmentNode.type === 'treatment') {
+                                connectedNodeIds.add(treatmentId);
+                                connectedLinkIds.add(`${targetId}-${treatmentId}`);
+                            }
+                        });
+                    }
+                }
+            });
+        };
+        
+        // Helper function to find backward connections
+        const findBackward = (nodeId: string, allowedTypes: string[]) => {
+            const sources = backwardMap.get(nodeId) || new Set();
+            sources.forEach(sourceId => {
+                const sourceNode = nodeMap.get(sourceId);
+                if (sourceNode && allowedTypes.includes(sourceNode.type)) {
+                    connectedNodeIds.add(sourceId);
+                    connectedLinkIds.add(`${sourceId}-${nodeId}`);
+                    
+                    // Continue backward if we found a diagnosis and need symptoms
+                    if (sourceNode.type === 'diagnosis') {
+                        const symptomSources = backwardMap.get(sourceId) || new Set();
+                        symptomSources.forEach(symptomId => {
+                            const symptomNode = nodeMap.get(symptomId);
+                            if (symptomNode && symptomNode.type === 'symptom') {
+                                connectedNodeIds.add(symptomId);
+                                connectedLinkIds.add(`${symptomId}-${sourceId}`);
+                            }
+                        });
+                    }
+                }
+            });
+        };
+        
+        // Apply directional logic based on node type
+        if (focusedNodeType === 'symptom') {
+            // Symptom -> Diagnoses -> Treatments
+            findForward(focusedNodeId, ['diagnosis', 'treatment']);
+        } else if (focusedNodeType === 'diagnosis') {
+            // Symptoms -> Diagnosis -> Treatments
+            findBackward(focusedNodeId, ['symptom']);
+            findForward(focusedNodeId, ['treatment']);
+            
+            // Also find treatments that investigate this diagnosis
+            svg.selectAll('.node').each((d: any) => {
+                if (d.type === 'treatment' && d.data && d.data.relationships) {
+                    // Check if this treatment investigates the focused diagnosis
+                    const investigatesRelation = d.data.relationships.find(
+                        (rel: any) => rel.nodeId === focusedNodeId && rel.relationship === 'investigates' && rel.direction === 'outgoing'
+                    );
+                    if (investigatesRelation) {
+                        connectedNodeIds.add(d.id);
+                        // Investigation links are reversed: diagnosis -> treatment (investigation)
+                        connectedLinkIds.add(`${focusedNodeId}-${d.id}`);
+                    }
+                }
+            });
+        } else if (focusedNodeType === 'treatment') {
+            // For treatments, we need to find connections in two ways:
+            // 1. Find diagnoses that lead to this treatment (incoming "treats" relationships)
+            // 2. Find diagnoses that this treatment investigates (outgoing "investigates" relationships)
+            
+            // Method 1: Find diagnoses that lead to this treatment
+            const treatmentSources = backwardMap.get(focusedNodeId) || new Set();
+            treatmentSources.forEach(diagnosisId => {
+                const diagnosisNode = nodeMap.get(diagnosisId);
+                if (diagnosisNode && diagnosisNode.type === 'diagnosis') {
+                    connectedNodeIds.add(diagnosisId);
+                    connectedLinkIds.add(`${diagnosisId}-${focusedNodeId}`);
+                    
+                    // Find all symptoms that connect to this diagnosis
+                    const diagnosisSources = backwardMap.get(diagnosisId) || new Set();
+                    diagnosisSources.forEach(symptomId => {
+                        const symptomNode = nodeMap.get(symptomId);
+                        if (symptomNode && symptomNode.type === 'symptom') {
+                            connectedNodeIds.add(symptomId);
+                            connectedLinkIds.add(`${symptomId}-${diagnosisId}`);
+                        }
+                    });
+                }
+            });
+            
+            // Method 2: Check if this treatment investigates any diagnoses
+            // Look at the treatment's own relationships
+            const focusedNode = nodeMap.get(focusedNodeId);
+            if (focusedNode && focusedNode.data && focusedNode.data.relationships) {
+                focusedNode.data.relationships.forEach((rel: any) => {
+                    if (rel.relationship === 'investigates' && rel.direction === 'outgoing') {
+                        const investigatedNode = nodeMap.get(rel.nodeId);
+                        if (investigatedNode && investigatedNode.type === 'diagnosis') {
+                            connectedNodeIds.add(rel.nodeId);
+                            // Investigation links are reversed: diagnosis -> treatment (investigation)
+                            connectedLinkIds.add(`${rel.nodeId}-${focusedNodeId}`);
+                            
+                            // Find all symptoms that connect to this investigated diagnosis
+                            const diagnosisSources = backwardMap.get(rel.nodeId) || new Set();
+                            diagnosisSources.forEach(symptomId => {
+                                const symptomNode = nodeMap.get(symptomId);
+                                if (symptomNode && symptomNode.type === 'symptom') {
+                                    connectedNodeIds.add(symptomId);
+                                    connectedLinkIds.add(`${symptomId}-${rel.nodeId}`);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Apply focus styling
+        svg.selectAll('.node')
+            .style('opacity', (d: any) => connectedNodeIds.has(d.id) ? OPACITY.FOCUS_ACTIVE : OPACITY.FOCUS_INACTIVE)
+            .style('filter', (d: any) => connectedNodeIds.has(d.id) ? 'none' : `grayscale(${OPACITY.GRAYSCALE_FILTER})`);
+        
+        svg.selectAll('.link')
+            .style('stroke-opacity', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                return connectedLinkIds.has(linkId) ? OPACITY.FOCUS_LINK_ACTIVE : OPACITY.FOCUS_LINK_INACTIVE;
+            });
+    }
+    
+    function resetHighlighting() {
+        if (!svg) return;
+        
+        // Reset all nodes and links to default state
+        svg.selectAll('.node')
+            .style('opacity', OPACITY.RESET_NODE)
+            .style('filter', 'none');
+        
+        svg.selectAll('.link')
+            .style('stroke', (d: any) => getLinkColor(d.type || 'default'))
+            .style('stroke-opacity', OPACITY.RESET_LINK);
     }
 
     function handleNodeHover(nodeId: string, isEntering: boolean) {
         hoveredNodeId = isEntering ? nodeId : null;
         
-        if (svg) {
-            // Get connected node IDs for the hovered node
-            const connectedNodeIds = new Set<string>();
-            connectedNodeIds.add(nodeId); // Include the hovered node itself
-            
-            if (hoveredNodeId) {
-                svg.selectAll('.link').each((d: any) => {
-                    const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                    const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                    
-                    if (sourceId === nodeId) connectedNodeIds.add(targetId);
-                    if (targetId === nodeId) connectedNodeIds.add(sourceId);
-                });
-            }
-            
-            // Update all nodes based on hover state
-            svg.selectAll('.node')
-                .style('opacity', (d: any) => {
-                    if (!hoveredNodeId) return 1.0; // Default full opacity
-                    
-                    // If this node is connected to the hovered node, keep it visible
-                    if (connectedNodeIds.has(d.id)) {
-                        return 1.0;
-                    }
-                    
-                    return 0.3; // Dim unconnected nodes
-                })
-                .style('filter', (d: any) => {
-                    if (!hoveredNodeId) return 'none'; // No filter by default
-                    
-                    // If this node is connected, no filter
-                    if (connectedNodeIds.has(d.id)) {
-                        return 'none';
-                    }
-                    
-                    return 'grayscale(0.8)'; // Gray out unconnected nodes
-                });
-            
-            // Update all links based on hover state
-            svg.selectAll('.link')
-                .style('stroke', (d: any) => {
-                    if (!hoveredNodeId) return '#000000'; // Default black
-                    
-                    const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                    const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                    
-                    // If this link is connected to the hovered node, show in color
-                    if (sourceId === hoveredNodeId || targetId === hoveredNodeId) {
-                        // For treatment links, use the diagnosis color
-                        if (typeof d.target === 'object' && d.target.type === 'treatment') {
-                            return typeof d.source === 'object' ? d.source.color : getLinkColor(d.type || 'default');
-                        }
-                        return getLinkColor(d.type || 'default');
-                    }
-                    
-                    return '#000000'; // Keep other links black
-                })
-                .style('stroke-opacity', (d: any) => {
-                    if (!hoveredNodeId) return 0.2; // Default low opacity
-                    
-                    const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                    const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                    
-                    // If this link is connected to the hovered node, highlight it
-                    if (sourceId === hoveredNodeId || targetId === hoveredNodeId) {
-                        return 0.9;
-                    }
-                    
-                    return 0.2; // Keep other links at low opacity
-                });
+        if (!svg) return;
+        
+        // If we're not hovering anymore, reset to default state (unless focused)
+        if (!isEntering && !selectedNodeId) {
+            resetHighlighting();
+            return;
+        } else if (!isEntering) {
+            // If we have a selected node but stopped hovering, reapply focus
+            applyFocusHighlighting(selectedNodeId);
+            return;
         }
-    }
-
-    function handleResize() {
-        if (!container) return;
         
-        // Debounce resize events
-        if (resizeTimeout) clearTimeout(resizeTimeout);
+        // Get logically connected nodes based on medical flow
+        const connectedNodeIds = new Set<string>();
+        const connectedLinkIds = new Set<string>();
         
-        resizeTimeout = setTimeout(() => {
-            const bounds = container.getBoundingClientRect();
-            const newWidth = Math.max(bounds.width, container.offsetWidth || 0);
-            const newHeight = Math.max(bounds.height, container.offsetHeight || 0);
+        // Find the node type
+        let hoveredNodeType = '';
+        svg.selectAll('.node').each((d: any) => {
+            if (d.id === nodeId) {
+                hoveredNodeType = d.type;
+            }
+        });
+        
+        // Start with the hovered node
+        connectedNodeIds.add(nodeId);
+        
+        // Build connection maps for directional traversal
+        const nodeMap = new Map<string, any>();
+        const forwardMap = new Map<string, Set<string>>(); // source -> targets
+        const backwardMap = new Map<string, Set<string>>(); // target -> sources
+        
+        svg.selectAll('.node').each((d: any) => {
+            nodeMap.set(d.id, d);
+        });
+        
+        svg.selectAll('.link').each((d: any) => {
+            const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+            const targetId = typeof d.target === 'object' ? d.target.id : d.target;
             
-            console.log('Resize detected:', { 
-                oldWidth: width, 
-                newWidth: newWidth,
-                oldHeight: height,
-                newHeight: newHeight,
-                boundsWidth: bounds.width,
-                offsetWidth: container.offsetWidth
+            if (!forwardMap.has(sourceId)) forwardMap.set(sourceId, new Set());
+            if (!backwardMap.has(targetId)) backwardMap.set(targetId, new Set());
+            
+            forwardMap.get(sourceId)!.add(targetId);
+            backwardMap.get(targetId)!.add(sourceId);
+        });
+        
+        // Helper function to find forward connections
+        const findForward = (nodeId: string, allowedTypes: string[]) => {
+            const targets = forwardMap.get(nodeId) || new Set();
+            targets.forEach(targetId => {
+                const targetNode = nodeMap.get(targetId);
+                if (targetNode && allowedTypes.includes(targetNode.type)) {
+                    connectedNodeIds.add(targetId);
+                    connectedLinkIds.add(`${nodeId}-${targetId}`);
+                    
+                    // Continue forward if we found a diagnosis and need treatments
+                    if (targetNode.type === 'diagnosis') {
+                        const treatmentTargets = forwardMap.get(targetId) || new Set();
+                        treatmentTargets.forEach(treatmentId => {
+                            const treatmentNode = nodeMap.get(treatmentId);
+                            if (treatmentNode && treatmentNode.type === 'treatment') {
+                                connectedNodeIds.add(treatmentId);
+                                connectedLinkIds.add(`${targetId}-${treatmentId}`);
+                            }
+                        });
+                    }
+                }
+            });
+        };
+        
+        // Helper function to find backward connections
+        const findBackward = (nodeId: string, allowedTypes: string[]) => {
+            const sources = backwardMap.get(nodeId) || new Set();
+            sources.forEach(sourceId => {
+                const sourceNode = nodeMap.get(sourceId);
+                if (sourceNode && allowedTypes.includes(sourceNode.type)) {
+                    connectedNodeIds.add(sourceId);
+                    connectedLinkIds.add(`${sourceId}-${nodeId}`);
+                    
+                    // Continue backward if we found a diagnosis and need symptoms
+                    if (sourceNode.type === 'diagnosis') {
+                        const symptomSources = backwardMap.get(sourceId) || new Set();
+                        symptomSources.forEach(symptomId => {
+                            const symptomNode = nodeMap.get(symptomId);
+                            if (symptomNode && symptomNode.type === 'symptom') {
+                                connectedNodeIds.add(symptomId);
+                                connectedLinkIds.add(`${symptomId}-${sourceId}`);
+                            }
+                        });
+                    }
+                }
+            });
+        };
+        
+        // Apply directional logic based on node type
+        if (hoveredNodeType === 'symptom') {
+            // Symptom -> Diagnoses -> Treatments
+            findForward(nodeId, ['diagnosis', 'treatment']);
+        } else if (hoveredNodeType === 'diagnosis') {
+            // Symptoms -> Diagnosis -> Treatments
+            findBackward(nodeId, ['symptom']);
+            findForward(nodeId, ['treatment']);
+            
+            // Also find treatments that investigate this diagnosis
+            svg.selectAll('.node').each((d: any) => {
+                if (d.type === 'treatment' && d.data && d.data.relationships) {
+                    // Check if this treatment investigates the hovered diagnosis
+                    const investigatesRelation = d.data.relationships.find(
+                        (rel: any) => rel.nodeId === nodeId && rel.relationship === 'investigates' && rel.direction === 'outgoing'
+                    );
+                    if (investigatesRelation) {
+                        connectedNodeIds.add(d.id);
+                        // Investigation links are reversed: diagnosis -> treatment (investigation)
+                        connectedLinkIds.add(`${nodeId}-${d.id}`);
+                    }
+                }
+            });
+        } else if (hoveredNodeType === 'treatment') {
+            // For treatments, we need to find connections in two ways:
+            // 1. Find diagnoses that lead to this treatment (incoming "treats" relationships)
+            // 2. Find diagnoses that this treatment investigates (outgoing "investigates" relationships)
+            
+            // Method 1: Find diagnoses that lead to this treatment
+            const treatmentSources = backwardMap.get(nodeId) || new Set();
+            treatmentSources.forEach(diagnosisId => {
+                const diagnosisNode = nodeMap.get(diagnosisId);
+                if (diagnosisNode && diagnosisNode.type === 'diagnosis') {
+                    connectedNodeIds.add(diagnosisId);
+                    connectedLinkIds.add(`${diagnosisId}-${nodeId}`);
+                    
+                    // Find all symptoms that connect to this diagnosis
+                    const diagnosisSources = backwardMap.get(diagnosisId) || new Set();
+                    diagnosisSources.forEach(symptomId => {
+                        const symptomNode = nodeMap.get(symptomId);
+                        if (symptomNode && symptomNode.type === 'symptom') {
+                            connectedNodeIds.add(symptomId);
+                            connectedLinkIds.add(`${symptomId}-${diagnosisId}`);
+                        }
+                    });
+                }
             });
             
-            if (newWidth !== width || newHeight !== height) {
-                width = newWidth;
-                height = newHeight;
-                
-                if (svg) {
-                    svg.attr('viewBox', `0 0 ${width} ${height}`);
-                    renderSankey();
-                }
+            // Method 2: Check if this treatment investigates any diagnoses
+            // Look at the treatment's own relationships
+            const hoveredNode = nodeMap.get(nodeId);
+            if (hoveredNode && hoveredNode.data && hoveredNode.data.relationships) {
+                hoveredNode.data.relationships.forEach((rel: any) => {
+                    if (rel.relationship === 'investigates' && rel.direction === 'outgoing') {
+                        const investigatedNode = nodeMap.get(rel.nodeId);
+                        if (investigatedNode && investigatedNode.type === 'diagnosis') {
+                            connectedNodeIds.add(rel.nodeId);
+                            // Investigation links are reversed: diagnosis -> treatment (investigation)
+                            connectedLinkIds.add(`${rel.nodeId}-${nodeId}`);
+                            
+                            // Find all symptoms that connect to this investigated diagnosis
+                            const diagnosisSources = backwardMap.get(rel.nodeId) || new Set();
+                            diagnosisSources.forEach(symptomId => {
+                                const symptomNode = nodeMap.get(symptomId);
+                                if (symptomNode && symptomNode.type === 'symptom') {
+                                    connectedNodeIds.add(symptomId);
+                                    connectedLinkIds.add(`${symptomId}-${rel.nodeId}`);
+                                }
+                            });
+                        }
+                    }
+                });
             }
-        }, 100);
+        }
+            
+        // Determine if we're in focus mode (node selected) or just hover mode
+        const isFocusMode = selectedNodeId !== null && selectedNodeId !== undefined;
+        // Use 0.02 opacity for inactive nodes during any highlighting (hover OR focus)
+        const isHighlighting = hoveredNodeId !== null || isFocusMode;
+        const unrelatedNodeOpacity = isHighlighting ? OPACITY.INACTIVE_NODE_HIGHLIGHTED : OPACITY.INACTIVE_NODE_HOVER;
+        const unrelatedLinkOpacity = isHighlighting ? OPACITY.INACTIVE_LINK_HIGHLIGHTED : OPACITY.INACTIVE_LINK_HOVER;
+        
+        // Update all nodes based on hover/focus state
+        svg.selectAll('.node')
+            .style('opacity', (d: any) => {
+                if (!hoveredNodeId && !isFocusMode) return OPACITY.DEFAULT_NODE; // Default full opacity
+                
+                // If this node is in the connected path, keep it visible
+                if (connectedNodeIds.has(d.id)) {
+                    return OPACITY.ACTIVE_NODE;
+                }
+                
+                return unrelatedNodeOpacity; // Dim unconnected nodes
+            })
+            .style('filter', (d: any) => {
+                if (!hoveredNodeId && !isFocusMode) return 'none'; // No filter by default
+                
+                // If this node is connected, no filter
+                if (connectedNodeIds.has(d.id)) {
+                    return 'none';
+                }
+                
+                return `grayscale(${OPACITY.GRAYSCALE_FILTER})`; // Gray out unconnected nodes
+            });
+            
+        // Update all links based on hover/focus state
+        svg.selectAll('.link')
+            .style('stroke', (d: any) => {
+                if (!hoveredNodeId && !isFocusMode) return getLinkColor(d.type || 'default'); // Default relationship colors
+                
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                
+                // If this link is in the full path, show in color
+                if (connectedLinkIds.has(linkId)) {
+                    // For treatment links, use the diagnosis color
+                    if (typeof d.target === 'object' && d.target.type === 'treatment') {
+                        return typeof d.source === 'object' ? d.source.color : getLinkColor(d.type || 'default');
+                    }
+                    return getLinkColor(d.type || 'default');
+                }
+                
+                return getLinkColor(d.type || 'default'); // Keep other links with relationship colors
+            })
+            .style('stroke-opacity', (d: any) => {
+                if (!hoveredNodeId && !isFocusMode) return OPACITY.DEFAULT_LINK; // Default low opacity
+                
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                
+                // If this link is in the full path, highlight it
+                if (connectedLinkIds.has(linkId)) {
+                    return OPACITY.ACTIVE_LINK;
+                }
+                
+                return unrelatedLinkOpacity; // Very low opacity for unrelated links
+            });
+    }
+
+    function handleContainerResize(contentRect: DOMRectReadOnly) {
+        const newWidth = Math.max(contentRect.width, 300);
+        const newHeight = Math.max(contentRect.height, 200);
+        
+        // Only update if there's a significant change
+        if (Math.abs(newWidth - width) > 10 || Math.abs(newHeight - height) > 10) {
+            width = newWidth;
+            height = newHeight;
+            
+            // Update SVG viewBox only
+            if (svg) {
+                svg.attr('viewBox', `0 0 ${width} ${height}`);
+                // Don't call renderSankey here - let the effect handle it
+            }
+        }
     }
 
     function truncateText(text: string, maxLength: number): string {
@@ -719,7 +1115,8 @@
     }
 </script>
 
-<div class="sankey-container" bind:this={container}>
+<div class="sankey-container" bind:this={container}
+     style="--hover-link-opacity: {OPACITY.CSS_HOVER_LINK}; --hover-node-opacity: {OPACITY.CSS_HOVER_NODE}; --shadow-light-opacity: {OPACITY.SHADOW_LIGHT}; --shadow-medium-opacity: {OPACITY.SHADOW_MEDIUM}">
     {#if !sankeyData.nodes.length}
         <div class="empty-state">
             <p>No data to visualize</p>
@@ -753,7 +1150,7 @@
     }
 
     :global(.sankey-container .link:hover) {
-        stroke-opacity: 0.8 !important;
+        stroke-opacity: var(--hover-link-opacity, 0.8) !important;
     }
 
     :global(.sankey-container .node) {
@@ -761,16 +1158,16 @@
     }
 
     :global(.sankey-container .node:hover) {
-        opacity: 0.9;
+        opacity: var(--hover-node-opacity, 0.9);
     }
 
     :global(.sankey-container .node-rect) {
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,var(--shadow-light-opacity, 0.1)));
         transition: filter 0.2s ease;
     }
 
     :global(.sankey-container .node:hover .node-rect) {
-        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,var(--shadow-medium-opacity, 0.2)));
     }
 
     :global(.sankey-container .node-label) {
@@ -896,103 +1293,4 @@
     /* :global(.sankey-node.node-diagnosis) { } */
     /* :global(.sankey-node.node-treatment) { } */
 
-    /* Action Tooltip Styles */
-    :global(.actions-tooltip) {
-        background: rgba(0, 0, 0, 0.9);
-        border: 1px solid #333;
-        border-radius: 6px;
-        padding: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        font-family: system-ui, sans-serif;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    :global(.action-item) {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 4px 6px;
-        margin-bottom: 4px;
-        border-radius: 3px;
-        font-size: 11px;
-        line-height: 1.3;
-    }
-
-    :global(.action-item:last-child) {
-        margin-bottom: 0;
-    }
-
-    :global(.action-item.high-priority) {
-        background: rgba(220, 38, 38, 0.2);
-        border-left: 3px solid #dc2626;
-    }
-
-    :global(.action-item.normal-priority) {
-        background: rgba(107, 114, 128, 0.2);
-        border-left: 3px solid #6b7280;
-    }
-
-    :global(.action-item.action-alert) {
-        border-left-color: #ef4444;
-    }
-
-    :global(.action-item.action-question) {
-        border-left-color: #3b82f6;
-    }
-
-    :global(.action-text) {
-        color: #fff;
-        flex: 1;
-        margin-right: 8px;
-        font-weight: 500;
-    }
-
-    :global(.action-meta) {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-        flex-shrink: 0;
-    }
-
-    :global(.action-type) {
-        font-size: 9px;
-        padding: 1px 4px;
-        border-radius: 2px;
-        text-transform: uppercase;
-        font-weight: 600;
-    }
-
-    :global(.action-alert .action-type) {
-        background: #ef4444;
-        color: white;
-    }
-
-    :global(.action-question .action-type) {
-        background: #3b82f6;
-        color: white;
-    }
-
-    :global(.action-priority) {
-        font-size: 9px;
-        color: #9ca3af;
-        font-weight: 500;
-    }
-
-    /* Mobile adjustments */
-    @media (max-width: 640px) {
-        :global(.actions-tooltip) {
-            padding: 6px;
-            max-height: 150px;
-        }
-
-        :global(.action-item) {
-            font-size: 10px;
-            padding: 3px 4px;
-        }
-
-        :global(.action-type), :global(.action-priority) {
-            font-size: 8px;
-        }
-    }
 </style>
