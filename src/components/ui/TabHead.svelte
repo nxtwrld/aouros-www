@@ -16,6 +16,6 @@
 
 
 
-<button class="tab-head" class:active="{$selectedTab === tab}" onclick={() => selectTab(tab)}>
+<button class="tab-head" class:-active="{$selectedTab === tab}" onclick={() => selectTab(tab)}>
 	{@render children?.()}
 </button>

@@ -43,7 +43,7 @@
   font-weight: 700;
   border-color: var(--color-highlight);
   color: var(--color-highlight);
-  background-color: var(--color-background);
+  background-color: transparent;
   margin-bottom: 0;
 }
 

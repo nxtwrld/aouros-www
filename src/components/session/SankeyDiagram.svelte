@@ -5,23 +5,32 @@
     import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
     import type { SessionAnalysis, SankeyNode, SankeyLink, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
     import { transformToSankeyData, calculateNodeSize } from './utils/sankeyDataTransformer';
-    import { OPACITY, COLORS, getLinkColor } from './config/visual-config';
+    import { OPACITY, COLORS, getLinkColor, NODE_SIZE } from './config/visual-config';
     import LinkTooltip from './LinkTooltip.svelte';
+    import SymptomNode from './nodes/SymptomNode.svelte';
+    import DiagnosisNode from './nodes/DiagnosisNode.svelte';
+    import TreatmentNode from './nodes/TreatmentNode.svelte';
 
     interface Props {
         data: SessionAnalysis;
         isMobile?: boolean;
         selectedNodeId?: string | null;
+        focusedNodeIndex?: number;
         onnodeSelect?: (event: CustomEvent<NodeSelectEvent>) => void;
         onlinkSelect?: (event: CustomEvent<LinkSelectEvent>) => void;
+        onselectionClear?: (event: CustomEvent) => void;
+        onfocusChange?: (event: CustomEvent<{ index: number }>) => void;
     }
 
     let { 
         data, 
         isMobile = false, 
         selectedNodeId = null,
+        focusedNodeIndex = -1,
         onnodeSelect,
-        onlinkSelect
+        onlinkSelect,
+        onselectionClear,
+        onfocusChange
     }: Props = $props();
 
     let container = $state<HTMLElement>();
@@ -31,10 +40,38 @@
     let sankeyData = $state(transformToSankeyData(data));
     let hoveredNodeId = $state<string | null>(null);
     let hoveredLink = $state<any>(null);
-    let tooltipComponent = $state<any>(null);
-    let tooltipContainer = $state<HTMLDivElement | null>(null);
+    let tooltipData = $state<{
+        relationshipType: string;
+        relationshipLabel: string;
+        actions: any[];
+        visible: boolean;
+        x: number;
+        y: number;
+    }>({
+        relationshipType: '',
+        relationshipLabel: '',
+        actions: [],
+        visible: false,
+        x: 0,
+        y: 0
+    });
+    let nodeComponents = $state(new Map<string, { component: any, container: HTMLDivElement }>());
     let resizeTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
+    let resizeDebounceTimer = $state<ReturnType<typeof setTimeout> | null>(null);
     let resizeObserver = $state<ResizeObserver | null>(null);
+    let focusableNodes = $state<SankeyNode[]>([]);
+    
+    // Resize thresholds to prevent unnecessary re-renders
+    const SIGNIFICANT_WIDTH_THRESHOLD = 50;  // px
+    const SIGNIFICANT_HEIGHT_THRESHOLD = 50; // px
+    const RESIZE_DEBOUNCE_DELAY = 150;       // ms
+
+    // Derive focused node ID efficiently  
+    const focusedNodeId = $derived(
+        focusedNodeIndex >= 0 && focusedNodeIndex < focusableNodes.length
+            ? focusableNodes[focusedNodeIndex].id
+            : null
+    );
 
     // Responsive margins based on screen size
     const margins = {
@@ -65,6 +102,7 @@
         
         return () => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
+            if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
             if (resizeObserver) {
                 resizeObserver.disconnect();
             }
@@ -72,7 +110,7 @@
     });
 
     onDestroy(() => {
-        cleanupTooltipComponent();
+        cleanupNodeComponents();
     });
 
     // React to data changes and transform data (without triggering render)
@@ -83,10 +121,16 @@
         }
     });
 
-    // React to sankeyData or svg changes and render (only when actually needed)
+    // React to data structure changes and initial setup (avoid unnecessary re-renders)
     $effect(() => {
         if (svg && sankeyData && container) {
             renderSankey();
+            buildFocusableNodesList();
+            console.log('🎨 Full Sankey render triggered:', {
+                reason: 'data/svg/container change',
+                nodeCount: sankeyData.nodes?.length || 0,
+                linkCount: sankeyData.links?.length || 0
+            });
         }
     });
 
@@ -99,6 +143,13 @@
             // Only reset if we had a selection and now we don't (and not hovering)
             // This prevents interfering with the initial state
             resetHighlighting();
+        }
+    });
+
+    // React to focus changes with efficient DOM updates
+    $effect(() => {
+        if (svg) {
+            updateNodeFocus(focusedNodeId);
         }
     });
 
@@ -125,7 +176,9 @@
             .attr('width', '100%')
             .attr('height', '100%')
             .attr('viewBox', `0 0 ${width} ${height}`)
-            .attr('preserveAspectRatio', 'xMidYMid meet');
+            .attr('preserveAspectRatio', 'xMidYMid meet')
+            .style('cursor', 'default')
+            .on('click', handleCanvasClick);
 
         // Add zoom and pan for mobile
         if (isMobile) {
@@ -142,9 +195,10 @@
         // Main group for all elements
         svg.append('g')
             .attr('class', 'main-group')
-            .attr('transform', `translate(${margins.left}, ${margins.top})`);
+            .attr('transform', `translate(${margins.left}, ${margins.top})`)
+            .on('click', handleCanvasClick);
 
-        renderSankey();
+        // Don't call renderSankey() here - let the effect handle it to avoid duplicate renders
     }
 
     function renderSankey() {
@@ -152,6 +206,9 @@
             console.warn('Missing svg or sankeyData:', { svg: !!svg, sankeyData: !!sankeyData });
             return;
         }
+        
+        // Clean up previous node components
+        cleanupNodeComponents();
 
         // Validate data structure
         if (!sankeyData.nodes || !Array.isArray(sankeyData.nodes)) {
@@ -289,12 +346,15 @@
                     
                     let currentY = 20; // Start with some padding
                     columnNodes.forEach((node) => {
-                        const nodeHeight = Math.max(30, node.value || 50); // Use our calculated value for height
+                        // Ensure minimum height using our configured value
+                        const calculatedHeight = node.value || NODE_SIZE.MIN_HEIGHT_PX;
+                        const nodeHeight = Math.max(NODE_SIZE.MIN_HEIGHT_PX, calculatedHeight);
+                        
                         node.y0 = currentY;
                         node.y1 = currentY + nodeHeight;
                         currentY = node.y1 + (isMobile ? 8 : 12); // Add padding between nodes
                         
-                        // console.log(`Positioned node ${node.id}: y ${node.y0}-${node.y1} (height: ${nodeHeight}, value: ${node.value})`);
+                        // console.log(`Positioned node ${node.id}: y ${node.y0}-${node.y1} (height: ${nodeHeight}, value: ${node.value}, calculated: ${calculatedHeight})`);
                     });
                 });
 
@@ -473,7 +533,7 @@
             .attr('width', htmlNodeWidth)
             .attr('height', (d: any) => d.y1! - d.y0!)
             .style('cursor', 'pointer')
-            .html((d: any) => createNodeHTML(d))
+            .html((d: any) => createNodeComponent(d))
             .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d))
             .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d))
             .on('mouseenter', (event: MouseEvent, d: any) => handleNodeHover(d.id, true))
@@ -489,28 +549,64 @@
         nodeSelection.exit().remove();
     }
 
-    function createNodeHTML(node: SankeyNode): string {
+    function createNodeComponent(node: SankeyNode): string {
         const isSelected = node.id === selectedNodeId;
-        const typeLabel = node.type.charAt(0).toUpperCase() + node.type.slice(1);
+        let nodeComponent;
+        const nodeContainer = document.createElement('div');
         
-        const selectedClass = isSelected ? 'selected' : '';
-        const typeClass = `node-${node.type}`;
-        const sizeClass = isMobile ? 'mobile' : 'desktop';
-        
-        return `
-            <div class="sankey-node ${typeClass} ${selectedClass} ${sizeClass}" style="background-color: ${node.color};">
-                <div class="node-header">
-                    <div class="node-indicators">
-                        ${node.priority <= 2 ? `<div class="priority-indicator priority-${node.priority}" style="background-color: ${getPriorityColor(node.priority)};"></div>` : ''}
-                        ${node.type === 'symptom' && node.source ? `<div class="source-indicator source-${node.source}" style="background-color: ${getSourceColor(node.source)};"></div>` : ''}
+        switch (node.type) {
+            case 'symptom':
+                nodeComponent = mount(SymptomNode, {
+                    target: nodeContainer,
+                    props: {
+                        node,
+                        symptom: node.data as any,
+                        isSelected,
+                        isMobile
+                    }
+                });
+                break;
+                
+            case 'diagnosis':
+                nodeComponent = mount(DiagnosisNode, {
+                    target: nodeContainer,
+                    props: {
+                        node,
+                        diagnosis: node.data as any,
+                        isSelected,
+                        isMobile
+                    }
+                });
+                break;
+                
+            case 'treatment':
+                nodeComponent = mount(TreatmentNode, {
+                    target: nodeContainer,
+                    props: {
+                        node,
+                        treatment: node.data as any,
+                        isSelected,
+                        isMobile
+                    }
+                });
+                break;
+                
+            default:
+                // Fallback for action nodes or unknown types
+                nodeContainer.innerHTML = `
+                    <div class="sankey-node" style="background-color: ${node.color};">
+                        <div class="node-content">
+                            <div class="node-title">${truncateText(node.name, isMobile ? 20 : 25)}</div>
+                        </div>
                     </div>
-                    ${node.confidence ? `<div class="node-confidence">${Math.round(node.confidence * 100)}%</div>` : ''}
-                </div>
-                <div class="node-content">
-                    <div class="node-title">${truncateText(node.name, isMobile ? 20 : 25)}</div>
-                </div>
-            </div>
-        `;
+                `;
+                break;
+        }
+        
+        // Store component reference for cleanup
+        nodeComponents.set(node.id, { component: nodeComponent, container: nodeContainer });
+        
+        return nodeContainer.innerHTML;
     }
 
     function getPriorityColor(priority: number): string {
@@ -545,52 +641,155 @@
         }));
     }
 
+    function handleCanvasClick(event: MouseEvent) {
+        // Only clear selection if clicking on the SVG itself (not nodes or links)
+        const target = event.target as SVGElement;
+        if (target.tagName === 'svg' || target.classList?.contains('main-group')) {
+            onselectionClear?.(new CustomEvent('selectionClear'));
+        }
+    }
+
+    function buildFocusableNodesList() {
+        if (!sankeyData.nodes) return;
+        
+        // Order nodes by medical workflow: symptoms -> diagnoses -> treatments
+        const orderedNodes: SankeyNode[] = [];
+        
+        // Add symptoms first
+        sankeyData.nodes.filter(n => n.type === 'symptom').forEach(node => {
+            orderedNodes.push(node);
+        });
+        
+        // Add diagnoses second
+        sankeyData.nodes.filter(n => n.type === 'diagnosis').forEach(node => {
+            orderedNodes.push(node);
+        });
+        
+        // Add treatments third
+        sankeyData.nodes.filter(n => n.type === 'treatment').forEach(node => {
+            orderedNodes.push(node);
+        });
+        
+        // Add any other node types at the end
+        sankeyData.nodes.filter(n => !['symptom', 'diagnosis', 'treatment'].includes(n.type)).forEach(node => {
+            orderedNodes.push(node);
+        });
+        
+        focusableNodes = orderedNodes;
+    }
+
+    function updateNodeFocus(targetFocusedNodeId: string | null) {
+        if (!svg) return;
+        
+        // Remove focus class from all nodes efficiently
+        svg.selectAll('.node-html').classed('focused', false);
+        
+        // Add focus class to the specific node if one is focused
+        if (targetFocusedNodeId) {
+            svg.selectAll('.node-html')
+                .filter((d: any) => d.id === targetFocusedNodeId)
+                .classed('focused', true);
+                
+            console.log('🎯 Applied focus to node:', targetFocusedNodeId);
+        }
+    }
+
+    function focusNextNode() {
+        if (focusableNodes.length === 0) return;
+        
+        const nextIndex = (focusedNodeIndex + 1) % focusableNodes.length;
+        onfocusChange?.(new CustomEvent('focusChange', { detail: { index: nextIndex }}));
+    }
+
+    function focusPreviousNode() {
+        if (focusableNodes.length === 0) return;
+        
+        const prevIndex = focusedNodeIndex <= 0 ? focusableNodes.length - 1 : focusedNodeIndex - 1;
+        onfocusChange?.(new CustomEvent('focusChange', { detail: { index: prevIndex }}));
+    }
+
+    function selectFocusedNode() {
+        if (focusedNodeIndex >= 0 && focusedNodeIndex < focusableNodes.length) {
+            const focusedNode = focusableNodes[focusedNodeIndex];
+            onnodeSelect?.(new CustomEvent('nodeSelect', {
+                detail: {
+                    nodeId: focusedNode.id,
+                    node: focusedNode,
+                    event: new KeyboardEvent('keydown')
+                }
+            }));
+        }
+    }
+
+    // Expose navigation functions to parent via global window object temporarily
+    // This is a workaround since we can't pass functions up directly
+    if (typeof window !== 'undefined') {
+        (window as any).sankeyNavigationFunctions = {
+            focusNext: focusNextNode,
+            focusPrevious: focusPreviousNode,
+            selectFocused: selectFocusedNode
+        };
+    }
+
     function handleLinkHover(link: any, isEntering: boolean) {
         hoveredLink = isEntering ? link : null;
         
-        // Remove any existing tooltips
-        if (svg) {
-            svg.selectAll('.link-unified-tooltip').remove();
-            cleanupTooltipComponent();
+        if (!isEntering) {
+            // Hide tooltip
+            tooltipData.visible = false;
+            return;
+        }
+        
+        if (hoveredLink) {
+            const sourceNode = hoveredLink.source;
+            const targetNode = hoveredLink.target;
             
-            if (hoveredLink) {
-                const sourceNode = hoveredLink.source;
-                const targetNode = hoveredLink.target;
-                
-                // Get relationship type for all links
-                const relationshipType = hoveredLink.type || 'connection';
-                const relationshipLabel = relationshipType.charAt(0).toUpperCase() + relationshipType.slice(1);
-                
-                // Get related actions (only for symptom->diagnosis or diagnosis->treatment links)
-                let relatedActions: any[] = [];
-                if ((sourceNode.type === 'symptom' && targetNode.type === 'diagnosis') ||
-                    (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment')) {
-                    relatedActions = getRelatedActions(hoveredLink);
-                }
-                
-                // Create tooltip using Svelte component
-                const tooltipHTML = createTooltipComponent(relationshipType, relationshipLabel, relatedActions);
-                
-                // Calculate position and size
-                const midX = (sourceNode.x1 + targetNode.x0) / 2;
-                const midY = (hoveredLink.y0 + hoveredLink.y1) / 2;
-                
-                // Dynamic sizing based on content
-                const baseHeight = 35; // Height for relationship header
-                const actionsHeight = relatedActions.length * (isMobile ? 24 : 30) + (relatedActions.length > 0 ? 25 : 0); // Add space for "Related Actions:" title
-                const totalHeight = baseHeight + actionsHeight;
-                
-                // Create unified tooltip
-                svg.select('g.main-group')
-                    .append('foreignObject')
-                    .attr('class', 'link-unified-tooltip')
-                    .attr('x', midX - (isMobile ? 100 : 150))
-                    .attr('y', midY - (totalHeight / 2)) // Center vertically on link
-                    .attr('width', isMobile ? 200 : 300)
-                    .attr('height', totalHeight)
-                    .style('pointer-events', 'none')
-                    .html(tooltipHTML);
+            // Get relationship type for all links
+            const relationshipType = hoveredLink.type || 'connection';
+            const relationshipLabel = relationshipType.charAt(0).toUpperCase() + relationshipType.slice(1);
+            
+            // Get related actions (only for symptom->diagnosis or diagnosis->treatment links)
+            let relatedActions: any[] = [];
+            if ((sourceNode.type === 'symptom' && targetNode.type === 'diagnosis') ||
+                (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment')) {
+                relatedActions = getRelatedActions(hoveredLink);
             }
+            
+            // Calculate position - convert from Sankey coordinates to absolute page coordinates
+            const sankeyMidX = (sourceNode.x1 + targetNode.x0) / 2;
+            const sankeyMidY = (hoveredLink.y0 + hoveredLink.y1) / 2;
+            
+            // Get the container's absolute position
+            const containerRect = container?.getBoundingClientRect();
+            if (!containerRect) return;
+            
+            // Convert to absolute coordinates, accounting for margins
+            const absoluteX = containerRect.left + margins.left + sankeyMidX;
+            const absoluteY = containerRect.top + margins.top + sankeyMidY;
+            
+            // Apply viewport boundary checking to keep tooltip on screen
+            const tooltipWidth = isMobile ? 200 : 300;
+            const tooltipHeight = 100; // Estimated height
+            
+            const clampedX = Math.max(
+                tooltipWidth / 2 + 10, // Left boundary
+                Math.min(absoluteX, window.innerWidth - tooltipWidth / 2 - 10) // Right boundary
+            );
+            
+            const clampedY = Math.max(
+                tooltipHeight / 2 + 10, // Top boundary  
+                Math.min(absoluteY, window.innerHeight - tooltipHeight / 2 - 10) // Bottom boundary
+            );
+            
+            // Update tooltip data - tooltip will be centered using CSS transform
+            tooltipData = {
+                relationshipType,
+                relationshipLabel,
+                actions: relatedActions,
+                visible: true,
+                x: clampedX,
+                y: clampedY
+            };
         }
     }
 
@@ -628,30 +827,19 @@
         return relatedActions.sort((a, b) => (a.priority || 10) - (b.priority || 10));
     }
 
-    function createTooltipComponent(relationshipType: string, relationshipLabel: string, actions: any[]): string {
-        // Create a container for the tooltip component
-        tooltipContainer = document.createElement('div');
-        
-        // Mount the Svelte component
-        tooltipComponent = mount(LinkTooltip, {
-            target: tooltipContainer,
-            props: {
-                relationshipType,
-                relationshipLabel,
-                actions,
-                isMobile
+    
+    function cleanupNodeComponents() {
+        nodeComponents.forEach(({ component }) => {
+            if (component) {
+                try {
+                    unmount(component);
+                } catch (error) {
+                    // Ignore unmount errors - component may already be unmounted
+                    console.debug('Node component already unmounted:', error);
+                }
             }
         });
-        
-        return tooltipContainer.innerHTML;
-    }
-    
-    function cleanupTooltipComponent() {
-        if (tooltipComponent) {
-            unmount(tooltipComponent);
-            tooltipComponent = null;
-        }
-        tooltipContainer = null;
+        nodeComponents.clear();
     }
 
     function applyFocusHighlighting(focusedNodeId: string) {
@@ -1085,16 +1273,36 @@
         const newWidth = Math.max(contentRect.width, 300);
         const newHeight = Math.max(contentRect.height, 200);
         
-        // Only update if there's a significant change
-        if (Math.abs(newWidth - width) > 10 || Math.abs(newHeight - height) > 10) {
-            width = newWidth;
-            height = newHeight;
-            
-            // Update SVG viewBox only
-            if (svg) {
-                svg.attr('viewBox', `0 0 ${width} ${height}`);
-                // Don't call renderSankey here - let the effect handle it
-            }
+        // Update viewBox immediately for smooth visual feedback during resize
+        if (svg) {
+            svg.attr('viewBox', `0 0 ${newWidth} ${newHeight}`);
+        }
+        
+        // Clear existing debounce timer
+        if (resizeDebounceTimer) {
+            clearTimeout(resizeDebounceTimer);
+        }
+        
+        // Check if resize is significant enough to require full re-render
+        const significantWidthChange = Math.abs(newWidth - width) > SIGNIFICANT_WIDTH_THRESHOLD;
+        const significantHeightChange = Math.abs(newHeight - height) > SIGNIFICANT_HEIGHT_THRESHOLD;
+        
+        if (significantWidthChange || significantHeightChange) {
+            // Debounce expensive recalculation for significant changes
+            resizeDebounceTimer = setTimeout(() => {
+                console.log('📐 Significant resize detected, triggering re-render:', {
+                    oldSize: { width, height },
+                    newSize: { width: newWidth, height: newHeight },
+                    widthChange: Math.abs(newWidth - width),
+                    heightChange: Math.abs(newHeight - height)
+                });
+                
+                // This will trigger the main effect to re-render
+                width = newWidth;
+                height = newHeight;
+                
+                resizeDebounceTimer = null;
+            }, RESIZE_DEBOUNCE_DELAY);
         }
     }
 
@@ -1124,6 +1332,18 @@
     {/if}
 </div>
 
+<!-- Persistent tooltip component -->
+{#if tooltipData.visible}
+    <div class="link-tooltip" style="left: {tooltipData.x}px; top: {tooltipData.y}px; transform: translate(-50%, -50%);">
+        <LinkTooltip 
+            relationshipType={tooltipData.relationshipType}
+            relationshipLabel={tooltipData.relationshipLabel}
+            actions={tooltipData.actions}
+            {isMobile}
+        />
+    </div>
+{/if}
+
 <style>
     .sankey-container {
         width: 100%;
@@ -1133,6 +1353,19 @@
         position: relative;
         overflow: hidden;
         box-sizing: border-box;
+    }
+
+    .link-tooltip {
+        position: fixed;
+        z-index: 1000;
+        pointer-events: none;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 8px;
+        font-size: 12px;
+        max-width: 300px;
     }
 
     .empty-state {
@@ -1189,7 +1422,35 @@
         }
     }
 
-    /* Sankey Node HTML Styles */
+    /* Focus styles for keyboard navigation - applied via CSS classes */
+    :global(.node-html.focused .treatment-node) {
+        outline: 2px dashed rgba(59, 130, 246, 0.6);
+        outline-offset: 1px;
+    }
+
+    :global(.node-html.focused.selected .treatment-node) {
+        outline: 2px dashed rgba(59, 130, 246, 0.8);
+    }
+
+    :global(.node-html.focused .symptom-node) {
+        outline: 2px dashed rgba(34, 197, 94, 0.6);
+        outline-offset: 1px;
+    }
+
+    :global(.node-html.focused.selected .symptom-node) {
+        outline: 2px dashed rgba(34, 197, 94, 0.8);
+    }
+
+    :global(.node-html.focused .diagnosis-node) {
+        outline: 2px dashed rgba(239, 68, 68, 0.6);
+        outline-offset: 1px;
+    }
+
+    :global(.node-html.focused.selected .diagnosis-node) {
+        outline: 2px dashed rgba(239, 68, 68, 0.8);
+    }
+
+    /* Fallback styles for action nodes or unknown types */
     :global(.sankey-node) {
         position: relative;
         width: 100%;
@@ -1199,31 +1460,10 @@
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
+        justify-content: center;
         font-family: system-ui, sans-serif;
-        border: 1px solid #333;
-    }
-
-    :global(.sankey-node.selected) {
-        border-width: 3px;
-        border-color: var(--color-primary, #3b82f6);
-    }
-
-    :global(.sankey-node .node-header) {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        left: 2px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        min-height: 16px;
-        pointer-events: none;
-    }
-
-    :global(.sankey-node .node-indicators) {
-        display: flex;
-        gap: 4px;
-        align-items: center;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        text-align: center;
     }
 
     :global(.sankey-node .node-content) {
@@ -1236,61 +1476,12 @@
 
     :global(.sankey-node .node-title) {
         font-weight: 600;
-        color: #333;
+        color: #1f2937;
         line-height: 1.2;
         text-align: center;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-bottom: 2px;
+        font-size: 11px;
     }
-
-    :global(.sankey-node .node-confidence) {
-        color: #666;
-        font-size: 0.75em;
-        font-weight: 500;
-        background: rgba(255, 255, 255, 0.8);
-        padding: 1px 4px;
-        border-radius: 3px;
-    }
-
-    /* Priority Indicator */
-    :global(.sankey-node .priority-indicator) {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 2px solid white;
-        flex-shrink: 0;
-    }
-
-    /* Source Indicator */
-    :global(.sankey-node .source-indicator) {
-        width: 4px;
-        height: 16px;
-        border-radius: 2px;
-        opacity: 0.8;
-        flex-shrink: 0;
-    }
-
-    /* Responsive sizing */
-    :global(.sankey-node.mobile .node-title) {
-        font-size: 10px;
-    }
-
-    :global(.sankey-node.mobile .node-confidence) {
-        font-size: 8px;
-    }
-
-    :global(.sankey-node.desktop .node-title) {
-        font-size: 12px;
-    }
-
-    :global(.sankey-node.desktop .node-confidence) {
-        font-size: 9px;
-    }
-
-    /* Node Type Variations - placeholder for future styling */
-    /* :global(.sankey-node.node-symptom) { } */
-    /* :global(.sankey-node.node-diagnosis) { } */
-    /* :global(.sankey-node.node-treatment) { } */
 
 </style>

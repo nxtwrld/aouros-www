@@ -16,10 +16,11 @@
     }
 
     function getNodeTypeLabel(node: any): string {
-        if ('severity' in node) return 'Symptom';
-        if ('probability' in node) return 'Diagnosis';
-        if ('type' in node && ['medication', 'procedure', 'therapy'].includes(node.type)) return 'Treatment';
-        if ('actionType' in node) return node.actionType === 'question' ? 'Question' : 'Alert';
+        console.log(node);
+        if ('severity' in node) return 'symptom';
+        if ('probability' in node) return 'diagnosis';
+        if ('actionType' in node) return node.actionType === 'question' ? 'question' : 'alert';
+        if ('type' in node) return node.type;
         return 'Unknown';
     }
 
@@ -59,19 +60,19 @@
         <section class="info-section">
             <h4>Information</h4>
             <div class="info-grid">
-                <div class="info-item">
+                <!--div class="info-item">
                     <label>ID:</label>
                     <span class="value">{node.id}</span>
-                </div>
+                </div-->
                 <div class="info-item">
                     <label>Priority:</label>
                     <span class="value">{node.priority || 5}/10</span>
                 </div>
                 {#if 'confidence' in node && node.confidence}
-                    <div class="info-item">
+                    <!--div class="info-item">
                         <label>Confidence:</label>
                         <span class="value">{Math.round(node.confidence * 100)}%</span>
-                    </div>
+                    </div-->
                 {/if}
                 {#if 'probability' in node && node.probability}
                     <div class="info-item">

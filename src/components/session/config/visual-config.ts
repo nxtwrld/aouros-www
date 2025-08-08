@@ -4,6 +4,27 @@
  */
 
 // ============================================================================
+// NODE SIZE SETTINGS
+// ============================================================================
+
+export const NODE_SIZE = {
+  // Minimum height for all nodes (in rem for consistency)
+  MIN_HEIGHT_REM: 3,        // 3rem minimum height
+  MIN_HEIGHT_PX: 48,        // ~3rem in pixels (assuming 16px base)
+  
+  // Maximum heights by node type
+  MAX_HEIGHT_PX: 150,       // Maximum height for any node
+  
+  // Height calculation multipliers
+  PRIORITY_MULTIPLIER: 10,  // How much priority affects height
+  PROBABILITY_MULTIPLIER: 8, // How much probability/confidence affects height
+  
+  // Width settings
+  NODE_WIDTH: 120,          // Default node width
+  NODE_WIDTH_MOBILE: 100,   // Mobile node width
+} as const;
+
+// ============================================================================
 // OPACITY SETTINGS
 // ============================================================================
 

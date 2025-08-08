@@ -1,0 +1,178 @@
+{
+  "conversation": [
+    {
+      "speaker": "patient",
+      "text": "Lately I've just been exhausted all the time. I wake up tired, and by midday I feel like I can barely function.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "When did this start?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "A couple of months ago, maybe late May? It's gotten worse over time.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Have you been sleeping poorly, or is it more like even after sleeping you still feel drained?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "I do sleep, but it doesn't feel restful. I can sleep 8 hours and still feel like I didn't sleep at all.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Any trouble focusing or remembering things?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Yes, that's been really frustrating. I'll be in meetings and completely lose track. It's like my brain is in a fog.",
+      "stress": "high",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Have you been feeling down or disinterested in things you usually enjoy?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "I wouldn't say depressed, but I've definitely been feeling overwhelmed and kind of emotionally flat.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "How about physical symptoms? Any changes in your weight, hair, or skin?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Actually, yes. I've noticed my hair's been thinning more than usual. And my skin feels really dry lately.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "How's your period been?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Much heavier, and it lasts longer. I used to be done in 4 days, now it's more like 6 or 7, and I need to change pads every couple of hours.",
+      "stress": "medium",
+      "urgency": "high"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Do you have a history of anemia or thyroid issues?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "I was borderline anemic a few years ago, but no thyroid problems that I know of.",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Have you had COVID in the past year?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Yes, I had a mild case back in March. Just a sore throat and cough for a few days, but nothing major.",
+      "stress": "low",
+      "urgency": "low"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Did your symptoms start after that?",
+      "stress": "low",
+      "urgency": "high"
+    },
+    {
+      "speaker": "patient",
+      "text": "Now that you mention it… yeah, I think the fatigue started a few weeks after I recovered.",
+      "stress": "high",
+      "urgency": "high"
+    }
+  ],
+  "symptoms": [
+    {
+      "name": "Chronic fatigue",
+      "duration": "months",
+      "severity": "severe",
+      "bodyParts": ["body"]
+    },
+    {
+      "name": "Non-restorative sleep",
+      "duration": "months",
+      "severity": "severe",
+      "bodyParts": ["body"]
+    },
+    {
+      "name": "Brain fog",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Concentration difficulties",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Hair thinning",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Dry skin",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["skin"]
+    },
+    {
+      "name": "Heavy menstrual bleeding",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["reproductive"]
+    },
+    {
+      "name": "Prolonged menstrual periods",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["reproductive"]
+    },
+    {
+      "name": "Emotional flatness",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["body"]
+    }
+  ],
+  "complaint": "Chronic fatigue and cognitive issues following COVID infection, with associated physical symptoms including hair thinning, dry skin, and heavy menstrual periods",
+  "tokenUsage": {
+    "total": 2847
+  }
+}

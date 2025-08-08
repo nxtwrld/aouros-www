@@ -1,0 +1,199 @@
+<script lang="ts">
+    import SessionTabs from './SessionTabs.svelte';
+    import type { SessionAnalysis, QuestionAnswerEvent } from './types/visualization';
+
+    interface Props {
+        sessionData: SessionAnalysis;
+        transcript: {
+            speaker: string;
+            text: string;
+            stress: string;
+            urgency: string;
+        }[];
+        selectedNode: any | null;
+        pendingQuestions: number;
+        isMobile: boolean;
+        showSidebar: boolean;
+        sidebarWidth: number;
+        tabsRef?: any;
+        onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
+        onnodeAction?: (event: CustomEvent<{ action: string; targetId: string; reason?: string }>) => void;
+        onToggleSidebar: () => void;
+        onStartResize: (event: MouseEvent) => void;
+    }
+
+    let { 
+        sessionData,
+        transcript,
+        selectedNode,
+        pendingQuestions,
+        isMobile,
+        showSidebar,
+        sidebarWidth,
+        tabsRef = $bindable(),
+        onquestionAnswer,
+        onnodeAction,
+        onToggleSidebar,
+        onStartResize
+    }: Props = $props();
+</script>
+
+{#if showSidebar}
+    {#if !isMobile}
+        <!-- Desktop Sidebar -->
+        <aside class="sidebar desktop" style="width: {sidebarWidth}px">
+            <!-- Resize Handle -->
+            <div 
+                class="resize-handle"
+                onmousedown={onStartResize}
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize sidebar"
+            ></div>
+            
+            <!-- Sidebar Header -->
+            <header class="sidebar-header">
+                <h3>Session Details</h3>
+                <button class="close-btn" onclick={onToggleSidebar}>
+                    ✕
+                </button>
+            </header>
+
+            <!-- Tabs Content -->
+            <div class="sidebar-content">
+                <SessionTabs
+                    bind:tabsRef
+                    {sessionData}
+                    {transcript}
+                    {selectedNode}
+                    {pendingQuestions}
+                    {isMobile}
+                    {onquestionAnswer}
+                    {onnodeAction}
+                />
+            </div>
+        </aside>
+    {:else}
+        <!-- Mobile Sidebar -->
+        <aside class="sidebar mobile">
+            <div class="mobile-sidebar-header">
+                <button class="close-btn" onclick={onToggleSidebar}>✕</button>
+            </div>
+            <div class="sidebar-content">
+                <SessionTabs
+                    bind:tabsRef
+                    {sessionData}
+                    {transcript}
+                    {selectedNode}
+                    {pendingQuestions}
+                    {isMobile}
+                    {onquestionAnswer}
+                    {onnodeAction}
+                />
+            </div>
+        </aside>
+    {/if}
+{/if}
+
+<style>
+    /* Desktop Sidebar */
+    .sidebar.desktop {
+        position: relative;
+        flex-shrink: 0;
+        height: 100%;
+        border-left: 1px solid var(--color-border, #e2e8f0);
+        display: flex;
+        flex-direction: column;
+        box-shadow: -2px 0 4px rgba(0,0,0,0.05);
+    }
+
+    /* Resize Handle */
+    .resize-handle {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: transparent;
+        cursor: col-resize;
+        z-index: 10;
+        transition: background-color 0.2s ease;
+    }
+
+    .resize-handle:hover {
+        background: var(--color-primary, #3b82f6);
+    }
+
+    /* Mobile Sidebar */
+    .sidebar.mobile {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        height: 60vh;
+        max-height: 400px;
+        background: var(--color-surface, #fff);
+        border-top: 1px solid var(--color-border, #e2e8f0);
+        border-radius: 12px 12px 0 0;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
+
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+    }
+
+    .sidebar-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--color-text-primary, #1f2937);
+    }
+
+    .mobile-sidebar-header {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+    }
+
+    .close-btn {
+        padding: 0.5rem;
+        border: none;
+        background: transparent;
+        color: var(--color-text-secondary, #6b7280);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    .close-btn:hover {
+        background: var(--color-surface-hover, #f1f5f9);
+    }
+
+    .sidebar-content {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Tab customization */
+</style>

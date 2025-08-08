@@ -44,7 +44,6 @@
 </script>
 
 <div class="legend" class:detailed>
-    <h4>Legend</h4>
     
     <div class="legend-section">
         <h5>Node Types</h5>
@@ -135,13 +134,9 @@
 
 <style>
     .legend {
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid var(--color-border, #e2e8f0);
         border-radius: 8px;
         padding: 1rem;
         font-size: 0.875rem;
-        backdrop-filter: blur(4px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         max-width: 280px;
     }
 

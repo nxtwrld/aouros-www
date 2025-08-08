@@ -1,14 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import SankeyDiagram from './SankeyDiagram.svelte';
-    import NodeDetails from './NodeDetails.svelte';  
-    import QuestionManager from './QuestionManager.svelte';
-    import Legend from './Legend.svelte';
-    import Transcript from '../profile/Session/Transcript.svelte';
-    import Tabs from '../ui/Tabs.svelte';
-    import TabHead from '../ui/TabHead.svelte';
-    import TabHeads from '../ui/TabHeads.svelte';
-    import TabPanel from '../ui/TabPanel.svelte';
+    import SessionSidebar from './SessionSidebar.svelte';
+    import sampleTranscript from './sample.transcript.1.json';
+    import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent, QuestionAnswerEvent } from './types/visualization';
 
     interface Props {
@@ -26,12 +21,13 @@
         isRealTime = true, 
         showLegend = true, 
         enableInteractions = true,
-        transcript = [],
+        transcript = sampleTranscript.conversation,
         onquestionAnswer,
         onnodeAction
     }: Props = $props();
 
     let selectedNodeId = $state<string | null>(null);
+    let focusedNodeIndex = $state<number>(-1);
     let isMobile = $state(false);
     let showSidebar = $state(true);
     let sidebarWidth = $state(400);
@@ -45,7 +41,33 @@
     onMount(() => {
         checkViewport();
         window.addEventListener('resize', checkViewport);
-        return () => window.removeEventListener('resize', checkViewport);
+        
+        // Debug sessionData loading
+        console.log('🚀 SessionMoeVisualizer mounted with sessionData:', {
+            sessionId: sessionData.sessionId,
+            analysisVersion: sessionData.analysisVersion,
+            nodes: {
+                symptoms: sessionData.nodes?.symptoms?.length || 0,
+                diagnoses: sessionData.nodes?.diagnoses?.length || 0,
+                treatments: sessionData.nodes?.treatments?.length || 0,
+                actions: sessionData.nodes?.actions?.length || 0
+            },
+            sampleDiagnoses: sessionData.nodes?.diagnoses?.slice(0, 3).map(d => ({id: d.id, name: d.name})) || []
+        });
+
+        // Setup keyboard shortcuts
+        const off = [
+            shortcuts.listen('Escape', handleClearSelection),
+            shortcuts.listen('Tab', handleFocusNext),
+            shortcuts.listen('Shift+Tab', handleFocusPrevious),
+            shortcuts.listen('Enter', handleSelectFocused),
+            shortcuts.listen('Space', handleSelectFocused)
+        ];
+        
+        return () => {
+            window.removeEventListener('resize', checkViewport);
+            off.forEach(f => f());
+        };
     });
 
     function checkViewport() {
@@ -60,19 +82,9 @@
     }
 
     function handleNodeSelect(event: CustomEvent<NodeSelectEvent>) {
+        console.log('🔍 Node selected:', event.detail.nodeId);
         selectedNodeId = event.detail.nodeId;
-        
-        // Auto-show sidebar when node is selected
-        if (!showSidebar && !isMobile) {
-            showSidebar = true;
-        }
-        
-        // Auto-select Details tab when node is selected
-        if (tabsRef?.selectTab) {
-            const hasTranscript = transcript && transcript.length > 0;
-            const detailsTabIndex = hasTranscript ? 2 : 1;
-            tabsRef.selectTab(detailsTabIndex);
-        }
+        // Note: Tab switching and sidebar opening now handled by $effect
     }
 
     function handleLinkSelect(event: CustomEvent<LinkSelectEvent>) {
@@ -86,6 +98,52 @@
 
     function handleNodeAction(action: string, targetId: string, reason?: string) {
         onnodeAction?.(new CustomEvent('nodeAction', { detail: { action, targetId, reason }}));
+    }
+
+    function handleClearSelection() {
+        selectedNodeId = null;
+        focusedNodeIndex = -1;
+        console.log('🎹 Selection and focus cleared via Escape key');
+    }
+
+    function handleSelectionClear() {
+        selectedNodeId = null;
+        console.log('🖱️ Selection cleared via canvas click');
+    }
+
+    function handleFocusNext() {
+        const navFunctions = (window as any).sankeyNavigationFunctions;
+        if (navFunctions?.focusNext) {
+            navFunctions.focusNext();
+            console.log('🎹 Focus next node via Tab key, focusedIndex now:', focusedNodeIndex);
+        } else {
+            console.warn('🎹 Tab navigation not available - navFunctions not found');
+        }
+    }
+
+    function handleFocusPrevious() {
+        const navFunctions = (window as any).sankeyNavigationFunctions;
+        if (navFunctions?.focusPrevious) {
+            navFunctions.focusPrevious();
+            console.log('🎹 Focus previous node via Shift+Tab key, focusedIndex now:', focusedNodeIndex);
+        } else {
+            console.warn('🎹 Shift+Tab navigation not available - navFunctions not found');
+        }
+    }
+
+    function handleSelectFocused() {
+        const navFunctions = (window as any).sankeyNavigationFunctions;
+        if (navFunctions?.selectFocused) {
+            navFunctions.selectFocused();
+            console.log('🎹 Select focused node via Enter/Space key, focusedIndex:', focusedNodeIndex);
+        } else {
+            console.warn('🎹 Enter/Space selection not available - navFunctions not found');
+        }
+    }
+
+    function handleFocusChange(event: CustomEvent<{ index: number }>) {
+        focusedNodeIndex = event.detail.index;
+        console.log('🎯 Focus changed to index:', focusedNodeIndex);
     }
 
     function toggleSidebar() {
@@ -118,10 +176,59 @@
     const questionCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question')?.length || 0);
     const pendingQuestions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question' && a.status === 'pending')?.length || 0);
     const alertCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'alert')?.length || 0);
-    const selectedNode = $derived(selectedNodeId ? 
-        [...(sessionData.nodes.symptoms || []), ...(sessionData.nodes.diagnoses || []), 
-         ...(sessionData.nodes.treatments || []), ...(sessionData.nodes.actions || [])]
-        .find(n => n.id === selectedNodeId) : null);
+    const selectedNode = $derived.by(() => {
+        console.log('🔍 selectedNode $derived called with selectedNodeId:', selectedNodeId);
+        if (!selectedNodeId) {
+            console.log('🔍 No selectedNodeId, returning null');
+            return null;
+        }
+        
+        const allNodes = [
+            ...(sessionData.nodes.symptoms || []), 
+            ...(sessionData.nodes.diagnoses || []), 
+            ...(sessionData.nodes.treatments || []), 
+            ...(sessionData.nodes.actions || [])
+        ];
+        
+        console.log('🎯 Looking for node:', selectedNodeId);
+        console.log('🎯 SessionData structure:', {
+            symptoms: sessionData.nodes.symptoms?.length || 0,
+            diagnoses: sessionData.nodes.diagnoses?.length || 0,
+            treatments: sessionData.nodes.treatments?.length || 0,
+            actions: sessionData.nodes.actions?.length || 0
+        });
+        console.log('🎯 Available nodes:', allNodes.map(n => ({ id: n.id, type: n.type || 'unknown', name: n.name || n.text || 'unnamed' })));
+        
+        const foundNode = allNodes.find(n => n.id === selectedNodeId);
+        console.log('🎯 Found node:', foundNode ? { id: foundNode.id, name: foundNode.name || foundNode.text || 'unnamed', fullNode: foundNode } : null);
+        
+        return foundNode || null;
+    });
+
+    // Handle tab selection when selectedNodeId changes
+    $effect(() => {
+        console.log('🎯 Effect called - selectedNodeId:', selectedNodeId, 'selectedNode:', selectedNode ? {id: selectedNode.id, name: selectedNode.name || selectedNode.text} : null);
+        if (selectedNodeId && selectedNode) {
+            console.log('🎯 Node selection effect triggered for:', selectedNodeId);
+            
+            // Auto-show sidebar when node is selected
+            if (!showSidebar && !isMobile) {
+                showSidebar = true;
+                console.log('📂 Sidebar opened via effect');
+            }
+            
+            // Auto-select Details tab when node is selected
+            if (tabsRef?.selectTab) {
+                const hasTranscript = transcript && transcript.length > 0;
+                // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
+                const detailsTabIndex = hasTranscript ? 2 : 1;
+                console.log('📋 Switching to Details tab via effect (index:', detailsTabIndex, ')');
+                setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
+            } else {
+                console.warn('⚠️ tabsRef or selectTab not available in effect:', { tabsRef, selectTab: tabsRef?.selectTab });
+            }
+        }
+    });
 </script>
 
 <div class="session-visualizer" class:mobile={isMobile}>
@@ -154,137 +261,31 @@
                 data={sessionData}
                 {isMobile}
                 {selectedNodeId}
+                {focusedNodeIndex}
                 onnodeSelect={handleNodeSelect}
                 onlinkSelect={handleLinkSelect}
+                onselectionClear={handleSelectionClear}
+                onfocusChange={handleFocusChange}
             />
         </div>
 
-        <!-- Desktop Sidebar -->
-        {#if showSidebar && !isMobile}
-            <aside class="sidebar desktop" style="width: {sidebarWidth}px">
-                <!-- Resize Handle -->
-                <div 
-                    class="resize-handle"
-                    onmousedown={startResize}
-                    role="separator"
-                    aria-orientation="vertical"
-                    aria-label="Resize sidebar"
-                ></div>
-                
-                <!-- Sidebar Header -->
-                <header class="sidebar-header">
-                    <h3>Session Details</h3>
-                    <button class="close-btn" onclick={toggleSidebar}>
-                        ✕
-                    </button>
-                </header>
-
-                <!-- Tabs Content -->
-                <div class="sidebar-content">
-                    <Tabs bind:this={tabsRef}>
-                        <TabHeads>
-                            <TabHead>
-                                Questions
-                                {#if pendingQuestions > 0}
-                                    <span class="badge">{pendingQuestions}</span>
-                                {/if}
-                            </TabHead>
-                            {#if transcript && transcript.length > 0}
-                                <TabHead>Transcript</TabHead>
-                            {/if}
-                            <TabHead>Details</TabHead>
-                            <TabHead>Legend</TabHead>
-                        </TabHeads>
-                        
-                        <TabPanel>
-                            <QuestionManager 
-                                questions={sessionData.nodes.actions?.filter(a => a.actionType === 'question') || []}
-                                alerts={sessionData.nodes.actions?.filter(a => a.actionType === 'alert') || []}
-                                onquestionAnswer={handleQuestionAnswer}
-                            />
-                        </TabPanel>
-                        
-                        {#if transcript && transcript.length > 0}
-                            <TabPanel>
-                                <Transcript conversation={transcript} />
-                            </TabPanel>
-                        {/if}
-                        
-                        <TabPanel>
-                            {#if selectedNode}
-                                <NodeDetails 
-                                    node={selectedNode}
-                                    allNodes={sessionData.nodes}
-                                    onnodeAction={(e) => handleNodeAction(e.detail.action, e.detail.targetId, e.detail.reason)}
-                                />
-                            {:else}
-                                <div class="empty-state">
-                                    <p>Select a node from the diagram to view details</p>
-                                </div>
-                            {/if}
-                        </TabPanel>
-                        
-                        <TabPanel>
-                            <Legend detailed={true} />
-                        </TabPanel>
-                    </Tabs>
-                </div>
-            </aside>
-        {/if}
+        <!-- Sidebar -->
+        <SessionSidebar
+            {sessionData}
+            {transcript}
+            {selectedNode}
+            {pendingQuestions}
+            {isMobile}
+            {showSidebar}
+            {sidebarWidth}
+            bind:tabsRef
+            onquestionAnswer={handleQuestionAnswer}
+            onnodeAction={(e) => handleNodeAction(e.detail.action, e.detail.targetId, e.detail.reason)}
+            onToggleSidebar={toggleSidebar}
+            onStartResize={startResize}
+        />
     </div>
 
-    <!-- Mobile Sidebar -->
-    {#if showSidebar && isMobile}
-        <aside class="sidebar mobile">
-            <div class="mobile-sidebar-header">
-                <button class="close-btn" onclick={toggleSidebar}>✕</button>
-            </div>
-            <div class="sidebar-content">
-                <Tabs>
-                    <TabHeads>
-                        <TabHead>
-                            Questions
-                            {#if pendingQuestions > 0}
-                                <span class="badge">{pendingQuestions}</span>
-                            {/if}
-                        </TabHead>
-                        {#if transcript && transcript.length > 0}
-                            <TabHead>Transcript</TabHead>
-                        {/if}
-                        <TabHead>Details</TabHead>
-                    </TabHeads>
-                    
-                    <TabPanel>
-                        <QuestionManager 
-                            questions={sessionData.nodes.actions?.filter(a => a.actionType === 'question') || []}
-                            alerts={sessionData.nodes.actions?.filter(a => a.actionType === 'alert') || []}
-                            onquestionAnswer={handleQuestionAnswer}
-                        />
-                    </TabPanel>
-                    
-                    {#if transcript && transcript.length > 0}
-                        <TabPanel>
-                            <Transcript conversation={transcript} />
-                        </TabPanel>
-                    {/if}
-                    
-                    <TabPanel>
-                        {#if selectedNode}
-                            <NodeDetails 
-                                node={selectedNode}
-                                allNodes={sessionData.nodes}
-                                onnodeAction={(e) => handleNodeAction(e.detail.action, e.detail.targetId, e.detail.reason)}
-                            />
-                        {:else}
-                            <div class="empty-state">
-                                <p>Select a node to view details</p>
-                            </div>
-                        {/if}
-                    </TabPanel>
-                </Tabs>
-            </div>
-        </aside>
-    {/if}
 
     <!-- Mobile sidebar overlay -->
     {#if isMobile && showSidebar}
@@ -371,161 +372,6 @@
         min-width: 0;
     }
 
-    /* Desktop Sidebar */
-    .sidebar.desktop {
-        position: relative;
-        flex-shrink: 0;
-        height: 100%;
-        background: var(--color-surface, #fff);
-        border-left: 1px solid var(--color-border, #e2e8f0);
-        display: flex;
-        flex-direction: column;
-        box-shadow: -2px 0 4px rgba(0,0,0,0.05);
-    }
-
-    /* Resize Handle */
-    .resize-handle {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: transparent;
-        cursor: col-resize;
-        z-index: 10;
-        transition: background-color 0.2s ease;
-    }
-
-    .resize-handle:hover {
-        background: var(--color-primary, #3b82f6);
-    }
-
-    /* Mobile Sidebar */
-    .sidebar.mobile {
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        left: 0;
-        height: 60vh;
-        max-height: 400px;
-        background: var(--color-surface, #fff);
-        border-top: 1px solid var(--color-border, #e2e8f0);
-        border-radius: 12px 12px 0 0;
-        z-index: 50;
-        display: flex;
-        flex-direction: column;
-        animation: slideUp 0.3s ease;
-    }
-
-    @keyframes slideUp {
-        from {
-            transform: translateY(100%);
-        }
-        to {
-            transform: translateY(0);
-        }
-    }
-
-    .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid var(--color-border, #e2e8f0);
-    }
-
-    .sidebar-header h3 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--color-text-primary, #1f2937);
-    }
-
-    .mobile-sidebar-header {
-        display: flex;
-        justify-content: flex-end;
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid var(--color-border, #e2e8f0);
-    }
-
-    .close-btn {
-        padding: 0.5rem;
-        border: none;
-        background: transparent;
-        color: var(--color-text-secondary, #6b7280);
-        cursor: pointer;
-        border-radius: 4px;
-        transition: background-color 0.2s ease;
-        font-size: 1.25rem;
-        line-height: 1;
-    }
-
-    .close-btn:hover {
-        background: var(--color-surface-hover, #f1f5f9);
-    }
-
-    .sidebar-content {
-        flex: 1;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Tab customization */
-    :global(.sidebar .tabs) {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    :global(.sidebar .tab-heads) {
-        flex-shrink: 0;
-        border-bottom: 1px solid var(--color-border, #e2e8f0);
-        padding: 0 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    :global(.sidebar .tab-head) {
-        position: relative;
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    :global(.sidebar .tab-panel) {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1rem;
-    }
-
-    .badge {
-        position: absolute;
-        top: 0.25rem;
-        right: 0.25rem;
-        background: var(--color-error, #dc2626);
-        color: white;
-        font-size: 0.625rem;
-        padding: 0.125rem 0.375rem;
-        border-radius: 10px;
-        min-width: 18px;
-        text-align: center;
-        font-weight: 600;
-    }
-
-    .empty-state {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        color: var(--color-text-secondary, #6b7280);
-        text-align: center;
-        padding: 2rem;
-    }
-
-    .empty-state p {
-        margin: 0;
-    }
 
     /* Mobile Overlay */
     .mobile-overlay {

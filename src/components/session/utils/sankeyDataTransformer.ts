@@ -1,5 +1,5 @@
 import type { SessionAnalysis, SankeyData, SankeyNode, SankeyLink } from '../types/visualization';
-import { getNodeColor, getLinkColor } from '../config/visual-config';
+import { getNodeColor, getLinkColor, NODE_SIZE } from '../config/visual-config';
 
 /**
  * Transform MoE session analysis JSON to D3 Sankey format
@@ -232,18 +232,26 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
  * Calculate node value (affects height) based on priority/severity and probability
  * Priority scale: 1 (critical) to 10 (low)
  * Probability/confidence/effectiveness: 0 to 1
- * Formula: (11 - priority) * probability * 100
+ * Formula: MIN_HEIGHT_PX + (priority_impact + probability_impact)
  */
 function calculateNodeValue(priority: number, probability: number): number {
     // Invert priority so higher severity = higher value
     const severityWeight = 11 - Math.max(1, Math.min(10, priority));
     const probWeight = Math.max(0, Math.min(1, probability));
     
-    // Base value between 20-200 for reasonable Sankey heights
-    const baseValue = 20;
-    const multiplier = 18; // Adjust this to control max height difference
+    // Start with minimum height
+    const baseValue = NODE_SIZE.MIN_HEIGHT_PX;
     
-    return baseValue + (severityWeight * probWeight * multiplier);
+    // Calculate additional height based on priority and probability
+    const additionalHeight = 
+        (severityWeight * NODE_SIZE.PRIORITY_MULTIPLIER) + 
+        (probWeight * NODE_SIZE.PROBABILITY_MULTIPLIER * severityWeight);
+    
+    // Ensure we don't exceed maximum height
+    return Math.min(
+        baseValue + additionalHeight,
+        NODE_SIZE.MAX_HEIGHT_PX
+    );
 }
 
 // Note: getNodeColor is now imported from visual-config
