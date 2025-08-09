@@ -5,6 +5,7 @@
     import sampleTranscript from './sample.transcript.1.json';
     import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent, QuestionAnswerEvent } from './types/visualization';
+    import { t } from '$lib/i18n';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -13,7 +14,7 @@
         enableInteractions?: boolean;
         transcript?: any[];
         onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
-        onnodeAction?: (event: CustomEvent<{ action: string; targetId: string; reason?: string }>) => void;
+        onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
     }
 
     let { 
@@ -27,6 +28,7 @@
     }: Props = $props();
 
     let selectedNodeId = $state<string | null>(null);
+    let selectedLink = $state<any | null>(null);
     let focusedNodeIndex = $state<number>(-1);
     let isMobile = $state(false);
     let showSidebar = $state(true);
@@ -84,30 +86,41 @@
     function handleNodeSelect(event: CustomEvent<NodeSelectEvent>) {
         console.log('🔍 Node selected:', event.detail.nodeId);
         selectedNodeId = event.detail.nodeId;
+        selectedLink = null; // Clear link selection when node is selected
         // Note: Tab switching and sidebar opening now handled by $effect
     }
 
     function handleLinkSelect(event: CustomEvent<LinkSelectEvent>) {
-        // For now, just show link details in console
-        console.log('Link selected:', event.detail.link);
+        console.log('🔗 Link selected:', event.detail.link);
+        selectedLink = event.detail.link;
+        selectedNodeId = null; // Clear node selection when link is selected
+        // Tab switching and sidebar opening will be handled by $effect
     }
 
     function handleQuestionAnswer(event: CustomEvent<QuestionAnswerEvent>) {
         onquestionAnswer?.(event);
     }
 
-    function handleNodeAction(action: string, targetId: string, reason?: string) {
-        onnodeAction?.(new CustomEvent('nodeAction', { detail: { action, targetId, reason }}));
+    function handleNodeAction(detail: { action: string; targetId: string; reason?: string }) {
+        onnodeAction?.(detail);
+    }
+
+    function handleRelationshipNodeClick(detail: { nodeId: string }) {
+        console.log('🔗 Relationship node clicked:', detail.nodeId);
+        selectedNodeId = detail.nodeId;
+        // This will automatically trigger the $effect that handles tab switching and sidebar opening
     }
 
     function handleClearSelection() {
         selectedNodeId = null;
+        selectedLink = null;
         focusedNodeIndex = -1;
         console.log('🎹 Selection and focus cleared via Escape key');
     }
 
     function handleSelectionClear() {
         selectedNodeId = null;
+        selectedLink = null;
         console.log('🖱️ Selection cleared via canvas click');
     }
 
@@ -205,16 +218,18 @@
         return foundNode || null;
     });
 
-    // Handle tab selection when selectedNodeId changes
+    // Handle tab selection when selectedNodeId or selectedLink changes
     $effect(() => {
-        console.log('🎯 Effect called - selectedNodeId:', selectedNodeId, 'selectedNode:', selectedNode ? {id: selectedNode.id, name: selectedNode.name || selectedNode.text} : null);
+        console.log('🎯 Effect called - selectedNodeId:', selectedNodeId, 'selectedLink:', selectedLink ? 'link selected' : null, 'selectedNode:', selectedNode ? {id: selectedNode.id, name: selectedNode.name || selectedNode.text} : null);
+        
+        // Handle node selection
         if (selectedNodeId && selectedNode) {
             console.log('🎯 Node selection effect triggered for:', selectedNodeId);
             
             // Auto-show sidebar when node is selected
             if (!showSidebar && !isMobile) {
                 showSidebar = true;
-                console.log('📂 Sidebar opened via effect');
+                console.log('📂 Sidebar opened via node selection effect');
             }
             
             // Auto-select Details tab when node is selected
@@ -222,7 +237,29 @@
                 const hasTranscript = transcript && transcript.length > 0;
                 // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
                 const detailsTabIndex = hasTranscript ? 2 : 1;
-                console.log('📋 Switching to Details tab via effect (index:', detailsTabIndex, ')');
+                console.log('📋 Switching to Details tab via node selection effect (index:', detailsTabIndex, ')');
+                setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
+            } else {
+                console.warn('⚠️ tabsRef or selectTab not available in effect:', { tabsRef, selectTab: tabsRef?.selectTab });
+            }
+        }
+        
+        // Handle link selection
+        if (selectedLink) {
+            console.log('🎯 Link selection effect triggered for:', selectedLink);
+            
+            // Auto-show sidebar when link is selected
+            if (!showSidebar && !isMobile) {
+                showSidebar = true;
+                console.log('📂 Sidebar opened via link selection effect');
+            }
+            
+            // Auto-select Details tab when link is selected
+            if (tabsRef?.selectTab) {
+                const hasTranscript = transcript && transcript.length > 0;
+                // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
+                const detailsTabIndex = hasTranscript ? 2 : 1;
+                console.log('📋 Switching to Details tab via link selection effect (index:', detailsTabIndex, ')');
                 setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
             } else {
                 console.warn('⚠️ tabsRef or selectTab not available in effect:', { tabsRef, selectTab: tabsRef?.selectTab });
@@ -239,16 +276,16 @@
                 <h2>Analysis v{sessionData.analysisVersion}</h2>
                 <div class="stats">
                     <span class="stat">
-                        <span class="count">{questionCount}</span> questions
+                        <span class="count">{questionCount}</span> {$t('session.headers.questions')}
                     </span>
                     <span class="stat">
-                        <span class="count urgent">{pendingQuestions}</span> pending
+                        <span class="count urgent">{pendingQuestions}</span> {$t('session.status.pending')}
                     </span>
                 </div>
             </div>
             <div class="header-actions">
                 <button class="sidebar-toggle" onclick={toggleSidebar}>
-                    {showSidebar ? 'Hide' : 'Show'} Panel
+                    {showSidebar ? $t('session.actions.hide-panel') : $t('session.actions.show-panel')}
                 </button>
             </div>
         </header>
@@ -274,13 +311,15 @@
             {sessionData}
             {transcript}
             {selectedNode}
+            {selectedLink}
             {pendingQuestions}
             {isMobile}
             {showSidebar}
             {sidebarWidth}
             bind:tabsRef
             onquestionAnswer={handleQuestionAnswer}
-            onnodeAction={(e) => handleNodeAction(e.detail.action, e.detail.targetId, e.detail.reason)}
+            onnodeAction={handleNodeAction}
+            onrelationshipNodeClick={handleRelationshipNodeClick}
             onToggleSidebar={toggleSidebar}
             onStartResize={startResize}
         />
@@ -297,7 +336,7 @@
     .session-visualizer {
         display: flex;
         flex-direction: column;
-        height: 100vh;
+        height: 100%;
         background: var(--color-background, #f8fafc);
         overflow: hidden;
     }

@@ -1,6 +1,7 @@
 <script lang="ts">
     import SessionTabs from './SessionTabs.svelte';
     import type { SessionAnalysis, QuestionAnswerEvent } from './types/visualization';
+    import { t } from '$lib/i18n';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -11,13 +12,15 @@
             urgency: string;
         }[];
         selectedNode: any | null;
+        selectedLink: any | null;
         pendingQuestions: number;
         isMobile: boolean;
         showSidebar: boolean;
         sidebarWidth: number;
         tabsRef?: any;
         onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
-        onnodeAction?: (event: CustomEvent<{ action: string; targetId: string; reason?: string }>) => void;
+        onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
+        onrelationshipNodeClick?: (detail: { nodeId: string }) => void;
         onToggleSidebar: () => void;
         onStartResize: (event: MouseEvent) => void;
     }
@@ -26,6 +29,7 @@
         sessionData,
         transcript,
         selectedNode,
+        selectedLink,
         pendingQuestions,
         isMobile,
         showSidebar,
@@ -33,6 +37,7 @@
         tabsRef = $bindable(),
         onquestionAnswer,
         onnodeAction,
+        onrelationshipNodeClick,
         onToggleSidebar,
         onStartResize
     }: Props = $props();
@@ -53,9 +58,9 @@
             
             <!-- Sidebar Header -->
             <header class="sidebar-header">
-                <h3>Session Details</h3>
+                <h3>{$t('session.tabs.details')}</h3>
                 <button class="close-btn" onclick={onToggleSidebar}>
-                    ✕
+                    <svg><use href="/icons.svg#close" /></svg>
                 </button>
             </header>
 
@@ -66,10 +71,12 @@
                     {sessionData}
                     {transcript}
                     {selectedNode}
+                    {selectedLink}
                     {pendingQuestions}
                     {isMobile}
                     {onquestionAnswer}
                     {onnodeAction}
+                    {onrelationshipNodeClick}
                 />
             </div>
         </aside>
@@ -77,7 +84,9 @@
         <!-- Mobile Sidebar -->
         <aside class="sidebar mobile">
             <div class="mobile-sidebar-header">
-                <button class="close-btn" onclick={onToggleSidebar}>✕</button>
+                <button class="close-btn" onclick={onToggleSidebar}>
+                    <svg><use href="/icons.svg#close" /></svg>
+                </button>
             </div>
             <div class="sidebar-content">
                 <SessionTabs
@@ -85,10 +94,12 @@
                     {sessionData}
                     {transcript}
                     {selectedNode}
+                    {selectedLink}
                     {pendingQuestions}
                     {isMobile}
                     {onquestionAnswer}
                     {onnodeAction}
+                    {onrelationshipNodeClick}
                 />
             </div>
         </aside>
@@ -154,7 +165,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
+        padding: .3rem .3rem .3rem 1rem;
+        height: var(--toolbar-height);
         border-bottom: 1px solid var(--color-border, #e2e8f0);
     }
 
@@ -182,6 +194,15 @@
         transition: background-color 0.2s ease;
         font-size: 1.25rem;
         line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .close-btn svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        fill: currentColor;
     }
 
     .close-btn:hover {
@@ -190,10 +211,13 @@
 
     .sidebar-content {
         flex: 1;
+        height: calc(100% - var(--toolbar-height));
         overflow: hidden;
         display: flex;
         flex-direction: column;
     }
-
+    .sidebar :global(.tabs) {
+        height: 100%;
+    }
     /* Tab customization */
 </style>

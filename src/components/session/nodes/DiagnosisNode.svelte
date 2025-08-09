@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { DiagnosisNode as DiagnosisData, SankeyNode } from '../types/visualization';
+    import { t } from '$lib/i18n';
     
     interface Props {
         node: SankeyNode;
@@ -73,7 +74,7 @@
         <div class="diagnosis-name">{truncateText(diagnosis.name, isMobile ? 18 : 60)}</div>
 
         {#if diagnosis.suppressed}
-            <div class="suppressed-indicator">Suppressed</div>
+            <div class="suppressed-indicator">{$t('session.labels.suppressed')}</div>
         {/if}
     </div>
 </div>

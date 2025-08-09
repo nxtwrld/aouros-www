@@ -177,6 +177,38 @@ export const COLORS = {
 } as const;
 
 // ============================================================================
+// LINK RENDERING CONFIGURATION
+// ============================================================================
+
+export const LINK_CONFIG = {
+  // Link rendering algorithm
+  ALGORITHM: 'custom-bezier' as 'default' | 'custom-bezier' | 'straight' | 'arc',
+  
+  // Curvature control (0 = straight, 1 = full curve)
+  CURVATURE: 0.5,
+  
+  // Width constraints
+  MAX_WIDTH: 25,           // Maximum link thickness in pixels
+  MIN_WIDTH: 10,           // Minimum link thickness in pixels
+  TAPER_FACTOR: 0.8,      // Controls width consistency (0.5-1.0)
+  
+  // Parallel link handling
+  PARALLEL_SPACING: 1,    // Spacing between parallel links in pixels
+  BUNDLE_THRESHOLD: 10,    // Number of parallel links before bundling
+  
+  // Visual enhancements
+  CURVE_SMOOTHNESS: 0.6,  // Bezier curve control point factor
+  EDGE_RADIUS: 2,         // Rounded edges for polygon links
+  
+  // Performance
+  RENDER_MODE: 'polygon' as 'stroke' | 'polygon' | 'hybrid'
+} as const;
+
+// Link algorithm types for type safety
+export type LinkAlgorithm = typeof LINK_CONFIG.ALGORITHM;
+export type LinkRenderMode = typeof LINK_CONFIG.RENDER_MODE;
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -259,4 +291,225 @@ export function getPriorityColor(priority: number): string {
   if (priority <= 3) return COLORS.PRIORITY.HIGH;
   if (priority <= 6) return COLORS.PRIORITY.MEDIUM;
   return COLORS.PRIORITY.LOW;
+}
+
+// ============================================================================
+// LINK PATH GENERATORS
+// ============================================================================
+
+/**
+ * Custom Bézier curve link generator with configurable curvature
+ */
+export function createCustomBezierLink(curvature: number = LINK_CONFIG.CURVATURE) {
+  return function(link: any): string {
+    const x0 = link.source.x1 || link.source.x0;
+    const x1 = link.target.x0 || link.target.x1;
+    const y0 = link.y0;
+    const y1 = link.y1;
+    
+    const xi = (x0 + x1) / 2;
+    const x2 = x0 + (xi - x0) * curvature;
+    const x3 = x1 - (x1 - xi) * curvature;
+    
+    return `M${x0},${y0}C${x2},${y0} ${x3},${y1} ${x1},${y1}`;
+  };
+}
+
+/**
+ * Straight diagonal link generator
+ */
+export function createStraightLink() {
+  return function(link: any): string {
+    const x0 = link.source.x1 || link.source.x0;
+    const x1 = link.target.x0 || link.target.x1;
+    const y0 = link.y0;
+    const y1 = link.y1;
+    
+    return `M${x0},${y0}L${x1},${y1}`;
+  };
+}
+
+/**
+ * Arc-based link generator
+ */
+export function createArcLink(curvature: number = LINK_CONFIG.CURVATURE) {
+  return function(link: any): string {
+    const x0 = link.source.x1 || link.source.x0;
+    const x1 = link.target.x0 || link.target.x1;
+    const y0 = link.y0;
+    const y1 = link.y1;
+    
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const radius = Math.sqrt(dx * dx + dy * dy) * curvature;
+    
+    return `M${x0},${y0}A${radius},${radius} 0 0,${dy > 0 ? 1 : 0} ${x1},${y1}`;
+  };
+}
+
+/**
+ * Polygon-based link generator for consistent thickness
+ */
+export function createPolygonLink(curvature: number = LINK_CONFIG.CURVATURE, taperFactor: number = LINK_CONFIG.TAPER_FACTOR) {
+  return function(link: any): string {
+    const x0 = link.source.x1 || link.source.x0;
+    const x1 = link.target.x0 || link.target.x1;
+    const y0 = link.y0;
+    const y1 = link.y1;
+    const width = Math.min(link.width || 2, LINK_CONFIG.MAX_WIDTH);
+    
+    // Calculate control points for smooth curves
+    const xi = (x0 + x1) / 2;
+    const x2 = x0 + (xi - x0) * curvature;
+    const x3 = x1 - (x1 - xi) * curvature;
+    
+    // Calculate tapered width
+    const startWidth = width;
+    const endWidth = width * taperFactor;
+    const midWidth = Math.max(startWidth, endWidth) * 0.8;
+    
+    // Create polygon path
+    const halfStartWidth = startWidth / 2;
+    const halfEndWidth = endWidth / 2;
+    const halfMidWidth = midWidth / 2;
+    
+    // Top curve
+    const topPath = `M${x0},${y0 - halfStartWidth}C${x2},${y0 - halfMidWidth} ${x3},${y1 - halfMidWidth} ${x1},${y1 - halfEndWidth}`;
+    // Bottom curve (reverse direction)
+    const bottomPath = `L${x1},${y1 + halfEndWidth}C${x3},${y1 + halfMidWidth} ${x2},${y0 + halfMidWidth} ${x0},${y0 + halfStartWidth}Z`;
+    
+    return topPath + bottomPath;
+  };
+}
+
+/**
+ * Get the appropriate link path generator based on configuration
+ */
+export function getLinkPathGenerator(
+  algorithm: LinkAlgorithm = LINK_CONFIG.ALGORITHM,
+  renderMode: LinkRenderMode = LINK_CONFIG.RENDER_MODE
+): (link: any) => string {
+  
+  // For polygon render mode, always use polygon generator
+  if (renderMode === 'polygon') {
+    return createPolygonLink(LINK_CONFIG.CURVATURE, LINK_CONFIG.TAPER_FACTOR);
+  }
+  
+  // For stroke mode, use the specified algorithm
+  switch (algorithm) {
+    case 'custom-bezier':
+      return createCustomBezierLink(LINK_CONFIG.CURVATURE);
+    case 'straight':
+      return createStraightLink();
+    case 'arc':
+      return createArcLink(LINK_CONFIG.CURVATURE);
+    case 'default':
+    default:
+      // Return a function that uses d3's sankeyLinkHorizontal
+      return function(link: any): string {
+        // This will be handled by d3.sankeyLinkHorizontal() in the component
+        return '';
+      };
+  }
+}
+
+/**
+ * Calculate link width with constraints
+ */
+export function calculateLinkWidth(rawWidth: number): number {
+  return Math.max(LINK_CONFIG.MIN_WIDTH, Math.min(rawWidth, LINK_CONFIG.MAX_WIDTH));
+}
+
+// ============================================================================
+// PARALLEL LINK HANDLING
+// ============================================================================
+
+/**
+ * Detect parallel links between the same source and target nodes
+ */
+export function detectParallelLinks(links: any[]): Map<string, any[]> {
+  const parallelGroups = new Map<string, any[]>();
+  
+  links.forEach(link => {
+    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+    const key = `${sourceId}-${targetId}`;
+    
+    if (!parallelGroups.has(key)) {
+      parallelGroups.set(key, []);
+    }
+    parallelGroups.get(key)!.push(link);
+  });
+  
+  // Return only groups with multiple links
+  const result = new Map<string, any[]>();
+  for (const [key, group] of parallelGroups) {
+    if (group.length > 1) {
+      result.set(key, group);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Calculate offsets for parallel links to prevent overlap
+ */
+export function calculateParallelOffsets(parallelLinks: any[], spacing: number = LINK_CONFIG.PARALLEL_SPACING): void {
+  const count = parallelLinks.length;
+  const totalOffset = (count - 1) * spacing;
+  const startOffset = -totalOffset / 2;
+  
+  parallelLinks.forEach((link, index) => {
+    const offset = startOffset + index * spacing;
+    
+    // Store offset for use in path generation
+    link.parallelOffset = offset;
+    link.parallelIndex = index;
+    link.parallelCount = count;
+    
+    // Adjust y positions based on offset
+    if (link.y0 !== undefined) link.y0 += offset;
+    if (link.y1 !== undefined) link.y1 += offset;
+  });
+}
+
+/**
+ * Apply parallel link spacing to all detected parallel groups
+ */
+export function applyParallelLinkSpacing(links: any[]): void {
+  const parallelGroups = detectParallelLinks(links);
+  
+  for (const [key, group] of parallelGroups) {
+    calculateParallelOffsets(group, LINK_CONFIG.PARALLEL_SPACING);
+  }
+}
+
+/**
+ * Enhanced link path generator that accounts for parallel link offsets
+ */
+export function createEnhancedLinkGenerator(
+  baseGenerator: (link: any) => string,
+  handleParallel: boolean = true
+): (link: any) => string {
+  return function(link: any): string {
+    if (!handleParallel || !link.parallelOffset) {
+      return baseGenerator(link);
+    }
+    
+    // For parallel links, we might want to adjust the curvature or path
+    // based on the parallel index to create visual separation
+    const originalPath = baseGenerator(link);
+    
+    // If this is a polygon path and we have multiple parallel links,
+    // we might want to adjust the curvature slightly for visual separation
+    if (link.parallelCount > 2) {
+      // Slightly vary the curvature for middle links to create visual separation
+      const curvatureVariation = (link.parallelIndex - (link.parallelCount - 1) / 2) * 0.02;
+      // This would require modifying the base generator, which is complex
+      // For now, rely on the y-offset adjustment
+    }
+    
+    return originalPath;
+  };
 }

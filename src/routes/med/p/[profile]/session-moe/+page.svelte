@@ -3,69 +3,42 @@
     import { page } from '$app/stores';
     import SessionMoeVisualizer from '$components/session/SessionMoeVisualizer.svelte';
     import type { SessionAnalysis } from '$components/session/types/visualization';
+    import { initializeSessionAnalysis } from '$lib/session/analysis-integration';
+    import { analysisActions, currentSession, isLoading } from '$lib/session/analysis-store';
     
     // Import sample data for development
     import sampleAnalysis from '$components/session/sample.analysis.1.json';
 
     let sessionData: SessionAnalysis = sampleAnalysis as SessionAnalysis;
-    let loading = false;
-    let error: string | null = null;
 
     const profileId = $page.params.profile;
 
-    onMount(() => {
+    onMount(async () => {
         // For now, we'll use the sample data
         // In production, this would load real session data
         console.log('Loading MoE session analysis for profile:', profileId);
-        console.log('Sample data loaded:', sessionData);
+        
+        // Initialize the analysis store directly - skip integration for now since this is sample data
+        analysisActions.loadSession(sessionData);
+        
+        // Optionally connect to real-time updates (but sample data won't have a session emitter)
+        // await initializeSessionAnalysis(sessionData.sessionId, sessionData);
     });
 
     function handleQuestionAnswer(event: CustomEvent) {
         const { questionId, answer, confidence } = event.detail;
         console.log('Question answered:', { questionId, answer, confidence });
         
-        // Update the session data
-        if (sessionData.nodes.actions) {
-            const questionIndex = sessionData.nodes.actions.findIndex(a => a.id === questionId);
-            if (questionIndex !== -1) {
-                sessionData.nodes.actions[questionIndex] = {
-                    ...sessionData.nodes.actions[questionIndex],
-                    status: 'answered',
-                    answer: answer
-                };
-                
-                // Trigger reactivity
-                sessionData = { ...sessionData };
-            }
-        }
+        // Use the store action instead of manually updating local state
+        analysisActions.answerQuestion(questionId, answer, confidence);
     }
 
     function handleNodeAction(event: CustomEvent) {
         const { action, targetId, reason } = event.detail;
         console.log('Node action:', { action, targetId, reason });
         
-        // Handle accept/suppress/highlight actions
-        // This would typically update the backend and refresh the analysis
-        
-        // For demo purposes, just log and potentially update UI state
-        if (action === 'suppress') {
-            // Find and suppress the node
-            ['symptoms', 'diagnoses', 'treatments', 'actions'].forEach(nodeType => {
-                if (sessionData.nodes[nodeType]) {
-                    const nodeIndex = sessionData.nodes[nodeType].findIndex((n: any) => n.id === targetId);
-                    if (nodeIndex !== -1) {
-                        const node = sessionData.nodes[nodeType][nodeIndex];
-                        if ('suppressed' in node) {
-                            (node as any).suppressed = true;
-                            (node as any).suppressionReason = reason || 'User suppressed';
-                        }
-                    }
-                }
-            });
-            
-            // Trigger reactivity
-            sessionData = { ...sessionData };
-        }
+        // Use the store action instead of manually updating local state
+        analysisActions.handleNodeAction(action, targetId, reason);
     }
 </script>
 
@@ -75,22 +48,14 @@
 </svelte:head>
 
 <div class="session-moe-page">
-    {#if loading}
+    {#if $isLoading}
         <div class="loading-state">
             <div class="spinner"></div>
             <p>Loading session analysis...</p>
         </div>
-    {:else if error}
-        <div class="error-state">
-            <h2>Error Loading Session</h2>
-            <p>{error}</p>
-            <button on:click={() => window.location.reload()}>
-                Retry
-            </button>
-        </div>
-    {:else if sessionData}
+    {:else if $currentSession}
         <SessionMoeVisualizer 
-            {sessionData}
+            sessionData={$currentSession}
             isRealTime={false}
             showLegend={true}
             enableInteractions={true}
@@ -101,13 +66,15 @@
         <div class="empty-state">
             <h2>No Session Data</h2>
             <p>Unable to load session analysis data.</p>
+            <p>Debug: isLoading = {$isLoading}</p>
+            <p>Debug: currentSession exists = {!!$currentSession}</p>
         </div>
     {/if}
 </div>
 
 <style>
     .session-moe-page {
-        height: 100vh;
+        height: 100%;
         background: var(--color-background, #f8fafc);
         overflow: hidden;
     }

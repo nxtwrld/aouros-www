@@ -1,15 +1,18 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import { mount, unmount } from 'svelte';
+    import { get } from 'svelte/store';
     import * as d3 from 'd3';
     import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
     import type { SessionAnalysis, SankeyNode, SankeyLink, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
     import { transformToSankeyData, calculateNodeSize } from './utils/sankeyDataTransformer';
-    import { OPACITY, COLORS, getLinkColor, NODE_SIZE } from './config/visual-config';
+    import { OPACITY, COLORS, NODE_SIZE, LINK_CONFIG, getLinkPathGenerator, calculateLinkWidth, applyParallelLinkSpacing, createEnhancedLinkGenerator } from './config/visual-config';
     import LinkTooltip from './LinkTooltip.svelte';
+    import { analysisActions, relatedActionsForSelectedLink, visualState } from '$lib/session/analysis-store';
     import SymptomNode from './nodes/SymptomNode.svelte';
     import DiagnosisNode from './nodes/DiagnosisNode.svelte';
     import TreatmentNode from './nodes/TreatmentNode.svelte';
+    import { t } from '$lib/i18n';
 
     interface Props {
         data: SessionAnalysis;
@@ -38,8 +41,24 @@
     let width = $state(800);
     let height = $state(600);
     let sankeyData = $state(transformToSankeyData(data));
-    let hoveredNodeId = $state<string | null>(null);
-    let hoveredLink = $state<any>(null);
+    
+    // Update sankey data when data changes
+    $effect(() => {
+        sankeyData = transformToSankeyData(data);
+    });
+    // Subscribe to unified visual state and apply styling
+    $effect(() => {
+        const currentVisualState = $visualState;
+        console.log('SankeyDiagram: Visual state changed:', {
+            hasActive: !!currentVisualState.activeState,
+            hasBackground: !!currentVisualState.backgroundState,
+            shouldAnimate: currentVisualState.shouldAnimateTrigger,
+            triggerType: currentVisualState.triggerItem?.type,
+            triggerId: currentVisualState.triggerItem?.id
+        });
+        
+        applyUnifiedVisualState(currentVisualState);
+    });
     let tooltipData = $state<{
         relationshipType: string;
         relationshipLabel: string;
@@ -139,7 +158,7 @@
         if (svg && selectedNodeId) {
             // Apply focus highlighting when a node is selected
             applyFocusHighlighting(selectedNodeId);
-        } else if (svg && selectedNodeId === null && hoveredNodeId === null) {
+        } else if (svg && selectedNodeId === null) {
             // Only reset if we had a selection and now we don't (and not hovering)
             // This prevents interfering with the initial state
             resetHighlighting();
@@ -224,6 +243,10 @@
         // Clear existing content in the main group
         const mainGroup = svg.select('g.main-group');
         mainGroup.selectAll('*').remove();
+        
+        // Create separate groups for proper z-ordering (links behind nodes)
+        const linkGroup = mainGroup.append('g').attr('class', 'link-group');
+        const nodeGroup = mainGroup.append('g').attr('class', 'node-group');
 
         // Debug logging
         /* console.log('Rendering Sankey with data:', {
@@ -490,20 +513,42 @@
             return;
         }
 
+        // Apply parallel link spacing before rendering
+        applyParallelLinkSpacing(sankeyResult.links);
+
+        // Get the appropriate link path generator
+        const baseLinkGenerator = LINK_CONFIG.ALGORITHM === 'default' 
+            ? sankeyLinkHorizontal()
+            : getLinkPathGenerator(LINK_CONFIG.ALGORITHM, LINK_CONFIG.RENDER_MODE);
+        
+        // Create enhanced generator that handles parallel links
+        const linkPathGenerator = LINK_CONFIG.ALGORITHM === 'default' 
+            ? sankeyLinkHorizontal()
+            : createEnhancedLinkGenerator(baseLinkGenerator);
+
         // Render links
-        const linkSelection = mainGroup
+        const linkSelection = linkGroup
             .selectAll('.link')
             .data(sankeyResult.links, (d: any) => `${d.source.id}-${d.target.id}`);
 
         linkSelection.enter()
             .append('path')
-            .attr('class', 'link')
+            .attr('class', (d: any) => {
+                const relType = (d.type || 'default').toLowerCase().replace(/\s+/g, '_');
+                return `link rel-${relType}`;
+            })
             .merge(linkSelection as any)
-            .attr('d', sankeyLinkHorizontal())
-            .style('stroke', (d: any) => getLinkColor(d.type || 'default')) // Relationship-based colors
-            .style('stroke-width', (d: any) => Math.max(1, d.width || 2))
-            .style('stroke-opacity', OPACITY.DEFAULT_LINK) // Low opacity by default
-            .style('fill', 'none')
+            .attr('d', (d: any) => {
+                // Use configured link generator or fall back to D3's default
+                if (LINK_CONFIG.ALGORITHM === 'default') {
+                    return sankeyLinkHorizontal()(d);
+                }
+                return linkPathGenerator(d);
+            })
+            .style('stroke-width', (d: any) => {
+                // For polygon mode, don't use stroke-width (it's built into the path)
+                return LINK_CONFIG.RENDER_MODE === 'polygon' ? 0 : calculateLinkWidth(d.width || 2);
+            })
             .style('cursor', 'pointer')
             .attr('data-relationship-type', (d: any) => d.type || 'default')
             .on('click', (event: MouseEvent, d: any) => handleLinkClick(event, d))
@@ -514,7 +559,7 @@
         linkSelection.exit().remove();
 
         // Render nodes
-        const nodeSelection = mainGroup
+        const nodeSelection = nodeGroup
             .selectAll('.node')
             .data(sankeyResult.nodes, (d: any) => d.id);
 
@@ -609,17 +654,17 @@
         return nodeContainer.innerHTML;
     }
 
-    function getPriorityColor(priority: number): string {
-        if (priority <= 2) return '#dc2626'; // Red for critical
-        if (priority <= 4) return '#ea580c'; // Orange for high  
-        if (priority <= 6) return '#3b82f6'; // Blue for medium
-        return '#10b981'; // Green for low
-    }
 
     function handleNodeClick(event: MouseEvent | TouchEvent, node: SankeyNode) {
         event.preventDefault();
         event.stopPropagation();
         
+        console.log('SankeyDiagram: Node clicked, using unified selection system', node);
+        
+        // Use new unified selection system
+        analysisActions.selectItem('node', node);
+        
+        // Also emit the event for backwards compatibility
         onnodeSelect?.(new CustomEvent('nodeSelect', {
             detail: {
                 nodeId: node.id,
@@ -633,6 +678,12 @@
         event.preventDefault();
         event.stopPropagation();
         
+        console.log('SankeyDiagram: Link clicked, using unified selection system', link);
+        
+        // Use new unified selection system
+        analysisActions.selectItem('link', link);
+        
+        // Also emit the event for backwards compatibility
         onlinkSelect?.(new CustomEvent('linkSelect', {
             detail: {
                 link: link,
@@ -731,33 +782,171 @@
         };
     }
 
-    function handleLinkHover(link: any, isEntering: boolean) {
-        hoveredLink = isEntering ? link : null;
+    function getConnectedLinkIds(nodeId: string): Set<string> {
+        if (!svg) return new Set();
         
+        const connectedLinkIds = new Set<string>();
+        
+        // Find the node type
+        let focusedNodeType = '';
+        svg.selectAll('.node').each((d: any) => {
+            if (d.id === nodeId) {
+                focusedNodeType = d.type;
+            }
+        });
+        
+        // Build connection maps for directional traversal
+        const nodeMap = new Map<string, any>();
+        const forwardMap = new Map<string, Set<string>>();
+        const backwardMap = new Map<string, Set<string>>();
+        
+        svg.selectAll('.node').each((d: any) => {
+            nodeMap.set(d.id, d);
+        });
+        
+        svg.selectAll('.link').each((d: any) => {
+            const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+            const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+            
+            if (!forwardMap.has(sourceId)) forwardMap.set(sourceId, new Set());
+            if (!backwardMap.has(targetId)) backwardMap.set(targetId, new Set());
+            
+            forwardMap.get(sourceId)!.add(targetId);
+            backwardMap.get(targetId)!.add(sourceId);
+        });
+        
+        // Helper function to find forward connections
+        const findForward = (nodeId: string, allowedTypes: string[]) => {
+            const targets = forwardMap.get(nodeId) || new Set();
+            targets.forEach(targetId => {
+                const targetNode = nodeMap.get(targetId);
+                if (targetNode && allowedTypes.includes(targetNode.type)) {
+                    connectedLinkIds.add(`${nodeId}-${targetId}`);
+                    
+                    // Continue forward if we found a diagnosis and need treatments
+                    if (targetNode.type === 'diagnosis') {
+                        const treatmentTargets = forwardMap.get(targetId) || new Set();
+                        treatmentTargets.forEach(treatmentId => {
+                            const treatmentNode = nodeMap.get(treatmentId);
+                            if (treatmentNode && treatmentNode.type === 'treatment') {
+                                connectedLinkIds.add(`${targetId}-${treatmentId}`);
+                            }
+                        });
+                    }
+                }
+            });
+        };
+        
+        // Helper function to find backward connections
+        const findBackward = (nodeId: string, allowedTypes: string[]) => {
+            const sources = backwardMap.get(nodeId) || new Set();
+            sources.forEach(sourceId => {
+                const sourceNode = nodeMap.get(sourceId);
+                if (sourceNode && allowedTypes.includes(sourceNode.type)) {
+                    connectedLinkIds.add(`${sourceId}-${nodeId}`);
+                    
+                    // Continue backward if we found a diagnosis and need symptoms
+                    if (sourceNode.type === 'diagnosis') {
+                        const symptomSources = backwardMap.get(sourceId) || new Set();
+                        symptomSources.forEach(symptomId => {
+                            const symptomNode = nodeMap.get(symptomId);
+                            if (symptomNode && symptomNode.type === 'symptom') {
+                                connectedLinkIds.add(`${symptomId}-${sourceId}`);
+                            }
+                        });
+                    }
+                }
+            });
+        };
+        
+        // Apply directional logic based on node type
+        if (focusedNodeType === 'symptom') {
+            // Symptom -> Diagnoses -> Treatments
+            findForward(nodeId, ['diagnosis', 'treatment']);
+        } else if (focusedNodeType === 'diagnosis') {
+            // Diagnosis -> Treatments AND Symptoms -> Diagnosis (bidirectional)
+            findForward(nodeId, ['treatment']);
+            findBackward(nodeId, ['symptom']);
+        } else if (focusedNodeType === 'treatment') {
+            // Symptoms -> Diagnoses -> Treatment (backward only)
+            findBackward(nodeId, ['diagnosis', 'symptom']);
+        } else if (focusedNodeType === 'action') {
+            // Actions can connect to any node through relationships
+            svg.selectAll('.node').each((d: any) => {
+                if (d.relationships) {
+                    d.relationships.forEach((rel: any) => {
+                        if (rel.nodeId === nodeId) {
+                            connectedLinkIds.add(`${rel.nodeId}-${nodeId}`);
+                        }
+                    });
+                }
+            });
+            
+            // Also check if this action has relationships to other nodes
+            const focusedNode = nodeMap.get(nodeId);
+            if (focusedNode?.relationships) {
+                focusedNode.relationships.forEach((rel: any) => {
+                    connectedLinkIds.add(`${nodeId}-${rel.nodeId}`);
+                });
+            }
+        }
+        
+        return connectedLinkIds;
+    }
+
+    function isLinkActiveInFocusMode(link: any): boolean {
+        const activeNodeId = selectedNodeId || focusedNodeId;
+        if (!activeNodeId) return true; // Not in focus mode, show all tooltips
+        
+        const connectedLinks = getConnectedLinkIds(activeNodeId);
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        const linkId = `${sourceId}-${targetId}`;
+        
+        return connectedLinks.has(linkId);
+    }
+
+    function handleLinkHover(link: any, isEntering: boolean) {
+        console.log('handleLinkHover called:', { link: link?.type, isEntering });
+        
+        // Use unified hover system
         if (!isEntering) {
-            // Hide tooltip
+            analysisActions.clearHover();
             tooltipData.visible = false;
             return;
         }
         
-        if (hoveredLink) {
-            const sourceNode = hoveredLink.source;
-            const targetNode = hoveredLink.target;
+        // Set hover state using unified system
+        analysisActions.hoverItem('link', link);
+        
+        // Check if this link should show tooltip based on focus mode
+        if (isEntering && !isLinkActiveInFocusMode(link)) {
+            // In focus mode but this link is inactive, don't show tooltip
+            return;
+        }
+        
+        if (link) {
+            const sourceNode = link.source;
+            const targetNode = link.target;
             
             // Get relationship type for all links
-            const relationshipType = hoveredLink.type || 'connection';
+            const relationshipType = link.type || 'connection';
             const relationshipLabel = relationshipType.charAt(0).toUpperCase() + relationshipType.slice(1);
             
-            // Get related actions (only for symptom->diagnosis or diagnosis->treatment links)
+            // Note: We don't set the hovered link as persistent selection
+            // Only clicks should trigger persistent selection
+            
+            // Get related actions from the reactive store (only for symptom->diagnosis or diagnosis->treatment links)
             let relatedActions: any[] = [];
             if ((sourceNode.type === 'symptom' && targetNode.type === 'diagnosis') ||
                 (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment')) {
-                relatedActions = getRelatedActions(hoveredLink);
+                // Get current value from the reactive store
+                relatedActions = get(relatedActionsForSelectedLink);
             }
             
             // Calculate position - convert from Sankey coordinates to absolute page coordinates
             const sankeyMidX = (sourceNode.x1 + targetNode.x0) / 2;
-            const sankeyMidY = (hoveredLink.y0 + hoveredLink.y1) / 2;
+            const sankeyMidY = (link.y0 + link.y1) / 2;
             
             // Get the container's absolute position
             const containerRect = container?.getBoundingClientRect();
@@ -793,39 +982,6 @@
         }
     }
 
-    function getRelatedActions(link: any): any[] {
-        const sourceNode = link.source;
-        const targetNode = link.target;
-        const sourceId = typeof sourceNode === 'object' ? sourceNode.id : sourceNode;
-        const targetId = typeof targetNode === 'object' ? targetNode.id : targetNode;
-        
-        const actions = data.nodes?.actions || [];
-        
-        const relatedActions = actions.filter(action => {
-            if (!action.relationships) return false;
-            
-            // For symptom->diagnosis links: show diagnostic questions
-            if (sourceNode.type === 'symptom' && targetNode.type === 'diagnosis') {
-                // Include actions that relate to either the symptom or the diagnosis
-                return action.relationships.some(rel => 
-                    rel.nodeId === sourceId || rel.nodeId === targetId
-                ) && action.actionType === 'question'; // Only diagnostic questions
-            }
-            
-            // For diagnosis->treatment links: show treatment-related actions (alerts, contraindications)
-            if (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment') {
-                // Include actions that relate to the treatment
-                return action.relationships.some(rel => 
-                    rel.nodeId === targetId
-                ); // Both questions and alerts for treatments
-            }
-            
-            return false;
-        });
-        
-        // Sort by priority (1 = highest priority)
-        return relatedActions.sort((a, b) => (a.priority || 10) - (b.priority || 10));
-    }
 
     
     function cleanupNodeComponents() {
@@ -1013,7 +1169,24 @@
                 const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
                 const targetId = typeof d.target === 'object' ? d.target.id : d.target;
                 const linkId = `${sourceId}-${targetId}`;
-                return connectedLinkIds.has(linkId) ? OPACITY.FOCUS_LINK_ACTIVE : OPACITY.FOCUS_LINK_INACTIVE;
+                // For polygon mode, stroke-opacity should be 0
+                return LINK_CONFIG.RENDER_MODE === 'polygon' ? 0 : 
+                    (connectedLinkIds.has(linkId) ? OPACITY.FOCUS_LINK_ACTIVE : OPACITY.FOCUS_LINK_INACTIVE);
+            })
+            .style('fill-opacity', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                // For polygon mode, use fill-opacity instead of stroke-opacity
+                return LINK_CONFIG.RENDER_MODE === 'polygon' ? 
+                    (connectedLinkIds.has(linkId) ? OPACITY.FOCUS_LINK_ACTIVE : OPACITY.FOCUS_LINK_INACTIVE) : 0;
+            })
+            .style('filter', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                // Remove grayscale for connected links in focus mode
+                return connectedLinkIds.has(linkId) ? 'none' : 'grayscale(1)';
             });
     }
     
@@ -1021,252 +1194,283 @@
         if (!svg) return;
         
         // Reset all nodes and links to default state
-        svg.selectAll('.node')
+        svg.select('.node-group').selectAll('.node')
             .style('opacity', OPACITY.RESET_NODE)
             .style('filter', 'none');
         
-        svg.selectAll('.link')
-            .style('stroke', (d: any) => getLinkColor(d.type || 'default'))
-            .style('stroke-opacity', OPACITY.RESET_LINK);
+        svg.select('.link-group').selectAll('.link')
+            .style('stroke-opacity', LINK_CONFIG.RENDER_MODE === 'polygon' ? 0 : OPACITY.RESET_LINK)
+            .style('fill-opacity', LINK_CONFIG.RENDER_MODE === 'polygon' ? OPACITY.RESET_LINK : 0);
     }
 
+    function applyUnifiedVisualState(visualStateData: any) {
+        if (!svg) {
+            console.log('applyUnifiedVisualState: No svg element');
+            return;
+        }
+        
+        console.log('applyUnifiedVisualState: Starting with state:', visualStateData);
+        
+        // Clear all existing classes and transitions
+        svg.select('.link-group').selectAll('.link')
+            .classed('selected', false)
+            .classed('in-path', false)
+            .classed('active-path', false)
+            .classed('background-trigger', false)
+            .classed('background-path', false)
+            .classed('inactive', false)
+            .interrupt(); // Stop any running animations
+            
+        svg.select('.node-group').selectAll('.node')
+            .classed('connected-to-selected', false)
+            .classed('in-path', false)
+            .classed('active-path', false)
+            .classed('background-trigger', false)
+            .classed('background-path', false)
+            .classed('inactive', false);
+            
+        svg.selectAll('.node-html')
+            .classed('connected-to-selected', false)
+            .classed('in-path', false)
+            .classed('active-path', false)
+            .classed('background-trigger', false)
+            .classed('background-path', false)
+            .classed('inactive', false);
+        
+        const { activeState, backgroundState, shouldAnimateTrigger, triggerItem } = visualStateData;
+        
+        if (!activeState) {
+            // No active state - reset to default
+            resetToDefault();
+            return;
+        }
+        
+        const activePathNodes = activeState.path.nodes;
+        const activePathLinks = activeState.path.links;
+        const backgroundPathNodes = backgroundState?.path?.nodes || [];
+        const backgroundPathLinks = backgroundState?.path?.links || [];
+        
+        console.log('applyUnifiedVisualState: Path data:', {
+            activePathNodes,
+            activePathLinks,
+            triggerType: triggerItem?.type,
+            triggerId: triggerItem?.id
+        });
+        
+        // Apply styling with priority: trigger > active path > background path > default
+        svg.select('.link-group').selectAll('.link')
+            .classed('selected', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                return triggerItem?.type === 'link' && triggerItem.id === linkId;
+            })
+            .classed('in-path', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                return activePathLinks.includes(linkId);
+            })
+            .classed('active-path', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
+                const isInActivePath = activePathLinks.includes(linkId);
+                return isTrigger || isInActivePath;
+            })
+            .classed('background-trigger', false) // Links don't have background trigger state
+            .classed('background-path', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                const isInActivePath = activePathLinks.includes(linkId);
+                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
+                const isInBackgroundPath = backgroundPathLinks.includes(linkId);
+                return !isTrigger && !isInActivePath && isInBackgroundPath;
+            })
+            .classed('inactive', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
+                const isInActivePath = activePathLinks.includes(linkId);
+                const isInBackgroundPath = backgroundPathLinks.includes(linkId);
+                return !isTrigger && !isInActivePath && !isInBackgroundPath;
+            });
+        
+        // Apply node styling
+        svg.select('.node-group').selectAll('.node')
+            .classed('selected', (d: any) => {
+                const isSelected = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                return isSelected;
+            })
+            .each(function(d: any) {
+                // Move selected node to end to ensure it renders on top
+                const isSelected = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                if (isSelected) {
+                    d3.select(this).raise(); // D3 method to move element to end of parent
+                    d3.select(this).select('.node-html').raise(); // Also raise the foreignObject
+                }
+            })
+            .classed('connected-to-selected', (d: any) => {
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                return isTrigger || isInActivePath;
+            })
+            .classed('in-path', (d: any) => {
+                return activePathNodes.includes(d.id) || backgroundPathNodes.includes(d.id);
+            })
+            .style('opacity', (d: any) => {
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                const isInBackgroundPath = backgroundPathNodes.includes(d.id);
+                
+                if (isTrigger) {
+                    return 1.0; // Trigger node always full opacity
+                } else if (isInActivePath) {
+                    return 1.0; // Active path nodes full opacity
+                } else if (isInBackgroundPath) {
+                    return 0.6; // Background path nodes medium opacity
+                } else {
+                    return 0.3; // Other nodes more visible (was 0.2)
+                }
+            });
+            
+        svg.selectAll('.node-html')
+            .classed('selected', (d: any) => {
+                // Node is selected if:
+                // 1. It's the trigger in background state (was selected and now something else is hovered), OR
+                // 2. It's the trigger in active state and should animate (was just clicked/selected)
+                const isBackgroundTrigger = backgroundState?.trigger?.type === 'node' && backgroundState.trigger.id === d.id;
+                const isActiveTriggerWithAnimation = activeState?.trigger?.type === 'node' && activeState.trigger.id === d.id && shouldAnimateTrigger;
+                
+                return isBackgroundTrigger || isActiveTriggerWithAnimation;
+            })
+            .classed('hovered', (d: any) => {
+                // Node is currently being hovered (but not selected, or hovered while something else is selected)
+                return activeState?.trigger?.type === 'node' && activeState.trigger.id === d.id && !shouldAnimateTrigger;
+            })
+            .classed('connected-to-selected', (d: any) => {
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                return isTrigger || isInActivePath;
+            })
+            .classed('active-path', (d: any) => {
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                return isTrigger || isInActivePath;
+            })
+            .classed('background-trigger', (d: any) => {
+                const isBackgroundTrigger = backgroundState?.trigger?.type === 'node' && backgroundState.trigger.id === d.id;
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                return isBackgroundTrigger && !isTrigger && !isInActivePath;
+            })
+            .classed('background-path', (d: any) => {
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                const isInBackgroundPath = backgroundPathNodes.includes(d.id);
+                const isBackgroundTrigger = backgroundState?.trigger?.type === 'node' && backgroundState.trigger.id === d.id;
+                return !isTrigger && !isInActivePath && !isBackgroundTrigger && isInBackgroundPath;
+            })
+            .classed('inactive', (d: any) => {
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                const isInBackgroundPath = backgroundPathNodes.includes(d.id);
+                const isBackgroundTrigger = backgroundState?.trigger?.type === 'node' && backgroundState.trigger.id === d.id;
+                return !isTrigger && !isInActivePath && !isInBackgroundPath && !isBackgroundTrigger;
+            });
+        
+        // Add animation class to trigger item if needed
+        if (shouldAnimateTrigger && triggerItem?.type === 'link') {
+            // Apply animation to the specific selected link
+            svg.selectAll('.link').each(function(d: any) {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                const isAnimatedLink = linkId === triggerItem.id;
+                
+                if (isAnimatedLink) {
+                    // Clear conflicting inline styles and add animation class
+                    d3.select(this)
+                        .classed('animate-pulse', true)
+                        .style('fill', null)           // Clear inline fill color
+                        .style('fill-opacity', null)   // Clear inline fill opacity
+                        .style('stroke', null)         // Clear inline stroke color  
+                        .style('stroke-opacity', null) // Clear inline stroke opacity
+                        .style('filter', null);        // Clear inline filter
+                } else {
+                    d3.select(this).classed('animate-pulse', false);
+                }
+            });
+        } else {
+            // Clear animation from all links
+            svg.select('.link-group').selectAll('.link').classed('animate-pulse', false);
+        }
+        
+        console.log('applyUnifiedVisualState: Applied styling for', {
+            activeNodes: activePathNodes.length,
+            activeLinks: activePathLinks.length,
+            backgroundNodes: backgroundPathNodes.length,
+            backgroundLinks: backgroundPathLinks.length,
+            shouldAnimate: shouldAnimateTrigger
+        });
+    }
+    
+    function resetToDefault() {
+        if (!svg) return;
+        
+        // Clear all visual state classes from links
+        svg.select('.link-group').selectAll('.link')
+            .classed('active-path', false)
+            .classed('background-trigger', false)
+            .classed('background-path', false)
+            .classed('inactive', true) // Default state is inactive
+            .interrupt();
+            
+        // Clear all visual state classes from SVG nodes
+        svg.select('.node-group').selectAll('.node')
+            .classed('active-path', false)
+            .classed('background-trigger', false)
+            .classed('background-path', false)
+            .classed('inactive', true); // Default state is inactive
+            
+        // Clear all visual state classes from HTML nodes
+        svg.selectAll('.node-html')
+            .classed('active-path', false)
+            .classed('background-trigger', false)
+            .classed('background-path', false)
+            .classed('inactive', true); // Default state is inactive
+    }
+    
+    
+
     function handleNodeHover(nodeId: string, isEntering: boolean) {
-        hoveredNodeId = isEntering ? nodeId : null;
+        console.log('handleNodeHover called:', { nodeId, isEntering });
         
         if (!svg) return;
         
-        // If we're not hovering anymore, reset to default state (unless focused)
-        if (!isEntering && !selectedNodeId) {
-            resetHighlighting();
-            return;
-        } else if (!isEntering) {
-            // If we have a selected node but stopped hovering, reapply focus
-            applyFocusHighlighting(selectedNodeId);
+        // Use new unified hover system
+        if (!isEntering) {
+            analysisActions.clearHover();
             return;
         }
         
-        // Get logically connected nodes based on medical flow
-        const connectedNodeIds = new Set<string>();
-        const connectedLinkIds = new Set<string>();
+        // Find the node object for hovering
+        const allNodeArrays = [
+            sankeyData?.nodes || [],
+        ].flat();
+        const nodeObject = allNodeArrays.find(n => n.id === nodeId);
         
-        // Find the node type
-        let hoveredNodeType = '';
-        svg.selectAll('.node').each((d: any) => {
-            if (d.id === nodeId) {
-                hoveredNodeType = d.type;
-            }
-        });
+        console.log('Found node object:', { nodeObject, totalNodes: allNodeArrays.length });
         
-        // Start with the hovered node
-        connectedNodeIds.add(nodeId);
-        
-        // Build connection maps for directional traversal
-        const nodeMap = new Map<string, any>();
-        const forwardMap = new Map<string, Set<string>>(); // source -> targets
-        const backwardMap = new Map<string, Set<string>>(); // target -> sources
-        
-        svg.selectAll('.node').each((d: any) => {
-            nodeMap.set(d.id, d);
-        });
-        
-        svg.selectAll('.link').each((d: any) => {
-            const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-            const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-            
-            if (!forwardMap.has(sourceId)) forwardMap.set(sourceId, new Set());
-            if (!backwardMap.has(targetId)) backwardMap.set(targetId, new Set());
-            
-            forwardMap.get(sourceId)!.add(targetId);
-            backwardMap.get(targetId)!.add(sourceId);
-        });
-        
-        // Helper function to find forward connections
-        const findForward = (nodeId: string, allowedTypes: string[]) => {
-            const targets = forwardMap.get(nodeId) || new Set();
-            targets.forEach(targetId => {
-                const targetNode = nodeMap.get(targetId);
-                if (targetNode && allowedTypes.includes(targetNode.type)) {
-                    connectedNodeIds.add(targetId);
-                    connectedLinkIds.add(`${nodeId}-${targetId}`);
-                    
-                    // Continue forward if we found a diagnosis and need treatments
-                    if (targetNode.type === 'diagnosis') {
-                        const treatmentTargets = forwardMap.get(targetId) || new Set();
-                        treatmentTargets.forEach(treatmentId => {
-                            const treatmentNode = nodeMap.get(treatmentId);
-                            if (treatmentNode && treatmentNode.type === 'treatment') {
-                                connectedNodeIds.add(treatmentId);
-                                connectedLinkIds.add(`${targetId}-${treatmentId}`);
-                            }
-                        });
-                    }
-                }
-            });
-        };
-        
-        // Helper function to find backward connections
-        const findBackward = (nodeId: string, allowedTypes: string[]) => {
-            const sources = backwardMap.get(nodeId) || new Set();
-            sources.forEach(sourceId => {
-                const sourceNode = nodeMap.get(sourceId);
-                if (sourceNode && allowedTypes.includes(sourceNode.type)) {
-                    connectedNodeIds.add(sourceId);
-                    connectedLinkIds.add(`${sourceId}-${nodeId}`);
-                    
-                    // Continue backward if we found a diagnosis and need symptoms
-                    if (sourceNode.type === 'diagnosis') {
-                        const symptomSources = backwardMap.get(sourceId) || new Set();
-                        symptomSources.forEach(symptomId => {
-                            const symptomNode = nodeMap.get(symptomId);
-                            if (symptomNode && symptomNode.type === 'symptom') {
-                                connectedNodeIds.add(symptomId);
-                                connectedLinkIds.add(`${symptomId}-${sourceId}`);
-                            }
-                        });
-                    }
-                }
-            });
-        };
-        
-        // Apply directional logic based on node type
-        if (hoveredNodeType === 'symptom') {
-            // Symptom -> Diagnoses -> Treatments
-            findForward(nodeId, ['diagnosis', 'treatment']);
-        } else if (hoveredNodeType === 'diagnosis') {
-            // Symptoms -> Diagnosis -> Treatments
-            findBackward(nodeId, ['symptom']);
-            findForward(nodeId, ['treatment']);
-            
-            // Also find treatments that investigate this diagnosis
-            svg.selectAll('.node').each((d: any) => {
-                if (d.type === 'treatment' && d.data && d.data.relationships) {
-                    // Check if this treatment investigates the hovered diagnosis
-                    const investigatesRelation = d.data.relationships.find(
-                        (rel: any) => rel.nodeId === nodeId && rel.relationship === 'investigates' && rel.direction === 'outgoing'
-                    );
-                    if (investigatesRelation) {
-                        connectedNodeIds.add(d.id);
-                        // Investigation links are reversed: diagnosis -> treatment (investigation)
-                        connectedLinkIds.add(`${nodeId}-${d.id}`);
-                    }
-                }
-            });
-        } else if (hoveredNodeType === 'treatment') {
-            // For treatments, we need to find connections in two ways:
-            // 1. Find diagnoses that lead to this treatment (incoming "treats" relationships)
-            // 2. Find diagnoses that this treatment investigates (outgoing "investigates" relationships)
-            
-            // Method 1: Find diagnoses that lead to this treatment
-            const treatmentSources = backwardMap.get(nodeId) || new Set();
-            treatmentSources.forEach(diagnosisId => {
-                const diagnosisNode = nodeMap.get(diagnosisId);
-                if (diagnosisNode && diagnosisNode.type === 'diagnosis') {
-                    connectedNodeIds.add(diagnosisId);
-                    connectedLinkIds.add(`${diagnosisId}-${nodeId}`);
-                    
-                    // Find all symptoms that connect to this diagnosis
-                    const diagnosisSources = backwardMap.get(diagnosisId) || new Set();
-                    diagnosisSources.forEach(symptomId => {
-                        const symptomNode = nodeMap.get(symptomId);
-                        if (symptomNode && symptomNode.type === 'symptom') {
-                            connectedNodeIds.add(symptomId);
-                            connectedLinkIds.add(`${symptomId}-${diagnosisId}`);
-                        }
-                    });
-                }
-            });
-            
-            // Method 2: Check if this treatment investigates any diagnoses
-            // Look at the treatment's own relationships
-            const hoveredNode = nodeMap.get(nodeId);
-            if (hoveredNode && hoveredNode.data && hoveredNode.data.relationships) {
-                hoveredNode.data.relationships.forEach((rel: any) => {
-                    if (rel.relationship === 'investigates' && rel.direction === 'outgoing') {
-                        const investigatedNode = nodeMap.get(rel.nodeId);
-                        if (investigatedNode && investigatedNode.type === 'diagnosis') {
-                            connectedNodeIds.add(rel.nodeId);
-                            // Investigation links are reversed: diagnosis -> treatment (investigation)
-                            connectedLinkIds.add(`${rel.nodeId}-${nodeId}`);
-                            
-                            // Find all symptoms that connect to this investigated diagnosis
-                            const diagnosisSources = backwardMap.get(rel.nodeId) || new Set();
-                            diagnosisSources.forEach(symptomId => {
-                                const symptomNode = nodeMap.get(symptomId);
-                                if (symptomNode && symptomNode.type === 'symptom') {
-                                    connectedNodeIds.add(symptomId);
-                                    connectedLinkIds.add(`${symptomId}-${rel.nodeId}`);
-                                }
-                            });
-                        }
-                    }
-                });
-            }
+        if (nodeObject) {
+            console.log('Calling analysisActions.hoverItem with node:', nodeObject);
+            analysisActions.hoverItem('node', nodeObject);
+        } else {
+            console.log('Node object not found for ID:', nodeId);
         }
-            
-        // Determine if we're in focus mode (node selected) or just hover mode
-        const isFocusMode = selectedNodeId !== null && selectedNodeId !== undefined;
-        // Use 0.02 opacity for inactive nodes during any highlighting (hover OR focus)
-        const isHighlighting = hoveredNodeId !== null || isFocusMode;
-        const unrelatedNodeOpacity = isHighlighting ? OPACITY.INACTIVE_NODE_HIGHLIGHTED : OPACITY.INACTIVE_NODE_HOVER;
-        const unrelatedLinkOpacity = isHighlighting ? OPACITY.INACTIVE_LINK_HIGHLIGHTED : OPACITY.INACTIVE_LINK_HOVER;
-        
-        // Update all nodes based on hover/focus state
-        svg.selectAll('.node')
-            .style('opacity', (d: any) => {
-                if (!hoveredNodeId && !isFocusMode) return OPACITY.DEFAULT_NODE; // Default full opacity
-                
-                // If this node is in the connected path, keep it visible
-                if (connectedNodeIds.has(d.id)) {
-                    return OPACITY.ACTIVE_NODE;
-                }
-                
-                return unrelatedNodeOpacity; // Dim unconnected nodes
-            })
-            .style('filter', (d: any) => {
-                if (!hoveredNodeId && !isFocusMode) return 'none'; // No filter by default
-                
-                // If this node is connected, no filter
-                if (connectedNodeIds.has(d.id)) {
-                    return 'none';
-                }
-                
-                return `grayscale(${OPACITY.GRAYSCALE_FILTER})`; // Gray out unconnected nodes
-            });
-            
-        // Update all links based on hover/focus state
-        svg.selectAll('.link')
-            .style('stroke', (d: any) => {
-                if (!hoveredNodeId && !isFocusMode) return getLinkColor(d.type || 'default'); // Default relationship colors
-                
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                
-                // If this link is in the full path, show in color
-                if (connectedLinkIds.has(linkId)) {
-                    // For treatment links, use the diagnosis color
-                    if (typeof d.target === 'object' && d.target.type === 'treatment') {
-                        return typeof d.source === 'object' ? d.source.color : getLinkColor(d.type || 'default');
-                    }
-                    return getLinkColor(d.type || 'default');
-                }
-                
-                return getLinkColor(d.type || 'default'); // Keep other links with relationship colors
-            })
-            .style('stroke-opacity', (d: any) => {
-                if (!hoveredNodeId && !isFocusMode) return OPACITY.DEFAULT_LINK; // Default low opacity
-                
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                
-                // If this link is in the full path, highlight it
-                if (connectedLinkIds.has(linkId)) {
-                    return OPACITY.ACTIVE_LINK;
-                }
-                
-                return unrelatedLinkOpacity; // Very low opacity for unrelated links
-            });
     }
 
     function handleContainerResize(contentRect: DOMRectReadOnly) {
@@ -1310,24 +1514,13 @@
         return text.length > maxLength ? text.substring(0, maxLength - 3) + '...' : text;
     }
 
-    function getSourceColor(source: string): string {
-        switch (source) {
-            case 'transcript': return '#10b981';
-            case 'medical_history': return '#3b82f6';
-            case 'family_history': return '#8b5cf6';
-            case 'social_history': return '#f59e0b';
-            case 'medication_history': return '#06b6d4';
-            case 'suspected': return '#f97316';
-            default: return '#6b7280';
-        }
-    }
 </script>
 
 <div class="sankey-container" bind:this={container}
      style="--hover-link-opacity: {OPACITY.CSS_HOVER_LINK}; --hover-node-opacity: {OPACITY.CSS_HOVER_NODE}; --shadow-light-opacity: {OPACITY.SHADOW_LIGHT}; --shadow-medium-opacity: {OPACITY.SHADOW_MEDIUM}">
     {#if !sankeyData.nodes.length}
         <div class="empty-state">
-            <p>No data to visualize</p>
+            <p>{$t('session.empty-states.no-data')}</p>
         </div>
     {/if}
 </div>
@@ -1483,5 +1676,17 @@
         text-overflow: ellipsis;
         font-size: 11px;
     }
+
+    /* Link animation now handled by global CSS in session.css */
+
+    :global(.node.connected-to-selected) {
+        filter: none !important; /* Remove grayscale for connected nodes */
+        opacity: 1.0 !important; /* Ensure full opacity */
+    }
+
+    /* 
+       Note: Node interactive styles (hover, selected, connected-to-selected) 
+       and link animations are now handled by src/css/session.css 
+    */
 
 </style>

@@ -8,6 +8,7 @@
     import SessionDetailsTab from './SessionDetailsTab.svelte';
     import SessionLegendTab from './SessionLegendTab.svelte';
     import type { SessionAnalysis, QuestionAnswerEvent } from './types/visualization';
+    import { t } from '$lib/i18n';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -18,22 +19,26 @@
             urgency: string;
         }[];
         selectedNode: any | null;
+        selectedLink: any | null;
         pendingQuestions: number;
         isMobile?: boolean;
         tabsRef?: any;
         onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
-        onnodeAction?: (event: CustomEvent<{ action: string; targetId: string; reason?: string }>) => void;
+        onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
+        onrelationshipNodeClick?: (detail: { nodeId: string }) => void;
     }
 
     let { 
         sessionData, 
         transcript = [], 
-        selectedNode, 
+        selectedNode,
+        selectedLink, 
         pendingQuestions, 
         isMobile = false,
         tabsRef = $bindable(),
         onquestionAnswer, 
-        onnodeAction 
+        onnodeAction,
+        onrelationshipNodeClick 
     }: Props = $props();
 
     // Filter questions and alerts
@@ -45,20 +50,20 @@
 <Tabs bind:this={tabsRef}>
     <TabHeads>
         <TabHead>
-            Questions
+            {$t('session.tabs.questions')}
             {#if pendingQuestions > 0}
                 <span class="badge">{pendingQuestions}</span>
             {/if}
         </TabHead>
         {#if hasTranscript}
-            <TabHead>Transcript</TabHead>
+            <TabHead>{$t('session.tabs.transcript')}</TabHead>
         {/if}
-        <TabHead>Details</TabHead>
+        <TabHead>{$t('session.tabs.details')}</TabHead>
         {#if !isMobile}
-            <TabHead>Legend</TabHead>
+            <TabHead>{$t('session.tabs.legend')}</TabHead>
         {/if}
     </TabHeads>
-    
+    <div class="tab-panels">
     <TabPanel>
         <SessionQuestionsTab 
             {questions}
@@ -76,8 +81,10 @@
     <TabPanel>
         <SessionDetailsTab 
             {selectedNode}
+            {selectedLink}
             allNodes={sessionData.nodes}
             {onnodeAction}
+            {onrelationshipNodeClick}
             {isMobile}
         />
     </TabPanel>
@@ -87,6 +94,7 @@
             <SessionLegendTab />
         </TabPanel>
     {/if}
+    </div>
 </Tabs>
 
 <style>
@@ -103,4 +111,11 @@
         text-align: center;
         font-weight: 600;
     }
+
+    .tab-panels {
+        height: calc(100% - var(--toolbar-height));
+        overflow: auto;
+
+    }
+    
 </style>

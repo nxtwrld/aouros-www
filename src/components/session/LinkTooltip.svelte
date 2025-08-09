@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { ActionNode } from './types/visualization';
+    import { t } from '$lib/i18n';
     
     interface Props {
         relationshipType: string;
@@ -22,7 +23,7 @@
     
     {#if actions.length > 0}
         <div class="actions-section">
-            <div class="actions-title">Related Actions:</div>
+            <div class="actions-title">{$t('session.labels.related-actions')}:</div>
             {#each actions as action}
                 <div class="action-item {action.priority <= 2 ? 'high-priority' : 'normal-priority'} {action.actionType === 'alert' ? 'action-alert' : 'action-question'}">
                     <div class="action-text">{truncateText(action.text, isMobile ? 30 : 45)}</div>

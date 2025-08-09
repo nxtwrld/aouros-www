@@ -1,0 +1,155 @@
+<script lang="ts">
+    import { t } from '$lib/i18n';
+    import InfoGrid from '../shared/InfoGrid.svelte';
+    import RelationshipsSection from '../shared/RelationshipsSection.svelte';
+    import NodeActions from '../shared/NodeActions.svelte';
+    import SymptomNodeComponent from '../nodes/SymptomNode.svelte';
+    import type { DiagnosisNode } from '../types/visualization';
+
+    interface Props {
+        diagnosis: DiagnosisNode;
+        allNodes: any;
+        onnodeAction?: (action: string, targetId: string, reason?: string) => void;
+        onrelationshipNodeClick?: (nodeId: string) => void;
+    }
+
+    let { diagnosis, allNodes, onnodeAction, onrelationshipNodeClick }: Props = $props();
+
+    function getPriorityLabel(priority: number): string {
+        if (priority <= 2) return $t('session.priority.critical');
+        if (priority <= 4) return $t('session.priority.high');
+        if (priority <= 6) return $t('session.priority.medium');
+        return $t('session.priority.low');
+    }
+
+    function getPriorityColor(priority: number): string {
+        if (priority <= 2) return 'var(--color-error, #dc2626)';
+        if (priority <= 4) return 'var(--color-warning, #f59e0b)';
+        if (priority <= 6) return 'var(--color-info, #3b82f6)';
+        return 'var(--color-success, #10b981)';
+    }
+
+    function getSupportingSymptoms(diagnosisId: string): any[] {
+        if (!allNodes?.symptoms) return [];
+        
+        // Find all symptoms that have a relationship supporting this diagnosis
+        return allNodes.symptoms.filter(symptom => 
+            symptom.relationships?.some(rel => 
+                rel.nodeId === diagnosisId && 
+                ['supports', 'suggests', 'indicates'].includes(rel.relationship.toLowerCase())
+            )
+        );
+    }
+
+    function handleSupportingSymptomClick(symptomId: string) {
+        console.log('🔗 DiagnosisDetails: Supporting symptom clicked:', symptomId);
+        onrelationshipNodeClick?.(symptomId);
+    }
+
+    const basicInfoItems = $derived([
+        { label: $t('session.labels.priority'), value: '', type: 'priority' as const, priority: diagnosis.priority || 5 },
+        { label: $t('session.labels.probability'), value: `${Math.round(diagnosis.probability * 100)}${$t('session.units.percent')}` }
+    ]);
+
+    const diagnosisDetailsItems = $derived([
+        ...(diagnosis.icd10 ? [{ label: $t('session.labels.icd10'), value: diagnosis.icd10 }] : [])
+    ]);
+
+    const supportingSymptoms = $derived(getSupportingSymptoms(diagnosis.id));
+</script>
+
+<div class="session-details-panel">
+    <header class="session-details-header">
+        <div class="session-node-type">
+            <span class="session-type-label">{$t('session.node-types.diagnosis')}</span>
+            <span 
+                class="session-priority-badge"
+                style="background-color: {getPriorityColor(diagnosis.priority || 5)}"
+            >
+                {getPriorityLabel(diagnosis.priority || 5)}
+            </span>
+        </div>
+        <h3 class="session-node-title">{diagnosis.name}</h3>
+    </header>
+
+    <div class="session-details-content">
+      <!-- Clinical Reasoning -->
+      {#if diagnosis.reasoning}
+        <section class="session-info-section">
+            <label>{$t('session.labels.clinical-reasoning')}:</label>
+            <p class="session-reasoning-text">{diagnosis.reasoning}</p>
+        </section>
+        {/if}
+
+
+        <!-- Basic Information -->
+        <InfoGrid items={basicInfoItems} title={$t('session.headers.information')} />
+
+        <!-- Diagnosis Specific Details -->
+        {#if diagnosisDetailsItems.length > 0}
+            <InfoGrid items={diagnosisDetailsItems} title={$t('session.headers.diagnosis-details')} />
+        {/if}
+
+  
+        <!-- Supporting Symptoms -->
+        {#if supportingSymptoms.length > 0}
+            <section class="session-info-section">
+                <h4>{$t('session.headers.supporting-symptoms')} ({supportingSymptoms.length})</h4>
+                <div class="supporting-symptoms">
+                    {#each supportingSymptoms as symptom}
+                        <div 
+                            class="supporting-symptom-wrapper session-relationship-wrapper"
+                            role="button"
+                            tabindex="0"
+                            on:click={() => handleSupportingSymptomClick(symptom.id)}
+                            on:keydown={(e) => e.key === 'Enter' && handleSupportingSymptomClick(symptom.id)}
+                        >
+                            <SymptomNodeComponent 
+                                node={{ id: symptom.id, x0: 0, x1: 120, y0: 0, y1: 50 }}
+                                {symptom}
+                                isSelected={false}
+                                isMobile={false}
+                            />
+                        </div>
+                    {/each}
+                </div>
+            </section>
+        {/if}
+
+        <!-- Relationships -->
+        <RelationshipsSection 
+            relationships={diagnosis.relationships || []} 
+            {allNodes}
+            {onrelationshipNodeClick}
+        />
+    </div>
+
+    <!-- Actions -->
+    <NodeActions nodeId={diagnosis.id} {onnodeAction} />
+</div>
+
+<style>
+    /* Most styles now use shared session-* classes */
+
+    /* Supporting Symptoms Styling */
+    .supporting-symptoms {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+    }
+
+    /* supporting-symptom-wrapper now uses session-relationship-wrapper class */
+
+    /* Mobile responsive adjustments */
+    @media (max-width: 768px) {
+        .supporting-symptoms {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        
+        .supporting-symptom-wrapper {
+            padding: 1px;
+        }
+    }
+</style>

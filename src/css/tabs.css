@@ -8,10 +8,12 @@
 }
 .tab-heads > button,
 .tab-heads > a {
+  position: relative;
   flex-grow: 1;
   padding: 0.5rem;
   background-color: var(--color-white);
   border-top: 3px solid var(--color-interactivity);
+  height: var(--toolbar-height);
   transition:
     background-color 0.5s,
     color 0.5s,

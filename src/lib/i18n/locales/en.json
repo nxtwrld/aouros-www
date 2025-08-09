@@ -794,6 +794,218 @@
       "title": "Title"
     }
   },
+  "session": {
+    "actions": {
+      "accept": "Accept",
+      "suppress": "Suppress",
+      "highlight": "Highlight",
+      "acknowledge": "Ack",
+      "yes": "Yes",
+      "no": "No",
+      "unknown": "Unknown",
+      "hide": "Hide",
+      "show": "Show",
+      "show-panel": "Show Panel",
+      "hide-panel": "Hide Panel"
+    },
+    "tabs": {
+      "questions": "Questions",
+      "transcript": "Transcript",
+      "details": "Details",
+      "legend": "Legend"
+    },
+    "headers": {
+      "symptoms": "Symptoms",
+      "diagnoses": "Diagnoses",
+      "treatments": "Treatments",
+      "alerts": "Safety Alerts",
+      "questions": "Questions",
+      "information": "Information",
+      "symptom-details": "Symptom Details",
+      "treatment-details": "Treatment Details",
+      "diagnosis-details": "Diagnosis Details",
+      "action-details": "Action Details",
+      "relationship-details": "Relationship Details",
+      "supporting-symptoms": "Supporting Symptoms",
+      "side-effects": "Side Effects",
+      "contraindications": "Contraindications",
+      "relationships": "Relationships",
+      "related-actions": "Related Actions"
+    },
+    "status": {
+      "pending": "pending",
+      "answered": "answered",
+      "acknowledged": "acknowledged",
+      "skipped": "skipped",
+      "resolved": "resolved"
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "severity": {
+      "low": "low",
+      "medium": "medium",
+      "high": "high",
+      "critical": "critical"
+    },
+    "effectiveness": {
+      "very-strong": "Very Strong",
+      "strong": "Strong",
+      "moderate": "Moderate",
+      "weak": "Weak",
+      "very-weak": "Very Weak",
+      "high": "high",
+      "medium": "medium",
+      "low": "low",
+      "very-low": "very-low",
+      "unknown": "unknown"
+    },
+    "node-types": {
+      "symptom": "symptom",
+      "diagnosis": "diagnosis",
+      "treatment": "treatment",
+      "question": "question",
+      "alert": "alert",
+      "relationship": "relationship"
+    },
+    "sources": {
+      "transcript": "Current Conversation",
+      "medical_history": "Medical History",
+      "family_history": "Family History",
+      "social_history": "Social History",
+      "medication_history": "Medication History",
+      "suspected": "AI Suspected"
+    },
+    "relationships": {
+      "supports": "Supports",
+      "contradicts": "Contradicts",
+      "confirms": "Confirms",
+      "rules_out": "Rules Out",
+      "suggests": "Suggests",
+      "treats": "Treats",
+      "manages": "Manages",
+      "prevents": "Prevents",
+      "relieves": "Relieves",
+      "investigates": "Investigates",
+      "clarifies": "Clarifies",
+      "explores": "Explores",
+      "excludes": "Excludes",
+      "reveals": "Reveals",
+      "indicates": "Indicates",
+      "requires": "Requires",
+      "monitors": "Monitors"
+    },
+    "treatment-types": {
+      "medication": "Medication",
+      "procedure": "Procedure",
+      "therapy": "Therapy",
+      "lifestyle": "Lifestyle",
+      "investigation": "Investigation",
+      "immediate": "Immediate",
+      "referral": "Referral"
+    },
+    "urgency": {
+      "immediate": "Immediate",
+      "urgent": "Urgent",
+      "routine": "Routine"
+    },
+    "action-categories": {
+      "symptom_exploration": "Symptom Exploration",
+      "diagnostic_clarification": "Diagnostic Clarification",
+      "treatment_selection": "Treatment Selection",
+      "risk_assessment": "Risk Assessment",
+      "drug_interaction": "Drug Interaction",
+      "contraindication": "Contraindication",
+      "allergy": "Allergy",
+      "warning": "Warning",
+      "red_flag": "Red Flag"
+    },
+    "action-types": {
+      "question": "Question",
+      "alert": "Alert",
+      "confirmatory": "Confirmatory",
+      "exclusionary": "Exclusionary",
+      "exploratory": "Exploratory"
+    },
+    "labels": {
+      "quote": "Quote",
+      "duration": "Duration",
+      "dosage": "Dosage",
+      "effectiveness": "Effectiveness",
+      "priority": "Priority",
+      "type": "Type",
+      "category": "Category",
+      "icd10": "ICD-10",
+      "probability": "Probability",
+      "confidence": "Confidence",
+      "severity": "Severity",
+      "source": "Source",
+      "characteristics": "Characteristics",
+      "suggested-by": "Suggested By",
+      "relevance": "Relevance",
+      "reasoning": "Reasoning",
+      "clinical-reasoning": "Clinical Reasoning",
+      "description": "Description",
+      "instructions": "Instructions",
+      "monitoring": "Monitoring",
+      "notes": "Notes",
+      "answer": "Answer",
+      "answer-context": "Answer Context",
+      "clinical-context": "Clinical Context",
+      "expected-impact": "Expected Impact",
+      "follow-up-actions": "Follow-up Actions",
+      "connection": "Connection",
+      "quick-answer": "Quick Answer",
+      "expected-answer-type": "Expected Answer Type",
+      "alert-message": "Alert Message",
+      "recommendation": "Recommendation",
+      "from": "From",
+      "to": "To",
+      "related-to": "Related to",
+      "if-yes": "If Yes",
+      "if-no": "If No",
+      "mechanism": "Mechanism",
+      "red-flags": "Red Flags",
+      "suppressed": "Suppressed",
+      "suppression-reason": "Suppression Reason",
+      "requires-investigation": "Requires Investigation",
+      "requires-follow-up": "Requires Follow-up",
+      "subtype": "Subtype",
+      "from-question": "From Question",
+      "document-id": "Document ID",
+      "impact": "Impact",
+      "related-actions": "Related Actions",
+      "urgency": "Urgency",
+      "relationship": "Relationship",
+      "direction": "Direction",
+      "strength": "Strength",
+      "status": "Status"
+    },
+    "empty-states": {
+      "no-questions": "No questions to display",
+      "no-alerts": "No alerts to display",
+      "no-data": "No data to visualize",
+      "select-node": "Select a node or link to view details",
+      "select-node-diagram": "Select a node or link from the diagram to view details"
+    },
+    "interactions": {
+      "click-nodes": "Click nodes for details • Hover to see relationships",
+      "click": "Click",
+      "select-details": "Select node for details",
+      "hover": "Hover",
+      "preview-relationships": "Preview relationships",
+      "pinch": "Pinch",
+      "zoom": "Zoom in/out (mobile)"
+    },
+    "units": {
+      "days": "days",
+      "days-short": "d",
+      "percent": "%"
+    }
+  },
   "report": {
     "anatomy": {
       "body": "Anatomy",

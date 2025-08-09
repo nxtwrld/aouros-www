@@ -1,0 +1,802 @@
+/**
+ * Session Visualization Shared Styles
+ * Consolidated styling for medical session components, nodes, and interactions
+ */
+
+/* ============================================================================
+   NODE BASE STYLES
+   ============================================================================ */
+
+.session-node-base {
+    padding: 0.4rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, sans-serif;
+    border-radius: 6px;
+    border: 0px solid transparent;
+    
+    /* Default color with opacity control */
+    --base-color-rgb: 204, 204, 204;  /* #CCC equivalent */
+    --color-opacity: 0.8;             /* Default opacity */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+    
+    /* Default left border */
+    border-left-color: #6b7280;
+    border-left-width: 0.5rem;
+}
+
+/* ============================================================================
+   SOURCE TYPE COLORS (for symptoms and other source-based nodes)
+   ============================================================================ */
+
+.session-source-transcript {
+    border-color: #10b981 !important; /* Green */
+}
+
+.session-source-medical_history {
+    border-color: #3b82f6 !important; /* Blue */
+}
+
+.session-source-family_history {
+    border-color: #8b5cf6 !important; /* Purple */
+}
+
+.session-source-social_history {
+    border-color: #f59e0b !important; /* Orange */
+}
+
+.session-source-medication_history {
+    border-color: #06b6d4 !important; /* Cyan */
+}
+
+.session-source-suspected {
+    border-color: #f97316 !important; /* Orange-red */
+}
+
+/* ============================================================================
+   PRIORITY COLORS AND BADGES
+   ============================================================================ */
+
+.session-priority-critical {
+    --priority-color: #dc2626; /* Red */
+}
+
+.session-priority-high {
+    --priority-color: #f59e0b; /* Orange */
+}
+
+.session-priority-medium {
+    --priority-color: #3b82f6; /* Blue */
+}
+
+.session-priority-low {
+    --priority-color: #10b981; /* Green */
+}
+
+.session-priority-badge {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    background-color: var(--priority-color, #6b7280);
+}
+
+.session-severity-badge {
+    font-size: 0.65em;
+    font-weight: 700;
+    color: white;
+    background: rgba(220, 38, 38, 0.9);
+    padding: 2px 4px;
+}
+
+/* ============================================================================
+   INTERACTIVE STATES - NODE COMPONENTS
+   ============================================================================ */
+
+/* Selected state for individual node components */
+.session-node-selected {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Focused state for individual node components */
+.session-node-focused {
+    outline-offset: 2px;
+    animation: outlinePulse 2.5s ease-in-out infinite;
+}
+
+/* ============================================================================
+   SANKEY DIAGRAM INTERACTIVE STATES
+   ============================================================================ */
+
+/* Hovered nodes in Sankey diagram - similar to DiagnosisDetails hover effect */
+.node-html.hovered {
+    overflow: visible !important;
+    z-index: 50 !important;
+}
+
+.node-html.hovered > div {
+    background-color: var(--color-primary-bg, #dbeafe) !important;
+    /* Use box-shadow for elevation instead of transform to avoid clipping */
+    box-shadow: 0 -2px 4px rgba(59, 130, 246, 0.1), 0 4px 8px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    /* Ensure content doesn't get clipped */
+    position: relative;
+    /* Add breathing pulsating animation */
+    animation: outlinePulse 2.5s ease-in-out infinite;
+}
+
+/* Selected nodes in Sankey diagram - outline-only styling */
+.node-html.selected > div {
+    background-color: var(--color-primary-bg, #dbeafe) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(0,0,0,0.15) !important;
+    transition: all 0.3s ease-out;
+    position: relative;
+    /* Add breathing pulsating animation - slightly faster for selected state */
+    animation: outlinePulse 2.2s ease-in-out infinite;
+}
+
+/* Selected nodes when in background (something else is hovered) - reduced visual intensity */
+.node-html.selected.background-trigger > div {
+    background-color: var(--color-primary-bg, #dbeafe) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), 0 2px 6px rgba(0,0,0,0.1) !important; /* Reduced shadow */
+    transition: all 0.3s ease-out;
+    position: relative;
+    /* Add subtle breathing animation for background state */
+    animation: outlinePulse 3s ease-in-out infinite;
+}
+
+/* Selected nodes - use simple z-index pattern like hovered nodes */
+.node-html.selected {
+    overflow: visible !important;
+    z-index: 100 !important; /* Higher than hovered (50) but simpler than before */
+    position: relative !important;
+}
+
+/* Connected nodes styling */
+.node.connected-to-selected {
+    filter: none !important;
+    opacity: 1.0 !important;
+}
+
+.node-html.connected-to-selected {
+    filter: none !important;
+}
+
+/* Visual state classes for nodes */
+.node-html.active-path {
+    filter: none !important;
+    opacity: 1.0 !important;
+}
+
+.node-html.background-trigger {
+    filter: grayscale(0.8) !important;
+    opacity: 0.6 !important;
+    /* Keep the selected transform working */
+}
+
+.node-html.background-path {
+    filter: grayscale(0.8) opacity(0.5) !important;
+}
+
+.node-html.inactive {
+    filter: grayscale(0.7) opacity(0.4) !important;
+}
+
+/* ============================================================================
+   LINK SEMANTIC COLORS (Relationship Types)
+   ============================================================================ */
+
+/* Supportive relationships - Green */
+.link.rel-supports,
+.link.rel-confirms {
+    stroke: #4ade80 !important;
+    fill: #4ade80 !important;
+}
+
+.link.rel-suggests,
+.link.rel-indicates {
+    stroke: #fb923c !important;
+    fill: #fb923c !important;
+}
+
+/* Negative relationships - Red */
+.link.rel-contradicts,
+.link.rel-rules_out {
+    stroke: #f87171 !important;
+    fill: #f87171 !important;
+}
+
+/* Treatment relationships - Blue */
+.link.rel-treats,
+.link.rel-manages,
+.link.rel-requires {
+    stroke: #60a5fa !important;
+    fill: #60a5fa !important;
+}
+
+/* Investigation relationships - Purple */
+.link.rel-investigates,
+.link.rel-clarifies,
+.link.rel-explores {
+    stroke: #a78bfa !important;
+    fill: #a78bfa !important;
+}
+
+/* Default relationship - Gray */
+.link.rel-default,
+.link {
+    stroke: #6b7280 !important;
+    fill: #6b7280 !important;
+}
+
+/* ============================================================================
+   LINK VISUAL STATES (Activity/Interaction)
+   ============================================================================ */
+
+/* Default link opacity */
+.link {
+    stroke-opacity: 0.6 !important;
+    fill-opacity: 0.6 !important;
+}
+
+/* Active path - full color intensity */
+.link.active-path {
+    stroke-opacity: 0.8 !important;
+    fill-opacity: 0.8 !important;
+    filter: none !important;
+    /* Add pulsing animation for active links */
+    animation: linkPulse 1.0s ease-in-out infinite !important;
+}
+
+/* Inactive/Background states - grayscaled versions of semantic colors */
+.link.background-trigger,
+.link.background-path,
+.link.inactive {
+    filter: grayscale(0.8) opacity(0.4) !important;
+    stroke-opacity: 0.4 !important;
+    fill-opacity: 0.4 !important;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes linkPulse {
+    0%, 100% {
+        filter: none !important;
+        stroke-opacity: 0.9 !important;
+        fill-opacity: 0.9 !important;
+    }
+    50% {
+        filter: brightness(1.4) !important;
+        stroke-opacity: 0.5 !important;
+        fill-opacity: 0.5 !important;
+    }
+}
+
+.link.animate-pulse {
+    animation: linkPulse 1.0s ease-in-out infinite !important;
+    /* Preserve semantic colors, just animate opacity and brightness */
+    filter: none !important;
+    stroke-opacity: 0.9 !important;
+    fill-opacity: 0.9 !important;
+}
+
+@keyframes outlinePulse {
+    0% {
+        outline: 0px solid transparent;
+        outline-offset: 0px;
+    }
+    50% {
+        outline: 3px solid var(--color-primary, #3b82f6);
+    }
+    100% {
+        outline: 5px solid transparent;
+        outline-offset: 5px;
+    }
+}
+
+/* ============================================================================
+   NODE COMPONENT BASE STYLES (extended)
+   ============================================================================ */
+
+/* Common node structure */
+.session-node {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 6px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, sans-serif;
+    border: 0px solid transparent;
+    border-left-width: 0.5rem;
+    --color-opacity: 0.8;
+}
+
+.session-node.mobile {
+    padding: 4px;
+}
+
+/* Node content areas */
+.session-node-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 2px;
+    margin-top: 0.2rem;
+}
+
+.session-node-meta {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+    align-items: center;
+}
+
+.session-node-name {
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Desktop vs mobile node names */
+.session-node:not(.mobile) .session-node-name {
+    font-size: 11px;
+}
+
+.session-node.mobile .session-node-name {
+    font-size: 9px;
+}
+
+/* ============================================================================
+   NODE TYPE SPECIFIC STYLES
+   ============================================================================ */
+
+/* Symptom nodes */
+.session-node.symptom {
+    --base-color-rgb: 204, 204, 204;  /* Default gray */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+    border-left-color: #6b7280;
+}
+
+/* Diagnosis nodes */
+.session-node.diagnosis {
+    --base-color-rgb: 167, 209, 255;  /* Light blue */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+    border-left-color: #ffffff;
+}
+
+/* Treatment nodes */
+.session-node.treatment {
+    --base-color-rgb: 178, 255, 229;  /* Light teal */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+    border-left-color: #ffffff;
+}
+
+/* ============================================================================
+   PRIORITY AND URGENCY BORDERS
+   ============================================================================ */
+
+/* Diagnosis priority borders */
+.session-node.diagnosis.priority-critical {
+    border-left-color: #dc2626 !important;
+}
+
+.session-node.diagnosis.priority-high {
+    border-left-color: #ed6700 !important;
+}
+
+.session-node.diagnosis.priority-medium {
+    border-left-color: #fba91b !important;
+}
+
+/* Treatment urgency borders */
+.session-node.treatment.urgency-immediate {
+    border-left-color: #dc2626 !important;
+}
+
+.session-node.treatment.urgency-urgent {
+    border-left-color: #ea580c !important;
+}
+
+.session-node.treatment.urgency-routine {
+    border-left-color: #10b981 !important;
+}
+
+/* ============================================================================
+   BADGE AND INDICATOR SHARED STYLES
+   ============================================================================ */
+
+/* Base badge styling */
+.session-badge {
+    font-weight: 700;
+    color: white;
+    border-radius: 4px;
+    line-height: 1;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Specific badge types */
+.session-probability-badge {
+    font-size: 9px;
+    padding: 2px 5px;
+}
+
+.session-effectiveness-badge {
+    font-size: 9px;
+    padding: 2px 5px;
+}
+
+.session-severity-badge {
+    font-size: 0.65em;
+    padding: 2px 4px;
+    background: rgba(220, 38, 38, 0.9);
+}
+
+/* Mobile badge adjustments */
+.session-node.mobile .session-probability-badge,
+.session-node.mobile .session-effectiveness-badge {
+    font-size: 8px;
+    padding: 1px 3px;
+}
+
+/* Badge value color classes */
+.session-badge.value-high {
+    background: rgba(16, 185, 129, 0.9); /* Green */
+}
+
+.session-badge.value-medium {
+    background: rgba(59, 130, 246, 0.9); /* Blue */
+}
+
+.session-badge.value-low {
+    background: rgba(245, 158, 11, 0.9); /* Orange */
+}
+
+.session-badge.value-very-low,
+.session-badge.value-unknown {
+    background: rgba(107, 114, 128, 0.9); /* Gray */
+}
+
+/* Small info badges */
+.session-info-badge {
+    font-size: 0.6em;
+    padding: 1px 3px;
+    border-radius: 2px;
+    line-height: 1;
+}
+
+.session-info-badge.icd10 {
+    color: #4338ca;
+    background: rgba(67, 56, 202, 0.1);
+    border: 1px solid rgba(67, 56, 202, 0.2);
+}
+
+.session-info-badge.subtype {
+    color: #6b7280;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.session-info-badge.red-flags {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.session-info-badge.contraindications {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.session-info-badge.dosage {
+    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.session-info-badge.duration {
+    color: #059669;
+    background: rgba(5, 150, 105, 0.1);
+    border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.session-info-badge.follow-up {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Mobile adjustments for info badges */
+.session-node.mobile .session-info-badge {
+    font-size: 0.55em;
+}
+
+/* Special indicators */
+.session-investigation-flag {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    background: rgba(245, 158, 11, 0.9);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.session-node.mobile .session-investigation-flag {
+    width: 12px;
+    height: 12px;
+    font-size: 9px;
+}
+
+.session-suppressed-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 0.55em;
+    color: #6b7280;
+    font-weight: 600;
+    background: rgba(107, 114, 128, 0.1);
+    padding: 1px 3px;
+    border-radius: 2px;
+    line-height: 1;
+    opacity: 0.8;
+}
+
+.session-node.mobile .session-suppressed-indicator {
+    font-size: 0.5em;
+}
+
+/* ============================================================================
+   DETAILS PANEL SHARED STYLES
+   ============================================================================ */
+
+.session-details-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.session-details-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.session-node-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.session-type-label {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary, #6b7280);
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.session-node-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary, #1f2937);
+    line-height: 1.4;
+}
+
+.session-details-content {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.session-info-section {
+    margin-bottom: 1.5rem;
+}
+
+.session-info-section h4 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary, #1f2937);
+}
+
+.session-info-section label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary, #6b7280);
+    margin-bottom: 0.5rem;
+}
+
+.session-reasoning-text {
+    margin: 0;
+    padding: 0.75rem;
+    background: var(--color-surface-2, #f8fafc);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: var(--color-text-primary, #1f2937);
+    line-height: 1.5;
+}
+
+.session-quote-text {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface-2, #f8fafc);
+    border-left: 3px solid var(--color-primary, #3b82f6);
+    border-radius: 0 4px 4px 0;
+    font-style: italic;
+    color: var(--color-text-secondary, #6b7280);
+}
+
+/* Details actions footer */
+.session-details-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-top: 1px solid var(--color-border, #e2e8f0);
+    margin-top: auto;
+}
+
+.session-action-btn {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    background: var(--color-surface, #fff);
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.session-action-btn.accept {
+    background: var(--color-positive, #29cc97);
+    color: var(--color-positive-text, #ffffff);
+    border-color: var(--color-positive, #29cc97);
+}
+
+.session-action-btn.suppress {
+    background: var(--color-negative, #fb104a);
+    color: var(--color-negative-text, #ffffff);
+    border-color: var(--color-negative, #fb104a);
+}
+
+.session-action-btn.highlight {
+    background: var(--color-highlight, #a989ee);
+    color: var(--color-highlight-text, #ffffff);
+    border-color: var(--color-highlight, #a989ee);
+}
+
+.session-action-btn:hover {
+    opacity: 0.8;
+}
+
+/* ============================================================================
+   INFO GRID SHARED STYLES
+   ============================================================================ */
+
+.session-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.session-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.session-info-item label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary, #6b7280);
+}
+
+.session-info-item .value {
+    font-size: 0.875rem;
+    color: var(--color-text-primary, #1f2937);
+    font-weight: 500;
+}
+
+/* Info grid value styling */
+.session-info-item .value.source-transcript { 
+    color: var(--color-success, #16a34a); 
+}
+
+.session-info-item .value.source-medical_history { 
+    color: var(--color-info, #3b82f6); 
+}
+
+.session-info-item .value.source-family_history { 
+    color: var(--color-purple, #8b5cf6); 
+}
+
+.session-info-item .value.source-suspected { 
+    color: var(--color-warning, #f59e0b); 
+}
+
+.session-info-item .value.status-pending { 
+    color: var(--color-warning, #f59e0b); 
+}
+
+.session-info-item .value.status-answered { 
+    color: var(--color-success, #16a34a); 
+}
+
+.session-info-item .value.status-acknowledged { 
+    color: var(--color-info, #3b82f6); 
+}
+
+/* ============================================================================
+   RELATIONSHIP INTERACTION STYLES
+   ============================================================================ */
+
+.session-relationship-wrapper {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    padding: 2px;
+    border: 1px solid transparent;
+}
+
+.session-relationship-wrapper:hover {
+    background-color: var(--color-primary-bg, #dbeafe);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-color: var(--color-primary, #3b82f6);
+}
+
+.session-relationship-wrapper:focus {
+    outline: 2px solid var(--color-primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .session-node-base {
+        padding: 0.3rem;
+    }
+    
+    .session-details-header,
+    .session-details-content {
+        padding: 0.75rem;
+    }
+    
+    .session-relationship-wrapper {
+        padding: 1px;
+    }
+    
+    /* Mobile adjustments for selected and hovered nodes */
+    .node-html.selected > div {
+        outline-width: 2px; /* Slightly thinner outline on mobile for better fit */
+        outline-offset: 2px; /* Keep consistent offset */
+    }
+    
+    .node-html.hovered > div {
+        outline-width: 1px; /* Thinner outline for hover on mobile */
+        outline-offset: 2px; /* Keep consistent offset */
+    }
+}

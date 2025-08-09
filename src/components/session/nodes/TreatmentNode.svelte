@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { TreatmentNode as TreatmentData, SankeyNode } from '../types/visualization';
+    import { t } from '$lib/i18n';
     
     interface Props {
         node: SankeyNode;
@@ -31,6 +32,7 @@
             case 'lifestyle': return '🏃';
             case 'investigation': return '🔬';
             case 'immediate': return '⚡';
+            case 'referral': return '👨‍⚕️';
             default: return '📋';
         }
     }
@@ -63,7 +65,7 @@
     {#if treatment.requiresFollowUp}
         <div class="follow-up">↻</div>
     {/if}
-    <div class="treatment-type-label">{treatment.type}</div>
+    <div class="treatment-type-label">{$t(`session.treatment-types.${treatment.type}`) || treatment.type}</div>
     {#if treatment.effectiveness}
         <div class="effectiveness-score effectiveness-{getEffectivenessLevel(treatment.effectiveness)}">
             {Math.round(treatment.effectiveness * 100)}%
@@ -73,6 +75,8 @@
 
     <div class="treatment-content">
         <div class="treatment-name">{truncateText(treatment.name, isMobile ? 18 : 22)}</div>
+
+        <!--
         {#if treatment.dosage}
         <div class="dosage">{truncateText(treatment.dosage, isMobile ? 10 : 14)}</div>
         {/if}
@@ -83,6 +87,7 @@
         {#if treatment.contraindications && treatment.contraindications.length > 0}
             <div class="contraindications">⚠️ {treatment.contraindications.length}</div>
         {/if}
+        -->
     </div>
 </div>
 
@@ -263,7 +268,6 @@
         border-radius: 2px;
         line-height: 1;
         border: 1px solid rgba(59, 130, 246, 0.2);
-        title: "Requires follow-up";
     }
     
     .contraindications {

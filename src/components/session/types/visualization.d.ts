@@ -49,7 +49,7 @@ export interface DiagnosisNode {
 
 export interface TreatmentNode {
     id: string;
-    type: 'medication' | 'procedure' | 'therapy' | 'lifestyle' | 'investigation' | 'immediate';
+    type: 'medication' | 'procedure' | 'therapy' | 'lifestyle' | 'investigation' | 'immediate' | 'referral';
     name: string;
     dosage?: string;
     priority: number; // 1-10 scale

@@ -21,6 +21,7 @@
     "@google/generative-ai": "^0.17.0",
     "@langchain/openai": "^0.5.18",
     "@playwright/test": "^1.28.1",
+    "@supabase/mcp-server-supabase": "^0.4.5",
     "@supabase/ssr": "^0.3.0",
     "@supabase/supabase-js": "2.43.5",
     "@sveltejs/adapter-auto": "^3.0.0",

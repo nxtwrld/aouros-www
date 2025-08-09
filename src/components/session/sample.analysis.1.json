@@ -408,7 +408,7 @@
               "reasoning": "Standard hormone replacement therapy for hypothyroidism."
             },
             {
-              "nodeId": "treat_thyroid_monitoring",
+              "nodeId": "treat_thyroid_function_tests",
               "relationship": "requires",
               "direction": "outgoing",
               "strength": 1.0,
@@ -539,6 +539,56 @@
               "reasoning": "TSH will differentiate hypo from hyperthyroidism."
             }
           ]
+        },
+        {
+          "id": "diag_androgenetic_alopecia",
+          "name": "Androgenetic Alopecia",
+          "probability": 0.3,
+          "priority": 7,
+          "icd10": "L64.9",
+          "reasoning": "Pattern hair loss in female patient could suggest androgenetic component.",
+          "confidence": 0.4,
+          "requiresInvestigation": false
+        },
+        {
+          "id": "diag_postpartum_thyroiditis",
+          "name": "Postpartum Thyroiditis",
+          "probability": 0.4,
+          "priority": 6,
+          "icd10": "O90.5",
+          "reasoning": "Persistent fatigue since pregnancy delivery could indicate postpartum thyroid dysfunction.",
+          "confidence": 0.5,
+          "requiresInvestigation": true
+        },
+        {
+          "id": "diag_perimenopause",
+          "name": "Perimenopause",
+          "probability": 0.2,
+          "priority": 8,
+          "icd10": "N95.8",
+          "reasoning": "Age-appropriate consideration for hormonal changes affecting mood and cycles.",
+          "confidence": 0.3,
+          "requiresInvestigation": false
+        },
+        {
+          "id": "diag_anxiety_disorder",
+          "name": "Generalized Anxiety Disorder",
+          "probability": 0.4,
+          "priority": 6,
+          "icd10": "F41.1",
+          "reasoning": "Sleep disturbance and palpitations could indicate underlying anxiety disorder.",
+          "confidence": 0.4,
+          "requiresInvestigation": true
+        },
+        {
+          "id": "diag_drug_induced_hypothyroidism",
+          "name": "Drug-Induced Hypothyroidism",
+          "probability": 0.1,
+          "priority": 9,
+          "icd10": "E03.2",
+          "reasoning": "Low probability but important to rule out medication-related thyroid dysfunction.",
+          "confidence": 0.2,
+          "requiresInvestigation": true
         }
       ],
       "treatments": [
@@ -738,6 +788,60 @@
               "reasoning": "Supportive treatment for iron deficiency."
             }
           ]
+        },
+        {
+          "id": "treat_investigate_bleeding",
+          "type": "investigation",
+          "name": "Heavy Bleeding Investigation",
+          "priority": 3,
+          "confidence": 0.8,
+          "urgency": "routine",
+          "description": "Investigate underlying causes of heavy menstrual bleeding",
+          "reasoning": "Must identify and treat source of iron loss."
+        },
+        {
+          "id": "treat_antidepressant",
+          "type": "medication",
+          "name": "Antidepressant Medication",
+          "priority": 5,
+          "confidence": 0.6,
+          "effectiveness": 0.7,
+          "duration": "6-12 months minimum",
+          "urgency": "routine",
+          "description": "SSRI or SNRI for depression treatment if needed",
+          "reasoning": "May be required if depression persists after medical treatment."
+        },
+        {
+          "id": "treat_gynecology_referral",
+          "type": "referral",
+          "name": "Gynecology Specialist Referral",
+          "priority": 4,
+          "confidence": 0.8,
+          "urgency": "routine",
+          "description": "Specialist evaluation for heavy menstrual bleeding",
+          "reasoning": "Expert assessment needed for complex gynecologic issues."
+        },
+        {
+          "id": "treat_symptom_management",
+          "type": "supportive",
+          "name": "Long COVID Symptom Management",
+          "priority": 7,
+          "confidence": 0.5,
+          "effectiveness": 0.5,
+          "duration": "Ongoing",
+          "urgency": "routine",
+          "description": "Supportive care for post-viral symptoms",
+          "reasoning": "Symptomatic support for persistent post-COVID effects."
+        },
+        {
+          "id": "treat_antibody_monitoring",
+          "type": "investigation",
+          "name": "Thyroid Antibody Monitoring",
+          "priority": 6,
+          "confidence": 0.7,
+          "urgency": "routine",
+          "description": "Periodic monitoring of thyroid peroxidase and thyroglobulin antibodies",
+          "reasoning": "Monitor autoimmune thyroid disease progression."
         }
       ],
       "actions": [
