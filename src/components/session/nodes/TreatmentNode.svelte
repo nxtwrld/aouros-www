@@ -55,7 +55,7 @@
 </script>
 
 <div 
-    class="treatment-node urgency-{treatment.urgency || 'routine'}" 
+    class="treatment-node treatment-type-{treatment.type} urgency-{treatment.urgency || 'routine'}" 
     class:selected={isSelected} 
     class:mobile={isMobile}
     style="--color-opacity: {getOpacityForEffectiveness(treatment.effectiveness)};"
@@ -103,15 +103,12 @@
         display: flex;
         flex-direction: column;
         font-family: system-ui, sans-serif;
-        background-color: rgb(178, 255, 229);
         
-        /* Color with opacity control */
-        --base-color-rgb: 178, 255, 229;  /* Light teal/cyan */
+        /* Color with opacity control - now set by treatment type classes */
         --color-opacity: 0.8;             /* Default opacity */
         background-color: rgba(var(--base-color-rgb), var(--color-opacity));
         
         border: 0px solid transparent;
-        border-left-color: #ffffff;       /* Teal border for treatments */
         border-left-width: .5rem;
         /*border: 2px solid rgba(255, 255, 255, 0.3);
         backdrop-filter: blur(4px);*/

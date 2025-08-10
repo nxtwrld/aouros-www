@@ -12,6 +12,7 @@
     import SymptomNode from './nodes/SymptomNode.svelte';
     import DiagnosisNode from './nodes/DiagnosisNode.svelte';
     import TreatmentNode from './nodes/TreatmentNode.svelte';
+    import ZoomControls from './ZoomControls.svelte';
     import { t } from '$lib/i18n';
 
     interface Props {
@@ -79,11 +80,21 @@
     let resizeDebounceTimer = $state<ReturnType<typeof setTimeout> | null>(null);
     let resizeObserver = $state<ResizeObserver | null>(null);
     let focusableNodes = $state<SankeyNode[]>([]);
+    let zoomBehavior = $state<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+    let currentZoomTransform = $state<d3.ZoomTransform>(d3.zoomIdentity);
     
     // Resize thresholds to prevent unnecessary re-renders
     const SIGNIFICANT_WIDTH_THRESHOLD = 50;  // px
     const SIGNIFICANT_HEIGHT_THRESHOLD = 50; // px
     const RESIZE_DEBOUNCE_DELAY = 150;       // ms
+    
+    // Zoom configuration
+    const ZOOM_CONFIG = {
+        scaleExtent: [0.2, 5] as [number, number],
+        duration: 300,
+        wheelDelta: -0.002,
+        touchDelta: 0.005
+    };
 
     // Derive focused node ID efficiently  
     const focusedNodeId = $derived(
@@ -119,12 +130,64 @@
             resizeObserver.observe(container);
         }
         
+        // Add keyboard event listeners for zoom shortcuts
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // Only handle shortcuts when container is focused or contains active element
+            if (!container?.contains(document.activeElement) && document.activeElement !== container) {
+                return;
+            }
+
+            if (event.ctrlKey || event.metaKey) {
+                switch (event.key) {
+                    case '+':
+                    case '=':
+                        event.preventDefault();
+                        zoomIn();
+                        break;
+                    case '-':
+                        event.preventDefault();
+                        zoomOut();
+                        break;
+                    case '0':
+                        event.preventDefault();
+                        resetZoom();
+                        break;
+                }
+            } else {
+                switch (event.key) {
+                    case 'f':
+                        event.preventDefault();
+                        zoomToFit();
+                        break;
+                    case 'ArrowUp':
+                        event.preventDefault();
+                        panDirection(0, -50);
+                        break;
+                    case 'ArrowDown':
+                        event.preventDefault();
+                        panDirection(0, 50);
+                        break;
+                    case 'ArrowLeft':
+                        event.preventDefault();
+                        panDirection(-50, 0);
+                        break;
+                    case 'ArrowRight':
+                        event.preventDefault();
+                        panDirection(50, 0);
+                        break;
+                }
+            }
+        };
+        
+        document.addEventListener('keydown', handleKeyDown);
+        
         return () => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
             if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
             if (resizeObserver) {
                 resizeObserver.disconnect();
             }
+            document.removeEventListener('keydown', handleKeyDown);
         };
     });
 
@@ -196,20 +259,23 @@
             .attr('height', '100%')
             .attr('viewBox', `0 0 ${width} ${height}`)
             .attr('preserveAspectRatio', 'xMidYMid meet')
-            .style('cursor', 'default')
+            .style('cursor', 'grab')
             .on('click', handleCanvasClick);
 
-        // Add zoom and pan for mobile
-        if (isMobile) {
-            const zoom = d3.zoom<SVGSVGElement, unknown>()
-                .scaleExtent([0.3, 3])
-                .on('zoom', (event) => {
-                    svg.select('g.main-group')
-                        .attr('transform', event.transform);
-                });
+        // Enhanced zoom and pan for all devices
+        zoomBehavior = d3.zoom<SVGSVGElement, unknown>()
+            .scaleExtent(ZOOM_CONFIG.scaleExtent)
+            .wheelDelta((event) => -event.deltaY * ZOOM_CONFIG.wheelDelta)
+            .filter(zoomFilter)
+            .constrain(constrainTransform)
+            .on('zoom', handleZoom)
+            .on('start', handleZoomStart)
+            .on('end', handleZoomEnd);
 
-            svg.call(zoom);
-        }
+        // Configure touch gestures for all devices
+        zoomBehavior.touchable(() => true);
+
+        svg.call(zoomBehavior);
 
         // Main group for all elements
         svg.append('g')
@@ -706,6 +772,9 @@
     }
 
     function handleCanvasClick(event: MouseEvent) {
+        // Ignore clicks that were part of a drag/zoom operation
+        if (event.defaultPrevented) return;
+        
         // Only clear selection if clicking on the SVG itself (not nodes or links)
         const target = event.target as SVGElement;
         const isClickableElement = target.classList?.contains('node-html') || 
@@ -941,6 +1010,29 @@
         if (!isEntering) {
             analysisActions.clearHover();
             tooltipData.visible = false;
+            // Explicitly remove hover classes and reset all states
+            if (svg) {
+                svg.selectAll('.link.hovered').classed('hovered', false);
+                svg.selectAll('.node-html.hovered').classed('hovered', false);
+                
+                // Force reset all node states to default opacity
+                svg.selectAll('.node-html')
+                    .classed('inactive', false)
+                    .classed('background-trigger', false)
+                    .classed('background-path', false)
+                    .classed('active-path', false)
+                    .style('opacity', null)
+                    .style('filter', null);
+                
+                svg.selectAll('.link')
+                    .classed('inactive', false)
+                    .classed('background-trigger', false)
+                    .classed('background-path', false)
+                    .classed('active-path', false)
+                    .style('opacity', null)
+                    .style('stroke-opacity', null)
+                    .style('fill-opacity', null);
+            }
             return;
         }
         
@@ -980,9 +1072,13 @@
             const containerRect = container?.getBoundingClientRect();
             if (!containerRect) return;
             
+            // Apply current zoom transform to coordinates
+            const transformedX = sankeyMidX * currentZoomTransform.k + currentZoomTransform.x;
+            const transformedY = sankeyMidY * currentZoomTransform.k + currentZoomTransform.y;
+            
             // Convert to absolute coordinates, accounting for margins
-            const absoluteX = containerRect.left + margins.left + sankeyMidX;
-            const absoluteY = containerRect.top + margins.top + sankeyMidY;
+            const absoluteX = containerRect.left + margins.left + transformedX;
+            const absoluteY = containerRect.top + margins.top + transformedY;
             
             // Apply viewport boundary checking to keep tooltip on screen
             const tooltipWidth = isMobile ? 200 : 300;
@@ -1449,27 +1545,37 @@
     function resetToDefault() {
         if (!svg) return;
         
-        // Clear all visual state classes from links
+        // Clear all visual state classes from links and reset opacity
         svg.select('.link-group').selectAll('.link')
             .classed('active-path', false)
             .classed('background-trigger', false)
             .classed('background-path', false)
-            .classed('inactive', false) // Normal state when no selection
+            .classed('inactive', false)
+            .classed('hovered', false)
+            .style('opacity', null)
+            .style('stroke-opacity', null)
+            .style('fill-opacity', null)
             .interrupt();
             
-        // Clear all visual state classes from SVG nodes
+        // Clear all visual state classes from SVG nodes and reset opacity
         svg.select('.node-group').selectAll('.node')
             .classed('active-path', false)
             .classed('background-trigger', false)
             .classed('background-path', false)
-            .classed('inactive', false); // Normal state when no selection
+            .classed('inactive', false)
+            .classed('connected-to-selected', false)
+            .style('opacity', null);
             
-        // Clear all visual state classes from HTML nodes
+        // Clear all visual state classes from HTML nodes and reset opacity
         svg.selectAll('.node-html')
             .classed('active-path', false)
             .classed('background-trigger', false)
             .classed('background-path', false)
-            .classed('inactive', false); // Normal state when no selection
+            .classed('inactive', false)
+            .classed('hovered', false)
+            .classed('connected-to-selected', false)
+            .style('opacity', null)
+            .style('filter', null);
     }
     
     
@@ -1482,6 +1588,28 @@
         // Use new unified hover system
         if (!isEntering) {
             analysisActions.clearHover();
+            // Explicitly remove hover classes and reset all opacity states
+            svg.selectAll('.node-html.hovered').classed('hovered', false);
+            svg.selectAll('.link.hovered').classed('hovered', false);
+            
+            // Force reset all node states to default opacity
+            svg.selectAll('.node-html')
+                .classed('inactive', false)
+                .classed('background-trigger', false)
+                .classed('background-path', false)
+                .classed('active-path', false)
+                .style('opacity', null)  // Remove any inline opacity styles
+                .style('filter', null);   // Remove any inline filter styles
+            
+            svg.selectAll('.link')
+                .classed('inactive', false)
+                .classed('background-trigger', false)
+                .classed('background-path', false)
+                .classed('active-path', false)
+                .style('opacity', null)
+                .style('stroke-opacity', null)
+                .style('fill-opacity', null);
+            
             return;
         }
         
@@ -1542,14 +1670,164 @@
         return text.length > maxLength ? text.substring(0, maxLength - 3) + '...' : text;
     }
 
+    // Zoom event handlers
+    function handleZoom(event: d3.D3ZoomEvent<SVGSVGElement, unknown>) {
+        currentZoomTransform = event.transform;
+        if (svg) {
+            svg.select('g.main-group')
+                .attr('transform', event.transform.toString());
+        }
+    }
+
+    function handleZoomStart() {
+        if (svg) {
+            svg.style('cursor', 'grabbing');
+        }
+    }
+
+    function handleZoomEnd() {
+        if (svg) {
+            svg.style('cursor', 'grab');
+        }
+    }
+
+    // Zoom utility functions
+    function zoomToFit() {
+        if (!svg || !sankeyData.nodes.length || !zoomBehavior) return;
+        
+        const mainGroupElement = svg.select('.main-group').node() as SVGGElement;
+        if (!mainGroupElement) return;
+        
+        const bounds = mainGroupElement.getBBox();
+        
+        const padding = isMobile ? 40 : 80;
+        const scaleX = (width - padding * 2) / bounds.width;
+        const scaleY = (height - padding * 2) / bounds.height;
+        const scale = Math.min(scaleX, scaleY, ZOOM_CONFIG.scaleExtent[1]);
+        
+        const centerX = bounds.x + bounds.width / 2;
+        const centerY = bounds.y + bounds.height / 2;
+        const translateX = width / 2 - scale * centerX;
+        const translateY = height / 2 - scale * centerY;
+        
+        const transform = d3.zoomIdentity
+            .translate(translateX, translateY)
+            .scale(scale);
+        
+        svg.transition()
+            .duration(ZOOM_CONFIG.duration)
+            .call(zoomBehavior.transform, transform);
+    }
+
+    function zoomIn() {
+        if (!svg || !zoomBehavior) return;
+        svg.transition()
+            .duration(ZOOM_CONFIG.duration)
+            .call(zoomBehavior.scaleBy, 1.5);
+    }
+
+    function zoomOut() {
+        if (!svg || !zoomBehavior) return;
+        svg.transition()
+            .duration(ZOOM_CONFIG.duration)
+            .call(zoomBehavior.scaleBy, 1 / 1.5);
+    }
+
+    function resetZoom() {
+        if (!svg || !zoomBehavior) return;
+        svg.transition()
+            .duration(ZOOM_CONFIG.duration)
+            .call(zoomBehavior.transform, d3.zoomIdentity);
+    }
+
+    // Pan in a specific direction
+    function panDirection(deltaX: number, deltaY: number) {
+        if (!svg || !zoomBehavior) return;
+        
+        const transform = d3.zoomIdentity
+            .translate(currentZoomTransform.x + deltaX, currentZoomTransform.y + deltaY)
+            .scale(currentZoomTransform.k);
+        
+        svg.transition()
+            .duration(200)
+            .call(zoomBehavior.transform, transform);
+    }
+
+    // Zoom filter to prevent conflicts with node/link interactions
+    function zoomFilter(event: any): boolean {
+        // Allow zoom on right click, wheel, or touch
+        if (event.type === 'wheel') return true;
+        if (event.type === 'dblclick') return true;
+        if (event.touches?.length >= 2) return true; // Multi-touch
+        
+        // For mouse/single touch, only allow if not on interactive elements
+        const target = event.target as Element;
+        const isInteractiveElement = 
+            target.closest('.node-html') ||
+            target.closest('.link') ||
+            target.classList.contains('node-html') ||
+            target.classList.contains('link');
+        
+        // Allow drag if not on interactive elements or if it's a right click
+        return !isInteractiveElement || event.button === 2;
+    }
+
+    // Transform constraint function to keep content within reasonable bounds
+    function constrainTransform(transform: d3.ZoomTransform): d3.ZoomTransform {
+        if (!sankeyData.nodes.length) return transform;
+        
+        // Calculate content bounds
+        const padding = isMobile ? 100 : 200;
+        const contentWidth = width - margins.left - margins.right;
+        const contentHeight = height - margins.top - margins.bottom;
+        
+        // Allow some panning beyond content bounds for better UX
+        const maxTranslateX = padding;
+        const minTranslateX = -contentWidth * transform.k + width - padding;
+        const maxTranslateY = padding;
+        const minTranslateY = -contentHeight * transform.k + height - padding;
+        
+        const constrainedX = Math.max(minTranslateX, Math.min(maxTranslateX, transform.x));
+        const constrainedY = Math.max(minTranslateY, Math.min(maxTranslateY, transform.y));
+        
+        return transform.k === 1 && Math.abs(constrainedX) < 10 && Math.abs(constrainedY) < 10
+            ? d3.zoomIdentity // Snap to center at 1:1 zoom
+            : d3.zoomIdentity.translate(constrainedX, constrainedY).scale(transform.k);
+    }
+
+    // Expose zoom functions for external control
+    if (typeof window !== 'undefined') {
+        (window as any).sankeyZoomFunctions = {
+            zoomIn,
+            zoomOut,
+            zoomToFit,
+            resetZoom,
+            panDirection,
+            getCurrentZoom: () => currentZoomTransform.k
+        };
+    }
+
 </script>
 
-<div class="sankey-container" bind:this={container}
+<div class="sankey-container" 
+     bind:this={container}
+     tabindex="0"
+     role="application"
+     aria-label="Interactive Sankey diagram with zoom and pan controls"
      style="--hover-link-opacity: {OPACITY.CSS_HOVER_LINK}; --hover-node-opacity: {OPACITY.CSS_HOVER_NODE}; --shadow-light-opacity: {OPACITY.SHADOW_LIGHT}; --shadow-medium-opacity: {OPACITY.SHADOW_MEDIUM}">
     {#if !sankeyData.nodes.length}
         <div class="empty-state">
             <p>{$t('session.empty-states.no-data')}</p>
         </div>
+    {:else}
+        <ZoomControls
+            {isMobile}
+            currentZoom={currentZoomTransform.k}
+            onZoomIn={zoomIn}
+            onZoomOut={zoomOut}
+            onZoomToFit={zoomToFit}
+            onResetZoom={resetZoom}
+        />
     {/if}
 </div>
 
@@ -1574,6 +1852,17 @@
         position: relative;
         overflow: hidden;
         box-sizing: border-box;
+        touch-action: none; /* Prevent browser default touch behaviors */
+        user-select: none; /* Prevent text selection during pan */
+    }
+
+    .sankey-container:focus {
+        outline: 2px solid rgba(59, 130, 246, 0.5);
+        outline-offset: -2px;
+    }
+
+    .sankey-container:focus-visible {
+        outline: 2px solid rgba(59, 130, 246, 0.8);
     }
 
     .link-tooltip {

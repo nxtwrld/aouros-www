@@ -31,27 +31,27 @@
    ============================================================================ */
 
 .session-source-transcript {
-    border-color: #10b981 !important; /* Green */
+    border-left-color: #10b981; /* Green */
 }
 
 .session-source-medical_history {
-    border-color: #3b82f6 !important; /* Blue */
+    border-left-color: #3b82f6; /* Blue */
 }
 
 .session-source-family_history {
-    border-color: #8b5cf6 !important; /* Purple */
+    border-left-color: #8b5cf6; /* Purple */
 }
 
 .session-source-social_history {
-    border-color: #f59e0b !important; /* Orange */
+    border-left-color: #f59e0b; /* Orange */
 }
 
 .session-source-medication_history {
-    border-color: #06b6d4 !important; /* Cyan */
+    border-left-color: #06b6d4; /* Cyan */
 }
 
 .session-source-suspected {
-    border-color: #f97316 !important; /* Orange-red */
+    border-left-color: #f97316; /* Orange-red */
 }
 
 /* ============================================================================
@@ -110,78 +110,96 @@
    SANKEY DIAGRAM INTERACTIVE STATES
    ============================================================================ */
 
-/* Hovered nodes in Sankey diagram - similar to DiagnosisDetails hover effect */
+/* Default state for nodes - ensure clean reset */
+.node-html {
+    opacity: 1.0;
+    filter: none;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.node-html > div {
+    transition: all 0.3s ease;
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+    box-shadow: none;
+}
+
+/* Hovered nodes in Sankey diagram - enhance without overriding background */
 .node-html.hovered {
-    overflow: visible !important;
-    z-index: 50 !important;
+    overflow: visible;
+    z-index: 50;
 }
 
 .node-html.hovered > div {
-    background-color: var(--color-primary-bg, #dbeafe) !important;
-    /* Use box-shadow for elevation instead of transform to avoid clipping */
-    box-shadow: 0 -2px 4px rgba(59, 130, 246, 0.1), 0 4px 8px rgba(0,0,0,0.1);
+    /* Enhance visibility without changing background color */
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5), 0 4px 12px rgba(0,0,0,0.2);
+    transform: translateY(-2px) scale(1.02);
+    filter: brightness(1.08);
     transition: all 0.2s ease;
-    /* Ensure content doesn't get clipped */
     position: relative;
-    /* Add breathing pulsating animation */
-    animation: outlinePulse 2.5s ease-in-out infinite;
+    /* Subtle pulsating outline */
+    animation: subtleOutlinePulse 3s ease-in-out infinite;
 }
 
-/* Selected nodes in Sankey diagram - outline-only styling */
+/* Selected nodes in Sankey diagram - enhance without overriding background */
 .node-html.selected > div {
-    background-color: var(--color-primary-bg, #dbeafe) !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(0,0,0,0.15) !important;
+    /* Strong visual indication without changing background */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.6), 0 6px 16px rgba(0,0,0,0.25);
+    transform: translateY(-3px) scale(1.03);
+    filter: brightness(1.1) contrast(1.05);
     transition: all 0.3s ease-out;
     position: relative;
-    /* Add breathing pulsating animation - slightly faster for selected state */
+    /* Breathing pulsating animation */
     animation: outlinePulse 2.2s ease-in-out infinite;
 }
 
 /* Selected nodes when in background (something else is hovered) - reduced visual intensity */
 .node-html.selected.background-trigger > div {
-    background-color: var(--color-primary-bg, #dbeafe) !important;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2), 0 2px 6px rgba(0,0,0,0.1) !important; /* Reduced shadow */
+    /* Subtle indication without changing background */
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 2px 6px rgba(0,0,0,0.15);
+    transform: scale(1.01);
+    filter: brightness(1.05);
     transition: all 0.3s ease-out;
     position: relative;
-    /* Add subtle breathing animation for background state */
-    animation: outlinePulse 3s ease-in-out infinite;
+    /* Subtle breathing animation for background state */
+    animation: subtleOutlinePulse 3.5s ease-in-out infinite;
 }
 
 /* Selected nodes - use simple z-index pattern like hovered nodes */
 .node-html.selected {
-    overflow: visible !important;
-    z-index: 100 !important; /* Higher than hovered (50) but simpler than before */
-    position: relative !important;
+    overflow: visible;
+    z-index: 100; /* Higher than hovered (50) */
+    position: relative;
 }
 
 /* Connected nodes styling */
 .node.connected-to-selected {
-    filter: none !important;
-    opacity: 1.0 !important;
+    filter: none;
+    opacity: 1.0;
 }
 
 .node-html.connected-to-selected {
-    filter: none !important;
+    filter: none;
 }
 
 /* Visual state classes for nodes */
 .node-html.active-path {
-    filter: none !important;
-    opacity: 1.0 !important;
+    filter: none;
+    opacity: 1.0;
 }
 
 .node-html.background-trigger {
-    filter: grayscale(0.8) !important;
-    opacity: 0.6 !important;
+    filter: grayscale(0.8);
+    opacity: 0.6;
     /* Keep the selected transform working */
 }
 
 .node-html.background-path {
-    filter: grayscale(0.8) opacity(0.5) !important;
+    filter: grayscale(0.8) opacity(0.5);
 }
 
 .node-html.inactive {
-    filter: grayscale(0.7) opacity(0.4) !important;
+    filter: grayscale(0.7) opacity(0.4);
 }
 
 /* ============================================================================
@@ -191,44 +209,44 @@
 /* Supportive relationships - Green */
 .link.rel-supports,
 .link.rel-confirms {
-    stroke: #4ade80 !important;
-    fill: #4ade80 !important;
+    stroke: #4ade80;
+    fill: #4ade80;
 }
 
 .link.rel-suggests,
 .link.rel-indicates {
-    stroke: #fb923c !important;
-    fill: #fb923c !important;
+    stroke: #fb923c;
+    fill: #fb923c;
 }
 
 /* Negative relationships - Red */
 .link.rel-contradicts,
 .link.rel-rules_out {
-    stroke: #f87171 !important;
-    fill: #f87171 !important;
+    stroke: #f87171;
+    fill: #f87171;
 }
 
 /* Treatment relationships - Blue */
 .link.rel-treats,
 .link.rel-manages,
 .link.rel-requires {
-    stroke: #60a5fa !important;
-    fill: #60a5fa !important;
+    stroke: #60a5fa;
+    fill: #60a5fa;
 }
 
 /* Investigation relationships - Purple */
 .link.rel-investigates,
 .link.rel-clarifies,
 .link.rel-explores {
-    stroke: #a78bfa !important;
-    fill: #a78bfa !important;
+    stroke: #a78bfa;
+    fill: #a78bfa;
 }
 
 /* Default relationship - Gray */
 .link.rel-default,
 .link {
-    stroke: #6b7280 !important;
-    fill: #6b7280 !important;
+    stroke: #6b7280;
+    fill: #6b7280;
 }
 
 /* ============================================================================
@@ -237,26 +255,33 @@
 
 /* Default link opacity */
 .link {
-    stroke-opacity: 0.6 !important;
-    fill-opacity: 0.6 !important;
+    stroke-opacity: 0.6;
+    fill-opacity: 0.6;
+    transition: all 0.3s ease;
 }
 
 /* Active path - full color intensity */
 .link.active-path {
-    stroke-opacity: 0.8 !important;
-    fill-opacity: 0.8 !important;
-    filter: none !important;
-    /* Add pulsing animation for active links */
-    animation: linkPulse 1.0s ease-in-out infinite !important;
+    stroke-opacity: 0.9;
+    fill-opacity: 0.9;
+    filter: none;
+}
+
+/* Selected link - only individually selected links pulse */
+.link.selected {
+    stroke-opacity: 0.9;
+    fill-opacity: 0.9;
+    filter: none;
+    animation: linkPulse 1.0s ease-in-out infinite;
 }
 
 /* Inactive/Background states - grayscaled versions of semantic colors */
 .link.background-trigger,
 .link.background-path,
 .link.inactive {
-    filter: grayscale(0.8) opacity(0.4) !important;
-    stroke-opacity: 0.4 !important;
-    fill-opacity: 0.4 !important;
+    filter: grayscale(0.8) opacity(0.4);
+    stroke-opacity: 0.4;
+    fill-opacity: 0.4;
 }
 
 /* ============================================================================
@@ -265,23 +290,23 @@
 
 @keyframes linkPulse {
     0%, 100% {
-        filter: none !important;
-        stroke-opacity: 0.9 !important;
-        fill-opacity: 0.9 !important;
+        filter: none;
+        stroke-opacity: 0.9;
+        fill-opacity: 0.9;
     }
     50% {
-        filter: brightness(1.4) !important;
-        stroke-opacity: 0.5 !important;
-        fill-opacity: 0.5 !important;
+        filter: brightness(1.4);
+        stroke-opacity: 0.5;
+        fill-opacity: 0.5;
     }
 }
 
 .link.animate-pulse {
-    animation: linkPulse 1.0s ease-in-out infinite !important;
+    animation: linkPulse 1.0s ease-in-out infinite;
     /* Preserve semantic colors, just animate opacity and brightness */
-    filter: none !important;
-    stroke-opacity: 0.9 !important;
-    fill-opacity: 0.9 !important;
+    filter: none;
+    stroke-opacity: 0.9;
+    fill-opacity: 0.9;
 }
 
 @keyframes outlinePulse {
@@ -295,6 +320,17 @@
     100% {
         outline: 5px solid transparent;
         outline-offset: 5px;
+    }
+}
+
+@keyframes subtleOutlinePulse {
+    0%, 100% {
+        outline: 1px solid rgba(59, 130, 246, 0.2);
+        outline-offset: 2px;
+    }
+    50% {
+        outline: 2px solid rgba(59, 130, 246, 0.4);
+        outline-offset: 3px;
     }
 }
 
@@ -378,11 +414,94 @@
     border-left-color: #ffffff;
 }
 
-/* Treatment nodes */
+/* Treatment nodes - default */
 .session-node.treatment {
     --base-color-rgb: 178, 255, 229;  /* Light teal */
     background-color: rgba(var(--base-color-rgb), var(--color-opacity));
     border-left-color: #ffffff;
+}
+
+/* ============================================================================
+   TREATMENT TYPE COLORS
+   ============================================================================ */
+
+/* Medication treatments - Soft Blue */
+.treatment-node.treatment-type-medication {
+    --base-color-rgb: 227, 242, 253;  /* #E3F2FD */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+}
+
+/* Procedure treatments - Soft Red */
+.treatment-node.treatment-type-procedure {
+    --base-color-rgb: 255, 235, 238;  /* #FFEBEE */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+}
+
+/* Therapy treatments - Soft Purple */
+.treatment-node.treatment-type-therapy {
+    --base-color-rgb: 243, 229, 245;  /* #F3E5F5 */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+}
+
+/* Lifestyle treatments - Soft Green */
+.treatment-node.treatment-type-lifestyle {
+    --base-color-rgb: 232, 245, 232;  /* #E8F5E8 */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+}
+
+/* Investigation treatments - Soft Orange */
+.treatment-node.treatment-type-investigation {
+    --base-color-rgb: 255, 243, 224;  /* #FFF3E0 */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+}
+
+/* Immediate treatments - Bright Red (Emergency) */
+.treatment-node.treatment-type-immediate {
+    --base-color-rgb: 255, 205, 210;  /* #FFCDD2 */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+}
+
+/* Referral treatments - Soft Teal */
+.treatment-node.treatment-type-referral {
+    --base-color-rgb: 224, 242, 241;  /* #E0F2F1 */
+    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+}
+
+/* Treatment type labels - use darker colors that work well with background colors */
+.treatment-node.treatment-type-medication .treatment-type-label {
+    color: #0d47a1;  /* Dark blue for blue background */
+    background: rgba(13, 71, 161, 0.15);
+}
+
+.treatment-node.treatment-type-procedure .treatment-type-label {
+    color: #b71c1c;  /* Dark red for red background */
+    background: rgba(183, 28, 28, 0.15);
+}
+
+.treatment-node.treatment-type-therapy .treatment-type-label {
+    color: #4a148c;  /* Dark purple for purple background */
+    background: rgba(74, 20, 140, 0.15);
+}
+
+.treatment-node.treatment-type-lifestyle .treatment-type-label {
+    color: #1b5e20;  /* Dark green for green background */
+    background: rgba(27, 94, 32, 0.15);
+}
+
+.treatment-node.treatment-type-investigation .treatment-type-label {
+    color: #e65100;  /* Dark orange for orange background */
+    background: rgba(230, 81, 0, 0.15);
+}
+
+.treatment-node.treatment-type-immediate .treatment-type-label {
+    color: #c62828;  /* Dark red for immediate */
+    background: rgba(198, 40, 40, 0.2);
+    font-weight: 700;
+}
+
+.treatment-node.treatment-type-referral .treatment-type-label {
+    color: #004d40;  /* Dark teal for teal background */
+    background: rgba(0, 77, 64, 0.15);
 }
 
 /* ============================================================================
@@ -391,28 +510,28 @@
 
 /* Diagnosis priority borders */
 .session-node.diagnosis.priority-critical {
-    border-left-color: #dc2626 !important;
+    border-left-color: #dc2626;
 }
 
 .session-node.diagnosis.priority-high {
-    border-left-color: #ed6700 !important;
+    border-left-color: #ed6700;
 }
 
 .session-node.diagnosis.priority-medium {
-    border-left-color: #fba91b !important;
+    border-left-color: #fba91b;
 }
 
 /* Treatment urgency borders */
-.session-node.treatment.urgency-immediate {
-    border-left-color: #dc2626 !important;
+.treatment-node.urgency-immediate {
+    border-left-color: #dc2626;
 }
 
-.session-node.treatment.urgency-urgent {
-    border-left-color: #ea580c !important;
+.treatment-node.urgency-urgent {
+    border-left-color: #ea580c;
 }
 
-.session-node.treatment.urgency-routine {
-    border-left-color: #10b981 !important;
+.treatment-node.urgency-routine {
+    border-left-color: #10b981;
 }
 
 /* ============================================================================
