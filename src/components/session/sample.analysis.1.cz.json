@@ -1,0 +1,1247 @@
+{
+  "sessionId": "session_20250806_143110",
+  "timestamp": "2025-08-06T14:34:45Z",
+  "analysisVersion": 1,
+  "nodes": {
+    "symptoms": [
+      {
+        "id": "sym_fatigue_non_restorative",
+        "text": "neobnovující únava",
+        "severity": 3,
+        "duration": 60,
+        "confidence": 0.95,
+        "source": "transcript",
+        "quote": "Budím se unavená a v poledne mám pocit, že sotva funguji.",
+        "characteristics": ["zhoršující se", "perzistentní"],
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Perzistentní únava s těžkou menstruací naznačuje ztrátu železa."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Neosvěžující spánek a únava jsou běžné u hypotyreózy."
+          },
+          {
+            "nodeId": "diag_long_covid",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Příznaky začaly týdny po infekci COVID."
+          },
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Perzistentní únava může být projevem deprese."
+          }
+        ]
+      },
+      {
+        "id": "sym_brain_fog",
+        "text": "potíže se soustředěním / mozková mlha",
+        "severity": 4,
+        "confidence": 0.9,
+        "source": "transcript",
+        "quote": "Je to, jako by můj mozek byl v mlze.",
+        "relationships": [
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.75,
+            "reasoning": "Kognitivní potíže a emoční otupělost mohou ukazovat na depresi."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Hypotyreóza může způsobovat zpomalení kognitivních funkcí."
+          },
+          {
+            "nodeId": "diag_long_covid",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.65,
+            "reasoning": "Postvirové kognitivní příznaky jsou u long COVID časté."
+          }
+        ]
+      },
+      {
+        "id": "sym_heavy_menstruation",
+        "text": "silná menstruace",
+        "severity": 6,
+        "duration": 180,
+        "confidence": 0.9,
+        "source": "transcript",
+        "quote": "Poslední měsíce je menstruace opravdu silná, trvá 7–8 dní.",
+        "characteristics": ["zhoršující se", "cyklické"],
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Silná menstruace je hlavní příčinou nedostatku železa u žen."
+          },
+          {
+            "nodeId": "diag_fibroids",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Děložní myomy často způsobují silné krvácení."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Hypotyreóza může způsobovat menorrhagii."
+          }
+        ]
+      },
+      {
+        "id": "sym_hair_thinning",
+        "text": "řídnutí a vypadávání vlasů",
+        "severity": 7,
+        "duration": 120,
+        "confidence": 0.85,
+        "source": "transcript",
+        "quote": "Všimla jsem si, že mi řídnou vlasy, hlavně kolem spánků.",
+        "characteristics": ["progresivní"],
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Nedostatek železa často způsobuje difuzní vypadávání vlasů."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Hypotyreóza vede ke křehkým, řídnoucím vlasům."
+          },
+          {
+            "nodeId": "diag_androgenetic_alopecia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Rozložení naznačuje možnou androgenetickou složku."
+          }
+        ]
+      },
+      {
+        "id": "sym_cold_intolerance",
+        "text": "nesnášenlivost chladu",
+        "severity": 6,
+        "duration": 90,
+        "confidence": 0.8,
+        "source": "transcript",
+        "quote": "Je mi pořád zima, i když je ostatním příjemně.",
+        "characteristics": ["progresivní"],
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Nesnášenlivost chladu je klasickým příznakem hypotyreózy."
+          },
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Anémie může způsobovat zimomřivost kvůli horší cirkulaci."
+          }
+        ]
+      },
+      {
+        "id": "sym_dry_skin",
+        "text": "suchá, drsná kůže",
+        "severity": 7,
+        "duration": 120,
+        "confidence": 0.85,
+        "source": "transcript",
+        "quote": "Kůže je hodně suchá a drsná, hlavně na rukou a nohách.",
+        "characteristics": ["progresivní", "rozsáhlé"],
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Suchá, hrubá kůže je typická pro hypotyreózu."
+          }
+        ]
+      },
+      {
+        "id": "sym_maternal_thyroid_disease",
+        "text": "matka měla potíže se štítnou žlázou",
+        "severity": 8,
+        "confidence": 0.9,
+        "source": "family_history",
+        "quote": "Pacientka uvádí, že matka byla ve 40 letech léčena pro sníženou funkci štítné žlázy.",
+        "characteristics": ["genetická predispozice"],
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Rodinná anamnéza významně zvyšuje riziko."
+          },
+          {
+            "nodeId": "diag_hashimoto_thyroiditis",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Autoimunitní onemocnění štítné žlázy mají silnou genetickou složku."
+          }
+        ]
+      },
+      {
+        "id": "sym_previous_pregnancy_fatigue",
+        "text": "perzistentní únava od posledního těhotenství",
+        "severity": 6,
+        "confidence": 0.8,
+        "source": "medical_history",
+        "quote": "Z dokumentace: Pacientka udává přetrvávající únavu od porodu před 18 měsíci.",
+        "characteristics": ["poporodní", "perzistentní"],
+        "documentId": "medical_record_2023_11_15",
+        "relevance": 0.8,
+        "relationships": [
+          {
+            "nodeId": "diag_postpartum_thyroiditis",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Poporodní tyreoiditida může vést k přetrvávající hypotyreóze."
+          },
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Těhotenství a kojení mohou vyčerpat zásoby železa."
+          }
+        ]
+      },
+      {
+        "id": "sym_weight_gain",
+        "text": "nevysvětlitelné přibírání na váze",
+        "severity": 6,
+        "duration": 150,
+        "confidence": 0.8,
+        "source": "transcript",
+        "quote": "Za posledních pár měsíců jsem přibrala asi 7 kilo bez změny jídelníčku.",
+        "characteristics": ["pozvolné", "nevysvětlitelné"],
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Nevysvětlitelné přibývání na váze je u hypotyreózy časté."
+          },
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.5,
+            "reasoning": "Deprese může vést ke změnám chuti k jídlu a hmotnosti."
+          }
+        ]
+      },
+      {
+        "id": "sym_mood_changes",
+        "text": "podrážděnost a výkyvy nálad",
+        "severity": 5,
+        "duration": 90,
+        "confidence": 0.7,
+        "source": "transcript",
+        "quote": "Jsem poslední dobou podrážděnější a rodina si všimla, že nejsem ve své kůži.",
+        "characteristics": ["epizodické", "dopad na vztahy"],
+        "relationships": [
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Výkyvy nálad a podrážděnost jsou základní příznaky deprese."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Hypotyreóza může způsobovat nestabilitu nálad."
+          },
+          {
+            "nodeId": "diag_perimenopause",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.4,
+            "reasoning": "Hormonální změny v perimenopauze mohou ovlivňovat náladu."
+          }
+        ]
+      },
+      {
+        "id": "sym_palpitations_suspected",
+        "text": "možné bušení srdce",
+        "severity": 7,
+        "confidence": 0.4,
+        "source": "suspected",
+        "suggestedBy": "diag_hyperthyroidism",
+        "characteristics": ["intermitentní", "vyvolávající úzkost"],
+        "relationships": [
+          {
+            "nodeId": "diag_hyperthyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Palpitace jsou kardinálním příznakem hypertyreózy."
+          },
+          {
+            "nodeId": "diag_anxiety_disorder",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Úzkost se může projevovat palpitacemi a srdečními příznaky."
+          }
+        ]
+      },
+      {
+        "id": "sym_sleep_disturbance",
+        "text": "potíže s usínáním",
+        "severity": 5,
+        "duration": 75,
+        "confidence": 0.85,
+        "source": "transcript",
+        "quote": "Usínání mi trvá strašně dlouho a i když usnu, necítím se ráno odpočatá.",
+        "characteristics": ["perzistentní", "neosvěžující"],
+        "relationships": [
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Poruchy spánku jsou u deprese běžné."
+          },
+          {
+            "nodeId": "diag_anxiety_disorder",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Úzkost se často projevuje potížemi s usínáním."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.4,
+            "reasoning": "Kvalita spánku může být hypotyreózou ovlivněna."
+          }
+        ]
+      }
+    ],
+    "diagnoses": [
+      {
+        "id": "diag_iron_deficiency_anemia",
+        "name": "Anémie z nedostatku železa",
+        "probability": 0.85,
+        "priority": 2,
+        "icd10": "D50.9",
+        "reasoning": "Kombinace únavy, silné menstruace a řídnutí vlasů je vysoce suspektní. Klasická triáda příznaků.",
+        "confidence": 0.9,
+        "requiresInvestigation": true,
+        "relationships": [
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Léčba první volby při potvrzeném nedostatku železa."
+          },
+          {
+            "nodeId": "treat_dietary_counseling",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Dietní úpravy podporují substituci železa."
+          },
+          {
+            "nodeId": "treat_investigate_bleeding",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Nutno vyšetřit příčinu ztrát železa."
+          }
+        ]
+      },
+      {
+        "id": "diag_hypothyroidism",
+        "name": "Primární hypotyreóza",
+        "probability": 0.75,
+        "priority": 2,
+        "icd10": "E03.9",
+        "reasoning": "Více klasických příznaků: suchá kůže, únava, vypadávání vlasů, nesnášenlivost chladu, přibírání a rodinná zátěž.",
+        "confidence": 0.8,
+        "requiresInvestigation": true,
+        "relationships": [
+          {
+            "nodeId": "treat_levothyroxine",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Standardní substituční léčba."
+          },
+          {
+            "nodeId": "treat_thyroid_function_tests",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Pravidelné monitorování je zásadní."
+          }
+        ]
+      },
+      {
+        "id": "diag_depression",
+        "name": "Středně těžká depresivní porucha",
+        "probability": 0.6,
+        "priority": 3,
+        "icd10": "F32.1",
+        "reasoning": "Výkyvy nálad, únava, kognitivní potíže a porucha spánku ukazují na možnou depresi. Může být sekundární k somatickému onemocnění.",
+        "confidence": 0.7,
+        "requiresInvestigation": true,
+        "relationships": [
+          {
+            "nodeId": "treat_counseling",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Psychoterapie je léčbou první volby."
+          },
+          {
+            "nodeId": "treat_antidepressant",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Farmakoterapie při přetrvávání obtíží."
+          },
+          {
+            "nodeId": "treat_lifestyle_modifications",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Pohyb a režimová opatření jsou klíčová."
+          }
+        ]
+      },
+      {
+        "id": "diag_fibroids",
+        "name": "Děložní myomy",
+        "probability": 0.4,
+        "priority": 5,
+        "icd10": "D25.9",
+        "reasoning": "Silné menstruační krvácení u ženy v reprodukčním věku může ukazovat na strukturální příčinu.",
+        "confidence": 0.5,
+        "requiresInvestigation": true,
+        "relationships": [
+          {
+            "nodeId": "treat_pelvic_ultrasound",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Ultrazvuk je metodou první volby."
+          },
+          {
+            "nodeId": "treat_gynecology_referral",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Potřeba specializovaného vyšetření."
+          }
+        ]
+      },
+      {
+        "id": "diag_long_covid",
+        "name": "Postcovidový syndrom",
+        "probability": 0.3,
+        "priority": 6,
+        "icd10": "U09.9",
+        "reasoning": "Únava a kognitivní potíže po COVID, ale časová osa a vzorec příznaků jsou méně typické.",
+        "confidence": 0.4,
+        "requiresInvestigation": false,
+        "relationships": [
+          {
+            "nodeId": "treat_symptom_management",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Podpůrná symptomatická léčba."
+          }
+        ]
+      },
+      {
+        "id": "diag_hashimoto_thyroiditis",
+        "name": "Hashimotova tyreoiditida",
+        "probability": 0.5,
+        "priority": 4,
+        "icd10": "E06.3",
+        "reasoning": "Rodinná anamnéza a spektrum příznaků naznačují autoimunitní postižení štítné žlázy.",
+        "confidence": 0.6,
+        "requiresInvestigation": true,
+        "relationships": [
+          {
+            "nodeId": "treat_levothyroxine",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Léčba jako u primární hypotyreózy."
+          },
+          {
+            "nodeId": "treat_antibody_monitoring",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Občasné sledování protilátek může být přínosné."
+          }
+        ]
+      },
+      {
+        "id": "diag_hyperthyroidism",
+        "name": "Hypertyreóza (k vyloučení)",
+        "probability": 0.1,
+        "priority": 8,
+        "icd10": "E05.9",
+        "reasoning": "Nízká pravděpodobnost, ale důležité vyloučit vzhledem k tyreoidálním příznakům. Klinický obraz by byl jiný.",
+        "confidence": 0.3,
+        "requiresInvestigation": true,
+        "suppressed": false,
+        "relationships": [
+          {
+            "nodeId": "treat_thyroid_function_tests",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "TSH diferencuje hypo- a hypertyreózu."
+          }
+        ]
+      },
+      {
+        "id": "diag_androgenetic_alopecia",
+        "name": "Androgenetická alopecie",
+        "probability": 0.3,
+        "priority": 7,
+        "icd10": "L64.9",
+        "reasoning": "Vzor řídnutí vlasů u ženy může svědčit pro androgenetickou složku.",
+        "confidence": 0.4,
+        "requiresInvestigation": false
+      },
+      {
+        "id": "diag_postpartum_thyroiditis",
+        "name": "Poporodní tyreoiditida",
+        "probability": 0.4,
+        "priority": 6,
+        "icd10": "O90.5",
+        "reasoning": "Přetrvávající únava od porodu může ukazovat na poporodní poruchu štítné žlázy.",
+        "confidence": 0.5,
+        "requiresInvestigation": true
+      },
+      {
+        "id": "diag_perimenopause",
+        "name": "Perimenopauza",
+        "probability": 0.2,
+        "priority": 8,
+        "icd10": "N95.8",
+        "reasoning": "Věkově odpovídající úvaha o hormonálních změnách ovlivňujících náladu a cyklus.",
+        "confidence": 0.3,
+        "requiresInvestigation": false
+      },
+      {
+        "id": "diag_anxiety_disorder",
+        "name": "Generalizovaná úzkostná porucha",
+        "probability": 0.4,
+        "priority": 6,
+        "icd10": "F41.1",
+        "reasoning": "Porucha spánku a palpitace mohou ukazovat na podkladovou úzkostnou poruchu.",
+        "confidence": 0.4,
+        "requiresInvestigation": true
+      },
+      {
+        "id": "diag_drug_induced_hypothyroidism",
+        "name": "Léky navozená hypotyreóza",
+        "probability": 0.1,
+        "priority": 9,
+        "icd10": "E03.2",
+        "reasoning": "Nízká pravděpodobnost, ale důležité vyloučit léčbou navozenou dysfunkci štítné žlázy.",
+        "confidence": 0.2,
+        "requiresInvestigation": true
+      }
+    ],
+    "treatments": [
+      {
+        "id": "treat_iron_supplementation",
+        "type": "medication",
+        "name": "Síran železnatý 325 mg denně",
+        "dosage": "325 mg 1× denně, nalačno s vitamínem C",
+        "priority": 2,
+        "confidence": 0.9,
+        "effectiveness": 0.85,
+        "duration": "3–6 měsíců",
+        "urgency": "routine",
+        "reasoning": "Standardní léčba první volby u anémie z nedostatku železa.",
+        "sideEffects": ["nevolnost", "zácpa", "tmavá stolice"],
+        "contraindications": ["hemochromatóza", "aktivní peptický vřed"],
+        "requiresFollowUp": true,
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.9,
+            "reasoning": "Přímá léčba nedostatku železa."
+          }
+        ]
+      },
+      {
+        "id": "treat_levothyroxine",
+        "type": "medication",
+        "name": "Levotyroxin – hormonální substituce",
+        "dosage": "Zahájit 50 μg denně, upravovat dle hladiny TSH",
+        "priority": 2,
+        "confidence": 0.9,
+        "effectiveness": 0.9,
+        "duration": "Doživotně",
+        "urgency": "routine",
+        "reasoning": "Standardní hormonální substituce při hypotyreóze.",
+        "mechanism": "Syntetická náhrada hormonu T4",
+        "sideEffects": ["palpitace při předávkování", "nespavost", "úzkost"],
+        "contraindications": ["neléčená adrenální insuficience", "recentní IM"],
+        "requiresFollowUp": true,
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.95,
+            "reasoning": "Zlatý standard léčby hypotyreózy."
+          },
+          {
+            "nodeId": "diag_hashimoto_thyroiditis",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.95,
+            "reasoning": "Stejný postup jako u primární hypotyreózy."
+          }
+        ]
+      },
+      {
+        "id": "treat_thyroid_function_tests",
+        "type": "investigation",
+        "name": "Komplexní panel funkce štítné žlázy",
+        "priority": 1,
+        "confidence": 1.0,
+        "urgency": "urgent",
+        "description": "TSH, volný T4, volný T3, protilátky proti TPO",
+        "reasoning": "Zásadní pro diagnostiku poruch štítné žlázy a vedení léčby.",
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Definitivní test funkce štítné žlázy."
+          },
+          {
+            "nodeId": "diag_hashimoto_thyroiditis",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Protilátky proti TPO pomáhají diagnostikovat autoimunitní tyreoiditidu."
+          },
+          {
+            "nodeId": "diag_hyperthyroidism",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Umožní jednoznačně vyloučit hypertyreózu."
+          }
+        ]
+      },
+      {
+        "id": "treat_iron_studies",
+        "type": "investigation",
+        "name": "Kompletní železité laboratorní vyšetření",
+        "priority": 1,
+        "confidence": 1.0,
+        "urgency": "urgent",
+        "description": "Sérové železo, TIBC, ferritin, saturace transferinu",
+        "reasoning": "Potvrzení nedostatku železa a posouzení závažnosti.",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Definitivní diagnóza vyžaduje laboratorní potvrzení."
+          }
+        ]
+      },
+      {
+        "id": "treat_counseling",
+        "type": "therapy",
+        "name": "Kognitivně-behaviorální terapie",
+        "priority": 4,
+        "confidence": 0.8,
+        "effectiveness": 0.75,
+        "duration": "12–16 sezení",
+        "urgency": "routine",
+        "description": "Týdenní sezení zaměřená na náladu, coping a kognitivní vzorce",
+        "reasoning": "Evidence-based psychoterapie pro depresi a úzkostné příznaky.",
+        "relationships": [
+          {
+            "nodeId": "diag_depression",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.85,
+            "reasoning": "Léčba první volby u deprese."
+          }
+        ]
+      },
+      {
+        "id": "treat_lifestyle_modifications",
+        "type": "lifestyle",
+        "name": "Program pohybu a spánkové hygieny",
+        "priority": 5,
+        "confidence": 0.8,
+        "effectiveness": 0.7,
+        "duration": "Průběžně",
+        "urgency": "routine",
+        "description": "Pravidelný pohyb, spánkový režim, techniky zvládání stresu",
+        "reasoning": "Režimová opatření podporují léčbu deprese a únavy.",
+        "relationships": [
+          {
+            "nodeId": "diag_depression",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.7,
+            "reasoning": "Důležitý doplněk léčby deprese."
+          },
+          {
+            "nodeId": "sym_fatigue_non_restorative",
+            "relationship": "relieves",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "Pohyb zlepšuje energii i kvalitu spánku."
+          }
+        ]
+      },
+      {
+        "id": "treat_pelvic_ultrasound",
+        "type": "investigation",
+        "name": "Transvaginální pánevní ultrazvuk",
+        "priority": 4,
+        "confidence": 0.8,
+        "urgency": "routine",
+        "description": "Zobrazení děložní struktury a detekce myomů",
+        "reasoning": "Zobrazovací metoda první volby při hodnocení silného krvácení.",
+        "relationships": [
+          {
+            "nodeId": "diag_fibroids",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Nejvhodnější počáteční zobrazení pro myomy."
+          }
+        ]
+      },
+      {
+        "id": "treat_dietary_counseling",
+        "type": "lifestyle",
+        "name": "Konzultace o stravě bohaté na železo",
+        "priority": 6,
+        "confidence": 0.7,
+        "effectiveness": 0.6,
+        "duration": "Úvodní konzultace + kontrola",
+        "urgency": "routine",
+        "description": "Nutriční konzultace k jídlům bohatým na železo a optimalizaci vstřebávání",
+        "reasoning": "Dietní změny podporují substituci železa i prevenci do budoucna.",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.6,
+            "reasoning": "Podpůrná léčba nedostatku železa."
+          }
+        ]
+      },
+      {
+        "id": "treat_investigate_bleeding",
+        "type": "investigation",
+        "name": "Vyšetření příčin silného krvácení",
+        "priority": 3,
+        "confidence": 0.8,
+        "urgency": "routine",
+        "description": "Vyšetření příčiny silného menstruačního krvácení",
+        "reasoning": "Nutné identifikovat a léčit zdroj ztrát železa."
+      },
+      {
+        "id": "treat_antidepressant",
+        "type": "medication",
+        "name": "Antidepresivum",
+        "priority": 5,
+        "confidence": 0.6,
+        "effectiveness": 0.7,
+        "duration": "minimálně 6–12 měsíců",
+        "urgency": "routine",
+        "description": "SSRI nebo SNRI při přetrvávající depresi",
+        "reasoning": "Možné při nedostatečné odpovědi na nefarmakologickou léčbu."
+      },
+      {
+        "id": "treat_gynecology_referral",
+        "type": "referral",
+        "name": "Doporučení ke gynekologovi",
+        "priority": 4,
+        "confidence": 0.8,
+        "urgency": "routine",
+        "description": "Specializované vyšetření silného menstruačního krvácení",
+        "reasoning": "Odborné posouzení u složitějších gynekologických potíží."
+      },
+      {
+        "id": "treat_symptom_management",
+        "type": "supportive",
+        "name": "Management příznaků u long COVID",
+        "priority": 7,
+        "confidence": 0.5,
+        "effectiveness": 0.5,
+        "duration": "Průběžně",
+        "urgency": "routine",
+        "description": "Podpůrná péče o postvirové příznaky",
+        "reasoning": "Symptomatická podpora při přetrvávajících potížích po COVID."
+      },
+      {
+        "id": "treat_antibody_monitoring",
+        "type": "investigation",
+        "name": "Sledování protilátek proti štítné žláze",
+        "priority": 6,
+        "confidence": 0.7,
+        "urgency": "routine",
+        "description": "Průběžné sledování anti-TPO a anti-Tg protilátek",
+        "reasoning": "Monitorace průběhu autoimunitního onemocnění."
+      }
+    ],
+    "actions": [
+      {
+        "id": "q_iron_labs",
+        "text": "Byly nedávno vyšetřeny koncentrace železa nebo ferritinu?",
+        "category": "diagnostic_clarification",
+        "actionType": "question",
+        "priority": 1,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Zásadní pro potvrzení suspektního nedostatku železa."
+          }
+        ],
+        "impact": {
+          "diagnoses": {
+            "diag_iron_deficiency_anemia": 0.3
+          },
+          "yes": {
+            "diag_iron_deficiency_anemia": -0.2
+          },
+          "no": {
+            "diag_iron_deficiency_anemia": 0.3
+          }
+        }
+      },
+      {
+        "id": "q_thyroid_history",
+        "text": "Měla jste vy nebo členové rodiny někdy potíže se štítnou žlázou?",
+        "category": "diagnostic_clarification",
+        "actionType": "question",
+        "priority": 2,
+        "status": "answered",
+        "answer": "Ano, matka měla sníženou funkci štítné žlázy",
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Rodinná anamnéza je významný rizikový faktor."
+          },
+          {
+            "nodeId": "diag_hashimoto_thyroiditis",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Relevantní u autoimunitního onemocnění štítné žlázy."
+          }
+        ],
+        "impact": {
+          "diagnoses": {
+            "diag_hypothyroidism": 0.2,
+            "diag_hashimoto_thyroiditis": 0.15
+          }
+        }
+      },
+      {
+        "id": "q_menstrual_pattern",
+        "text": "Popište svůj menstruační cyklus – kolik dní, jak silný, sraženiny?",
+        "category": "symptom_exploration",
+        "actionType": "question",
+        "priority": 2,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "sym_heavy_menstruation",
+            "relationship": "clarifies",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Potřeba kvantifikovat ztráty krve."
+          },
+          {
+            "nodeId": "diag_fibroids",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Vzor menstruace pomáhá posoudit strukturální příčiny."
+          }
+        ],
+        "impact": {
+          "symptoms": ["sym_menorrhagia_quantified"],
+          "diagnoses": {
+            "diag_fibroids": 0.2,
+            "diag_iron_deficiency_anemia": 0.1
+          }
+        }
+      },
+      {
+        "id": "q_medication_history",
+        "text": "Užíváte v současnosti nějaké léky včetně volně prodejných doplňků?",
+        "category": "risk_assessment",
+        "actionType": "question",
+        "priority": 3,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Nutné zhodnotit lékové interakce a kontraindikace."
+          },
+          {
+            "nodeId": "treat_levothyroxine",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Mnohé léky ovlivňují vstřebávání hormonů štítné žlázy."
+          }
+        ],
+        "impact": {
+          "diagnoses": {
+            "diag_drug_induced_hypothyroidism": 0.1
+          }
+        }
+      },
+      {
+        "id": "q_mood_screening",
+        "text": "Jak často jste se během posledních 2 týdnů cítila sklesle, depresivně nebo beznadějně?",
+        "category": "diagnostic_clarification",
+        "actionType": "question",
+        "priority": 3,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "diag_depression",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Screeningová otázka PHQ‑2 pro depresi."
+          }
+        ],
+        "impact": {
+          "diagnoses": {
+            "diag_depression": 0.3
+          },
+          "yes": {
+            "diag_depression": 0.4
+          },
+          "no": {
+            "diag_depression": -0.3
+          }
+        }
+      },
+      {
+        "id": "q_weight_timeline",
+        "text": "Kdy přibírání začalo a kolik jste přibrala?",
+        "category": "symptom_exploration",
+        "actionType": "question",
+        "priority": 4,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "sym_weight_gain",
+            "relationship": "clarifies",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Časový průběh pomáhá odlišit příčiny přibývání."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Rychlé nevysvětlitelné přibírání svědčí pro metabolickou příčinu."
+          }
+        ],
+        "impact": {
+          "diagnoses": {
+            "diag_hypothyroidism": 0.15
+          }
+        }
+      },
+      {
+        "id": "q_palpitations_check",
+        "text": "Zažila jste bušení srdce, zrychlený tep nebo tlak na hrudi?",
+        "category": "symptom_exploration",
+        "actionType": "question",
+        "priority": 3,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "sym_palpitations_suspected",
+            "relationship": "confirms",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Přímý dotaz k potvrzení či vyloučení kardiálních příznaků."
+          },
+          {
+            "nodeId": "diag_hyperthyroidism",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Palpitace by více svědčily pro hypertyreózu."
+          }
+        ],
+        "impact": {
+          "diagnoses": {
+            "diag_hyperthyroidism": 0.4,
+            "diag_hypothyroidism": -0.2
+          },
+          "yes": {
+            "diag_hyperthyroidism": 0.6,
+            "diag_anxiety_disorder": 0.3
+          },
+          "no": {
+            "diag_hypothyroidism": 0.1
+          }
+        }
+      },
+      {
+        "id": "q_sleep_quality",
+        "text": "Jak byste hodnotila kvalitu spánku a cítíte se po probuzení odpočatá?",
+        "category": "symptom_exploration",
+        "actionType": "question",
+        "priority": 5,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "sym_sleep_disturbance",
+            "relationship": "clarifies",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Potřeba charakterizovat poruchu spánku."
+          },
+          {
+            "nodeId": "diag_depression",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Porucha spánku je klíčovým příznakem deprese."
+          }
+        ]
+      },
+      {
+        "id": "q_treatment_preferences",
+        "text": "Máte obavy z dlouhodobého užívání léků nebo preference ohledně přístupu k léčbě?",
+        "category": "treatment_selection",
+        "actionType": "question",
+        "priority": 6,
+        "status": "pending",
+        "relationships": [
+          {
+            "nodeId": "treat_levothyroxine",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Preference pacientky jsou důležité u celoživotní léčby."
+          },
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.6,
+            "reasoning": "K dispozici jsou různé formy železa."
+          }
+        ]
+      },
+      {
+        "id": "safety_delay_diagnosis",
+        "text": "Oddálení léčby hypotyreózy či anémie může zhoršit kognitivní příznaky a kvalitu života.",
+        "category": "red_flag",
+        "actionType": "alert",
+        "priority": 1,
+        "status": "pending",
+        "recommendation": "Zajistit laboratorní testy do 48–72 hodin jako podklad pro léčbu",
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.8,
+            "reasoning": "Neléčená hypotyreóza může mít závažné následky."
+          },
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.8,
+            "reasoning": "Těžká anémie může vést ke kardiálním komplikacím."
+          }
+        ]
+      },
+      {
+        "id": "safety_drug_interaction",
+        "text": "Železo může snižovat vstřebávání hormonů štítné žlázy – načasování je důležité.",
+        "category": "drug_interaction",
+        "actionType": "alert",
+        "priority": 3,
+        "status": "pending",
+        "recommendation": "Užívat železo a levotyroxin s odstupem alespoň 4 hodin",
+        "relationships": [
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.9,
+            "reasoning": "Železo chelatuje hormon štítné žlázy a snižuje jeho vstřebávání."
+          },
+          {
+            "nodeId": "treat_levothyroxine",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.9,
+            "reasoning": "Vstřebávání levotyroxinu je ovlivněno železem."
+          }
+        ]
+      },
+      {
+        "id": "safety_pregnancy_check",
+        "text": "Před zahájením léčby je vhodné vyloučit těhotenství – obě stavy ovlivňují jeho průběh.",
+        "category": "contraindication",
+        "actionType": "alert",
+        "priority": 2,
+        "status": "pending",
+        "recommendation": "Provést těhotenský test, pokud je těhotenství možné",
+        "relationships": [
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.7,
+            "reasoning": "Potřeba odlišných dávek železa v těhotenství."
+          },
+          {
+            "nodeId": "treat_levothyroxine",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.9,
+            "reasoning": "Hormony štítné žlázy jsou zásadní pro vývoj plodu."
+          }
+        ]
+      },
+      {
+        "id": "safety_depression_risk",
+        "text": "Sledovat možné zhoršení deprese či sebevražedných myšlenek, zejména při zahájení léčby.",
+        "category": "warning",
+        "actionType": "alert",
+        "priority": 2,
+        "status": "pending",
+        "recommendation": "Nastavit bezpečnostní plán a plán kontrol",
+        "relationships": [
+          {
+            "nodeId": "diag_depression",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.9,
+            "reasoning": "Deprese vyžaduje průběžné hodnocení suicidality."
+          },
+          {
+            "nodeId": "treat_counseling",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.8,
+            "reasoning": "Zahájení terapie může přechodně zvýšit zátěž."
+          }
+        ]
+      },
+      {
+        "id": "safety_thyroid_crisis",
+        "text": "Pozor na známky myxedematózní krize: zmatenost, hypothermie, oběhový kolaps.",
+        "category": "red_flag",
+        "actionType": "alert",
+        "priority": 1,
+        "status": "pending",
+        "recommendation": "Při rozvoji závažných příznaků okamžitě vyhledat lékařskou pomoc",
+        "relationships": [
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "indicates",
+            "direction": "incoming",
+            "strength": 0.7,
+            "reasoning": "Těžká hypotyreóza může přejít do život ohrožující krize."
+          }
+        ]
+      }
+    ]
+  },
+  "userActions": [
+    {
+      "timestamp": "2025-08-06T14:35:22Z",
+      "action": "accept",
+      "targetId": "diag_iron_deficiency_anemia",
+      "reason": "Laboratorní výsledky potvrzují nedostatek železa",
+      "confidence": 0.95
+    },
+    {
+      "timestamp": "2025-08-06T14:36:15Z",
+      "action": "suppress",
+      "targetId": "diag_long_covid",
+      "reason": "Časová osa neodpovídá prodělanému COVID",
+      "confidence": 0.8
+    }
+  ]
+}
+
+

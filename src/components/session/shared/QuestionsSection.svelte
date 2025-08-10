@@ -9,15 +9,13 @@
         title?: string;
         compact?: boolean;
         showFilters?: boolean;
-        onquestionAnswer?: (questionId: string, answer: string) => void;
     }
 
     let { 
         questions = [],
         title = '',
         compact = false,
-        showFilters = false,
-        onquestionAnswer
+        showFilters = false
     }: Props = $props();
 
     const bubble = createBubbler();
@@ -44,16 +42,10 @@
         } else {
             expandedItems.add(questionId);
         }
-        expandedItems = expandedItems;
+        // Create a new Set to trigger reactivity in Svelte 5
+        expandedItems = new Set(expandedItems);
     }
 
-    function handleQuestionAnswer(questionId: string, answer: string) {
-        onquestionAnswer?.(questionId, answer);
-        
-        // Collapse the question after answering
-        expandedItems.delete(questionId);
-        expandedItems = expandedItems;
-    }
 </script>
 
 <div class="questions-section" class:compact use:bubble>
@@ -61,7 +53,7 @@
         <header class="section-header">
             {#if title}
                 <h4 class="section-title">
-                    {title} ({questions.length})
+                    {title} <!--({questions.length})-->
                     {#if pendingQuestions > 0}
                         <span class="badge">{pendingQuestions}</span>
                     {/if}
@@ -91,7 +83,6 @@
                     {question}
                     {compact}
                     expanded={expandedItems.has(question.id)}
-                    onquestionAnswer={handleQuestionAnswer}
                     ontoggleExpanded={toggleExpanded}
                 />
             {/each}

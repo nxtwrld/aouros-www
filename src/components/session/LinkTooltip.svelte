@@ -40,20 +40,16 @@
 <style>
     /* Unified Tooltip Styles */
     .unified-tooltip {
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: var(--radius);
+        padding: .2rem;;
         backdrop-filter: blur(4px);
         font-family: system-ui, sans-serif;
-        max-height: 250px;
         overflow-y: auto;
     }
 
     .relationship-header {
         text-align: center;
-        padding-bottom: 6px;
     }
 
     .relationship-header.with-actions {
@@ -62,8 +58,6 @@
     }
 
     .relationship-label {
-        font-size: 12px;
-        font-weight: 600;
         color: #374151;
         white-space: nowrap;
     }

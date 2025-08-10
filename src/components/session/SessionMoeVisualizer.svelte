@@ -2,9 +2,10 @@
     import { onMount } from 'svelte';
     import SankeyDiagram from './SankeyDiagram.svelte';
     import SessionSidebar from './SessionSidebar.svelte';
-    import sampleTranscript from './sample.transcript.1.json';
+    import sampleTranscript from './sample.transcript.1.cz.json';
     import shortcuts from '$lib/shortcuts';
-    import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent, QuestionAnswerEvent } from './types/visualization';
+    import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
+    // import { analysisActions } from '$lib/session/analysis-store';
     import { t } from '$lib/i18n';
 
     interface Props {
@@ -13,7 +14,6 @@
         showLegend?: boolean;
         enableInteractions?: boolean;
         transcript?: any[];
-        onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
         onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
     }
 
@@ -23,7 +23,6 @@
         showLegend = true, 
         enableInteractions = true,
         transcript = sampleTranscript.conversation,
-        onquestionAnswer,
         onnodeAction
     }: Props = $props();
 
@@ -97,9 +96,6 @@
         // Tab switching and sidebar opening will be handled by $effect
     }
 
-    function handleQuestionAnswer(event: CustomEvent<QuestionAnswerEvent>) {
-        onquestionAnswer?.(event);
-    }
 
     function handleNodeAction(detail: { action: string; targetId: string; reason?: string }) {
         onnodeAction?.(detail);
@@ -112,16 +108,34 @@
     }
 
     function handleClearSelection() {
+        const hadNodeSelection = selectedNodeId !== null;
+        const hadLinkSelection = selectedLink !== null;
+        const hadFocus = focusedNodeIndex !== -1;
+        
         selectedNodeId = null;
         selectedLink = null;
         focusedNodeIndex = -1;
-        console.log('🎹 Selection and focus cleared via Escape key');
+        
+        // Also clear the unified selection system via SankeyDiagram
+        const navFunctions = (window as any).sankeyNavigationFunctions;
+        if (navFunctions?.clearSelection) {
+            navFunctions.clearSelection();
+        }
+        
+        // console.log('🎹 Selection and focus cleared via Escape key');
     }
 
     function handleSelectionClear() {
+        const hadNodeSelection = selectedNodeId !== null;
+        const hadLinkSelection = selectedLink !== null;
+        
         selectedNodeId = null;
         selectedLink = null;
-        console.log('🖱️ Selection cleared via canvas click');
+        
+        // Also clear the unified selection system (SankeyDiagram handles this internally) 
+        // analysisActions.clearSelection();
+        
+        // console.log('🖱️ Selection cleared via canvas click');
     }
 
     function handleFocusNext() {
@@ -317,7 +331,6 @@
             {showSidebar}
             {sidebarWidth}
             bind:tabsRef
-            onquestionAnswer={handleQuestionAnswer}
             onnodeAction={handleNodeAction}
             onrelationshipNodeClick={handleRelationshipNodeClick}
             onToggleSidebar={toggleSidebar}

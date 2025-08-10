@@ -2,8 +2,11 @@
     import { t } from '$lib/i18n';
     import InfoGrid from '../shared/InfoGrid.svelte';
     import RelationshipsSection from '../shared/RelationshipsSection.svelte';
+    import QuestionsSection from '../shared/QuestionsSection.svelte';
+    import AlertsSection from '../shared/AlertsSection.svelte';
     import NodeActions from '../shared/NodeActions.svelte';
-    import type { SymptomNode } from '../types/visualization';
+    import type { SymptomNode, ActionNode } from '../types/visualization';
+    import { questionsForNode, alertsForNode, analysisActions } from '$lib/session/analysis-store';
 
     interface Props {
         symptom: SymptomNode;
@@ -13,6 +16,12 @@
     }
 
     let { symptom, allNodes, onnodeAction, onrelationshipNodeClick }: Props = $props();
+
+    // Use store actions for alerts
+
+    function handleAlertAcknowledge(alertId: string) {
+        analysisActions.acknowledgeAlert(alertId);
+    }
 
     function getConfidenceLabel(confidence: number): string {
         if (confidence >= 0.8) return $t('session.effectiveness.high');
@@ -37,6 +46,12 @@
         ...(symptom.duration ? [{ label: $t('session.labels.duration'), value: `${symptom.duration} ${$t('session.units.days')}` }] : []),
         { label: $t('session.labels.source'), value: $t(`session.sources.${symptom.source}`), className: `source-${symptom.source}` }
     ]);
+
+    // Use store factory functions to get related questions and alerts
+    const questionsStore = $derived(questionsForNode(symptom.id));
+    const alertsStore = $derived(alertsForNode(symptom.id));
+    const relatedQuestions = $derived($questionsStore);
+    const relatedAlerts = $derived($alertsStore);
 </script>
 
 <div class="session-details-panel">
@@ -66,6 +81,25 @@
                 <label>{$t('session.labels.quote')}:</label>
                 <p class="session-quote-text">"{symptom.quote}"</p>
             </section>
+        {/if}
+
+        <!-- Related Questions -->
+        {#if relatedQuestions.length > 0}
+            <QuestionsSection 
+                questions={relatedQuestions}
+                title={$t('session.headers.related-questions')}
+                compact={true}
+            />
+        {/if}
+
+        <!-- Related Alerts -->
+        {#if relatedAlerts.length > 0}
+            <AlertsSection 
+                alerts={relatedAlerts}
+                title={$t('session.headers.related-alerts')}
+                compact={true}
+                onalertAcknowledge={handleAlertAcknowledge}
+            />
         {/if}
 
         <!-- Relationships -->

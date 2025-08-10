@@ -7,7 +7,7 @@
     import SessionTranscriptTab from './SessionTranscriptTab.svelte';
     import SessionDetailsTab from './SessionDetailsTab.svelte';
     import SessionLegendTab from './SessionLegendTab.svelte';
-    import type { SessionAnalysis, QuestionAnswerEvent } from './types/visualization';
+    import type { SessionAnalysis } from './types/visualization';
     import { t } from '$lib/i18n';
 
     interface Props {
@@ -23,7 +23,6 @@
         pendingQuestions: number;
         isMobile?: boolean;
         tabsRef?: any;
-        onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
         onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
         onrelationshipNodeClick?: (detail: { nodeId: string }) => void;
     }
@@ -36,7 +35,6 @@
         pendingQuestions, 
         isMobile = false,
         tabsRef = $bindable(),
-        onquestionAnswer, 
         onnodeAction,
         onrelationshipNodeClick 
     }: Props = $props();
@@ -68,7 +66,6 @@
         <SessionQuestionsTab 
             {questions}
             {alerts}
-            {onquestionAnswer}
         />
     </TabPanel>
     

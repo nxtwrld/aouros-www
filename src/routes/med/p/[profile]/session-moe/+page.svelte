@@ -7,7 +7,7 @@
     import { analysisActions, currentSession, isLoading } from '$lib/session/analysis-store';
     
     // Import sample data for development
-    import sampleAnalysis from '$components/session/sample.analysis.1.json';
+    import sampleAnalysis from '$components/session/sample.analysis.1.cz.json';
 
     let sessionData: SessionAnalysis = sampleAnalysis as SessionAnalysis;
 

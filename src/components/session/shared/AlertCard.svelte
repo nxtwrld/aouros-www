@@ -61,7 +61,7 @@
         <div class="alert-content">
             <div class="alert-text">{alert.text}</div>
             <div class="alert-meta">
-                <span class="category {getCategoryClass(alert.category)}">{alert.category}</span>
+                <span class="category {getCategoryClass(alert.category)}">{$t(`session.action-categories.${alert.category}`)}</span>
                 <span class="priority">{getPriorityLabel(alert.priority || 5)}</span>
             </div>
             {#if alert.recommendation}
@@ -72,7 +72,7 @@
         </div>
         {#if !compact}
             <button 
-                class="acknowledge-btn" 
+                class="button -small {alert.status === 'acknowledged' ? '-acknowledged' : ''}" 
                 disabled={alert.status === 'acknowledged'}
                 onclick={handleAcknowledge}
             >
@@ -185,31 +185,15 @@
         border-left: 3px solid var(--color-info, #3b82f6);
     }
 
-    .acknowledge-btn {
-        padding: 0.5rem 0.75rem;
-        border: 1px solid var(--color-border, #e2e8f0);
-        background: var(--color-surface, #fff);
-        border-radius: 4px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
+    .alert-header .button {
         flex-shrink: 0;
         align-self: flex-start;
     }
-
-    .acknowledge-btn:not(:disabled):hover {
-        background: var(--color-primary-bg, #dbeafe);
-        color: var(--color-primary, #3b82f6);
-        border-color: var(--color-primary, #3b82f6);
-    }
-
-    .acknowledge-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        background: var(--color-success-bg, #dcfce7);
-        color: var(--color-success, #16a34a);
-        border-color: var(--color-success, #16a34a);
+    
+    .alert-header .button:not(.-acknowledged):not(:disabled):hover {
+        --color-hover: var(--color-primary-bg, #dbeafe);
+        --color-text-hover: var(--color-primary, #3b82f6);
+        --color-border-hover: var(--color-primary, #3b82f6);
     }
 
     /* Mobile optimizations */
@@ -222,7 +206,7 @@
             gap: 0.5rem;
         }
 
-        .acknowledge-btn {
+        .alert-header .button {
             padding: 0.375rem 0.5rem;
             font-size: 0.8125rem;
         }

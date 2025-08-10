@@ -105,24 +105,7 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
         nodeMap.set(node.id, node);
     });
 
-    // Skip actions for now to simplify debugging
-    // TODO: Re-enable actions after core flow is working
-    // sessionData.nodes.actions?.forEach((action, index) => {
-    //     const node: SankeyNode = {
-    //         id: action.id,
-    //         name: action.text,
-    //         type: action.actionType === 'question' ? 'question' : 'alert',
-    //         column: getActionColumn(action, nodeMap),
-    //         priority: action.priority || 5,
-    //         confidence: 1.0,
-    //         data: action,
-    //         x: getActionXPosition(action, nodeMap),
-    //         y: 400 + (index * 60), // Position actions below main flow
-    //         color: getNodeColor(action.actionType === 'question' ? 'question' : 'alert', action.priority || 5)
-    //     };
-    //     nodes.push(node);
-    //     nodeMap.set(node.id, node);
-    // });
+    // Actions are not rendered as nodes - they create investigative pathways between existing nodes
 
     // Create links based on relationships: handle both forward and bidirectional flows
     nodes.forEach(sourceNode => {
@@ -197,6 +180,68 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
                 }
             }
         });
+
+        // No action-specific processing here - actions create investigative pathways
+    });
+
+    // Create investigative pathway links from actions
+    // These create links between nodes that are connected through investigative questions
+    sessionData.nodes.actions?.forEach(action => {
+        if (action.impact?.diagnoses) {
+            Object.entries(action.impact.diagnoses).forEach(([targetDiagnosisId, impactValue]: [string, any]) => {
+                if (impactValue !== 0) {
+                    const targetDiagnosis = nodeMap.get(targetDiagnosisId);
+                    if (!targetDiagnosis) return;
+
+                    // Find the investigative pathway source:
+                    // Look for nodes that this action investigates
+                    let sourceNodeId: string | null = null;
+                    
+                    if (action.relationships) {
+                        for (const rel of action.relationships) {
+                            if (rel.relationship === 'investigates') {
+                                // This action investigates some node (usually a treatment)
+                                // Find what diagnosis requires/treats that node
+                                const investigatedNode = nodeMap.get(rel.nodeId);
+                                if (investigatedNode?.type === 'treatment') {
+                                    // Look for diagnoses that require this treatment
+                                    nodes.forEach(potentialSource => {
+                                        if (potentialSource.type === 'diagnosis' && potentialSource.data.relationships) {
+                                            const hasRelationToTreatment = potentialSource.data.relationships.some((r: any) => 
+                                                r.nodeId === rel.nodeId && ['requires', 'treats'].includes(r.relationship)
+                                            );
+                                            if (hasRelationToTreatment) {
+                                                sourceNodeId = potentialSource.id;
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    // Create investigative link if we found a source
+                    if (sourceNodeId && sourceNodeId !== targetDiagnosisId) {
+                        const linkKey = `${sourceNodeId}-${targetDiagnosisId}`;
+                        const existingLink = links.find(l => l.source === sourceNodeId && l.target === targetDiagnosisId);
+                        
+                        if (!existingLink) {
+                            const link: SankeyLink = {
+                                source: sourceNodeId,
+                                target: targetDiagnosisId,
+                                value: Math.abs(impactValue) * 50, // Convert impact to visual weight
+                                type: 'investigates',
+                                strength: Math.abs(impactValue),
+                                direction: 'outgoing',
+                                reasoning: `Investigative pathway via ${action.id}`
+                            };
+                            links.push(link);
+                            console.log(`Creating investigative pathway link: ${sourceNodeId} -> ${targetDiagnosisId} (via ${action.id})`);
+                        }
+                    }
+                }
+            });
+        }
     });
 
     // Remove any cycles that might have been created by bidirectional relationships

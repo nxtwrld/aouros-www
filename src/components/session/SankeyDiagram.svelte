@@ -538,6 +538,13 @@
                 return `link rel-${relType}`;
             })
             .merge(linkSelection as any)
+            .attr('id', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                return `link-${sourceId}-${targetId}`;
+            })
+            .attr('data-source-id', (d: any) => typeof d.source === 'object' ? d.source.id : d.source)
+            .attr('data-target-id', (d: any) => typeof d.target === 'object' ? d.target.id : d.target)
             .attr('d', (d: any) => {
                 // Use configured link generator or fall back to D3's default
                 if (LINK_CONFIG.ALGORITHM === 'default') {
@@ -566,6 +573,9 @@
         const nodeEnter = nodeSelection.enter()
             .append('g')
             .attr('class', 'node')
+            .attr('id', (d: any) => `node-${d.id}`)
+            .attr('data-node-id', (d: any) => d.id)
+            .attr('data-node-type', (d: any) => d.type)
             .style('cursor', 'pointer');
 
         // Node HTML content using foreignObject
@@ -586,9 +596,12 @@
 
         // Priority indicators are now included in HTML content
 
-        // Update positions
+        // Update positions and attributes for both new and existing nodes
         nodeSelection
             .merge(nodeEnter as any)
+            .attr('id', (d: any) => `node-${d.id}`)
+            .attr('data-node-id', (d: any) => d.id)
+            .attr('data-node-type', (d: any) => d.type)
             .attr('transform', (d: any) => `translate(${d.x0}, ${d.y0})`);
 
         nodeSelection.exit().remove();
@@ -695,7 +708,18 @@
     function handleCanvasClick(event: MouseEvent) {
         // Only clear selection if clicking on the SVG itself (not nodes or links)
         const target = event.target as SVGElement;
-        if (target.tagName === 'svg' || target.classList?.contains('main-group')) {
+        const isClickableElement = target.classList?.contains('node-html') || 
+                                  target.classList?.contains('link') ||
+                                  target.tagName === 'path' ||
+                                  target.closest('.node-html') ||
+                                  target.closest('.link');
+        
+        // Clear selection if clicking on any non-interactive SVG element
+        if (!isClickableElement) {
+            // Clear the unified visual state system
+            analysisActions.clearSelection();
+            
+            // Also notify parent component
             onselectionClear?.(new CustomEvent('selectionClear'));
         }
     }
@@ -778,7 +802,11 @@
         (window as any).sankeyNavigationFunctions = {
             focusNext: focusNextNode,
             focusPrevious: focusPreviousNode,
-            selectFocused: selectFocusedNode
+            selectFocused: selectFocusedNode,
+            clearSelection: () => {
+                // Clear the unified visual state system
+                analysisActions.clearSelection();
+            }
         };
     }
 
@@ -1426,7 +1454,7 @@
             .classed('active-path', false)
             .classed('background-trigger', false)
             .classed('background-path', false)
-            .classed('inactive', true) // Default state is inactive
+            .classed('inactive', false) // Normal state when no selection
             .interrupt();
             
         // Clear all visual state classes from SVG nodes
@@ -1434,14 +1462,14 @@
             .classed('active-path', false)
             .classed('background-trigger', false)
             .classed('background-path', false)
-            .classed('inactive', true); // Default state is inactive
+            .classed('inactive', false); // Normal state when no selection
             
         // Clear all visual state classes from HTML nodes
         svg.selectAll('.node-html')
             .classed('active-path', false)
             .classed('background-trigger', false)
             .classed('background-path', false)
-            .classed('inactive', true); // Default state is inactive
+            .classed('inactive', false); // Normal state when no selection
     }
     
     

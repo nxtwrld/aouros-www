@@ -20,7 +20,6 @@
         relatedActions?: ActionNode[];
         onnodeSelect?: (nodeId: string) => void;
         onnodeAction?: (action: string, targetId: string, reason?: string) => void;
-        onquestionAnswer?: (questionId: string, answer: string) => void;
         onalertAcknowledge?: (alertId: string) => void;
     }
 
@@ -30,7 +29,6 @@
         relatedActions = [], // Keep for backward compatibility
         onnodeSelect, 
         onnodeAction,
-        onquestionAnswer,
         onalertAcknowledge
     }: Props = $props();
 
@@ -161,7 +159,6 @@
                     questions={$questionsForSelectedLink}
                     title={$t('session.headers.questions')}
                     compact={true}
-                    onquestionAnswer={onquestionAnswer}
                 />
             </section>
         {/if}
@@ -290,7 +287,7 @@
                                 </div>
                             </div>
                             {#if action.category}
-                                <div class="action-category">{action.category}</div>
+                                <div class="action-category">{$t(`session.action-categories.${action.category}`)}</div>
                             {/if}
                         </div>
                     {/each}
@@ -303,13 +300,13 @@
 
     <!-- Actions -->
     <footer class="session-details-actions">
-        <button class="session-action-btn accept" onclick={() => handleLinkAction('accept')}>
+        <button class="button -accept" onclick={() => handleLinkAction('accept')}>
             {$t('session.actions.accept')}
         </button>
-        <button class="session-action-btn highlight" onclick={() => handleLinkAction('highlight')}>
+        <button class="button -highlight" onclick={() => handleLinkAction('highlight')}>
             {$t('session.actions.highlight')}
         </button>
-        <button class="session-action-btn suppress" onclick={() => handleLinkAction('suppress')}>
+        <button class="button -suppress" onclick={() => handleLinkAction('suppress')}>
             {$t('session.actions.suppress')}
         </button>
     </footer>
@@ -317,6 +314,17 @@
 
 <style>
     /* Component-specific styles (most styles now shared via session-* classes) */
+    .session-details-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        border-top: 1px solid var(--color-border, #e2e8f0);
+        margin-top: auto;
+    }
+    
+    .session-details-actions .button {
+        flex: 1;
+    }
 
     .connection-flow {
         display: flex;

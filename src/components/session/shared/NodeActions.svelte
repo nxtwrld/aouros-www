@@ -14,18 +14,27 @@
 </script>
 
 <footer class="session-details-actions">
-    <button class="session-action-btn accept" onclick={() => handleNodeAction('accept')}>
+    <button class="button -accept" onclick={() => handleNodeAction('accept')}>
         {$t('session.actions.accept')}
     </button>
-    <button class="session-action-btn highlight" onclick={() => handleNodeAction('highlight')}>
+    <button class="button -highlight" onclick={() => handleNodeAction('highlight')}>
         {$t('session.actions.highlight')}
     </button>
-    <button class="session-action-btn suppress" onclick={() => handleNodeAction('suppress')}>
+    <button class="button -suppress" onclick={() => handleNodeAction('suppress')}>
         {$t('session.actions.suppress')}
     </button>
-
 </footer>
 
 <style>
-    /* All styles now use shared session-* classes */
+    .session-details-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        border-top: 1px solid var(--color-border, #e2e8f0);
+        margin-top: auto;
+    }
+    
+    .session-details-actions .button {
+        flex: 1;
+    }
 </style>

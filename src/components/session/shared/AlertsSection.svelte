@@ -47,7 +47,7 @@
         <header class="section-header">
             {#if title}
                 <h4 class="section-title">
-                    {title} ({alerts.length})
+                    {title} <!--({alerts.length})-->
                     {#if pendingAlerts > 0}
                         <span class="badge">{pendingAlerts}</span>
                     {/if}

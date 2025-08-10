@@ -3,12 +3,12 @@
     import { slide } from 'svelte/transition';
     import type { ActionNode } from '../types/visualization';
     import { t } from '$lib/i18n';
+    import { analysisActions, nodeLookup } from '$lib/session/analysis-store';
 
     interface Props {
         question: ActionNode;
         expanded?: boolean;
         compact?: boolean;
-        onquestionAnswer?: (questionId: string, answer: string) => void;
         ontoggleExpanded?: (questionId: string) => void;
     }
 
@@ -16,15 +16,11 @@
         question, 
         expanded = false, 
         compact = false,
-        onquestionAnswer,
         ontoggleExpanded
     }: Props = $props();
 
     const bubble = createBubbler();
 
-    function handleQuestionAnswer(answer: string) {
-        onquestionAnswer?.(question.id, answer);
-    }
 
     function handleToggleExpanded() {
         ontoggleExpanded?.(question.id);
@@ -43,13 +39,29 @@
         if (priority <= 6) return $t('session.priority.medium');
         return $t('session.priority.low');
     }
+
+    // Interactive handlers using existing store actions
+    function handleNodeHover(nodeId: string, isEntering: boolean) {
+        const node = nodeLookup.findNodeById(nodeId);
+        if (node && isEntering) {
+            analysisActions.hoverItem('node', node);
+        } else if (!isEntering) {
+            analysisActions.clearHover();
+        }
+    }
+
+    function handleNodeClick(nodeId: string) {
+        const node = nodeLookup.findNodeById(nodeId);
+        if (node) {
+            analysisActions.selectItem('node', node);
+        }
+    }
 </script>
 
 <div class="question-card" class:compact use:bubble>
     <button 
         class="question-header"
         onclick={handleToggleExpanded}
-        disabled={compact}
     >
         <div class="header-content">
             <div class="priority-indicator" 
@@ -59,50 +71,30 @@
                 <span class="question-text">{question.text}</span>
                 <div class="question-meta">
                     <span class="priority">{getPriorityLabel(question.priority || 5)}</span>
-                    <span class="category">{question.category}</span>
+                    <span class="category">{$t(`session.action-categories.${question.category}`)}</span>
                 </div>
             </div>
         </div>
-        {#if !compact}
-            <div class="header-actions">
+        <div class="header-actions">
+            {#if !compact}
                 <span class="status status-{question.status}">{question.status}</span>
-                <span class="expand-icon" class:expanded>
-                    ▼
-                </span>
-            </div>
-        {/if}
+            {/if}
+            <span class="expand-icon" class:expanded>
+                ▼
+            </span>
+        </div>
     </button>
 
-    {#if expanded && !compact}
-        <div class="question-details" transition:slide={{ duration: 200 }}>
-            {#if question.status === 'pending'}
-                <div class="quick-answers">
-                    <h5>{$t('session.labels.quick-answer')}:</h5>
-                    <div class="answer-buttons">
-                        <button 
-                            class="answer-btn yes"
-                            onclick={() => handleQuestionAnswer('yes')}
-                        >
-                            {$t('session.actions.yes')}
-                        </button>
-                        <button 
-                            class="answer-btn no"
-                            onclick={() => handleQuestionAnswer('no')}
-                        >
-                            {$t('session.actions.no')}
-                        </button>
-                        <button 
-                            class="answer-btn unknown"
-                            onclick={() => handleQuestionAnswer('unknown')}
-                        >
-                            {$t('session.actions.unknown')}
-                        </button>
-                    </div>
-                </div>
-            {:else if question.answer}
+    {#if expanded}
+        <div class="question-details" class:compact transition:slide={{ duration: 200 }}>
+            {#if question.answer}
                 <div class="answer-display">
                     <h5>{$t('session.labels.answer')}:</h5>
                     <p class="answer">{question.answer}</p>
+                </div>
+            {:else if question.status === 'pending'}
+                <div class="pending-note">
+                    <p class="note-text">{$t('session.labels.awaiting-clinical-input')}</p>
                 </div>
             {/if}
 
@@ -115,7 +107,17 @@
                             <ul>
                                 {#each Object.entries(question.impact.yes) as [diagId, impact]}
                                     <li class="impact-item" class:positive={impact > 0} class:negative={impact < 0}>
-                                        {diagId}: {impact > 0 ? '+' : ''}{Math.round(impact * 100)}%
+                                        <span 
+                                            class="node-reference clickable"
+                                            role="button"
+                                            tabindex="0"
+                                            onmouseenter={() => handleNodeHover(diagId, true)}
+                                            onmouseleave={() => handleNodeHover(diagId, false)}
+                                            onclick={() => handleNodeClick(diagId)}
+                                            onkeydown={(e) => e.key === 'Enter' && handleNodeClick(diagId)}
+                                        >
+                                            {nodeLookup.getNodeDisplayText(diagId)}
+                                        </span>: {impact > 0 ? '+' : ''}{Math.round(impact * 100)}%
                                     </li>
                                 {/each}
                             </ul>
@@ -127,7 +129,17 @@
                             <ul>
                                 {#each Object.entries(question.impact.no) as [diagId, impact]}
                                     <li class="impact-item" class:positive={impact > 0} class:negative={impact < 0}>
-                                        {diagId}: {impact > 0 ? '+' : ''}{Math.round(impact * 100)}%
+                                        <span 
+                                            class="node-reference clickable"
+                                            role="button"
+                                            tabindex="0"
+                                            onmouseenter={() => handleNodeHover(diagId, true)}
+                                            onmouseleave={() => handleNodeHover(diagId, false)}
+                                            onclick={() => handleNodeClick(diagId)}
+                                            onkeydown={(e) => e.key === 'Enter' && handleNodeClick(diagId)}
+                                        >
+                                            {nodeLookup.getNodeDisplayText(diagId)}
+                                        </span>: {impact > 0 ? '+' : ''}{Math.round(impact * 100)}%
                                     </li>
                                 {/each}
                             </ul>
@@ -142,8 +154,18 @@
                     <ul class="relationships-list">
                         {#each question.relationships as rel}
                             <li class="relationship">
-                                <span class="rel-type">{rel.relationship}</span>
-                                <span class="rel-target">{rel.nodeId}</span>
+                                <span class="rel-type">{$t(`session.relationships.${rel.relationship}`)}</span>
+                                <span 
+                                    class="rel-target node-reference clickable"
+                                    role="button"
+                                    tabindex="0"
+                                    onmouseenter={() => handleNodeHover(rel.nodeId, true)}
+                                    onmouseleave={() => handleNodeHover(rel.nodeId, false)}
+                                    onclick={() => handleNodeClick(rel.nodeId)}
+                                    onkeydown={(e) => e.key === 'Enter' && handleNodeClick(rel.nodeId)}
+                                >
+                                    {nodeLookup.getNodeDisplayText(rel.nodeId)}
+                                </span>
                                 <span class="rel-strength">{Math.round(rel.strength * 100)}%</span>
                             </li>
                         {/each}
@@ -284,6 +306,10 @@
         background: var(--color-surface, #fff);
     }
 
+    .question-details.compact {
+        padding: 0 0.75rem 0.75rem;
+    }
+
     .question-details h5 {
         margin: 0 0 0.5rem;
         font-size: 0.875rem;
@@ -291,45 +317,19 @@
         color: var(--color-text-primary, #1f2937);
     }
 
-    .quick-answers {
+
+    .pending-note {
         margin-bottom: 1rem;
     }
-
-    .answer-buttons {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .answer-btn {
-        flex: 1;
-        padding: 0.5rem;
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: 4px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .answer-btn.yes {
-        background: var(--color-success-bg, #dcfce7);
-        color: var(--color-success, #16a34a);
-        border-color: var(--color-success, #16a34a);
-    }
-
-    .answer-btn.no {
-        background: var(--color-error-bg, #fee2e2);
-        color: var(--color-error, #dc2626);
-        border-color: var(--color-error, #dc2626);
-    }
-
-    .answer-btn.unknown {
-        background: var(--color-surface, #fff);
-        color: var(--color-text-primary, #1f2937);
-    }
-
-    .answer-btn:hover {
-        opacity: 0.8;
+    
+    .note-text {
+        font-style: italic;
+        color: var(--color-text-secondary, #6b7280);
+        background: var(--color-surface-2, #f8fafc);
+        padding: 0.75rem;
+        border-radius: 6px;
+        border: 1px dashed var(--color-border, #e2e8f0);
+        margin: 0;
     }
 
     .answer-display .answer {
@@ -400,15 +400,39 @@
         margin-left: auto;
     }
 
+    /* Interactive node references */
+    .node-reference {
+        color: var(--color-primary, #3b82f6);
+        border-bottom: 1px dashed currentColor;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .node-reference:hover,
+    .node-reference:focus {
+        background: var(--color-primary-bg, #dbeafe);
+        border-bottom: 1px solid currentColor;
+        padding: 0.125rem 0.25rem;
+        margin: -0.125rem -0.25rem;
+        border-radius: 3px;
+        outline: none;
+    }
+
+    .node-reference:focus {
+        box-shadow: 0 0 0 2px var(--color-primary, #3b82f6);
+    }
+
+    /* Remove monospace styling for clickable node references */
+    .rel-target.node-reference {
+        font-family: inherit;
+    }
+
     /* Mobile optimizations */
     @media (max-width: 640px) {
         .question-header {
             padding: 0.75rem;
         }
 
-        .answer-buttons {
-            flex-direction: column;
-        }
 
         .question-meta {
             gap: 0.5rem;

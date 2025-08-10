@@ -1,6 +1,6 @@
 <script lang="ts">
     import SessionTabs from './SessionTabs.svelte';
-    import type { SessionAnalysis, QuestionAnswerEvent } from './types/visualization';
+    import type { SessionAnalysis } from './types/visualization';
     import { t } from '$lib/i18n';
 
     interface Props {
@@ -18,7 +18,6 @@
         showSidebar: boolean;
         sidebarWidth: number;
         tabsRef?: any;
-        onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
         onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
         onrelationshipNodeClick?: (detail: { nodeId: string }) => void;
         onToggleSidebar: () => void;
@@ -35,7 +34,6 @@
         showSidebar,
         sidebarWidth,
         tabsRef = $bindable(),
-        onquestionAnswer,
         onnodeAction,
         onrelationshipNodeClick,
         onToggleSidebar,
@@ -74,7 +72,6 @@
                     {selectedLink}
                     {pendingQuestions}
                     {isMobile}
-                    {onquestionAnswer}
                     {onnodeAction}
                     {onrelationshipNodeClick}
                 />
@@ -97,7 +94,6 @@
                     {selectedLink}
                     {pendingQuestions}
                     {isMobile}
-                    {onquestionAnswer}
                     {onnodeAction}
                     {onrelationshipNodeClick}
                 />

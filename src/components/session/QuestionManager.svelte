@@ -1,43 +1,30 @@
 <script lang="ts">
-    import { createBubbler } from 'svelte/legacy';
     import QuestionsSection from './shared/QuestionsSection.svelte';
     import AlertsSection from './shared/AlertsSection.svelte';
-    import type { ActionNode, QuestionAnswerEvent } from './types/visualization';
+    import type { ActionNode } from './types/visualization';
     import { t } from '$lib/i18n';
+    import { analysisActions } from '$lib/session/analysis-store';
 
     interface Props {
         questions?: ActionNode[];
         alerts?: ActionNode[];
-        onquestionAnswer?: (event: CustomEvent<QuestionAnswerEvent>) => void;
     }
 
-    let { questions = [], alerts = [], onquestionAnswer }: Props = $props();
-
-    const bubble = createBubbler();
+    let { questions = [], alerts = [] }: Props = $props();
 
     let activeTab: 'questions' | 'alerts' = $state('questions');
 
     const pendingQuestions = $derived(questions.filter(q => q.status === 'pending').length);
     const pendingAlerts = $derived(alerts.filter(a => a.status === 'pending').length);
 
-    function handleQuestionAnswer(questionId: string, answer: string) {
-        const event = new CustomEvent('questionAnswer', {
-            detail: {
-                questionId,
-                answer,
-                confidence: 0.9
-            }
-        });
-        onquestionAnswer?.(event);
-    }
 
     function handleAlertAcknowledge(alertId: string) {
-        // TODO: Handle alert acknowledgment
-        console.log('Alert acknowledged:', alertId);
+        // Use centralized store action
+        analysisActions.acknowledgeAlert(alertId);
     }
 </script>
 
-<div class="question-manager" use:bubble>
+<div class="question-manager">
     <header class="manager-header">
         <div class="tabs">
             <button 
@@ -45,7 +32,7 @@
                 class:active={activeTab === 'questions'}
                 onclick={() => activeTab = 'questions'}
             >
-                {$t('session.headers.questions')} ({questions.length})
+                {$t('session.headers.questions')} <!--({questions.length})-->
                 {#if pendingQuestions > 0}
                     <span class="badge">{pendingQuestions}</span>
                 {/if}
@@ -55,7 +42,7 @@
                 class:active={activeTab === 'alerts'}
                 onclick={() => activeTab = 'alerts'}
             >
-                {$t('session.headers.alerts')} ({alerts.length})
+                {$t('session.headers.alerts')} <!--({alerts.length})-->
                 {#if pendingAlerts > 0}
                     <span class="badge">{pendingAlerts}</span>
                 {/if}
@@ -68,7 +55,6 @@
             <QuestionsSection 
                 {questions}
                 showFilters={true}
-                onquestionAnswer={handleQuestionAnswer}
             />
         {:else}
             <AlertsSection 

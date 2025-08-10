@@ -2,8 +2,11 @@
     import { t } from '$lib/i18n';
     import InfoGrid from '../shared/InfoGrid.svelte';
     import RelationshipsSection from '../shared/RelationshipsSection.svelte';
+    import QuestionsSection from '../shared/QuestionsSection.svelte';
+    import AlertsSection from '../shared/AlertsSection.svelte';
     import NodeActions from '../shared/NodeActions.svelte';
-    import type { TreatmentNode } from '../types/visualization';
+    import type { TreatmentNode, ActionNode } from '../types/visualization';
+    import { questionsForNode, alertsForNode, analysisActions } from '$lib/session/analysis-store';
 
     interface Props {
         treatment: TreatmentNode;
@@ -13,6 +16,12 @@
     }
 
     let { treatment, allNodes, onnodeAction, onrelationshipNodeClick }: Props = $props();
+
+    // Use store actions for alerts
+
+    function handleAlertAcknowledge(alertId: string) {
+        analysisActions.acknowledgeAlert(alertId);
+    }
 
     function getPriorityLabel(priority: number): string {
         if (priority <= 2) return $t('session.priority.critical');
@@ -28,6 +37,7 @@
         return 'var(--color-success, #10b981)';
     }
 
+
     const basicInfoItems = $derived([
         { label: $t('session.labels.priority'), value: '', type: 'priority' as const, priority: treatment.priority || 5 }
     ]);
@@ -38,6 +48,12 @@
         ...(treatment.effectiveness ? [{ label: $t('session.labels.effectiveness'), value: `${Math.round(treatment.effectiveness * 100)}${$t('session.units.percent')}` }] : []),
         ...(treatment.duration ? [{ label: $t('session.labels.duration'), value: treatment.duration }] : [])
     ]);
+
+    // Use store factory functions to get related questions and alerts
+    const questionsStore = $derived(questionsForNode(treatment.id));
+    const alertsStore = $derived(alertsForNode(treatment.id));
+    const relatedQuestions = $derived($questionsStore);
+    const relatedAlerts = $derived($alertsStore);
 </script>
 
 <div class="session-details-panel">
@@ -119,6 +135,25 @@
                 <label>{$t('session.labels.notes')}:</label>
                 <p class="session-reasoning-text">{treatment.notes}</p>
             </section>
+        {/if}
+
+        <!-- Related Questions -->
+        {#if relatedQuestions.length > 0}
+            <QuestionsSection 
+                questions={relatedQuestions}
+                title={$t('session.headers.related-questions')}
+                compact={true}
+            />
+        {/if}
+
+        <!-- Related Alerts -->
+        {#if relatedAlerts.length > 0}
+            <AlertsSection 
+                alerts={relatedAlerts}
+                title={$t('session.headers.related-alerts')}
+                compact={true}
+                onalertAcknowledge={handleAlertAcknowledge}
+            />
         {/if}
 
         <!-- Relationships -->

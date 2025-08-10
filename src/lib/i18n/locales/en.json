@@ -830,14 +830,20 @@
       "side-effects": "Side Effects",
       "contraindications": "Contraindications",
       "relationships": "Relationships",
-      "related-actions": "Related Actions"
+      "related-actions": "Related Actions",
+      "related-questions": "Related Questions",
+      "related-alerts": "Related Alerts"
+    },
+    "filters": {
+      "all-questions": "All Questions",
+      "all-alerts": "All Alerts"
     },
     "status": {
-      "pending": "pending",
-      "answered": "answered",
-      "acknowledged": "acknowledged",
-      "skipped": "skipped",
-      "resolved": "resolved"
+      "pending": "Pending",
+      "answered": "Answered", 
+      "acknowledged": "Acknowledged",
+      "skipped": "Skipped",
+      "resolved": "Resolved"
     },
     "priority": {
       "critical": "Critical",
@@ -959,6 +965,7 @@
       "follow-up-actions": "Follow-up Actions",
       "connection": "Connection",
       "quick-answer": "Quick Answer",
+      "awaiting-clinical-input": "Awaiting clinical input for further analysis",
       "expected-answer-type": "Expected Answer Type",
       "alert-message": "Alert Message",
       "recommendation": "Recommendation",
