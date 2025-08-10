@@ -218,7 +218,7 @@
         previousLanguage = userLanguage;
         previousIsOwnProfile = isOwnProfile;
       } else {
-        console.log('Profile/language unchanged, skipping profile switch event');
+        //console.log('Profile/language unchanged, skipping profile switch event');
       }
     }
   });

@@ -63,8 +63,7 @@ function updateIndex() {
             (doc) => doc.user_id === user_id && doc.type === "document",
           );
           logger.documents.debug("Update profile store", {
-            user_id,
-            userDocuments,
+            user_id
           });
           set(userDocuments);
         });
