@@ -24,11 +24,7 @@
         onrelationshipNodeClick?.(detail);
     }
 
-    // Debug logging
-    $effect(() => {
-        console.log('📋 SessionDetailsTab received selectedNode:', selectedNode ? { id: selectedNode.id, type: selectedNode.type || 'unknown' } : null);
-        console.log('🔗 SessionDetailsTab received selectedLink:', selectedLink);
-    });
+    // Effect retained without debug logs
 </script>
 
 {#if selectedNode}

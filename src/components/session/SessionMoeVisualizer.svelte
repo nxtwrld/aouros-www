@@ -5,7 +5,7 @@
     import sampleTranscript from './sample.transcript.1.cz.json';
     import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
-    // import { analysisActions } from '$lib/session/analysis-store';
+    // import { analysisActions } from '$lib/session/stores/analysis-store';
     import { t } from '$lib/i18n';
 
     interface Props {
@@ -43,18 +43,7 @@
         checkViewport();
         window.addEventListener('resize', checkViewport);
         
-        // Debug sessionData loading
-        console.log('🚀 SessionMoeVisualizer mounted with sessionData:', {
-            sessionId: sessionData.sessionId,
-            analysisVersion: sessionData.analysisVersion,
-            nodes: {
-                symptoms: sessionData.nodes?.symptoms?.length || 0,
-                diagnoses: sessionData.nodes?.diagnoses?.length || 0,
-                treatments: sessionData.nodes?.treatments?.length || 0,
-                actions: sessionData.nodes?.actions?.length || 0
-            },
-            sampleDiagnoses: sessionData.nodes?.diagnoses?.slice(0, 3).map(d => ({id: d.id, name: d.name})) || []
-        });
+        // Minimal mount work; avoid noisy logs in production
 
         // Setup keyboard shortcuts
         const off = [
@@ -83,14 +72,12 @@
     }
 
     function handleNodeSelect(event: CustomEvent<NodeSelectEvent>) {
-        console.log('🔍 Node selected:', event.detail.nodeId);
         selectedNodeId = event.detail.nodeId;
         selectedLink = null; // Clear link selection when node is selected
         // Note: Tab switching and sidebar opening now handled by $effect
     }
 
     function handleLinkSelect(event: CustomEvent<LinkSelectEvent>) {
-        console.log('🔗 Link selected:', event.detail.link);
         selectedLink = event.detail.link;
         selectedNodeId = null; // Clear node selection when link is selected
         // Tab switching and sidebar opening will be handled by $effect
@@ -102,7 +89,6 @@
     }
 
     function handleRelationshipNodeClick(detail: { nodeId: string }) {
-        console.log('🔗 Relationship node clicked:', detail.nodeId);
         selectedNodeId = detail.nodeId;
         // This will automatically trigger the $effect that handles tab switching and sidebar opening
     }
@@ -142,7 +128,6 @@
         const navFunctions = (window as any).sankeyNavigationFunctions;
         if (navFunctions?.focusNext) {
             navFunctions.focusNext();
-            console.log('🎹 Focus next node via Tab key, focusedIndex now:', focusedNodeIndex);
         } else {
             console.warn('🎹 Tab navigation not available - navFunctions not found');
         }
@@ -152,7 +137,6 @@
         const navFunctions = (window as any).sankeyNavigationFunctions;
         if (navFunctions?.focusPrevious) {
             navFunctions.focusPrevious();
-            console.log('🎹 Focus previous node via Shift+Tab key, focusedIndex now:', focusedNodeIndex);
         } else {
             console.warn('🎹 Shift+Tab navigation not available - navFunctions not found');
         }
@@ -162,7 +146,6 @@
         const navFunctions = (window as any).sankeyNavigationFunctions;
         if (navFunctions?.selectFocused) {
             navFunctions.selectFocused();
-            console.log('🎹 Select focused node via Enter/Space key, focusedIndex:', focusedNodeIndex);
         } else {
             console.warn('🎹 Enter/Space selection not available - navFunctions not found');
         }
@@ -170,7 +153,7 @@
 
     function handleFocusChange(event: CustomEvent<{ index: number }>) {
         focusedNodeIndex = event.detail.index;
-        console.log('🎯 Focus changed to index:', focusedNodeIndex);
+        // focus index updated
     }
 
     function toggleSidebar() {
@@ -204,9 +187,7 @@
     const pendingQuestions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question' && a.status === 'pending')?.length || 0);
     const alertCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'alert')?.length || 0);
     const selectedNode = $derived.by(() => {
-        console.log('🔍 selectedNode $derived called with selectedNodeId:', selectedNodeId);
         if (!selectedNodeId) {
-            console.log('🔍 No selectedNodeId, returning null');
             return null;
         }
         
@@ -217,33 +198,17 @@
             ...(sessionData.nodes.actions || [])
         ];
         
-        console.log('🎯 Looking for node:', selectedNodeId);
-        console.log('🎯 SessionData structure:', {
-            symptoms: sessionData.nodes.symptoms?.length || 0,
-            diagnoses: sessionData.nodes.diagnoses?.length || 0,
-            treatments: sessionData.nodes.treatments?.length || 0,
-            actions: sessionData.nodes.actions?.length || 0
-        });
-        console.log('🎯 Available nodes:', allNodes.map(n => ({ id: n.id, type: n.type || 'unknown', name: n.name || n.text || 'unnamed' })));
-        
         const foundNode = allNodes.find(n => n.id === selectedNodeId);
-        console.log('🎯 Found node:', foundNode ? { id: foundNode.id, name: foundNode.name || foundNode.text || 'unnamed', fullNode: foundNode } : null);
-        
         return foundNode || null;
     });
 
     // Handle tab selection when selectedNodeId or selectedLink changes
     $effect(() => {
-        console.log('🎯 Effect called - selectedNodeId:', selectedNodeId, 'selectedLink:', selectedLink ? 'link selected' : null, 'selectedNode:', selectedNode ? {id: selectedNode.id, name: selectedNode.name || selectedNode.text} : null);
-        
         // Handle node selection
         if (selectedNodeId && selectedNode) {
-            console.log('🎯 Node selection effect triggered for:', selectedNodeId);
-            
             // Auto-show sidebar when node is selected
             if (!showSidebar && !isMobile) {
                 showSidebar = true;
-                console.log('📂 Sidebar opened via node selection effect');
             }
             
             // Auto-select Details tab when node is selected
@@ -251,7 +216,6 @@
                 const hasTranscript = transcript && transcript.length > 0;
                 // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
                 const detailsTabIndex = hasTranscript ? 2 : 1;
-                console.log('📋 Switching to Details tab via node selection effect (index:', detailsTabIndex, ')');
                 setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
             } else {
                 console.warn('⚠️ tabsRef or selectTab not available in effect:', { tabsRef, selectTab: tabsRef?.selectTab });
@@ -260,12 +224,10 @@
         
         // Handle link selection
         if (selectedLink) {
-            console.log('🎯 Link selection effect triggered for:', selectedLink);
             
             // Auto-show sidebar when link is selected
             if (!showSidebar && !isMobile) {
                 showSidebar = true;
-                console.log('📂 Sidebar opened via link selection effect');
             }
             
             // Auto-select Details tab when link is selected
@@ -273,7 +235,6 @@
                 const hasTranscript = transcript && transcript.length > 0;
                 // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
                 const detailsTabIndex = hasTranscript ? 2 : 1;
-                console.log('📋 Switching to Details tab via link selection effect (index:', detailsTabIndex, ')');
                 setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
             } else {
                 console.warn('⚠️ tabsRef or selectTab not available in effect:', { tabsRef, selectTab: tabsRef?.selectTab });

@@ -12,8 +12,8 @@
     import { profile } from '$lib/profiles';
     import { float32Flatten } from '$lib/array';
     import { ANALYZE_STEPS } from '$lib/types.d';
-    import { AnalysisMerger } from '$lib/session/analysis-merger';
-    import { sessionStorage, loadSessionData, removeSessionData, hasStoredSessionData, type StoredSessionData } from '$lib/session/local-storage';
+    import { AnalysisMerger } from '$lib/session-deprecated/analysis-merger';
+    import { sessionStorage, loadSessionData, removeSessionData, hasStoredSessionData, type StoredSessionData } from '$lib/session-deprecated/local-storage';
     import { log } from '$lib/logging/logger';
   
     
@@ -863,7 +863,7 @@
                 streamTestTranscript, 
                 getAvailableTestTranscripts, 
                 getTestTranscriptInfo 
-            } = await import('$lib/session/test-transcript-loader');
+            } = await import('$lib/session/testing/transcript-loader');
             
             // Make test functions available in console
             (window as any).testTranscripts = {

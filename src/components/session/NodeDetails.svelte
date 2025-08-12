@@ -24,7 +24,6 @@
     }
 
     function handleRelationshipNodeClick(nodeId: string) {
-        console.log('🔗 NodeDetails: Relationship node clicked:', nodeId);
         onrelationshipNodeClick?.({ nodeId });
     }
 

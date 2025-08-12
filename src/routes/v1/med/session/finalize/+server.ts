@@ -1,5 +1,5 @@
 import { error, json, type RequestHandler } from "@sveltejs/kit";
-import { finalize } from "$lib/session/finalizeReport";
+import { finalize } from "$lib/session-deprecated/finalizeReport";
 
 export const POST: RequestHandler = async ({
   request,

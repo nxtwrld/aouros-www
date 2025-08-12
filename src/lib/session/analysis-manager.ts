@@ -8,7 +8,7 @@ import type {
     SankeyNode,
     UserAction
 } from "$components/session/types/visualization";
-import { analysisActions } from "./analysis-store";
+import { analysisActions } from "./stores/analysis-store";
 import { logger } from "$lib/logging/logger";
 
 /**

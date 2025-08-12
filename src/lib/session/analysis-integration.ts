@@ -1,5 +1,5 @@
 import type { SessionAnalysis } from "$components/session/types/visualization";
-import { analysisActions } from "./analysis-store";
+import { analysisActions } from "./stores/analysis-store";
 import { globalAnalysisManager } from "./analysis-manager";
 import { getSessionEmitter, type SessionData, type SSEUpdate } from "./manager";
 import { logger } from "$lib/logging/logger";

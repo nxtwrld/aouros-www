@@ -6,7 +6,7 @@
     import AlertsSection from '../shared/AlertsSection.svelte';
     import NodeActions from '../shared/NodeActions.svelte';
     import type { TreatmentNode, ActionNode } from '../types/visualization';
-    import { questionsForNode, alertsForNode, analysisActions } from '$lib/session/analysis-store';
+    import { questionsForNode, alertsForNode, analysisActions } from '$lib/session/stores/analysis-store';
 
     interface Props {
         treatment: TreatmentNode;

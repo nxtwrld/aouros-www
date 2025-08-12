@@ -1,4 +1,4 @@
-import { analyze } from "$lib/session/analyzeConversation";
+import { analyze } from "./analyzeConversation";
 import { ANALYZE_STEPS } from "$lib/types.d";
 import { logger } from "$lib/logging/logger";
 

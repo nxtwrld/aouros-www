@@ -851,6 +851,168 @@
 }
 
 /* ============================================================================
+   SVG VISUAL STATE CLASSES - Replace ALL inline styling
+   ============================================================================ */
+
+/* Node State Classes - for SVG nodes */
+.node.state-focus-active {
+    opacity: 1.0;
+    filter: none;
+}
+
+.node.state-focus-inactive {
+    opacity: 0.1;
+    filter: grayscale(0.8);
+}
+
+.node.state-path-active {
+    opacity: 1.0;
+    filter: none;
+}
+
+.node.state-path-background {
+    opacity: 0.6;
+    filter: grayscale(0.8);
+}
+
+.node.state-inactive {
+    opacity: 0.3;
+    filter: grayscale(0.7);
+}
+
+.node.state-reset {
+    opacity: 1.0;
+    filter: none;
+}
+
+/* Link State Classes - Stroke Mode */
+.link.state-active.render-stroke {
+    stroke-opacity: 0.9;
+    fill-opacity: 0;
+    filter: none;
+}
+
+.link.state-inactive.render-stroke {
+    stroke-opacity: 0.1;
+    fill-opacity: 0;
+    filter: grayscale(1);
+}
+
+.link.state-background.render-stroke {
+    stroke-opacity: 0.4;
+    fill-opacity: 0;
+    filter: grayscale(0.8);
+}
+
+.link.state-reset.render-stroke {
+    stroke-opacity: 0.2;
+    fill-opacity: 0;
+    filter: none;
+}
+
+/* Link State Classes - Polygon Mode */
+.link.state-active.render-polygon {
+    stroke-opacity: 0;
+    fill-opacity: 0.9;
+    filter: none;
+}
+
+.link.state-inactive.render-polygon {
+    stroke-opacity: 0;
+    fill-opacity: 0.1;
+    filter: grayscale(1);
+}
+
+.link.state-background.render-polygon {
+    stroke-opacity: 0;
+    fill-opacity: 0.4;
+    filter: grayscale(0.8);
+}
+
+.link.state-reset.render-polygon {
+    stroke-opacity: 0;
+    fill-opacity: 0.2;
+    filter: none;
+}
+
+/* Semantic Interaction Classes */
+.interactive-element {
+    cursor: pointer;
+}
+
+.draggable-surface {
+    cursor: grab;
+}
+
+.draggable-surface.dragging-active {
+    cursor: grabbing;
+}
+
+/* Semantic Link Strength Classes */
+.link.strength-minimal {
+    stroke-width: 1px;
+}
+
+.link.strength-weak {
+    stroke-width: 2px;
+}
+
+.link.strength-moderate {
+    stroke-width: 4px;
+}
+
+.link.strength-strong {
+    stroke-width: 8px;
+}
+
+.link.strength-very-strong {
+    stroke-width: 12px;
+}
+
+.link.strength-maximum {
+    stroke-width: 25px;
+}
+
+/* Polygon mode links don't use stroke-width */
+.link.render-polygon.strength-minimal,
+.link.render-polygon.strength-weak,
+.link.render-polygon.strength-moderate,
+.link.render-polygon.strength-strong,
+.link.render-polygon.strength-very-strong,
+.link.render-polygon.strength-maximum {
+    stroke-width: 0;
+}
+
+/* CSS Custom Properties for Dynamic Colors */
+.priority-critical {
+    --priority-color: #dc2626;
+}
+
+.priority-high {
+    --priority-color: #f59e0b;
+}
+
+.priority-medium {
+    --priority-color: #3b82f6;
+}
+
+.priority-low {
+    --priority-color: #10b981;
+}
+
+.priority-unknown {
+    --priority-color: #6b7280;
+}
+
+.dynamic-bg {
+    background-color: var(--priority-color);
+}
+
+.dynamic-color {
+    color: var(--priority-color);
+}
+
+/* ============================================================================
    RESPONSIVE ADJUSTMENTS
    ============================================================================ */
 

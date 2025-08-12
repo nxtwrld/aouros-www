@@ -30,6 +30,13 @@
         return 'var(--color-success, #10b981)';
     }
 
+    function getPriorityClass(priority: number): string {
+        if (priority <= 2) return 'priority-critical';
+        if (priority <= 4) return 'priority-high';
+        if (priority <= 6) return 'priority-medium';
+        return 'priority-low';
+    }
+
     function getPriorityLabel(priority: number): string {
         if (priority <= 2) return $t('session.priority.critical');
         if (priority <= 4) return $t('session.priority.high');
@@ -55,8 +62,7 @@
 
 <div class="alert-card" class:compact use:bubble>
     <div class="alert-header">
-        <div class="priority-indicator" 
-             style="background-color: {getPriorityColor(alert.priority || 5)}">
+        <div class="priority-indicator {getPriorityClass(alert.priority || 5)} dynamic-bg">
         </div>
         <div class="alert-content">
             <div class="alert-text">{alert.text}</div>

@@ -8,7 +8,7 @@
     import { transformToSankeyData, calculateNodeSize } from './utils/sankeyDataTransformer';
     import { OPACITY, COLORS, NODE_SIZE, LINK_CONFIG, getLinkPathGenerator, calculateLinkWidth, applyParallelLinkSpacing, createEnhancedLinkGenerator } from './config/visual-config';
     import LinkTooltip from './LinkTooltip.svelte';
-    import { analysisActions, relatedActionsForSelectedLink, visualState } from '$lib/session/analysis-store';
+    import { analysisActions, relatedActionsForSelectedLink, visualState } from '$lib/session/stores/analysis-store';
     import SymptomNode from './nodes/SymptomNode.svelte';
     import DiagnosisNode from './nodes/DiagnosisNode.svelte';
     import TreatmentNode from './nodes/TreatmentNode.svelte';
@@ -50,13 +50,6 @@
     // Subscribe to unified visual state and apply styling
     $effect(() => {
         const currentVisualState = $visualState;
-        console.log('SankeyDiagram: Visual state changed:', {
-            hasActive: !!currentVisualState.activeState,
-            hasBackground: !!currentVisualState.backgroundState,
-            shouldAnimate: currentVisualState.shouldAnimateTrigger,
-            triggerType: currentVisualState.triggerItem?.type,
-            triggerId: currentVisualState.triggerItem?.id
-        });
         
         applyUnifiedVisualState(currentVisualState);
     });
@@ -208,11 +201,6 @@
         if (svg && sankeyData && container) {
             renderSankey();
             buildFocusableNodesList();
-            console.log('🎨 Full Sankey render triggered:', {
-                reason: 'data/svg/container change',
-                nodeCount: sankeyData.nodes?.length || 0,
-                linkCount: sankeyData.links?.length || 0
-            });
         }
     });
 
@@ -259,7 +247,7 @@
             .attr('height', '100%')
             .attr('viewBox', `0 0 ${width} ${height}`)
             .attr('preserveAspectRatio', 'xMidYMid meet')
-            .style('cursor', 'grab')
+            .classed('draggable-surface', true)
             .on('click', handleCanvasClick);
 
         // Enhanced zoom and pan for all devices
@@ -618,11 +606,10 @@
                 }
                 return linkPathGenerator(d);
             })
-            .style('stroke-width', (d: any) => {
-                // For polygon mode, don't use stroke-width (it's built into the path)
-                return LINK_CONFIG.RENDER_MODE === 'polygon' ? 0 : calculateLinkWidth(d.width || 2);
+            .classed('interactive-element', true)
+            .each(function(d: any) {
+                d3.select(this).classed(getLinkStrengthClass(d.width || 2), true);
             })
-            .style('cursor', 'pointer')
             .attr('data-relationship-type', (d: any) => d.type || 'default')
             .on('click', (event: MouseEvent, d: any) => handleLinkClick(event, d))
             .on('touchstart', (event: TouchEvent, d: any) => handleLinkClick(event, d))
@@ -642,7 +629,7 @@
             .attr('id', (d: any) => `node-${d.id}`)
             .attr('data-node-id', (d: any) => d.id)
             .attr('data-node-type', (d: any) => d.type)
-            .style('cursor', 'pointer');
+            .classed('interactive-element', true);
 
         // Node HTML content using foreignObject
         nodeEnter
@@ -653,7 +640,7 @@
             .attr('y', 0)
             .attr('width', htmlNodeWidth)
             .attr('height', (d: any) => d.y1! - d.y0!)
-            .style('cursor', 'pointer')
+            .classed('interactive-element', true)
             .html((d: any) => createNodeComponent(d))
             .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d))
             .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d))
@@ -738,8 +725,6 @@
         event.preventDefault();
         event.stopPropagation();
         
-        console.log('SankeyDiagram: Node clicked, using unified selection system', node);
-        
         // Use new unified selection system
         analysisActions.selectItem('node', node);
         
@@ -756,8 +741,6 @@
     function handleLinkClick(event: MouseEvent | TouchEvent, link: SankeyLink) {
         event.preventDefault();
         event.stopPropagation();
-        
-        console.log('SankeyDiagram: Link clicked, using unified selection system', link);
         
         // Use new unified selection system
         analysisActions.selectItem('link', link);
@@ -833,8 +816,6 @@
             svg.selectAll('.node-html')
                 .filter((d: any) => d.id === targetFocusedNodeId)
                 .classed('focused', true);
-                
-            console.log('🎯 Applied focus to node:', targetFocusedNodeId);
         }
     }
 
@@ -1004,8 +985,6 @@
     }
 
     function handleLinkHover(link: any, isEntering: boolean) {
-        console.log('handleLinkHover called:', { link: link?.type, isEntering });
-        
         // Use unified hover system
         if (!isEntering) {
             analysisActions.clearHover();
@@ -1015,23 +994,12 @@
                 svg.selectAll('.link.hovered').classed('hovered', false);
                 svg.selectAll('.node-html.hovered').classed('hovered', false);
                 
-                // Force reset all node states to default opacity
+                // Force reset all node states to default
                 svg.selectAll('.node-html')
-                    .classed('inactive', false)
-                    .classed('background-trigger', false)
-                    .classed('background-path', false)
-                    .classed('active-path', false)
-                    .style('opacity', null)
-                    .style('filter', null);
+                    .classed('inactive background-trigger background-path active-path', false);
                 
                 svg.selectAll('.link')
-                    .classed('inactive', false)
-                    .classed('background-trigger', false)
-                    .classed('background-path', false)
-                    .classed('active-path', false)
-                    .style('opacity', null)
-                    .style('stroke-opacity', null)
-                    .style('fill-opacity', null);
+                    .classed('inactive background-trigger background-path active-path', false);
             }
             return;
         }
@@ -1115,7 +1083,6 @@
                     unmount(component);
                 } catch (error) {
                     // Ignore unmount errors - component may already be unmounted
-                    console.debug('Node component already unmounted:', error);
                 }
             }
         });
@@ -1283,57 +1250,56 @@
             }
         }
         
-        // Apply focus styling
+        // Apply focus styling using semantic CSS classes
         svg.selectAll('.node')
-            .style('opacity', (d: any) => connectedNodeIds.has(d.id) ? OPACITY.FOCUS_ACTIVE : OPACITY.FOCUS_INACTIVE)
-            .style('filter', (d: any) => connectedNodeIds.has(d.id) ? 'none' : `grayscale(${OPACITY.GRAYSCALE_FILTER})`);
+            .classed('state-focus-active', (d: any) => connectedNodeIds.has(d.id))
+            .classed('state-focus-inactive', (d: any) => !connectedNodeIds.has(d.id));
+        
+        // Determine render mode class
+        const renderModeClass = LINK_CONFIG.RENDER_MODE === 'polygon' ? 'render-polygon' : 'render-stroke';
         
         svg.selectAll('.link')
-            .style('stroke-opacity', (d: any) => {
+            .classed(renderModeClass, true)
+            .classed('state-active', (d: any) => {
                 const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
                 const targetId = typeof d.target === 'object' ? d.target.id : d.target;
                 const linkId = `${sourceId}-${targetId}`;
-                // For polygon mode, stroke-opacity should be 0
-                return LINK_CONFIG.RENDER_MODE === 'polygon' ? 0 : 
-                    (connectedLinkIds.has(linkId) ? OPACITY.FOCUS_LINK_ACTIVE : OPACITY.FOCUS_LINK_INACTIVE);
+                return connectedLinkIds.has(linkId);
             })
-            .style('fill-opacity', (d: any) => {
+            .classed('state-inactive', (d: any) => {
                 const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
                 const targetId = typeof d.target === 'object' ? d.target.id : d.target;
                 const linkId = `${sourceId}-${targetId}`;
-                // For polygon mode, use fill-opacity instead of stroke-opacity
-                return LINK_CONFIG.RENDER_MODE === 'polygon' ? 
-                    (connectedLinkIds.has(linkId) ? OPACITY.FOCUS_LINK_ACTIVE : OPACITY.FOCUS_LINK_INACTIVE) : 0;
-            })
-            .style('filter', (d: any) => {
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                // Remove grayscale for connected links in focus mode
-                return connectedLinkIds.has(linkId) ? 'none' : 'grayscale(1)';
+                return !connectedLinkIds.has(linkId);
             });
     }
     
     function resetHighlighting() {
         if (!svg) return;
         
-        // Reset all nodes and links to default state
+        // Reset all nodes and links to default state using CSS classes
         svg.select('.node-group').selectAll('.node')
-            .style('opacity', OPACITY.RESET_NODE)
-            .style('filter', 'none');
+            .classed('state-focus-active state-focus-inactive state-path-active state-path-background state-inactive', false)
+            .classed('state-reset', true);
+        
+        // Determine render mode class
+        const renderModeClass = LINK_CONFIG.RENDER_MODE === 'polygon' ? 'render-polygon' : 'render-stroke';
         
         svg.select('.link-group').selectAll('.link')
-            .style('stroke-opacity', LINK_CONFIG.RENDER_MODE === 'polygon' ? 0 : OPACITY.RESET_LINK)
-            .style('fill-opacity', LINK_CONFIG.RENDER_MODE === 'polygon' ? OPACITY.RESET_LINK : 0);
+            .classed('state-active state-inactive state-background', false)
+            .classed(`state-reset ${renderModeClass}`, true);
     }
 
     function applyUnifiedVisualState(visualStateData: any) {
         if (!svg) {
-            console.log('applyUnifiedVisualState: No svg element');
+            //console.log('applyUnifiedVisualState: No svg element');
             return;
         }
         
-        console.log('applyUnifiedVisualState: Starting with state:', visualStateData);
+        //console.log('applyUnifiedVisualState: Starting with state:', visualStateData);
+        
+        // Determine render mode class for links
+        const renderModeClass = LINK_CONFIG.RENDER_MODE === 'polygon' ? 'render-polygon' : 'render-stroke';
         
         // Clear all existing classes and transitions
         svg.select('.link-group').selectAll('.link')
@@ -1343,6 +1309,7 @@
             .classed('background-trigger', false)
             .classed('background-path', false)
             .classed('inactive', false)
+            .classed('state-active state-inactive state-background state-reset', false)
             .interrupt(); // Stop any running animations
             
         svg.select('.node-group').selectAll('.node')
@@ -1351,7 +1318,8 @@
             .classed('active-path', false)
             .classed('background-trigger', false)
             .classed('background-path', false)
-            .classed('inactive', false);
+            .classed('inactive', false)
+            .classed('state-focus-active state-focus-inactive state-path-active state-path-background state-inactive state-reset', false);
             
         svg.selectAll('.node-html')
             .classed('connected-to-selected', false)
@@ -1374,15 +1342,16 @@
         const backgroundPathNodes = backgroundState?.path?.nodes || [];
         const backgroundPathLinks = backgroundState?.path?.links || [];
         
-        console.log('applyUnifiedVisualState: Path data:', {
+        /*console.log('applyUnifiedVisualState: Path data:', {
             activePathNodes,
             activePathLinks,
             triggerType: triggerItem?.type,
             triggerId: triggerItem?.id
-        });
+        });*/
         
         // Apply styling with priority: trigger > active path > background path > default
         svg.select('.link-group').selectAll('.link')
+            .classed(renderModeClass, true)
             .classed('selected', (d: any) => {
                 const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
                 const targetId = typeof d.target === 'object' ? d.target.id : d.target;
@@ -1421,9 +1390,36 @@
                 const isInActivePath = activePathLinks.includes(linkId);
                 const isInBackgroundPath = backgroundPathLinks.includes(linkId);
                 return !isTrigger && !isInActivePath && !isInBackgroundPath;
+            })
+            .classed('state-active', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
+                const isInActivePath = activePathLinks.includes(linkId);
+                return isTrigger || isInActivePath;
+            })
+            .classed('state-background', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                const isInActivePath = activePathLinks.includes(linkId);
+                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
+                const isInBackgroundPath = backgroundPathLinks.includes(linkId);
+                return !isTrigger && !isInActivePath && isInBackgroundPath;
+            })
+            .classed('state-inactive', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
+                const isInActivePath = activePathLinks.includes(linkId);
+                const isInBackgroundPath = backgroundPathLinks.includes(linkId);
+                return !isTrigger && !isInActivePath && !isInBackgroundPath;
             });
         
-        // Apply node styling
+        
+        // Apply node styling using CSS classes
         svg.select('.node-group').selectAll('.node')
             .classed('selected', (d: any) => {
                 const isSelected = triggerItem?.type === 'node' && triggerItem.id === d.id;
@@ -1445,20 +1441,22 @@
             .classed('in-path', (d: any) => {
                 return activePathNodes.includes(d.id) || backgroundPathNodes.includes(d.id);
             })
-            .style('opacity', (d: any) => {
+            .classed('state-path-active', (d: any) => {
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                return isTrigger || isInActivePath;
+            })
+            .classed('state-path-background', (d: any) => {
                 const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
                 const isInActivePath = activePathNodes.includes(d.id);
                 const isInBackgroundPath = backgroundPathNodes.includes(d.id);
-                
-                if (isTrigger) {
-                    return 1.0; // Trigger node always full opacity
-                } else if (isInActivePath) {
-                    return 1.0; // Active path nodes full opacity
-                } else if (isInBackgroundPath) {
-                    return 0.6; // Background path nodes medium opacity
-                } else {
-                    return 0.3; // Other nodes more visible (was 0.2)
-                }
+                return !isTrigger && !isInActivePath && isInBackgroundPath;
+            })
+            .classed('state-inactive', (d: any) => {
+                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
+                const isInActivePath = activePathNodes.includes(d.id);
+                const isInBackgroundPath = backgroundPathNodes.includes(d.id);
+                return !isTrigger && !isInActivePath && !isInBackgroundPath;
             });
             
         svg.selectAll('.node-html')
@@ -1516,14 +1514,9 @@
                 const isAnimatedLink = linkId === triggerItem.id;
                 
                 if (isAnimatedLink) {
-                    // Clear conflicting inline styles and add animation class
+                    // Add animation class
                     d3.select(this)
-                        .classed('animate-pulse', true)
-                        .style('fill', null)           // Clear inline fill color
-                        .style('fill-opacity', null)   // Clear inline fill opacity
-                        .style('stroke', null)         // Clear inline stroke color  
-                        .style('stroke-opacity', null) // Clear inline stroke opacity
-                        .style('filter', null);        // Clear inline filter
+                        .classed('animate-pulse', true);
                 } else {
                     d3.select(this).classed('animate-pulse', false);
                 }
@@ -1533,56 +1526,40 @@
             svg.select('.link-group').selectAll('.link').classed('animate-pulse', false);
         }
         
-        console.log('applyUnifiedVisualState: Applied styling for', {
+        /*console.log('applyUnifiedVisualState: Applied styling for', {
             activeNodes: activePathNodes.length,
             activeLinks: activePathLinks.length,
             backgroundNodes: backgroundPathNodes.length,
             backgroundLinks: backgroundPathLinks.length,
             shouldAnimate: shouldAnimateTrigger
-        });
+        });*/
     }
     
     function resetToDefault() {
         if (!svg) return;
         
-        // Clear all visual state classes from links and reset opacity
+        // Determine render mode class
+        const renderModeClass = LINK_CONFIG.RENDER_MODE === 'polygon' ? 'render-polygon' : 'render-stroke';
+        
+        // Clear all visual state classes from links and apply reset state
         svg.select('.link-group').selectAll('.link')
-            .classed('active-path', false)
-            .classed('background-trigger', false)
-            .classed('background-path', false)
-            .classed('inactive', false)
-            .classed('hovered', false)
-            .style('opacity', null)
-            .style('stroke-opacity', null)
-            .style('fill-opacity', null)
+            .classed('active-path background-trigger background-path inactive hovered state-active state-inactive state-background', false)
+            .classed(`state-reset ${renderModeClass}`, true)
             .interrupt();
             
-        // Clear all visual state classes from SVG nodes and reset opacity
+        // Clear all visual state classes from SVG nodes and apply reset state
         svg.select('.node-group').selectAll('.node')
-            .classed('active-path', false)
-            .classed('background-trigger', false)
-            .classed('background-path', false)
-            .classed('inactive', false)
-            .classed('connected-to-selected', false)
-            .style('opacity', null);
+            .classed('active-path background-trigger background-path inactive connected-to-selected state-focus-active state-focus-inactive state-path-active state-path-background state-inactive', false)
+            .classed('state-reset', true);
             
-        // Clear all visual state classes from HTML nodes and reset opacity
+        // Clear all visual state classes from HTML nodes
         svg.selectAll('.node-html')
-            .classed('active-path', false)
-            .classed('background-trigger', false)
-            .classed('background-path', false)
-            .classed('inactive', false)
-            .classed('hovered', false)
-            .classed('connected-to-selected', false)
-            .style('opacity', null)
-            .style('filter', null);
+            .classed('active-path background-trigger background-path inactive hovered connected-to-selected', false);
     }
     
     
 
     function handleNodeHover(nodeId: string, isEntering: boolean) {
-        console.log('handleNodeHover called:', { nodeId, isEntering });
-        
         if (!svg) return;
         
         // Use new unified hover system
@@ -1592,23 +1569,12 @@
             svg.selectAll('.node-html.hovered').classed('hovered', false);
             svg.selectAll('.link.hovered').classed('hovered', false);
             
-            // Force reset all node states to default opacity
+            // Force reset all node states to default
             svg.selectAll('.node-html')
-                .classed('inactive', false)
-                .classed('background-trigger', false)
-                .classed('background-path', false)
-                .classed('active-path', false)
-                .style('opacity', null)  // Remove any inline opacity styles
-                .style('filter', null);   // Remove any inline filter styles
+                .classed('inactive background-trigger background-path active-path', false);
             
             svg.selectAll('.link')
-                .classed('inactive', false)
-                .classed('background-trigger', false)
-                .classed('background-path', false)
-                .classed('active-path', false)
-                .style('opacity', null)
-                .style('stroke-opacity', null)
-                .style('fill-opacity', null);
+                .classed('inactive background-trigger background-path active-path', false);
             
             return;
         }
@@ -1619,13 +1585,8 @@
         ].flat();
         const nodeObject = allNodeArrays.find(n => n.id === nodeId);
         
-        console.log('Found node object:', { nodeObject, totalNodes: allNodeArrays.length });
-        
         if (nodeObject) {
-            console.log('Calling analysisActions.hoverItem with node:', nodeObject);
             analysisActions.hoverItem('node', nodeObject);
-        } else {
-            console.log('Node object not found for ID:', nodeId);
         }
     }
 
@@ -1650,13 +1611,6 @@
         if (significantWidthChange || significantHeightChange) {
             // Debounce expensive recalculation for significant changes
             resizeDebounceTimer = setTimeout(() => {
-                console.log('📐 Significant resize detected, triggering re-render:', {
-                    oldSize: { width, height },
-                    newSize: { width: newWidth, height: newHeight },
-                    widthChange: Math.abs(newWidth - width),
-                    heightChange: Math.abs(newHeight - height)
-                });
-                
                 // This will trigger the main effect to re-render
                 width = newWidth;
                 height = newHeight;
@@ -1670,6 +1624,20 @@
         return text.length > maxLength ? text.substring(0, maxLength - 3) + '...' : text;
     }
 
+    /**
+     * Map link width values to semantic strength classes
+     */
+    function getLinkStrengthClass(width: number): string {
+        const calculatedWidth = calculateLinkWidth(width || 2);
+        
+        if (calculatedWidth <= 1) return 'strength-minimal';
+        if (calculatedWidth <= 2) return 'strength-weak';
+        if (calculatedWidth <= 4) return 'strength-moderate';
+        if (calculatedWidth <= 8) return 'strength-strong';
+        if (calculatedWidth <= 12) return 'strength-very-strong';
+        return 'strength-maximum';
+    }
+
     // Zoom event handlers
     function handleZoom(event: d3.D3ZoomEvent<SVGSVGElement, unknown>) {
         currentZoomTransform = event.transform;
@@ -1681,13 +1649,13 @@
 
     function handleZoomStart() {
         if (svg) {
-            svg.style('cursor', 'grabbing');
+            svg.classed('dragging-active', true);
         }
     }
 
     function handleZoomEnd() {
         if (svg) {
-            svg.style('cursor', 'grab');
+            svg.classed('dragging-active', false);
         }
     }
 

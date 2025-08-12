@@ -7,7 +7,7 @@
     import NodeActions from '../shared/NodeActions.svelte';
     import SymptomNodeComponent from '../nodes/SymptomNode.svelte';
     import type { DiagnosisNode, ActionNode } from '../types/visualization';
-    import { questionsForNode, alertsForNode, analysisActions } from '$lib/session/analysis-store';
+    import { questionsForNode, alertsForNode, analysisActions } from '$lib/session/stores/analysis-store';
 
     interface Props {
         diagnosis: DiagnosisNode;
@@ -38,6 +38,13 @@
         return 'var(--color-success, #10b981)';
     }
 
+    function getPriorityClass(priority: number): string {
+        if (priority <= 2) return 'priority-critical';
+        if (priority <= 4) return 'priority-high';
+        if (priority <= 6) return 'priority-medium';
+        return 'priority-low';
+    }
+
     function getSupportingSymptoms(diagnosisId: string): any[] {
         if (!allNodes?.symptoms) return [];
         
@@ -51,7 +58,6 @@
     }
 
     function handleSupportingSymptomClick(symptomId: string) {
-        console.log('🔗 DiagnosisDetails: Supporting symptom clicked:', symptomId);
         onrelationshipNodeClick?.(symptomId);
     }
 
@@ -79,8 +85,7 @@
         <div class="session-node-type">
             <span class="session-type-label">{$t('session.node-types.diagnosis')}</span>
             <span 
-                class="session-priority-badge"
-                style="background-color: {getPriorityColor(diagnosis.priority || 5)}"
+                class="session-priority-badge {getPriorityClass(diagnosis.priority || 5)} dynamic-bg"
             >
                 {getPriorityLabel(diagnosis.priority || 5)}
             </span>

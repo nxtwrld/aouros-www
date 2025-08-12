@@ -3,7 +3,7 @@
     import AlertsSection from './shared/AlertsSection.svelte';
     import type { ActionNode } from './types/visualization';
     import { t } from '$lib/i18n';
-    import { analysisActions } from '$lib/session/analysis-store';
+    import { analysisActions } from '$lib/session/stores/analysis-store';
 
     interface Props {
         questions?: ActionNode[];

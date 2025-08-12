@@ -3,7 +3,7 @@
     import { slide } from 'svelte/transition';
     import type { ActionNode } from '../types/visualization';
     import { t } from '$lib/i18n';
-    import { analysisActions, nodeLookup } from '$lib/session/analysis-store';
+    import { analysisActions, nodeLookup } from '$lib/session/stores/analysis-store';
 
     interface Props {
         question: ActionNode;
@@ -31,6 +31,13 @@
         if (priority <= 4) return 'var(--color-warning, #f59e0b)';
         if (priority <= 6) return 'var(--color-info, #3b82f6)';
         return 'var(--color-success, #10b981)';
+    }
+
+    function getPriorityClass(priority: number): string {
+        if (priority <= 2) return 'priority-critical';
+        if (priority <= 4) return 'priority-high';
+        if (priority <= 6) return 'priority-medium';
+        return 'priority-low';
     }
 
     function getPriorityLabel(priority: number): string {
@@ -64,8 +71,7 @@
         onclick={handleToggleExpanded}
     >
         <div class="header-content">
-            <div class="priority-indicator" 
-                 style="background-color: {getPriorityColor(question.priority || 5)}">
+            <div class="priority-indicator {getPriorityClass(question.priority || 5)} dynamic-bg">
             </div>
             <div class="question-info">
                 <span class="question-text">{question.text}</span>

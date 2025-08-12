@@ -8,7 +8,7 @@
         analysisActions, 
         questionsForSelectedLink, 
         alertsForSelectedLink 
-    } from '$lib/session/analysis-store';
+    } from '$lib/session/stores/analysis-store';
     import SymptomNodeComponent from '../nodes/SymptomNode.svelte';
     import DiagnosisNodeComponent from '../nodes/DiagnosisNode.svelte';
     import TreatmentNodeComponent from '../nodes/TreatmentNode.svelte';
@@ -34,21 +34,10 @@
 
     // Set the selected link in the store when component receives a new link
     $effect(() => {
-        console.log('LinkDetails: Setting selected link', link);
         analysisActions.selectLink(link);
     });
 
-    // Debug the derived stores
-    $effect(() => {
-        console.log('LinkDetails: questionsForSelectedLink count:', $questionsForSelectedLink.length);
-        console.log('LinkDetails: alertsForSelectedLink count:', $alertsForSelectedLink.length);
-        if ($questionsForSelectedLink.length > 0) {
-            console.log('LinkDetails: First question:', $questionsForSelectedLink[0]);
-        }
-        if ($alertsForSelectedLink.length > 0) {
-            console.log('LinkDetails: First alert:', $alertsForSelectedLink[0]);
-        }
-    });
+    // Reactive stores auto-update without debug logs
 
     // Use reactive stores for questions and alerts - these will update automatically
     // when the selected link changes in the store
@@ -104,7 +93,6 @@
     }
 
     function handleNodeClick(nodeId: string) {
-        console.log('🔗 LinkDetails: Node clicked:', nodeId);
         onnodeSelect?.(nodeId);
     }
 

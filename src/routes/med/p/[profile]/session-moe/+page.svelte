@@ -4,7 +4,8 @@
     import SessionMoeVisualizer from '$components/session/SessionMoeVisualizer.svelte';
     import type { SessionAnalysis } from '$components/session/types/visualization';
     import { initializeSessionAnalysis } from '$lib/session/analysis-integration';
-    import { analysisActions, currentSession, isLoading } from '$lib/session/analysis-store';
+    import { analysisActions, currentSession, isLoading } from '$lib/session/stores/analysis-store';
+    import { unifiedSessionActions } from '$lib/session/stores/unified-session-store';
     
     // Import sample data for development
     import sampleAnalysis from '$components/session/sample.analysis.1.cz.json';
@@ -16,10 +17,14 @@
     onMount(async () => {
         // For now, we'll use the sample data
         // In production, this would load real session data
-        console.log('Loading MoE session analysis for profile:', profileId);
+        // Loading MoE session analysis for profile (removed excessive logging)
         
         // Initialize the analysis store directly - skip integration for now since this is sample data
         analysisActions.loadSession(sessionData);
+        
+        // Since we have mock data, set the session state to Paused
+        // This will show the AudioButton in the header with "Continue" text
+        unifiedSessionActions.loadSessionWithData(sessionData);
         
         // Optionally connect to real-time updates (but sample data won't have a session emitter)
         // await initializeSessionAnalysis(sessionData.sessionId, sessionData);

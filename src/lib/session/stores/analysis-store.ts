@@ -237,22 +237,7 @@ export const relationshipIndex: Readable<RelationshipIndex | null> = derived(
       index.forward.set(nodeId, updatedRels);
     }
 
-    // Debug logging for relationship index
-    console.log("🔍 Relationship Index Debug:");
-    console.log(`  Nodes indexed: ${index.nodeTypes.size}`);
-    console.log(`  Forward relationships: ${index.forward.size}`);
-    console.log(`  Reverse relationships: ${index.reverse.size}`);
-    
-    // Log specific entries for debugging
-    const diagHypothyroidism = "diag_hypothyroidism";
-    if (index.reverse.has(diagHypothyroidism)) {
-      console.log(`  ${diagHypothyroidism} reverse (symptoms supporting):`, 
-        Array.from(index.reverse.get(diagHypothyroidism) || new Set()));
-    }
-    if (index.forward.has(diagHypothyroidism)) {
-      console.log(`  ${diagHypothyroidism} forward (treatments required):`, 
-        Array.from(index.forward.get(diagHypothyroidism) || new Set()));
-    }
+    // Debug logging removed (use logger.session.debug below)
 
     logger.session.debug("Built relationship index", {
       nodeCount: index.nodeTypes.size,
@@ -363,11 +348,6 @@ export const relatedActionsForSelectedLink = derived(
   [currentSession, selectedLinkStore],
   ([$session, $selectedLink]) => {
     if (!$session?.nodes?.actions || !$selectedLink) {
-      console.log("relatedActionsForSelectedLink: No session or link", {
-        hasSession: !!$session,
-        hasActions: !!$session?.nodes?.actions,
-        hasLink: !!$selectedLink,
-      });
       return [];
     }
 
@@ -378,11 +358,7 @@ export const relatedActionsForSelectedLink = derived(
     const targetId =
       typeof targetNode === "object" ? targetNode.id : targetNode;
 
-    console.log("relatedActionsForSelectedLink: Processing link", {
-      sourceId,
-      targetId,
-      linkType: $selectedLink.type,
-    });
+    // removed debug log
 
     const actions = $session.nodes.actions;
 
@@ -396,21 +372,12 @@ export const relatedActionsForSelectedLink = derived(
         (rel) => rel.nodeId === sourceId || rel.nodeId === targetId,
       );
 
-      if (isRelated) {
-        console.log("Found related action:", {
-          actionId: action.id,
-          actionType: action.actionType,
-          text: action.text?.substring(0, 50),
-        });
-      }
+      // removed debug log per request
 
       return isRelated;
     });
 
-    console.log(
-      "relatedActionsForSelectedLink: Found actions",
-      relatedActions.length,
-    );
+    // removed debug log
 
     // Sort by priority (1 = highest priority)
     return relatedActions.sort(
@@ -603,7 +570,6 @@ export function calculatePathFromLink(
   // Get the relationship index for efficient lookups
   const index = get(relationshipIndex);
   if (!index) {
-    console.log("No relationship index available for link path calculation");
     return {
       trigger: { type: "link", id: linkId, item: link },
       path: { nodes: [sourceId, targetId], links: [linkId] },
@@ -622,9 +588,7 @@ export function calculatePathFromLink(
   const sourceType = index.nodeTypes.get(sourceId);
   const targetType = index.nodeTypes.get(targetId);
 
-  console.log(
-    `Building focused path from link: ${sourceType} -> ${targetType}`,
-  );
+  // removed debug log
 
   // For link hover, we want to show only the medical reasoning path that includes this specific link
   // Not all paths from the source node, but the path that this link is part of
@@ -639,9 +603,7 @@ export function calculatePathFromLink(
       if (rel.targetType === "treatment" && rel.relationship === "requires") {
         pathNodes.add(rel.targetId);
         pathLinks.add(`${targetId}-${rel.targetId}`);
-        console.log(
-          `Added treatment ${rel.targetId} for diagnosis ${targetId}`,
-        );
+        // removed debug log
       }
     }
   } else if (sourceType === "diagnosis" && targetType === "treatment") {
@@ -659,15 +621,13 @@ export function calculatePathFromLink(
       ) {
         pathNodes.add(rel.sourceId);
         pathLinks.add(`${rel.sourceId}-${sourceId}`);
-        console.log(
-          `Added symptom ${rel.sourceId} supporting diagnosis ${sourceId}`,
-        );
+        // removed debug log
       }
     }
   } else if (sourceType === "symptom" && targetType === "treatment") {
     // Direct symptom to treatment (less common, but possible)
     // Show just the direct relationship
-    console.log("Direct symptom to treatment relationship");
+    // removed debug log
   } else if (sourceType === "treatment" && targetType === "diagnosis") {
     // Reverse treatment -> diagnosis relationship
     // Show: symptoms supporting this diagnosis -> this diagnosis -> this treatment
@@ -683,9 +643,7 @@ export function calculatePathFromLink(
       ) {
         pathNodes.add(rel.sourceId);
         pathLinks.add(`${rel.sourceId}-${targetId}`);
-        console.log(
-          `Added symptom ${rel.sourceId} supporting diagnosis ${targetId}`,
-        );
+        // removed debug log
       }
     }
   } else if (sourceType === "diagnosis" && targetType === "symptom") {
@@ -698,17 +656,15 @@ export function calculatePathFromLink(
       if (rel.targetType === "treatment" && rel.relationship === "requires") {
         pathNodes.add(rel.targetId);
         pathLinks.add(`${sourceId}-${rel.targetId}`);
-        console.log(
-          `Added treatment ${rel.targetId} for diagnosis ${sourceId}`,
-        );
+        // removed debug log
       }
     }
   } else if (sourceType === "treatment" && targetType === "symptom") {
     // Treatment -> Symptom (treating symptom directly)
     // This might be rare, just show the direct relationship
-    console.log("Direct treatment to symptom relationship");
+    // removed debug log
   } else {
-    console.log(`Unhandled link type: ${sourceType} -> ${targetType}`);
+    // removed debug log
   }
 
   logger.session.debug("Calculated path from link", {
@@ -734,10 +690,9 @@ export function calculatePathFromNode(
   nodeId: string,
   sessionData: SessionAnalysis | null,
 ): PathState {
-  console.log("calculatePathFromNode starting:", { nodeId });
+  // removed debug log
 
   if (!sessionData?.nodes) {
-    console.log("No session data available");
     return {
       trigger: { type: "node", id: nodeId, item: null },
       path: { nodes: [nodeId], links: [] },
@@ -747,7 +702,6 @@ export function calculatePathFromNode(
   // Get the relationship index for efficient lookups
   const index = get(relationshipIndex);
   if (!index) {
-    console.log("No relationship index available");
     return {
       trigger: { type: "node", id: nodeId, item: null },
       path: { nodes: [nodeId], links: [] },
@@ -758,7 +712,7 @@ export function calculatePathFromNode(
   const pathLinks = new Set<string>();
   pathNodes.add(nodeId);
 
-  console.log("Building medical reasoning path using Sankey-compatible logic");
+  // removed debug log
   
   // Create a node map for quick lookup
   const nodeMap = new Map<string, any>();
@@ -862,7 +816,7 @@ export function calculatePathFromNode(
             if (sourceNodeId && sourceNodeId !== targetDiagnosisId) {
               const linkKey = `${sourceNodeId}-${targetDiagnosisId}`;
               allSankeyLinks.add(linkKey);
-              console.log(`Added investigative pathway link to Sankey links: ${sourceNodeId} -> ${targetDiagnosisId} (via ${action.id})`);
+              // removed debug log
             }
           }
         }
@@ -870,17 +824,16 @@ export function calculatePathFromNode(
     }
   }
 
-  console.log(`Total Sankey-compatible links available: ${allSankeyLinks.size}`);
+  // removed debug log
   
   // Build medical reasoning path based on starting node type
   const startingNodeType = index.nodeTypes.get(nodeId);
-  console.log(`Building medical reasoning path for ${startingNodeType}: ${nodeId}`);
   
   if (startingNodeType === 'treatment') {
     // Treatment can be connected in two ways:
     // 1. diagnosis → treatment (normal: diagnosis requires treatment)
     // 2. diagnosis → treatment (investigative: diagnosis investigated via treatment)
-    console.log('Following treatment connections (both directions)');
+    // removed debug log
     
     // Find diagnoses connected to this treatment (incoming links)
     for (const linkKey of allSankeyLinks) {
@@ -888,7 +841,7 @@ export function calculatePathFromNode(
       if (target === nodeId && index.nodeTypes.get(source) === 'diagnosis') {
         pathNodes.add(source);
         pathLinks.add(linkKey);
-        console.log(`Diagnosis links to treatment: ${source} -> ${target}`);
+        // removed debug log
         
         // Find symptoms supporting these diagnoses
         for (const symptomLinkKey of allSankeyLinks) {
@@ -896,7 +849,7 @@ export function calculatePathFromNode(
           if (symTarget === source && index.nodeTypes.get(symSource) === 'symptom') {
             pathNodes.add(symSource);
             pathLinks.add(symptomLinkKey);
-            console.log(`Diagnosis supported by symptom: ${symSource} -> ${symTarget}`);
+            // removed debug log
           }
         }
       }
@@ -908,7 +861,7 @@ export function calculatePathFromNode(
       if (source === nodeId && index.nodeTypes.get(target) === 'diagnosis') {
         pathNodes.add(target);
         pathLinks.add(linkKey);
-        console.log(`Treatment links to diagnosis: ${source} -> ${target}`);
+        // removed debug log
         
         // Find symptoms supporting these diagnoses
         for (const symptomLinkKey of allSankeyLinks) {
@@ -916,7 +869,7 @@ export function calculatePathFromNode(
           if (symTarget === target && index.nodeTypes.get(symSource) === 'symptom') {
             pathNodes.add(symSource);
             pathLinks.add(symptomLinkKey);
-            console.log(`Diagnosis supported by symptom: ${symSource} -> ${symTarget}`);
+            // removed debug log
           }
         }
       }
@@ -924,7 +877,7 @@ export function calculatePathFromNode(
     
   } else if (startingNodeType === 'diagnosis') {
     // Diagnosis → Symptoms + Treatments
-    console.log('Following diagnosis → symptoms + treatments path');
+    // removed debug log
     
     // Find symptoms supporting this diagnosis
     for (const linkKey of allSankeyLinks) {
@@ -932,7 +885,7 @@ export function calculatePathFromNode(
       if (target === nodeId && index.nodeTypes.get(source) === 'symptom') {
         pathNodes.add(source);
         pathLinks.add(linkKey);
-        console.log(`Diagnosis supported by symptom: ${source} -> ${target}`);
+        // removed debug log
       }
     }
     
@@ -942,7 +895,7 @@ export function calculatePathFromNode(
       if (source === nodeId && index.nodeTypes.get(target) === 'treatment') {
         pathNodes.add(target);
         pathLinks.add(linkKey);
-        console.log(`Diagnosis requires treatment: ${source} -> ${target}`);
+        // removed debug log
       }
     }
     
@@ -955,13 +908,13 @@ export function calculatePathFromNode(
         pathNodes.add(source);
         pathNodes.add(target);
         pathLinks.add(linkKey);
-        console.log(`Investigative pathway: ${source} -> ${target}`);
+        // removed debug log
       }
     }
     
   } else if (startingNodeType === 'symptom') {
     // Symptom → Diagnoses → Treatments
-    console.log('Following symptom → diagnoses → treatments path');
+    // removed debug log
     
     // Step 1: Find diagnoses supported by this symptom
     for (const linkKey of allSankeyLinks) {
@@ -969,7 +922,7 @@ export function calculatePathFromNode(
       if (source === nodeId && index.nodeTypes.get(target) === 'diagnosis') {
         pathNodes.add(target);
         pathLinks.add(linkKey);
-        console.log(`Symptom supports diagnosis: ${source} -> ${target}`);
+        // removed debug log
         
         // Step 2: Find treatments for these diagnoses
         for (const treatmentLinkKey of allSankeyLinks) {
@@ -977,16 +930,14 @@ export function calculatePathFromNode(
           if (treatSource === target && index.nodeTypes.get(treatTarget) === 'treatment') {
             pathNodes.add(treatTarget);
             pathLinks.add(treatmentLinkKey);
-            console.log(`Diagnosis requires treatment: ${treatSource} -> ${treatTarget}`);
+            // removed debug log
           }
         }
       }
     }
   }
 
-  console.log(
-    `Completed path calculation for ${startingNodeType}: ${pathNodes.size} nodes, ${pathLinks.size} links`,
-  );
+  // removed debug log
 
   const nodeItem =
     sessionData.nodes?.symptoms?.find((n) => n.id === nodeId) ||
@@ -1259,7 +1210,6 @@ export const analysisActions = {
   },
 
   hoverItem: (type: "link" | "node", item: SankeyLink | any | null) => {
-    console.log("hoverItem called:", { type, item });
 
     if (!item) {
       hoveredState.set(null);
@@ -1267,10 +1217,6 @@ export const analysisActions = {
     }
 
     const currentSession = get(analysisStore).currentSession;
-    console.log("Current session for hover:", {
-      hasSession: !!currentSession,
-      sessionId: currentSession?.sessionId,
-    });
 
     if (type === "link") {
       const pathState = calculatePathFromLink(
@@ -1279,15 +1225,7 @@ export const analysisActions = {
       );
       hoveredState.set(pathState);
     } else {
-      console.log("Calling calculatePathFromNode for node:", item.id);
       const pathState = calculatePathFromNode(item.id, currentSession);
-      console.log("Path calculation result:", {
-        trigger: pathState.trigger,
-        pathNodes: pathState.path.nodes,
-        pathLinks: pathState.path.links,
-        nodeCount: pathState.path.nodes.length,
-        linkCount: pathState.path.links.length,
-      });
       hoveredState.set(pathState);
     }
   },

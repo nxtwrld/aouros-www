@@ -17,6 +17,7 @@ import type { ChatContextResult } from "$lib/context/integration/shared/chat-con
 import { chatMCPToolWrapper } from "./mcp-tool-wrapper";
 import user from "$lib/user";
 import { profile } from "$lib/profiles";
+import { logger } from "$lib/logging/logger";
 
 export class ChatManager {
   private clientService: ChatClientService;
@@ -259,15 +260,12 @@ export class ChatManager {
     // Don't auto-initialize chat on profile switch - only initialize when chat is actually opened
     // If we don't have a context yet, just return - chat will initialize when opened
     if (!state.context) {
-      console.log(
-        `Profile switch to ${data.profileName}, but chat not initialized yet`,
-      );
       return;
     }
 
     // If switching to the same profile, no action needed
     if (state.context.currentProfileId === data.profileId) {
-      console.log(`Already on profile ${data.profileId}, no switch needed`);
+      logger.namespace("Chat").debug("Already on current profile, no switch needed", { profileId: data.profileId });
       return;
     }
 
@@ -288,7 +286,7 @@ export class ChatManager {
     // Get current profile data from store and update context
     const currentProfile = profile.get();
     if (currentProfile && currentProfile.id === data.profileId) {
-      console.log(`Switching chat context to profile: ${data.profileName}`);
+      logger.namespace("Chat").info("Switching chat context to profile", { profileName: data.profileName, profileId: data.profileId });
       
       // Create new context for the switched profile using profile store data
       const newContext = this.createContextFromProfileData(
@@ -399,7 +397,7 @@ export class ChatManager {
 
     // Health context will be available through the profile context system
     if (currentProfile.health) {
-      console.log("Health context available for chat initialization", {
+      logger.namespace("Chat").debug("Health context available for chat initialization", {
         hasHealthData: true,
         healthDocumentId: currentProfile.healthDocumentId,
       });

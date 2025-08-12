@@ -6,12 +6,6 @@ import { getNodeColor, getLinkColor, NODE_SIZE } from '../config/visual-config';
  * Handles embedded relationships and creates proper node/link structures
  */
 export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData {
-    console.log('Transforming session data:', {
-        hasNodes: !!sessionData.nodes,
-        symptoms: sessionData.nodes?.symptoms?.length || 0,
-        diagnoses: sessionData.nodes?.diagnoses?.length || 0,
-        treatments: sessionData.nodes?.treatments?.length || 0
-    });
 
     const nodes: SankeyNode[] = [];
     const links: SankeyLink[] = [];
@@ -113,7 +107,6 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
         relationships.forEach((rel: any) => {
             const targetNode = nodeMap.get(rel.nodeId);
             if (!targetNode) {
-                console.log(`Target node not found: ${rel.nodeId} for source ${sourceNode.id}`);
                 return;
             }
             
@@ -127,25 +120,23 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
                     ['supports', 'suggests', 'indicates', 'confirms'].includes(rel.relationship)) {
                     shouldCreateLink = true;
                     linkDirection = 'forward';
-                    console.log(`Creating symptom->diagnosis link: ${sourceNode.id} -> ${targetNode.id} (${rel.relationship})`);
+                    // creating symptom->diagnosis link
                 } else if (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment' && 
                           ['requires', 'treats', 'manages'].includes(rel.relationship)) {
                     shouldCreateLink = true;
                     linkDirection = 'forward';
-                    console.log(`Creating diagnosis->treatment link: ${sourceNode.id} -> ${targetNode.id} (${rel.relationship})`);
+                    // creating diagnosis->treatment link
                 } else if (sourceNode.type === 'treatment' && targetNode.type === 'diagnosis' && 
                           ['investigates', 'clarifies', 'explores'].includes(rel.relationship)) {
                     // Investigation relationships: reverse the link direction to maintain left-to-right flow
                     // Instead of treatment->diagnosis, create diagnosis->treatment for proper visual flow
                     shouldCreateLink = true;
                     linkDirection = 'investigation';
-                    console.log(`Creating reversed investigation link: ${targetNode.id} -> ${sourceNode.id} (${rel.relationship})`);
+                    // reversed investigation link for visual flow
                 }
             }
             
-            if (!shouldCreateLink) {
-                console.log(`Skipped link: ${sourceNode.type}(${sourceNode.id}) -> ${targetNode.type}(${targetNode.id}), relationship: ${rel.relationship}, direction: ${rel.direction}`);
-            }
+            // skip creating link when not applicable
             
             if (shouldCreateLink) {
                 // For investigation relationships, reverse source and target to maintain visual flow
@@ -176,7 +167,7 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
                     };
                     
                     links.push(link);
-                    console.log(`Created link: ${actualSource} -> ${actualTarget} (${rel.relationship})`);
+                    // created link
                 }
             }
         });
@@ -236,7 +227,7 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
                                 reasoning: `Investigative pathway via ${action.id}`
                             };
                             links.push(link);
-                            console.log(`Creating investigative pathway link: ${sourceNodeId} -> ${targetDiagnosisId} (via ${action.id})`);
+                            // creating investigative pathway link
                         }
                     }
                 }
@@ -246,21 +237,7 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
 
     // Remove any cycles that might have been created by bidirectional relationships
     const finalLinks = removeCycles(links, nodes);
-    console.log(`Cycle removal: ${links.length} -> ${finalLinks.length} links`);
-
-    console.log('Transformation complete:', {
-        nodeCount: nodes.length,
-        linkCount: finalLinks.length,
-        nodeTypes: nodes.map(n => n.type),
-        nodeValues: nodes.map(n => ({ 
-            id: n.id, 
-            type: n.type, 
-            priority: n.priority, 
-            confidence: n.confidence, 
-            value: n.value 
-        })),
-        linksDetail: finalLinks.map(l => `${l.source} -> ${l.target} (${l.value})`)
-    });
+    // cycle removal summary omitted in production logs
 
     return {
         nodes,

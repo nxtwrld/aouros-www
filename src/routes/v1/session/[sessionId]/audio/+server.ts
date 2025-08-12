@@ -5,7 +5,7 @@ import {
   updateAnalysis,
   setAnalysisInProgress,
 } from "$lib/session/manager";
-import { transcribeAudioChunk } from "$lib/session/realtime-transcription";
+import { transcribeAudioChunk } from "$lib/session/transport/realtime-transcription";
 import type { PartialTranscript } from "$lib/session/manager";
 import OpenAI from "openai";
 import {
@@ -422,7 +422,7 @@ async function runFallbackAnalysis(sessionId: string) {
     // Use existing analysis system
     console.log("🔍 Importing realtime analysis module...");
     const { analyzeTranscriptionRealtime } = await import(
-      "$lib/session/realtime-analysis"
+      "$lib/session-deprecated/realtime-analysis"
     );
 
     // Get doctor feedback context for AI learning

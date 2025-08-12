@@ -1,6 +1,6 @@
 import type { FunctionDefinition } from "@langchain/core/language_models/base";
 import { error } from "@sveltejs/kit";
-import transcript from "$lib/session/session.transcript";
+import transcript from "./session.transcript";
 import { DIAGNOSIS_CONFIGS } from "$lib/configurations/session.diagnosis";
 import tags from "$lib/configurations/tags";
 import propertiesDefition from "$data/lab.properties.defaults.json";
@@ -12,7 +12,7 @@ import { sleep } from "$lib/utils";
 import { ANALYZE_STEPS as Types } from "$lib/types.d";
 import { DEBUG_CONVERSATION } from "$env/static/private";
 import { logger } from "$lib/logging/logger";
-import { getSessionAnalysisContext } from "./manager";
+import { getSessionAnalysisContext } from "$lib/session/manager";
 
 // Select diagnosis configuration based on environment variable
 const PROMPT_CONFIG = "enhanced"; // or 'fast' or 'enhanced'
