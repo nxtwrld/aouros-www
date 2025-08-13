@@ -69,7 +69,10 @@
 		selectedPanel
 	}
 
-	export const selectTab = tabContext.selectByIndex;
+	// Export selectTab function to component instance
+	export function selectTab(index: number) {
+		tabContext.selectByIndex(index);
+	}
 
 	setContext(TABS, tabContext);
 </script>

@@ -1,6 +1,5 @@
 import { writable, derived, get, readable } from 'svelte/store';
 import type { Writable, Readable } from 'svelte/store';
-import { logger } from '$lib/logging/logger';
 import type { SessionAnalysis, ActionNode } from '$components/session/types/visualization';
 import { transformToSankeyData } from '$components/session/utils/sankeyDataTransformer';
 import { QUESTION_SCORING, type QuestionCategory } from '$lib/session/constants';
@@ -84,17 +83,6 @@ function buildRelationshipIndex(sessionData: SessionAnalysis): RelationshipIndex
               confidence: (rel as any).confidence ?? 1.0,
               sourceType: group.type,
             });
-            
-            // Debug specifically for treat_thyroid_function_tests
-            if (rel.nodeId === 'treat_thyroid_function_tests') {
-              logger.session.debug("Adding reverse relationship to treatment from outgoing", {
-                treatmentId: rel.nodeId,
-                fromNode: node.id,
-                fromType: group.type,
-                relationshipType: rel.relationship,
-                direction: rel.direction
-              });
-            }
           }
 
           if (rel.direction === "incoming" || rel.direction === "bidirectional") {
@@ -139,20 +127,7 @@ function buildRelationshipIndex(sessionData: SessionAnalysis): RelationshipIndex
     index.forward.set(nodeId, updatedRels);
   }
 
-  logger.session.debug("Built relationship index", {
-    nodeCount: index.nodeTypes.size,
-    forwardRelationships: index.forward.size,
-    reverseRelationships: index.reverse.size,
-  });
-  
-  // Debug specific treatment relationships
-  const treatmentId = 'treat_thyroid_function_tests';
-  logger.session.debug("Treatment relationship debug", {
-    treatmentId,
-    nodeType: index.nodeTypes.get(treatmentId),
-    forwardRels: index.forward.get(treatmentId) ? Array.from(index.forward.get(treatmentId)!) : [],
-    reverseRels: index.reverse.get(treatmentId) ? Array.from(index.reverse.get(treatmentId)!) : []
-  });
+  // Relationship index built successfully
 
   return index;
 }
@@ -195,12 +170,6 @@ export const sessionDataActions = {
    * Load new session data and compute all derived data
    */
   loadSession(sessionData: SessionAnalysis): void {
-    console.log("sessionDataActions.loadSession called with:", { 
-      sessionId: sessionData.sessionId,
-      nodeGroups: Object.keys(sessionData.nodes),
-      totalNodes: Object.values(sessionData.nodes).flat().length
-    });
-    logger.session.info("Loading session data", { sessionId: sessionData.sessionId });
 
     // Build all derived data
     const relationshipIndex = buildRelationshipIndex(sessionData);
@@ -217,11 +186,6 @@ export const sessionDataActions = {
 
     sessionDataStore.set(computedData);
     
-    logger.session.info("Session data loaded with computed data", {
-      sessionId: sessionData.sessionId,
-      nodeCount: nodeMap.size,
-      relationshipCount: relationshipIndex.forward.size
-    });
   },
 
   /**
@@ -234,11 +198,6 @@ export const sessionDataActions = {
     // Calculate path without mutating store
     const pathCalculation = calculatePathFromNode(nodeId, data);
     
-    logger.session.debug("Calculated path", { 
-      nodeId, 
-      pathNodes: pathCalculation.path.nodes.length,
-      pathLinks: pathCalculation.path.links.length 
-    });
 
     return pathCalculation;
   },
@@ -248,7 +207,6 @@ export const sessionDataActions = {
    */
   clearSession(): void {
     sessionDataStore.set(null);
-    logger.session.info("Session data cleared");
   },
 
   /**
@@ -273,7 +231,6 @@ export const sessionDataActions = {
     };
 
     this.loadSession(updatedSessionData);
-    logger.session.info("Alert acknowledged", { alertId });
   },
 
   /**
@@ -298,7 +255,6 @@ export const sessionDataActions = {
     };
 
     this.loadSession(updatedSessionData);
-    logger.session.info("Question answered", { questionId, answer, confidence });
   },
 
   /**
@@ -353,7 +309,6 @@ export const sessionDataActions = {
     }
 
     this.loadSession(updatedSessionData);
-    logger.session.info("Node action handled", { action, targetId, reason });
   },
 
   /**
@@ -375,7 +330,6 @@ export const sessionDataActions = {
    */
   setLoading(loading: boolean): void {
     sessionDataStore.update(data => data ? { ...data, isLoading: loading } : null);
-    logger.session.debug("Loading state updated", { loading });
   },
 
   /**
@@ -383,7 +337,6 @@ export const sessionDataActions = {
    */
   setError(error: string | null): void {
     sessionDataStore.update(data => data ? { ...data, error } : null);
-    logger.session.error("Error state updated", { error });
   }
 };
 
@@ -400,12 +353,6 @@ function calculatePathFromNode(nodeId: string, data: SessionComputedData): PathC
 
   const startingNodeType = relationshipIndex.nodeTypes.get(nodeId) || "unknown";
   
-  logger.session.debug("Starting path calculation", { 
-    nodeId, 
-    startingNodeType,
-    forwardRels: relationshipIndex.forward.get(nodeId)?.size || 0,
-    reverseRels: relationshipIndex.reverse.get(nodeId)?.size || 0
-  });
 
   // Medical reasoning path calculation based on node type
   switch (startingNodeType) {
@@ -419,20 +366,11 @@ function calculatePathFromNode(nodeId: string, data: SessionComputedData): PathC
       calculateDiagnosisPath(nodeId, pathNodes, pathLinks, relationshipIndex);
       break;
     default:
-      logger.session.warn("Unknown node type for path calculation", { nodeId, startingNodeType });
       break;
   }
 
   const nodeItem = nodeMap.get(nodeId);
   
-  logger.session.debug("Path calculation complete", {
-    nodeId,
-    nodeType: startingNodeType,
-    totalNodes: pathNodes.size,
-    totalLinks: pathLinks.size,
-    nodes: Array.from(pathNodes),
-    links: Array.from(pathLinks)
-  });
 
   return {
     trigger: { type: "node", id: nodeId, item: nodeItem },
@@ -459,36 +397,15 @@ function calculateTreatmentPath(
   // Debug what relationships actually exist for this treatment
   const forwardRels = relationshipIndex.forward.get(treatmentId);
   
-  logger.session.debug("Treatment path calculation - ALL relationships", {
-    treatmentId,
-    hasReverseRels: !!reverseRels,
-    reverseRelsSize: reverseRels?.size || 0,
-    reverseRelsContent: reverseRels ? Array.from(reverseRels) : [],
-    hasForwardRels: !!forwardRels,
-    forwardRelsSize: forwardRels?.size || 0,
-    forwardRelsContent: forwardRels ? Array.from(forwardRels) : []
-  });
   
   // Process reverse relationships (diagnoses that require/treat this treatment)
   if (reverseRels) {
     for (const rel of reverseRels) {
-      logger.session.debug("Processing treatment reverse relationship", {
-        treatmentId,
-        sourceId: rel.sourceId,
-        sourceType: rel.sourceType,
-        relationshipType: rel.type
-      });
       
       if (rel.sourceType === "diagnosis") {
         pathNodes.add(rel.sourceId);
         pathLinks.add(`${rel.sourceId}-${treatmentId}`);
         
-        logger.session.debug("Added diagnosis to treatment path (reverse)", {
-          treatmentId,
-          diagnosisId: rel.sourceId,
-          relationshipType: rel.type,
-          linkAdded: `${rel.sourceId}-${treatmentId}`
-        });
         
         // Find symptoms that support this diagnosis
         const diagnosisReverseRels = relationshipIndex.reverse.get(rel.sourceId);
@@ -498,13 +415,6 @@ function calculateTreatmentPath(
               pathNodes.add(symptomRel.sourceId);
               pathLinks.add(`${symptomRel.sourceId}-${rel.sourceId}`);
               
-              logger.session.debug("Added symptom to treatment path", {
-                treatmentId,
-                diagnosisId: rel.sourceId,
-                symptomId: symptomRel.sourceId,
-                relationshipType: symptomRel.type,
-                linkAdded: `${symptomRel.sourceId}-${rel.sourceId}`
-              });
             }
           }
         }
@@ -515,24 +425,12 @@ function calculateTreatmentPath(
   // Process forward relationships (what this treatment investigates/clarifies/explores)
   if (forwardRels) {
     for (const rel of forwardRels) {
-      logger.session.debug("Processing treatment forward relationship", {
-        treatmentId,
-        targetId: rel.targetId,
-        targetType: rel.targetType,
-        relationshipType: rel.type
-      });
       
       if (rel.targetType === "diagnosis") {
         pathNodes.add(rel.targetId);
         // For investigates relationships, the link direction might be reversed visually
         pathLinks.add(`${rel.targetId}-${treatmentId}`);
         
-        logger.session.debug("Added diagnosis to treatment path (forward)", {
-          treatmentId,
-          diagnosisId: rel.targetId,
-          relationshipType: rel.type,
-          linkAdded: `${rel.targetId}-${treatmentId}`
-        });
         
         // Find symptoms that support the investigated diagnosis
         const diagnosisReverseRels = relationshipIndex.reverse.get(rel.targetId);
@@ -542,13 +440,6 @@ function calculateTreatmentPath(
               pathNodes.add(symptomRel.sourceId);
               pathLinks.add(`${symptomRel.sourceId}-${rel.targetId}`);
               
-              logger.session.debug("Added symptom supporting investigated diagnosis", {
-                treatmentId,
-                diagnosisId: rel.targetId,
-                symptomId: symptomRel.sourceId,
-                relationshipType: symptomRel.type,
-                linkAdded: `${symptomRel.sourceId}-${rel.targetId}`
-              });
             }
           }
         }

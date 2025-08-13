@@ -49,12 +49,6 @@
         const activePathData = $activePath;
         const hoveredItemData = $hoveredItem;
         
-        console.log('✨ Path highlighting effect triggered', {
-            hasActivePath: !!activePathData,
-            hasHoveredItem: !!hoveredItemData,
-            activeNodeCount: activePathData?.nodes?.length || 0,
-            activeLinkCount: activePathData?.links?.length || 0
-        });
         
         // Calculate hover path if needed - hover takes precedence over active selection
         let hoverHighlight = null;
@@ -63,11 +57,6 @@
             const pathResult = sessionDataActions.calculatePath(hoveredItemData.id);
             hoverHighlight = pathResult?.path || null;
             
-            console.log('Hover path calculated', {
-                hoveredNodeId: hoveredItemData.id,
-                hoverNodeCount: hoverHighlight?.nodes?.length || 0,
-                hoverLinkCount: hoverHighlight?.links?.length || 0
-            });
         }
         
         // Apply the highlighting: hover takes precedence, then active path
@@ -125,7 +114,6 @@
             initializeSankey();
             // Initial render after SVG is created
             if ($sankeyData) {
-                console.log('🎨 Initial render on mount');
                 renderSankey();
                 buildFocusableNodesList();
             }
@@ -227,7 +215,6 @@
         
         // Only re-render if data actually changed (not on initial mount, handled in onMount)
         if (currentSvg && data && dataHash !== previousDataHash && previousDataHash !== '') {
-            console.log('🔄 DATA EFFECT: Data changed, re-rendering Sankey');
             renderSankey();
             buildFocusableNodesList();
             previousDataHash = dataHash;
@@ -310,7 +297,6 @@
     }
 
     function renderSankey() {
-        console.log('🔄 renderSankey() EXECUTING - DOM elements will be recreated, clearing all highlighting');
         
         if (!svg || !$sankeyData) {
             console.warn('Missing svg or $sankeyData:', { svg: !!svg, $sankeyData: !!$sankeyData });
@@ -1340,16 +1326,9 @@ viewerStoreModule.sessionViewerActions.setHoveredItem('link', `${link.source}-${
      */
     function updateSelectionState(activePath: any, hoverPath: any) {
         if (!svg) {
-            console.log('SVG not available for selection state update');
             return;
         }
         
-        console.log('Updating selection state (D3 update pattern)', { 
-            activePathNodes: activePath?.nodes || [],
-            activePathLinks: activePath?.links || [],
-            hoverPathNodes: hoverPath?.nodes || [],
-            hoverPathLinks: hoverPath?.links || []
-        });
         
         // Determine which nodes and links should be highlighted
         const activeNodes = activePath?.nodes || [];
@@ -1402,7 +1381,6 @@ viewerStoreModule.sessionViewerActions.setHoveredItem('link', `${link.source}-${
             return;
         }
         
-        console.log('🔄 updateSankeyLayout() - Updating positions only, preserving DOM elements and state');
         
         // Get current container dimensions
         const bounds = container.getBoundingClientRect();
@@ -1562,7 +1540,6 @@ viewerStoreModule.sessionViewerActions.setHoveredItem('link', `${link.source}-${
                 return linkPathGenerator(d);
             });
         
-        console.log('🔄 updateSankeyLayout() - Layout positions updated, DOM elements and state preserved');
     }
     
     function resetToDefault() {
@@ -1639,7 +1616,6 @@ viewerStoreModule.sessionViewerActions.setHoveredItem('link', `${link.source}-${
                 
                 // Update layout positions without re-rendering nodes
                 if ($sankeyData) {
-                    console.log('📐 Container resized, updating layout positions');
                     updateSankeyLayout();
                 }
             }

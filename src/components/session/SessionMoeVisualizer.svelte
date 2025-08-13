@@ -238,19 +238,11 @@
             
             // Auto-select Details tab when node is selected
             activeTabId = 'details';
-            if (tabsRef?.selectTab) {
-                const hasTranscript = transcript && transcript.length > 0;
-                // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
-                const detailsTabIndex = hasTranscript ? 2 : 1;
-                setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
-            } else {
-                console.warn('⚠️ tabsRef or selectTab not available in effect:', { tabsRef, selectTab: tabsRef?.selectTab });
-            }
+            selectDetailsTab();
         }
         
         // Handle link selection
         if (selectedLink) {
-            
             // Auto-show sidebar when link is selected
             if (!showSidebar && !isMobile) {
                 showSidebar = true;
@@ -258,16 +250,23 @@
             
             // Auto-select Details tab when link is selected
             activeTabId = 'details';
-            if (tabsRef?.selectTab) {
-                const hasTranscript = transcript && transcript.length > 0;
-                // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
-                const detailsTabIndex = hasTranscript ? 2 : 1;
-                setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
-            } else {
-                console.warn('⚠️ tabsRef or selectTab not available in effect:', { tabsRef, selectTab: tabsRef?.selectTab });
-            }
+            selectDetailsTab();
         }
     });
+
+    // Helper function to handle tab selection with proper timing
+    function selectDetailsTab() {
+        if (tabsRef?.selectTab) {
+            const hasTranscript = transcript && transcript.length > 0;
+            // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
+            const detailsTabIndex = hasTranscript ? 2 : 1;
+            setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
+        } else if (tabsRef !== undefined) {
+            // Only warn if tabsRef is defined but doesn't have selectTab method
+            // Skip warning during initial render when tabsRef is undefined
+            console.warn('⚠️ tabsRef.selectTab not available:', { tabsRef, hasSelectTab: !!tabsRef?.selectTab });
+        }
+    }
     
     // No reactive effects needed - path calculation is handled by the store
     
