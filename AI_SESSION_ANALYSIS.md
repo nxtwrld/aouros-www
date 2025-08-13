@@ -198,12 +198,12 @@ The Context Assembly system provides intelligent context retrieval and compilati
 
 #### Core Components
 
-1. **Embedding-Based Search**
+1. **Classification/Rules-First Search (with optional embeddings)**
 
-   - **Real-time Embedding Generation**: Convert current conversation content to vectors
-   - **Semantic Similarity Search**: Find relevant historical documents using vector similarity
-   - **Multi-document Retrieval**: Search across patient's complete medical history
-   - **Privacy-Preserving**: Client-side search with encrypted embeddings
+   - **Term/Rule Extraction**: Extract medical terms, triggers, and context rules from the current content
+   - **Rules/Classification Search**: Find relevant historical documents by term/category mapping
+   - **Optional Embeddings**: When enabled, supplement with vector similarity to broaden recall
+   - **Privacy-Preserving**: Client-side search (both rules and optional embeddings) with encrypted data
 
 2. **Context Assembly Engine**
 
@@ -213,7 +213,7 @@ The Context Assembly system provides intelligent context retrieval and compilati
    - **Token Optimization**: Fit assembled context within AI model limits (4000 tokens default)
 
 3. **Context Quality Assessment**
-   - **Relevance Scoring**: Measure semantic similarity between current and historical content
+   - **Relevance Scoring**: Measure rule/term match quality (and optional semantic similarity when enabled)
    - **Confidence Metrics**: Assess quality and completeness of assembled context
    - **Source Attribution**: Track which documents contributed to context assembly
    - **Temporal Weighting**: Prioritize recent medical events and patterns
@@ -289,6 +289,19 @@ As specified in the workflow, the consensus builder implements sophisticated agg
    - Aggregates evidence from all experts
    - Tracks reasoning paths
    - Maintains expert attribution for transparency
+
+### Refinement Policy and ID Stability (Aligned with Workflow/DAG)
+
+- In-place refinement: Each new iteration receives the previous analysis as input and must refine existing nodes rather than recreate them.
+- Per-node actions: For every prior node (symptom, diagnosis, treatment, question), the expert outputs one explicit action: prove, disprove, keep, rephrase, or remove.
+  - prove: increase confidence/priority; update reasoning/relationships
+  - disprove: decrease confidence/priority; optionally mark suppressed
+  - keep: no change beyond timestamp/version
+  - rephrase: update the node label/text only; preserve the same node ID
+  - remove: mark for removal; actual deletion is deferred
+- Stable IDs: IDs persist across iterations. New nodes are created only on explicit add when evidence is genuinely new.
+- Anti-flap cleanup: node removal passes through cleaner hysteresis (e.g., suppress first; delete only after N rounds below thresholds).
+- Questions are ActionNodes (actionType="question"): answers are deduced from transcript; status and optional answer update in place; effects encoded via impact/relationships.
 
 ### Visual Output: Interactive Sankey Diagram
 
@@ -383,55 +396,25 @@ interface SankeyData {
 interface SankeyNode {
   id: string; // Unique identifier
   name: string; // Short title (1-3 words)
-  category:
-    | "symptom"
-    | "signal"
-    | "history"
-    | "diagnosis"
-    | "treatment"
-    | "medication"
-    | "investigation"
-    | "question";
-  level: number; // 0: inputs, 1: diagnoses, 2: treatments
-  details: {
-    description: string;
-    confidence: number;
-    origin:
-      | "transcript"
-      | "history"
-      | "context"
-      | "previous"
-      | "expert"
-      | "consensus";
-    urgency?: "critical" | "high" | "medium" | "low";
-    evidence?: string[];
-    reasoning?: string;
-    priority?: number;
-    probability?: number;
-    icdCode?: string; // For diagnoses
-    dosing?: string; // For medications
-    acceptanceState?: "none" | "accepted" | "suppressed";
-    suppressionCoefficient?: number;
-  };
-}
+  type: 'symptom' | 'diagnosis' | 'treatment' | 'question' | 'alert';
+  column: number; // 0=symptoms, 1=diagnoses, 2=treatments, floating=actions
+  priority: number;
+  confidence: number;
+  probability?: number;
+  source?: string; // transcript | medical_history | family_history | social_history | medication_history | suspected
+  data: any; // Original node data (SymptomNode | DiagnosisNode | TreatmentNode | ActionNode)
+  value: number; // Node height derived from priority/probability
+};
 
 interface SankeyLink {
-  source: string; // node id
-  target: string; // node id
-  value: number; // strength of connection (0-1)
-  type:
-    | "supports"
-    | "contradicts"
-    | "confirms"
-    | "suggests"
-    | "requires"
-    | "treats"
-    | "rules_out";
-  reasoning: string;
-  expertIds: string[]; // which experts suggested this link
-  evidenceStrength: number;
-  questionNode?: string; // ID of question node on this path
-}
+  source: string | number | SankeyNode;
+  target: string | number | SankeyNode;
+  value: number;
+  type: string; // relationship type
+  strength: number;
+  reasoning?: string;
+  direction: 'incoming' | 'outgoing' | 'bidirectional';
+};
 ```
 
 ### Enhanced Clinical Inquiry Structure (Per Workflow)
@@ -765,6 +748,21 @@ This section outlines the user stories that drive the design and implementation 
 
 **Value:** Enhances clinical decision-making by providing comprehensive multi-perspective analysis that reduces diagnostic blind spots and improves patient outcomes
 
+#### Story 0.3A: Expert Refinement Stability (Minimal-Diff)
+
+**As a** Doctor
+**I want to** see iterative updates applied in place without diagram “jumping”
+**So that** I can reliably track how the analysis evolves each iteration
+
+**Acceptance Criteria:**
+- Node IDs persist across iterations; rephrases update labels only
+- Per-node action is recorded: prove, disprove, keep, rephrase, or remove
+- New nodes appear only on explicit add
+- Removals occur only after N suppressed rounds (hysteresis)
+- Change log shows per-node action and numeric changes to probability/priority/strength
+
+**Value:** Improves trust and readability by avoiding layout churn
+
 #### Story 0.2: Intelligent Medical History Integration
 
 **As a** Doctor treating a patient with complex medical history  
@@ -859,6 +857,19 @@ This section outlines the user stories that drive the design and implementation 
 
 **Value:** Reduces cognitive load and provides immediate visual understanding of complex diagnostic relationships
 
+#### Story 1.4: Minimal-Diff Change Log Overlay
+
+**As a** Specialist
+**I want to** see a per-iteration diff overlay on the diagram
+**So that** I can quickly understand what changed and why
+
+**Acceptance Criteria:**
+- Nodes/links changed in latest iteration are highlighted
+- Tooltip shows per-node action (prove/disprove/keep/rephrase/remove) and deltas
+- Timeline scrubber jumps to previous versions and shows diffs
+
+**Value:** Enables fast audit of evolving clinical reasoning
+
 #### Story 1.2: Identify Diagnostic Confidence Gaps
 
 **As a** Specialist  
@@ -908,6 +919,19 @@ This section outlines the user stories that drive the design and implementation 
 - Questions are ordered by diagnostic impact and clinical priority
 
 **Value:** Optimizes consultation efficiency and improves diagnostic accuracy
+
+#### Story 2.4: Transcript-Deduced Answers
+
+**As a** Doctor
+**I want to** have questions auto-resolve when the patient answers during conversation
+**So that** I don’t need to manually mark answers
+
+**Acceptance Criteria:**
+- ActionNode.status updates based on transcript-deduced answers in subsequent iterations
+- Optional `answer` text and evidence snippet displayed on hover
+- Probability and link strengths update according to configured impact/relationships
+
+**Value:** Reduces manual work and keeps analysis in sync with the live conversation
 
 #### Story 2.2: Understand Question Impact
 
@@ -959,6 +983,19 @@ This section outlines the user stories that drive the design and implementation 
 
 **Value:** Supports personalized treatment decisions and improves patient outcomes
 
+#### Story 3.3: Single-Accept Constraints
+
+**As a** Doctor
+**I want to** accept only one diagnosis and one treatment at a time
+**So that** the care plan is unambiguous
+
+**Acceptance Criteria:**
+- Accepting a diagnosis automatically unsets the prior accepted diagnosis (same for treatment)
+- Suppressed items reduce visible priority using suppression coefficient
+- SSE broadcasts accept/suppress changes so UI stays consistent
+
+**Value:** Prevents plan ambiguity and keeps the UI/state aligned
+
 #### Story 3.2: Understand Medication Interactions
 
 **As a** Specialist  
@@ -1009,6 +1046,19 @@ This section outlines the user stories that drive the design and implementation 
 
 **Value:** Enables rapid response to critical conditions and improves patient safety
 
+#### Story 4.3: Change Gate Efficiency
+
+**As a** Doctor
+**I want to** avoid unnecessary recomputation when there are no new inputs or answers
+**So that** analysis is fast and resource-efficient
+
+**Acceptance Criteria:**
+- When Symptoms/Answers signature is unchanged, MoE analysis is skipped
+- UI displays a “no changes detected” notice near the stream indicator
+- Next analysis runs immediately when a new transcript chunk changes the signature
+
+**Value:** Reduces latency and cost without sacrificing responsiveness
+
 ### Epic 5: Data Export and Documentation
 
 #### Story 5.1: Export Analysis Results
@@ -1042,6 +1092,19 @@ This section outlines the user stories that drive the design and implementation 
 - Benchmarking against clinical guidelines
 
 **Value:** Enables continuous quality improvement and system optimization
+
+#### Story 5.3: Minimal-Diff Audit Export
+
+**As a** Medical Quality Manager
+**I want to** export per-iteration diffs with node actions and deltas
+**So that** audits and case reviews are traceable
+
+**Acceptance Criteria:**
+- Export includes per-node action (prove/disprove/keep/rephrase/remove)
+- Probability/priority/strength deltas are included
+- Timestamps and expert provenance recorded for each change
+
+**Value:** Provides a defensible audit trail of AI reasoning evolution
 
 ### Epic 6: Accessibility and Customization
 

@@ -320,6 +320,33 @@ interface MedicalAnalysisOutput {
   layer: number;
 }
 
+// Question nodes align to UI ActionNode (actionType='question'); answers deduced from transcript iterations
+interface QuestionNode {
+  id: string;                // q_*
+  text: string;
+  actionType: 'question';
+  category: 'symptom_exploration' | 'diagnostic_clarification' | 'treatment_selection' | 'risk_assessment';
+  priority: number;          // displayPriority
+  status: 'pending' | 'answered' | 'acknowledged' | 'skipped' | 'resolved';
+  relationships?: Relationship[];
+  impact?: {
+    diagnoses?: Record<string, number>;
+    yes?: Record<string, number>;
+    no?: Record<string, number>;
+  };
+  answer?: string;
+  // Optional internal hint for runtime behavior
+  qType?: 'prove' | 'disprove' | 'redirect';
+}
+
+interface Relationship {
+  nodeId: string;
+  type: 'supports' | 'contradicts' | 'confirms' | 'treats' | 'investigates';
+  direction: 'incoming' | 'outgoing' | 'bidirectional';
+  strength: number;          // 0.0-1.0
+  reasoning?: string;
+}
+
 interface ConsensusResult {
   unifiedAnalysis: MedicalAnalysisOutput;
   consensusItems: ConsensusItem[];
@@ -431,6 +458,11 @@ export async function executeDAG(
   context?: any
 ) {
   const dag = buildDAGRuntime();
+  
+  // Change gate: skip MoE when Symptoms/Answers unchanged
+  if (!await shouldAnalyze(sessionId, transcript, context)) {
+    return { skipped: true, reason: 'no_changes' } as any;
+  }
   const workflow = new StateGraph<DAGState>({
     channels: createStateChannels(dag)
   });

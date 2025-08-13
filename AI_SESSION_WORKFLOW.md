@@ -17,6 +17,24 @@ This system is designed as a **continuous, real-time assistant** that works alon
 
 The workflow described below operates in a continuous loop, with each phase feeding back into the next as the conversation evolves.
 
+## Session Workflow (Concise)
+
+1. Patient and doctor converse; audio captured continuously.
+2. Chunks sent to STT; transcript rebuilt server-side.
+3. Client submits transcript to server with patient context and previous MoE analysis.
+4. Symptoms extraction: AI extracts symptoms and physiologic signals as Symptom nodes.
+5. Each symptom gets a stable unique ID; deduplication prevents duplicates across iterations.
+6. Historical/contextual items (e.g., prior hypertension, family cardiac history) may be added as Symptom nodes labeled by origin (context vs transcript vs history).
+7. If previous MoE generated questions, the transcript is scanned to detect answers and update statuses.
+8. Newly discovered Symptoms and Answers stream to the client via SSE for display.
+9. If neither Symptoms nor Answers changed, pause analysis and wait for new transcript.
+10. If changed, run MoE to produce Diagnoses, Treatments, and new Questions (prove/disprove/redirect) with risk evaluation.
+11. Each Diagnosis/Treatment gets a stable ID; build the map: [symptom] → [question] → [diagnosis] → [question] → [treatment] (1:N at each hop).
+12. Treatments may be text recommendations, medications, and/or investigations to acquire new inputs (signals).
+13. Nodes carry title, description, reasoning, priority, probability; links may include prioritized questions.
+14. Return a Sankey-style JSON: column 1 Symptoms/Signals/History, column 2 Diagnoses, column 3 Treatments, with mid-path question nodes.
+15. User actions: accept or suppress. Only one diagnosis and one treatment can be accepted at a time. Suppressed items are greyed and reprioritized using visible_priority = ai_priority / coefficient.
+
 ## High-Level Architecture
 
 ```mermaid
@@ -302,6 +320,7 @@ context_triggers:
     - Update question status (answered/pending/partial)
     - Extract follow-up information from answers
     - Context assembly informs question prioritization
+    - Rephrased questions are matched to existing question nodes by semantic similarity; IDs persist and nodes are updated in place rather than recreated
 
 12. **Real-time Client Updates with Context**
     - Send discovered inputs via SSE to client with context metadata
@@ -346,13 +365,14 @@ context_triggers:
     - **Role**: Medical NER and Clinical Inference Engine
     - **Input**: Structured transcript + Previous symptoms + Context
     - **Processing**:
-      - Identifies explicit symptoms mentioned in conversation
-      - Infers implied symptoms from patient descriptions
+      - Identifies explicit symptoms and physiologic signals mentioned in conversation
+      - Infers implied symptoms/signals from patient descriptions
       - Extracts severity indicators, duration, characteristics
-      - Maps symptoms to appropriate source categories (transcript, history, suspected)
+      - Assigns stable unique IDs; deduplicates across iterations
+      - Maps symptoms to appropriate source categories (transcript, medical_history/context, suspected)
       - Assigns confidence scores based on certainty of identification
-    - **Output**: New symptom nodes with embedded metadata
-    - **Schema Impact**: Populates nodes.symptoms array with comprehensive symptom data
+    - **Output**: New SymptomNode entries with embedded metadata
+    - **Schema Impact**: Populates nodes.symptoms array (signals are represented as SymptomNode items, optionally tagged via characteristics)
 
     **Node 3: diagnosis_mapper**
     - **Role**: Differential Diagnosis Engine
@@ -423,6 +443,16 @@ context_triggers:
       - Tracks changes and increments analysisVersion
       - Maintains node ID consistency across iterations
       - Preserves user interactions and preferences
+      - ID stability and minimal-diff updates (refinement-based, no semantic matching):
+        - Generates/reuses stable IDs via canonicalization (normalize casing/units, lemmatize, strip stop-words) with anchor metadata (speaker, time window, category, ontology codes like ICD-10 when present)
+        - For each existing node in previous analysis, the expert must output one explicit refinement action:
+          - prove: increase confidence/priority, update reasoning/relationships
+          - disprove: decrease confidence/priority, mark suppressed if appropriate
+          - keep: preserve node unchanged
+          - rephrase: update text/label without changing the node ID
+          - remove: mark for removal; actual deletion deferred to cleaner hysteresis
+        - Only explicit add creates a new node; otherwise update existing nodes in place to avoid visualization churn
+        - Never delete immediately; mark suppressed/low-visibility and defer removal to cleaner hysteresis
     - **Output**: Integrated schema with version tracking
     - **Schema Impact**: Creates unified, versioned analysis output
 
@@ -447,8 +477,15 @@ context_triggers:
       - Eliminates duplicate or redundant suggestions
       - Optimizes schema size for visualization performance
       - Maintains critical information regardless of confidence
+      - Hysteresis and anti-flap controls:
+        - Confidence hysteresis (example: add above 0.55, remove below 0.45) to avoid churn
+        - minRoundsToDelete: require a node to remain below thresholds for N consecutive iterations before removal
     - **Output**: Clean, optimized analysis ready for visualization
     - **Schema Impact**: Final pruned schema with optimal node set
+
+    Additional execution utilities:
+    - id_allocator_deduplicator: Generates stable IDs and removes duplicates across all node types.
+    - change_detector_gate: Compares current Symptoms/Answers to the previous iteration and conditionally triggers MoE.
 
 16. **DAG Execution Flow and Dependencies**
 
@@ -552,6 +589,16 @@ context_triggers:
     - Expected impact on diagnosis probabilities
     - Embedded relationships with connected nodes
 
+    Question semantics (aligns with ActionNode in visualization types):
+    - actionType: "question"
+    - category: symptom_exploration | diagnostic_clarification | treatment_selection | risk_assessment
+    - displayPriority: numeric rank; only top items are expanded by default, others appear as small dots on the path until hovered/clicked
+    - Answer handling (refinement-based):
+      - The model receives previous questions with IDs and must choose one: prove, disprove, keep, rephrase, or remove
+      - Updates are applied in place: set `status`, optional `answer`, and encode effects via `impact` and/or `relationships`
+      - Prove/disprove effects: encode weight adjustments in `impact.yes/no` or `impact.diagnoses`
+      - Redirect: add/update a relationship to the target node with `relationship: "investigates"`
+
 19. **Embedded Relationship Mapping**
 
     - Each node contains its own relationships array with:
@@ -623,6 +670,8 @@ context_triggers:
       - Accept: Triggers immediate re-processing through relevant expert nodes
       - Suppress: Updates node states and triggers downstream DAG re-evaluation
       - User actions influence subsequent DAG executions for incremental learning
+      - Constraints: Only one diagnosis and one treatment can be accepted at a time
+      - Suppression effect: visible_priority = ai_priority / coefficient (UI greys suppressed nodes and reduces size accordingly)
     - **Incremental Analysis Features:**
       - Version comparison: Compare analysisVersion iterations side-by-side
       - Change highlighting: Visual indicators for nodes modified in latest iteration
