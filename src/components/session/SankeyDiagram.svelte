@@ -211,16 +211,29 @@
     // Data transformation is now handled by the store - no local effects needed
 
     // React to data structure changes (full re-render only when data changes)
-    // Use untrack to prevent svg from being a reactive dependency
+    // Track a data version/hash to detect actual changes
+    let previousDataHash = '';
+    
     $effect(() => {
-        const currentSvg = untrack(() => svg);
         const data = $sankeyData;
+        const currentSvg = untrack(() => svg);
         
-        if (currentSvg && data) {
-            console.log('🔄 DATA EFFECT: renderSankey() for data changes - will clear DOM elements');
+        // Create a simple hash of the data to detect changes
+        const dataHash = data ? JSON.stringify({
+            nodeCount: data.nodes?.length || 0,
+            linkCount: data.links?.length || 0,
+            nodeIds: data.nodes?.map(n => n.id).join(',') || ''
+        }) : '';
+        
+        // Only re-render if data actually changed (not on initial mount, handled in onMount)
+        if (currentSvg && data && dataHash !== previousDataHash && previousDataHash !== '') {
+            console.log('🔄 DATA EFFECT: Data changed, re-rendering Sankey');
             renderSankey();
             buildFocusableNodesList();
-            console.log('🔄 DATA EFFECT: renderSankey() completed');
+            previousDataHash = dataHash;
+        } else if (data && dataHash !== previousDataHash) {
+            // Update hash without re-rendering (for initial mount case)
+            previousDataHash = dataHash;
         }
     });
     
@@ -294,8 +307,6 @@
             .attr('class', 'main-group')
             .attr('transform', `translate(${margins.left}, ${margins.top})`)
             .on('click', handleCanvasClick);
-
-        // Don't call renderSankey() here - let the effect handle it to avoid duplicate renders
     }
 
     function renderSankey() {

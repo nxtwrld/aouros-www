@@ -36,6 +36,7 @@
     let isResizing = $state(false);
     let tabsRef = $state<any>();
     let activeTabId = $state<string>('questions');
+    let activeMainView = $state<string>('diagram'); // Track main area view
     
     // Responsive breakpoints
     const MOBILE_BREAKPOINT = 640;
@@ -180,6 +181,12 @@
         }
     }
     
+    function handleMainViewSelect(viewId: string) {
+        activeMainView = viewId;
+        // Future: Handle switching between different main views
+        // For now, we only have 'diagram'
+    }
+    
     function getTabIndex(tabId: string): number {
         const hasTranscript = transcript && transcript.length > 0;
         const tabOrder = [
@@ -284,12 +291,14 @@
         <SessionToolbar 
             {showSidebar}
             activeTab={activeTabId}
+            {activeMainView}
             hasQuestions={questionCount > 0}
             hasTranscript={transcript && transcript.length > 0}
             {pendingQuestions}
             {isMobile}
             onToggleSidebar={toggleSidebar}
             onTabSelect={handleTabSelect}
+            onMainViewSelect={handleMainViewSelect}
         />
     {/if}
     

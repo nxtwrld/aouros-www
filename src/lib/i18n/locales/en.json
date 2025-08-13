@@ -795,6 +795,7 @@
     }
   },
   "session": {
+    "diagram": "Diagram",
     "actions": {
       "accept": "Accept",
       "suppress": "Suppress",

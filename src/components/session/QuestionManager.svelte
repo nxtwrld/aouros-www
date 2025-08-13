@@ -1,21 +1,19 @@
 <script lang="ts">
     import QuestionsSection from './shared/QuestionsSection.svelte';
     import AlertsSection from './shared/AlertsSection.svelte';
-    import type { ActionNode } from './types/visualization';
     import { t } from '$lib/i18n';
-    import { sessionDataActions } from '$lib/session/stores/session-data-store';
+    import { sessionDataActions, sortedQuestions, alerts } from '$lib/session/stores/session-data-store';
 
     interface Props {
-        questions?: ActionNode[];
-        alerts?: ActionNode[];
+        // Props are no longer needed as we use stores directly
     }
 
-    let { questions = [], alerts = [] }: Props = $props();
+    let { }: Props = $props();
 
     let activeTab: 'questions' | 'alerts' = $state('questions');
 
-    const pendingQuestions = $derived(questions.filter(q => q.status === 'pending').length);
-    const pendingAlerts = $derived(alerts.filter(a => a.status === 'pending').length);
+    const pendingQuestions = $derived($sortedQuestions.filter(q => q.status === 'pending').length);
+    const pendingAlerts = $derived($alerts.filter(a => a.status === 'pending').length);
 
 
     function handleAlertAcknowledge(alertId: string) {
@@ -53,12 +51,12 @@
     <div class="content">
         {#if activeTab === 'questions'}
             <QuestionsSection 
-                {questions}
+                questions={$sortedQuestions}
                 showFilters={true}
             />
         {:else}
             <AlertsSection 
-                {alerts}
+                alerts={$alerts}
                 showFilters={true}
                 onalertAcknowledge={handleAlertAcknowledge}
             />

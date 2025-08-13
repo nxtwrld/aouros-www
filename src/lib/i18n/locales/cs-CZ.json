@@ -839,6 +839,7 @@
     "no-diagnosis-data": "Žádné údaje o diagnóze nejsou k dispozici"
   },
   "session": {
+    "diagram": "Diagram",
     "actions": {
       "accept": "Přijmout",
       "suppress": "Potlačit",

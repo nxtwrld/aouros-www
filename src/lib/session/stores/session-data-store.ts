@@ -3,6 +3,7 @@ import type { Writable, Readable } from 'svelte/store';
 import { logger } from '$lib/logging/logger';
 import type { SessionAnalysis, ActionNode } from '$components/session/types/visualization';
 import { transformToSankeyData } from '$components/session/utils/sankeyDataTransformer';
+import { QUESTION_SCORING, type QuestionCategory } from '$lib/session/constants';
 
 // Types for derived calculations
 interface RelationshipIndex {
@@ -739,6 +740,69 @@ export function alertsForLink(link: any): Readable<ActionNode[]> {
     );
   });
 }
+
+/**
+ * Calculate composite score for question prioritization
+ * Combines urgency, diagnosis relevance, and question priority
+ */
+function calculateCompositeScore(
+  question: ActionNode, 
+  sessionData: SessionAnalysis
+): number {
+  const { URGENCY_SCORES, WEIGHTS, SCALING } = QUESTION_SCORING;
+
+  // 1. Urgency Score (0-10 based on category)
+  const urgencyScore = URGENCY_SCORES[question.category as QuestionCategory] || 3;
+
+  // 2. Relevance Score - highest probability among related diagnoses
+  let maxDiagnosisProbability = 0;
+  if (question.impact?.diagnoses && sessionData?.nodes?.diagnoses) {
+    const diagnosisMap = new Map(sessionData.nodes.diagnoses.map(d => [d.id, d.probability]));
+    
+    Object.entries(question.impact.diagnoses).forEach(([diagnosisId]) => {
+      const probability = diagnosisMap.get(diagnosisId) || 0;
+      maxDiagnosisProbability = Math.max(maxDiagnosisProbability, probability);
+    });
+  }
+
+  // 3. Priority Score (invert so lower priority number = higher score)
+  const priorityScore = SCALING.PRIORITY_INVERSION - (question.priority || 5);
+
+  // Calculate weighted composite score
+  const compositeScore = 
+    (WEIGHTS.URGENCY * urgencyScore) + 
+    (WEIGHTS.RELEVANCE * maxDiagnosisProbability * SCALING.PROBABILITY_MULTIPLIER) + 
+    (WEIGHTS.PRIORITY * priorityScore);
+
+  return compositeScore;
+}
+
+/**
+ * Derived store for questions sorted by composite score
+ * Considers urgency, diagnosis probability, and question priority
+ */
+export const sortedQuestions: Readable<ActionNode[]> = derived(
+  [questions, sessionData], 
+  ([$questions, $sessionData]) => {
+    if (!$questions.length || !$sessionData) return $questions;
+
+    return [...$questions].sort((a, b) => {
+      const scoreA = calculateCompositeScore(a, $sessionData);
+      const scoreB = calculateCompositeScore(b, $sessionData);
+      
+      // Sort by highest score first
+      return scoreB - scoreA;
+    });
+  }
+);
+
+/**
+ * Derived store for pending questions sorted by composite score
+ */
+export const sortedPendingQuestions: Readable<ActionNode[]> = derived(
+  sortedQuestions, 
+  ($sortedQuestions) => $sortedQuestions.filter(q => q.status === 'pending')
+);
 
 // Export the main store for direct access if needed
 export { sessionDataStore };

@@ -55,12 +55,12 @@
             ></div>
             
             <!-- Sidebar Header -->
-            <header class="sidebar-header">
+            <!--header class="sidebar-header">
                 <h3>{$t('session.tabs.details')}</h3>
                 <button class="close-btn" onclick={onToggleSidebar}>
                     <svg><use href="/icons.svg#close" /></svg>
                 </button>
-            </header>
+            </header-->
 
             <!-- Tabs Content -->
             <div class="sidebar-content">

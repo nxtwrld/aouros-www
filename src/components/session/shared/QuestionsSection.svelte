@@ -32,9 +32,8 @@
 
     const pendingQuestions = $derived(questions.filter(q => q.status === 'pending').length);
 
-    function sortByPriority(items: ActionNode[]): ActionNode[] {
-        return [...items].sort((a, b) => (a.priority || 5) - (b.priority || 5));
-    }
+    // Sorting is now handled by the sortedQuestions store in session-data-store
+    // which considers urgency, diagnosis probability, and question priority
 
     function toggleExpanded(questionId: string) {
         if (expandedItems.has(questionId)) {
@@ -78,7 +77,7 @@
                 <p>{$t('session.empty-states.no-questions')}</p>
             </div>
         {:else}
-            {#each sortByPriority(filteredQuestions) as question (question.id)}
+            {#each filteredQuestions as question (question.id)}
                 <QuestionCard 
                     {question}
                     {compact}

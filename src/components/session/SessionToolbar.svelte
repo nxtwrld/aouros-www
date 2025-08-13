@@ -4,55 +4,94 @@
     interface Props {
         showSidebar: boolean;
         activeTab?: string;
+        activeMainView?: string; // Track which view is active in main area
         hasQuestions?: boolean;
         hasTranscript?: boolean;
         pendingQuestions?: number;
         isMobile?: boolean;
         onToggleSidebar: () => void;
         onTabSelect?: (tab: string) => void;
+        onMainViewSelect?: (view: string) => void;
     }
     
     let {
         showSidebar,
         activeTab = '',
+        activeMainView = 'diagram',
         hasQuestions = true,
         hasTranscript = true,
         pendingQuestions = 0,
         isMobile = false,
         onToggleSidebar,
-        onTabSelect
+        onTabSelect,
+        onMainViewSelect
     }: Props = $props();
     
-    const tabs = $derived([
-        { id: 'diagram', label: $t('session.diagram'), isDiagram: true },
+    // Main area view tabs (left side)
+    const mainViewTabs = $derived([
+        { id: 'diagram', label: $t('session.diagram') }
+        // Future: Could add more views like 'timeline', 'statistics', etc.
+    ]);
+    
+    // Sidebar content tabs (right side)
+    const sidebarTabs = $derived([
         ...(hasQuestions ? [{ id: 'questions', label: $t('session.tabs.questions'), hasBadge: pendingQuestions > 0, badgeCount: pendingQuestions }] : []),
         ...(hasTranscript ? [{ id: 'transcript', label: $t('session.tabs.transcript') }] : []),
         { id: 'details', label: $t('session.tabs.details') },
         ...(!isMobile ? [{ id: 'legend', label: $t('session.tabs.legend') }] : [])
     ]);
     
-    function handleTabClick(tabId: string) {
-        if (tabId === 'diagram') {
-            if (showSidebar) {
-                onToggleSidebar();
-            }
-        } else {
+    function handleMainViewClick(viewId: string) {
+        onMainViewSelect?.(viewId);
+        // Optionally close sidebar when switching main views
+        // if (showSidebar) {
+        //     onToggleSidebar();
+        // }
+    }
+    
+    function handleSidebarTabClick(tabId: string) {
+        // If clicking the already active tab while sidebar is open, close the sidebar
+        if (showSidebar && activeTab === tabId) {
+            onToggleSidebar();
+        } 
+        // If sidebar is closed, open it and select the tab
+        else if (!showSidebar) {
+            onToggleSidebar();
+            // Delay tab selection to allow sidebar to render
+            setTimeout(() => onTabSelect?.(tabId), 50);
+        } 
+        // Sidebar is open but clicking a different tab, just switch tabs
+        else {
             onTabSelect?.(tabId);
-            if (!showSidebar) {
-                onToggleSidebar();
-            }
         }
     }
 </script>
 
 <div class="session-toolbar-tabs">
-    <div class="tab-heads">
-        {#each tabs as tab}
+    <!-- Main View Tabs (controls main area content) -->
+    <div class="tab-group-main">
+        {#each mainViewTabs as tab}
             <button 
-                class="tab-head"
-                class:-active={tab.isDiagram ? !showSidebar : (showSidebar && activeTab === tab.id)}
-                onclick={() => handleTabClick(tab.id)}
+                class="tab-head main-view-tab"
+                class:-active={activeMainView === tab.id}
+                onclick={() => handleMainViewClick(tab.id)}
                 title={tab.label}
+            >
+                {tab.label}
+            </button>
+        {/each}
+    </div>
+    
+    <div class="tab-spacer"></div>
+    
+    <!-- Sidebar Tabs (controls sidebar content) -->
+    <div class="tab-group-sidebar">
+        {#each sidebarTabs as tab}
+            <button 
+                class="tab-head sidebar-tab"
+                class:-active={showSidebar && activeTab === tab.id}
+                onclick={() => handleSidebarTabClick(tab.id)}
+                title={showSidebar && activeTab === tab.id ? `${$t('session.actions.hide-panel')} (${tab.label})` : tab.label}
             >
                 {tab.label}
                 {#if tab.hasBadge && tab.badgeCount}
@@ -61,36 +100,44 @@
             </button>
         {/each}
     </div>
-    
-    <button 
-        class="sidebar-toggle-btn"
-        onclick={onToggleSidebar}
-        title={showSidebar ? $t('session.actions.hide-panel') : $t('session.actions.show-panel')}
-    >
-        <svg class="icon">
-            <use href={showSidebar ? "/icons.svg#panel-right-close" : "/icons.svg#panel-right-open"} />
-        </svg>
-    </button>
 </div>
 
 <style>
     .session-toolbar-tabs {
         display: flex;
-        justify-content: space-between;
         align-items: stretch;
         height: var(--toolbar-height, 48px);
-        background: var(--color-surface, #fff);
         border-bottom: 1px solid var(--color-border, #e2e8f0);
-        padding-right: 0.5rem;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         z-index: 10;
     }
     
-    .tab-heads {
+    .tab-group-main {
+        display: flex;
+        align-items: stretch;
+        border-right: 2px solid var(--color-border-strong, #cbd5e1);
+    }
+    
+    .tab-spacer {
         flex: 1;
+        min-width: 1rem;
+        background: var(--color-surface, #fff);
+    }
+    
+    .tab-group-sidebar {
         display: flex;
         align-items: stretch;
         gap: 0;
+    }
+    
+    /* Visual distinction for main view tabs */
+    .main-view-tab {
+        background-color: var(--color-surface-alt, #f8fafc);
+    }
+    
+    .main-view-tab.-active {
+        background-color: var(--color-surface, #fff);
+        border-top-color: var(--color-primary, #3b82f6);
     }
     
     .tab-head {
@@ -149,28 +196,6 @@
         line-height: 1;
     }
     
-    .sidebar-toggle-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 0.75rem;
-        background: transparent;
-        border: none;
-        color: var(--color-text-secondary);
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .sidebar-toggle-btn:hover {
-        background: var(--color-surface-hover);
-        color: var(--color-text-primary);
-    }
-    
-    .sidebar-toggle-btn .icon {
-        width: 1.25rem;
-        height: 1.25rem;
-        fill: currentColor;
-    }
     
     /* Mobile adjustments */
     @media (max-width: 768px) {
@@ -183,20 +208,21 @@
         .session-toolbar-tabs {
             padding-right: 0.25rem;
         }
-        
-        .sidebar-toggle-btn {
-            padding: 0 0.5rem;
-        }
     }
     
-    /* Very small screens - show only active tab */
+    /* Very small screens - show only active tabs */
     @media (max-width: 480px) {
-        .tab-head {
-            flex-grow: 1;
+        .tab-spacer {
+            min-width: 0.5rem;
+        }
+    
+        
+        .tab-group-sidebar .tab-head:not(.-active) {
+            display: none;
         }
         
-        .tab-head:not(.-active) {
-            display: none;
+        .tab-group-sidebar .tab-head.-active {
+            flex-grow: 1;
         }
     }
 </style>

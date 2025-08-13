@@ -46,21 +46,6 @@
 </script>
 
 <Tabs bind:this={tabsRef}>
-    <TabHeads>
-        <TabHead>
-            {$t('session.tabs.questions')}
-            {#if pendingQuestions > 0}
-                <span class="badge">{pendingQuestions}</span>
-            {/if}
-        </TabHead>
-        {#if hasTranscript}
-            <TabHead>{$t('session.tabs.transcript')}</TabHead>
-        {/if}
-        <TabHead>{$t('session.tabs.details')}</TabHead>
-        {#if !isMobile}
-            <TabHead>{$t('session.tabs.legend')}</TabHead>
-        {/if}
-    </TabHeads>
     <div class="tab-panels">
     <TabPanel>
         <SessionQuestionsTab 
@@ -110,7 +95,7 @@
     }
 
     .tab-panels {
-        height: calc(100% - var(--toolbar-height));
+        height: 100%;
         overflow: auto;
 
     }

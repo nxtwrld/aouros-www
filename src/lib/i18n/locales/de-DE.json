@@ -839,6 +839,7 @@
     "no-diagnosis-data": "Keine Diagnosedaten verfügbar"
   },
   "session": {
+    "diagram": "Diagramm",
     "actions": {
       "accept": "Akzeptieren",
       "suppress": "Unterdrücken",
