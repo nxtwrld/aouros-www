@@ -9,10 +9,26 @@ import type {
   MoEAnalysisOutput,
   ExpertContext
 } from "../index";
-import type { 
-  AnalysisState, 
-  PathState
-} from "./analysis-store";
+// Types extracted from legacy analysis-store (now removed)
+interface AnalysisState {
+  currentSession: SessionAnalysis | null;
+  isLoading: boolean;
+  lastUpdated: number | null;
+  userActions: any[];
+  error: string | null;
+}
+
+interface PathState {
+  trigger: {
+    type: "link" | "node";
+    id: string;
+    item: any; // SankeyLink or SankeyNode
+  } | null;
+  path: {
+    nodes: string[];
+    links: string[];
+  };
+}
 import { SSEClient } from "../transport/sse-client";
 import type { PartialTranscript } from "../transport/sse-client";
 

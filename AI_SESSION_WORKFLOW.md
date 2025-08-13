@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the complete workflow for AI-powered medical session analysis using a Mixture of Experts (MoE) architecture. The system processes real-time medical conversations, extracts clinical insights, and generates interactive visualizations for diagnostic decision support.
+This document describes the complete workflow for AI-powered medical session analysis using a Universal DAG (Directed Acyclic Graph) Mixture of Experts architecture. The system processes real-time medical conversations through dynamically configured expert nodes, builds consensus through intelligent merging, and handles conflicts by presenting multiple perspectives to clinicians.
 
 ## Real-Time Continuous Assistant Nature
 
@@ -51,22 +51,40 @@ graph TB
         L -->|Yes| N[Context-Aware Expert Analysis]
     end
 
-    subgraph "DAG-Based MoE Expert System"
-        N --> N1[transcript_parser]
-        N1 --> N2[symptom_extractor]
-        N2 --> N3[diagnosis_mapper]
-        N3 --> N4[treatment_recommender]
-        N3 --> N5[question_generator]
-        N3 --> N6[warning_annotator]
-        N2 --> N7[relationship_builder]
-        N3 --> N7
-        N4 --> N7
-        N5 --> N7
-        N6 --> N7
-        N7 --> N8[schema_merger]
-        N8 --> N9[user_feedback_applier]
-        N9 --> N10[node_cleaner]
-        N10 --> T[Enhanced JSON Output]
+    subgraph "Universal Multi-Layer DAG Pattern"
+        N --> E[Expert Node]
+        E --> D{Decision Point}
+        D -->|Complete Analysis| O[Output: Symptoms + Diagnosis + Treatments + Questions]
+        D -->|Needs Specialization| T[Trigger Additional Experts]
+        T --> E2[Sub-Expert Node 1]
+        T --> E3[Sub-Expert Node 2]
+        E2 --> D2{Sub-Expert Decision}
+        E3 --> D3{Sub-Expert Decision}
+        D2 -->|Complete| O2[Sub-Analysis Output]
+        D2 -->|More Specialization| T2[Trigger Deeper Experts]
+        D3 -->|Complete| O3[Sub-Analysis Output]
+        O --> M[Consensus Merger]
+        O2 --> M
+        O3 --> M
+        M --> F[Final Medical Analysis]
+    end
+    
+    subgraph "Concrete Example: Cardiology Case"
+        N2 --> GP[GP Expert]
+        GP --> GD{GP Decision}
+        GD -->|Cardiac Symptoms Detected| CARD[Cardiology Expert]
+        GD -->|Complete Primary Assessment| GPO[GP Analysis Output]
+        CARD --> CD{Cardiology Decision}
+        CD -->|Complex Arrhythmia| EP[Electrophysiology Expert]
+        CD -->|Heart Failure| HF[Heart Failure Expert]  
+        CD -->|Standard Cardiac Analysis| CO[Cardiology Output]
+        EP --> EPO[Electrophysiology Analysis]
+        HF --> HFO[Heart Failure Analysis]
+        GPO --> CM[Final Consensus Merger]
+        CO --> CM
+        EPO --> CM
+        HFO --> CM
+        CM --> FA[Final Analysis: All Symptoms + All Diagnoses + All Treatments + All Questions]
     end
 
     subgraph "Output Generation"
@@ -76,6 +94,77 @@ graph TB
         W --> X[Client UI]
     end
 ```
+
+## Universal DAG Architecture Principles
+
+### Core Expert Node Behavior
+
+Every expert node in the DAG follows a universal pattern with two possible outcomes:
+
+#### 1. Complete Analysis Output
+When an expert determines it can provide a complete analysis, it outputs:
+- **Symptoms**: Identified symptoms with confidence scores and sources
+- **Diagnosis**: Differential diagnoses with probabilities and reasoning
+- **Treatments**: Treatment recommendations with risk assessments
+- **Questions**: Follow-up questions to prove/disprove/redirect diagnoses
+
+#### 2. Trigger Additional Expert Analysis
+When an expert identifies the need for specialized knowledge, it can:
+- **Activate Specialist Experts**: Trigger domain-specific experts (cardiology, neurology, etc.)
+- **Activate Functional Experts**: Trigger role-specific experts (safety monitor, drug interaction checker)
+- **Pass Enriched Context**: Provide its preliminary analysis as additional input to sub-experts
+
+### Dynamic Expert Selection Logic
+
+```
+Expert Decision Framework:
+IF (case_complexity > expert_capability_threshold) THEN
+    trigger_specialist_experts(domain_indicators)
+ELSE
+    return_complete_analysis(symptoms, diagnosis, treatments, questions)
+END IF
+```
+
+### Multi-Layer Consensus Building
+
+#### Layer-by-Layer Merging
+- Each layer of experts produces analysis outputs
+- Layer consensus mergers combine outputs from experts at the same level
+- Final merger combines all layer outputs into unified medical analysis
+
+#### Weighted Integration
+- **Specialty Relevance**: Weight expert opinions based on case relevance
+- **Confidence Scoring**: Higher confidence experts have more influence
+- **Evidence Quality**: Well-supported recommendations get priority
+
+#### Conflict Handling
+- **Consensus Detection**: When >75% agreement exists, boost probabilities
+- **Conflict Publication**: When experts disagree, publish all perspectives with conflict alerts
+- **No Resolution**: Present conflicting diagnoses/treatments to clinician for discussion
+
+### Expert Triggering Mechanisms
+
+#### Symptom-Based Triggers
+```yaml
+trigger_conditions:
+  cardiology: ["chest_pain", "shortness_of_breath", "palpitations", "syncope"]
+  neurology: ["headache", "confusion", "weakness", "seizure"]
+  emergency: ["severe_pain", "vital_sign_abnormality", "altered_consciousness"]
+```
+
+#### Context-Based Triggers
+```yaml
+context_triggers:
+  geriatrics: "patient_age > 65"
+  pediatrics: "patient_age < 18" 
+  obstetrics: "pregnancy_status = true"
+  critical_care: "severity_score > high_threshold"
+```
+
+#### Dynamic Depth Control
+- **Maximum Layers**: Prevent infinite expert recursion
+- **Confidence Thresholds**: Only trigger sub-experts when needed
+- **Cost Optimization**: Balance analysis depth with processing costs
 
 ## Detailed Workflow Steps
 
