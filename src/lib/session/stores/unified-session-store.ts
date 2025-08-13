@@ -11,8 +11,7 @@ import type {
 } from "../index";
 import type { 
   AnalysisState, 
-  PathState, 
-  analysisActions 
+  PathState
 } from "./analysis-store";
 import { SSEClient } from "../transport/sse-client";
 import type { PartialTranscript } from "../transport/sse-client";
@@ -73,7 +72,7 @@ export interface UnifiedSessionState {
     buffer: string;
   };
 
-  // Analysis Integration (from existing analysis-store)
+  // Analysis Integration
   analysis: AnalysisState & {
     expertAnalyses: Map<string, any>;
     consensus: any | null;

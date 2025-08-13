@@ -126,6 +126,9 @@ export interface SankeyNode {
     // Node height value (calculated from priority/severity and probability)
     value: number;
     
+    // Sort index to preserve intended order (especially for symptoms)
+    sortIndex?: number;
+    
     // D3 Sankey computed properties (added by D3)
     x0?: number;
     y0?: number;

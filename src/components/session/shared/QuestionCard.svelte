@@ -3,7 +3,8 @@
     import { slide } from 'svelte/transition';
     import type { ActionNode } from '../types/visualization';
     import { t } from '$lib/i18n';
-    import { analysisActions, nodeLookup } from '$lib/session/stores/analysis-store';
+    import { sessionDataActions } from '$lib/session/stores/session-data-store';
+    import { sessionViewerActions } from '$lib/session/stores/session-viewer-store';
 
     interface Props {
         question: ActionNode;
@@ -47,20 +48,20 @@
         return $t('session.priority.low');
     }
 
-    // Interactive handlers using existing store actions
+    // Interactive handlers using new store actions
     function handleNodeHover(nodeId: string, isEntering: boolean) {
-        const node = nodeLookup.findNodeById(nodeId);
+        const node = sessionDataActions.findNodeById(nodeId);
         if (node && isEntering) {
-            analysisActions.hoverItem('node', node);
+            sessionViewerActions.setHoveredItem('node', nodeId, node);
         } else if (!isEntering) {
-            analysisActions.clearHover();
+            sessionViewerActions.setHoveredItem(null);
         }
     }
 
     function handleNodeClick(nodeId: string) {
-        const node = nodeLookup.findNodeById(nodeId);
+        const node = sessionDataActions.findNodeById(nodeId);
         if (node) {
-            analysisActions.selectItem('node', node);
+            sessionViewerActions.selectItem('node', nodeId, node);
         }
     }
 </script>
@@ -122,7 +123,7 @@
                                             onclick={() => handleNodeClick(diagId)}
                                             onkeydown={(e) => e.key === 'Enter' && handleNodeClick(diagId)}
                                         >
-                                            {nodeLookup.getNodeDisplayText(diagId)}
+                                            {sessionDataActions.getNodeDisplayText(diagId)}
                                         </span>: {impact > 0 ? '+' : ''}{Math.round(impact * 100)}%
                                     </li>
                                 {/each}
@@ -144,7 +145,7 @@
                                             onclick={() => handleNodeClick(diagId)}
                                             onkeydown={(e) => e.key === 'Enter' && handleNodeClick(diagId)}
                                         >
-                                            {nodeLookup.getNodeDisplayText(diagId)}
+                                            {sessionDataActions.getNodeDisplayText(diagId)}
                                         </span>: {impact > 0 ? '+' : ''}{Math.round(impact * 100)}%
                                     </li>
                                 {/each}
@@ -170,7 +171,7 @@
                                     onclick={() => handleNodeClick(rel.nodeId)}
                                     onkeydown={(e) => e.key === 'Enter' && handleNodeClick(rel.nodeId)}
                                 >
-                                    {nodeLookup.getNodeDisplayText(rel.nodeId)}
+                                    {sessionDataActions.getNodeDisplayText(rel.nodeId)}
                                 </span>
                                 <span class="rel-strength">{Math.round(rel.strength * 100)}%</span>
                             </li>

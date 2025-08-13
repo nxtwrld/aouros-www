@@ -5,10 +5,10 @@
     import QuestionsSection from '../shared/QuestionsSection.svelte';
     import AlertsSection from '../shared/AlertsSection.svelte';
     import { 
-        analysisActions, 
-        questionsForSelectedLink, 
-        alertsForSelectedLink 
-    } from '$lib/session/stores/analysis-store';
+        sessionDataActions, 
+        questionsForLink, 
+        alertsForLink 
+    } from '$lib/session/stores/session-data-store';
     import SymptomNodeComponent from '../nodes/SymptomNode.svelte';
     import DiagnosisNodeComponent from '../nodes/DiagnosisNode.svelte';
     import TreatmentNodeComponent from '../nodes/TreatmentNode.svelte';
@@ -32,10 +32,11 @@
         onalertAcknowledge
     }: Props = $props();
 
-    // Set the selected link in the store when component receives a new link
-    $effect(() => {
-        analysisActions.selectLink(link);
-    });
+    // Create derived stores for this specific link
+    const linkQuestions = $derived(questionsForLink(link));
+    const linkAlerts = $derived(alertsForLink(link));
+    const relatedQuestions = $derived($linkQuestions);
+    const relatedAlerts = $derived($linkAlerts);
 
     // Reactive stores auto-update without debug logs
 
@@ -141,10 +142,10 @@
         <InfoGrid items={basicInfoItems} title={$t('session.headers.relationship-details')} />
 
         <!-- Questions -->
-        {#if $questionsForSelectedLink.length > 0}
+        {#if relatedQuestions.length > 0}
             <section class="session-info-section">
                 <QuestionsSection 
-                    questions={$questionsForSelectedLink}
+                    questions={relatedQuestions}
                     title={$t('session.headers.questions')}
                     compact={true}
                 />
@@ -152,10 +153,10 @@
         {/if}
 
         <!-- Alerts -->
-        {#if $alertsForSelectedLink.length > 0}
+        {#if relatedAlerts.length > 0}
             <section class="session-info-section">
                 <AlertsSection 
-                    alerts={$alertsForSelectedLink}
+                    alerts={relatedAlerts}
                     title={$t('session.headers.alerts')}
                     compact={true}
                     onalertAcknowledge={onalertAcknowledge}

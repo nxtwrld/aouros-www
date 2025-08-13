@@ -69,7 +69,14 @@
 {:else}
     <div class="unknown-node">
         <p>{$t('session.empty-states.no-data')}: {nodeType}</p>
-        <pre>{JSON.stringify(node, null, 2)}</pre>
+        <pre>{JSON.stringify({
+            id: node?.id,
+            name: node?.name,
+            type: node?.type,
+            value: node?.value,
+            // Avoid circular references from D3 Sankey
+            data: node?.data
+        }, null, 2)}</pre>
     </div>
 {/if}
 

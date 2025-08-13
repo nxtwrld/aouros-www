@@ -1,14 +1,17 @@
 <script lang="ts">
-    import { onMount, onDestroy } from 'svelte';
+    import { onMount, onDestroy, untrack } from 'svelte';
     import { mount, unmount } from 'svelte';
     import { get } from 'svelte/store';
     import * as d3 from 'd3';
     import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
     import type { SessionAnalysis, SankeyNode, SankeyLink, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
-    import { transformToSankeyData, calculateNodeSize } from './utils/sankeyDataTransformer';
+    import { calculateNodeSize } from './utils/sankeyDataTransformer';
     import { OPACITY, COLORS, NODE_SIZE, LINK_CONFIG, getLinkPathGenerator, calculateLinkWidth, applyParallelLinkSpacing, createEnhancedLinkGenerator } from './config/visual-config';
     import LinkTooltip from './LinkTooltip.svelte';
-    import { analysisActions, relatedActionsForSelectedLink, visualState } from '$lib/session/stores/analysis-store';
+    import { sessionDataActions, sankeyData } from '$lib/session/stores/session-data-store';
+    import { activePath, hoveredItem, selectedItem } from '$lib/session/stores/session-viewer-store';
+    // Temporary workaround for TypeScript import issues
+    import * as viewerStoreModule from '$lib/session/stores/session-viewer-store';
     import SymptomNode from './nodes/SymptomNode.svelte';
     import DiagnosisNode from './nodes/DiagnosisNode.svelte';
     import TreatmentNode from './nodes/TreatmentNode.svelte';
@@ -16,10 +19,8 @@
     import { t } from '$lib/i18n';
 
     interface Props {
-        data: SessionAnalysis;
         isMobile?: boolean;
-        selectedNodeId?: string | null;
-        focusedNodeIndex?: number;
+        // All data now comes from stores, no reactive props
         onnodeSelect?: (event: CustomEvent<NodeSelectEvent>) => void;
         onlinkSelect?: (event: CustomEvent<LinkSelectEvent>) => void;
         onselectionClear?: (event: CustomEvent) => void;
@@ -27,31 +28,51 @@
     }
 
     let { 
-        data, 
-        isMobile = false, 
-        selectedNodeId = null,
-        focusedNodeIndex = -1,
+        isMobile = false,
         onnodeSelect,
         onlinkSelect,
         onselectionClear,
         onfocusChange
     }: Props = $props();
 
+    // Read all data directly from stores - no transformations needed here
+    const selectedNodeId = $derived($selectedItem?.type === 'node' ? $selectedItem.id : null);
+    // TODO: Add focusedNodeIndex to viewer store
+    let focusedNodeIndex = $state(-1);
+
     let container = $state<HTMLElement>();
     let svg = $state<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
-    let width = $state(800);
-    let height = $state(600);
-    let sankeyData = $state(transformToSankeyData(data));
-    
-    // Update sankey data when data changes
+    let width = 800;  // Non-reactive to prevent triggering effects
+    let height = 600; // Non-reactive to prevent triggering effects
+    // Subscribe only to the specific values we need (avoid reading the entire store)
     $effect(() => {
-        sankeyData = transformToSankeyData(data);
-    });
-    // Subscribe to unified visual state and apply styling
-    $effect(() => {
-        const currentVisualState = $visualState;
+        const activePathData = $activePath;
+        const hoveredItemData = $hoveredItem;
         
-        applyUnifiedVisualState(currentVisualState);
+        console.log('✨ Path highlighting effect triggered', {
+            hasActivePath: !!activePathData,
+            hasHoveredItem: !!hoveredItemData,
+            activeNodeCount: activePathData?.nodes?.length || 0,
+            activeLinkCount: activePathData?.links?.length || 0
+        });
+        
+        // Calculate hover path if needed - hover takes precedence over active selection
+        let hoverHighlight = null;
+        if (hoveredItemData && hoveredItemData.type === 'node') {
+            // Use the same path calculation method as selection for consistency
+            const pathResult = sessionDataActions.calculatePath(hoveredItemData.id);
+            hoverHighlight = pathResult?.path || null;
+            
+            console.log('Hover path calculated', {
+                hoveredNodeId: hoveredItemData.id,
+                hoverNodeCount: hoverHighlight?.nodes?.length || 0,
+                hoverLinkCount: hoverHighlight?.links?.length || 0
+            });
+        }
+        
+        // Apply the highlighting: hover takes precedence, then active path
+        // When hover is cleared, active path will be restored
+        updateSelectionState(activePathData, hoverHighlight);
     });
     let tooltipData = $state<{
         relationshipType: string;
@@ -70,16 +91,10 @@
     });
     let nodeComponents = $state(new Map<string, { component: any, container: HTMLDivElement }>());
     let resizeTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
-    let resizeDebounceTimer = $state<ReturnType<typeof setTimeout> | null>(null);
     let resizeObserver = $state<ResizeObserver | null>(null);
     let focusableNodes = $state<SankeyNode[]>([]);
     let zoomBehavior = $state<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
     let currentZoomTransform = $state<d3.ZoomTransform>(d3.zoomIdentity);
-    
-    // Resize thresholds to prevent unnecessary re-renders
-    const SIGNIFICANT_WIDTH_THRESHOLD = 50;  // px
-    const SIGNIFICANT_HEIGHT_THRESHOLD = 50; // px
-    const RESIZE_DEBOUNCE_DELAY = 150;       // ms
     
     // Zoom configuration
     const ZOOM_CONFIG = {
@@ -108,6 +123,12 @@
         // Use requestAnimationFrame to ensure DOM is ready
         requestAnimationFrame(() => {
             initializeSankey();
+            // Initial render after SVG is created
+            if ($sankeyData) {
+                console.log('🎨 Initial render on mount');
+                renderSankey();
+                buildFocusableNodesList();
+            }
         });
         
         // Set up ResizeObserver for container
@@ -176,7 +197,6 @@
         
         return () => {
             if (resizeTimeout) clearTimeout(resizeTimeout);
-            if (resizeDebounceTimer) clearTimeout(resizeDebounceTimer);
             if (resizeObserver) {
                 resizeObserver.disconnect();
             }
@@ -188,24 +208,28 @@
         cleanupNodeComponents();
     });
 
-    // React to data changes and transform data (without triggering render)
-    $effect(() => {
-        if (data) {
-            // Create a fresh copy to avoid mutation issues
-            sankeyData = transformToSankeyData(JSON.parse(JSON.stringify(data)));
-        }
-    });
+    // Data transformation is now handled by the store - no local effects needed
 
-    // React to data structure changes and initial setup (avoid unnecessary re-renders)
+    // React to data structure changes (full re-render only when data changes)
+    // Use untrack to prevent svg from being a reactive dependency
     $effect(() => {
-        if (svg && sankeyData && container) {
+        const currentSvg = untrack(() => svg);
+        const data = $sankeyData;
+        
+        if (currentSvg && data) {
+            console.log('🔄 DATA EFFECT: renderSankey() for data changes - will clear DOM elements');
             renderSankey();
             buildFocusableNodesList();
+            console.log('🔄 DATA EFFECT: renderSankey() completed');
         }
     });
+    
+    // Container resize is handled by ResizeObserver calling handleContainerResize
+    // No need for a separate effect here
 
     // React to selectedNodeId changes to apply focus highlighting
-    $effect(() => {
+    // NOTE: Disabled in favor of unified visual state system
+    /*$effect(() => {
         if (svg && selectedNodeId) {
             // Apply focus highlighting when a node is selected
             applyFocusHighlighting(selectedNodeId);
@@ -214,7 +238,7 @@
             // This prevents interfering with the initial state
             resetHighlighting();
         }
-    });
+    });*/
 
     // React to focus changes with efficient DOM updates
     $effect(() => {
@@ -275,8 +299,10 @@
     }
 
     function renderSankey() {
-        if (!svg || !sankeyData) {
-            console.warn('Missing svg or sankeyData:', { svg: !!svg, sankeyData: !!sankeyData });
+        console.log('🔄 renderSankey() EXECUTING - DOM elements will be recreated, clearing all highlighting');
+        
+        if (!svg || !$sankeyData) {
+            console.warn('Missing svg or $sankeyData:', { svg: !!svg, $sankeyData: !!$sankeyData });
             return;
         }
         
@@ -284,18 +310,20 @@
         cleanupNodeComponents();
 
         // Validate data structure
-        if (!sankeyData.nodes || !Array.isArray(sankeyData.nodes)) {
-            console.error('Invalid nodes data:', sankeyData.nodes);
+        if (!$sankeyData.nodes || !Array.isArray($sankeyData.nodes)) {
+            console.error('Invalid nodes data:', $sankeyData.nodes);
             return;
         }
         
-        if (!sankeyData.links || !Array.isArray(sankeyData.links)) {
-            console.error('Invalid links data:', sankeyData.links);
+        if (!$sankeyData.links || !Array.isArray($sankeyData.links)) {
+            console.error('Invalid links data:', $sankeyData.links);
             return;
         }
 
-        // Clear existing content in the main group
+        // Clear existing content in the main group - ensure complete removal
         const mainGroup = svg.select('g.main-group');
+        mainGroup.selectAll('.link-group').remove();
+        mainGroup.selectAll('.node-group').remove();
         mainGroup.selectAll('*').remove();
         
         // Create separate groups for proper z-ordering (links behind nodes)
@@ -304,15 +332,15 @@
 
         // Debug logging
         /* console.log('Rendering Sankey with data:', {
-            nodes: sankeyData.nodes.length,
-            links: sankeyData.links.length,
+            nodes: $sankeyData.nodes.length,
+            links: $sankeyData.links.length,
             width: width,
             height: height,
             containerWidth: container?.getBoundingClientRect().width,
-            nodeTypes: sankeyData.nodes.map(n => n.type),
-            linkTypes: sankeyData.links.map(l => l.type),
-            nodeDetails: sankeyData.nodes.map(n => ({ id: n.id, name: n.name, type: n.type })),
-            linkDetails: sankeyData.links.map(l => ({ source: l.source, target: l.target, value: l.value }))
+            nodeTypes: $sankeyData.nodes.map(n => n.type),
+            linkTypes: $sankeyData.links.map(l => l.type),
+            nodeDetails: $sankeyData.nodes.map(n => ({ id: n.id, name: n.name, type: n.type })),
+            linkDetails: $sankeyData.links.map(l => ({ source: l.source, target: l.target, value: l.value }))
         }); */
 
         const chartWidth = width - margins.left - margins.right;
@@ -348,14 +376,18 @@
             .extent([[0, 0], [chartWidth, chartHeight]])
             .nodeId(d => d.id)
             .nodeSort((a: SankeyNode, b: SankeyNode) => {
-                // Sort nodes in each column by their calculated value (descending)
+                // For symptoms, preserve the pre-sorted order using sortIndex
+                if (a.type === 'symptom' && b.type === 'symptom') {
+                    return (a.sortIndex || 0) - (b.sortIndex || 0);
+                }
+                // For other node types, sort by calculated value (descending)
                 return (b.value || 50) - (a.value || 50);
             });
 
         // Transform data for D3 with error handling
         let sankeyResult: any;
         try {
-            const nodesForD3 = sankeyData.nodes.map(d => ({ 
+            const nodesForD3 = $sankeyData.nodes.map(d => ({ 
                 ...d,
                 // Ensure all required properties exist
                 sourceLinks: [],
@@ -364,7 +396,7 @@
                 value: d.value || 50
             }));
             
-            const linksForD3 = sankeyData.links.map(d => ({ 
+            const linksForD3 = $sankeyData.links.map(d => ({ 
                 ...d,
                 // Ensure source and target are properly set
                 source: d.source,
@@ -725,8 +757,10 @@
         event.preventDefault();
         event.stopPropagation();
         
-        // Use new unified selection system
-        analysisActions.selectItem('node', node);
+        // Use session viewer store to select node only
+        // Store the original medical data, not the D3 Sankey wrapper
+        // Path calculation will be handled by the reactive effect in SessionMoeVisualizer
+        viewerStoreModule.sessionViewerActions.selectItem('node', node.id, node.data || node);
         
         // Also emit the event for backwards compatibility
         onnodeSelect?.(new CustomEvent('nodeSelect', {
@@ -742,8 +776,8 @@
         event.preventDefault();
         event.stopPropagation();
         
-        // Use new unified selection system
-        analysisActions.selectItem('link', link);
+        // Use session viewer store to select link
+viewerStoreModule.sessionViewerActions.selectItem('link', `${link.source}-${link.target}`, link);
         
         // Also emit the event for backwards compatibility
         onlinkSelect?.(new CustomEvent('linkSelect', {
@@ -768,8 +802,8 @@
         
         // Clear selection if clicking on any non-interactive SVG element
         if (!isClickableElement) {
-            // Clear the unified visual state system
-            analysisActions.clearSelection();
+            // Clear the selection and active path
+    viewerStoreModule.sessionViewerActions.clearSelection();
             
             // Also notify parent component
             onselectionClear?.(new CustomEvent('selectionClear'));
@@ -777,28 +811,28 @@
     }
 
     function buildFocusableNodesList() {
-        if (!sankeyData.nodes) return;
+        if (!$sankeyData.nodes) return;
         
         // Order nodes by medical workflow: symptoms -> diagnoses -> treatments
         const orderedNodes: SankeyNode[] = [];
         
         // Add symptoms first
-        sankeyData.nodes.filter(n => n.type === 'symptom').forEach(node => {
+        $sankeyData.nodes.filter(n => n.type === 'symptom').forEach(node => {
             orderedNodes.push(node);
         });
         
         // Add diagnoses second
-        sankeyData.nodes.filter(n => n.type === 'diagnosis').forEach(node => {
+        $sankeyData.nodes.filter(n => n.type === 'diagnosis').forEach(node => {
             orderedNodes.push(node);
         });
         
         // Add treatments third
-        sankeyData.nodes.filter(n => n.type === 'treatment').forEach(node => {
+        $sankeyData.nodes.filter(n => n.type === 'treatment').forEach(node => {
             orderedNodes.push(node);
         });
         
         // Add any other node types at the end
-        sankeyData.nodes.filter(n => !['symptom', 'diagnosis', 'treatment'].includes(n.type)).forEach(node => {
+        $sankeyData.nodes.filter(n => !['symptom', 'diagnosis', 'treatment'].includes(n.type)).forEach(node => {
             orderedNodes.push(node);
         });
         
@@ -855,7 +889,7 @@
             selectFocused: selectFocusedNode,
             clearSelection: () => {
                 // Clear the unified visual state system
-                analysisActions.clearSelection();
+        viewerStoreModule.sessionViewerActions.clearSelection();
             }
         };
     }
@@ -987,7 +1021,7 @@
     function handleLinkHover(link: any, isEntering: boolean) {
         // Use unified hover system
         if (!isEntering) {
-            analysisActions.clearHover();
+    viewerStoreModule.sessionViewerActions.setHoveredItem(null);
             tooltipData.visible = false;
             // Explicitly remove hover classes and reset all states
             if (svg) {
@@ -1005,7 +1039,7 @@
         }
         
         // Set hover state using unified system
-        analysisActions.hoverItem('link', link);
+viewerStoreModule.sessionViewerActions.setHoveredItem('link', `${link.source}-${link.target}`, link);
         
         // Check if this link should show tooltip based on focus mode
         if (isEntering && !isLinkActiveInFocusMode(link)) {
@@ -1028,8 +1062,8 @@
             let relatedActions: any[] = [];
             if ((sourceNode.type === 'symptom' && targetNode.type === 'diagnosis') ||
                 (sourceNode.type === 'diagnosis' && targetNode.type === 'treatment')) {
-                // Get current value from the reactive store
-                relatedActions = get(relatedActionsForSelectedLink);
+                // Get related actions (simplified for now)
+                relatedActions = [];
             }
             
             // Calculate position - convert from Sankey coordinates to absolute page coordinates
@@ -1290,249 +1324,234 @@
             .classed(`state-reset ${renderModeClass}`, true);
     }
 
-    function applyUnifiedVisualState(visualStateData: any) {
+    /**
+     * Update selection state using proper D3 update pattern (CSS-only, no re-render)
+     */
+    function updateSelectionState(activePath: any, hoverPath: any) {
         if (!svg) {
-            //console.log('applyUnifiedVisualState: No svg element');
+            console.log('SVG not available for selection state update');
             return;
         }
         
-        //console.log('applyUnifiedVisualState: Starting with state:', visualStateData);
+        console.log('Updating selection state (D3 update pattern)', { 
+            activePathNodes: activePath?.nodes || [],
+            activePathLinks: activePath?.links || [],
+            hoverPathNodes: hoverPath?.nodes || [],
+            hoverPathLinks: hoverPath?.links || []
+        });
         
-        // Determine render mode class for links
-        const renderModeClass = LINK_CONFIG.RENDER_MODE === 'polygon' ? 'render-polygon' : 'render-stroke';
+        // Determine which nodes and links should be highlighted
+        const activeNodes = activePath?.nodes || [];
+        const activeLinks = activePath?.links || [];
+        const hoverNodes = hoverPath?.nodes || [];
+        const hoverLinks = hoverPath?.links || [];
         
-        // Clear all existing classes and transitions
-        svg.select('.link-group').selectAll('.link')
-            .classed('selected', false)
-            .classed('in-path', false)
-            .classed('active-path', false)
-            .classed('background-trigger', false)
-            .classed('background-path', false)
-            .classed('inactive', false)
-            .classed('state-active state-inactive state-background state-reset', false)
-            .interrupt(); // Stop any running animations
+        // Priority: hover takes precedence over active selection
+        // When hover is cleared, active path will be restored
+        const highlightedNodeSet = hoverNodes.length > 0 ? new Set(hoverNodes) : new Set(activeNodes);
+        const highlightedLinkSet = hoverLinks.length > 0 ? new Set(hoverLinks) : new Set(activeLinks);
+        
+        const hasHighlights = highlightedNodeSet.size > 0 || highlightedLinkSet.size > 0;
+        
+        // D3 update pattern: Update existing node elements (no recreation)
+        svg.select('.node-group').selectAll('.node-html')
+            .classed('active-path', (d: any) => highlightedNodeSet.has(d.id))
+            .classed('hovered', (d: any) => hoverNodes.includes(d.id))
+            .classed('inactive', (d: any) => hasHighlights && !highlightedNodeSet.has(d.id));
             
-        svg.select('.node-group').selectAll('.node')
-            .classed('connected-to-selected', false)
-            .classed('in-path', false)
-            .classed('active-path', false)
-            .classed('background-trigger', false)
-            .classed('background-path', false)
-            .classed('inactive', false)
-            .classed('state-focus-active state-focus-inactive state-path-active state-path-background state-inactive state-reset', false);
-            
-        svg.selectAll('.node-html')
-            .classed('connected-to-selected', false)
-            .classed('in-path', false)
-            .classed('active-path', false)
-            .classed('background-trigger', false)
-            .classed('background-path', false)
-            .classed('inactive', false);
-        
-        const { activeState, backgroundState, shouldAnimateTrigger, triggerItem } = visualStateData;
-        
-        if (!activeState) {
-            // No active state - reset to default
-            resetToDefault();
-            return;
-        }
-        
-        const activePathNodes = activeState.path.nodes;
-        const activePathLinks = activeState.path.links;
-        const backgroundPathNodes = backgroundState?.path?.nodes || [];
-        const backgroundPathLinks = backgroundState?.path?.links || [];
-        
-        /*console.log('applyUnifiedVisualState: Path data:', {
-            activePathNodes,
-            activePathLinks,
-            triggerType: triggerItem?.type,
-            triggerId: triggerItem?.id
-        });*/
-        
-        // Apply styling with priority: trigger > active path > background path > default
+        // D3 update pattern: Update existing link elements (no recreation)  
         svg.select('.link-group').selectAll('.link')
-            .classed(renderModeClass, true)
-            .classed('selected', (d: any) => {
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                return triggerItem?.type === 'link' && triggerItem.id === linkId;
-            })
-            .classed('in-path', (d: any) => {
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                return activePathLinks.includes(linkId);
-            })
             .classed('active-path', (d: any) => {
                 const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
                 const targetId = typeof d.target === 'object' ? d.target.id : d.target;
                 const linkId = `${sourceId}-${targetId}`;
-                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
-                const isInActivePath = activePathLinks.includes(linkId);
-                return isTrigger || isInActivePath;
-            })
-            .classed('background-trigger', false) // Links don't have background trigger state
-            .classed('background-path', (d: any) => {
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                const isInActivePath = activePathLinks.includes(linkId);
-                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
-                const isInBackgroundPath = backgroundPathLinks.includes(linkId);
-                return !isTrigger && !isInActivePath && isInBackgroundPath;
-            })
-            .classed('inactive', (d: any) => {
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
-                const isInActivePath = activePathLinks.includes(linkId);
-                const isInBackgroundPath = backgroundPathLinks.includes(linkId);
-                return !isTrigger && !isInActivePath && !isInBackgroundPath;
-            })
-            .classed('state-active', (d: any) => {
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
-                const isInActivePath = activePathLinks.includes(linkId);
-                return isTrigger || isInActivePath;
-            })
-            .classed('state-background', (d: any) => {
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                const isInActivePath = activePathLinks.includes(linkId);
-                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
-                const isInBackgroundPath = backgroundPathLinks.includes(linkId);
-                return !isTrigger && !isInActivePath && isInBackgroundPath;
-            })
-            .classed('state-inactive', (d: any) => {
-                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-                const linkId = `${sourceId}-${targetId}`;
-                const isTrigger = triggerItem?.type === 'link' && triggerItem.id === linkId;
-                const isInActivePath = activePathLinks.includes(linkId);
-                const isInBackgroundPath = backgroundPathLinks.includes(linkId);
-                return !isTrigger && !isInActivePath && !isInBackgroundPath;
-            });
-        
-        
-        // Apply node styling using CSS classes
-        svg.select('.node-group').selectAll('.node')
-            .classed('selected', (d: any) => {
-                const isSelected = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                return isSelected;
-            })
-            .each(function(d: any) {
-                // Move selected node to end to ensure it renders on top
-                const isSelected = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                if (isSelected) {
-                    d3.select(this).raise(); // D3 method to move element to end of parent
-                    d3.select(this).select('.node-html').raise(); // Also raise the foreignObject
-                }
-            })
-            .classed('connected-to-selected', (d: any) => {
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                return isTrigger || isInActivePath;
-            })
-            .classed('in-path', (d: any) => {
-                return activePathNodes.includes(d.id) || backgroundPathNodes.includes(d.id);
-            })
-            .classed('state-path-active', (d: any) => {
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                return isTrigger || isInActivePath;
-            })
-            .classed('state-path-background', (d: any) => {
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                const isInBackgroundPath = backgroundPathNodes.includes(d.id);
-                return !isTrigger && !isInActivePath && isInBackgroundPath;
-            })
-            .classed('state-inactive', (d: any) => {
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                const isInBackgroundPath = backgroundPathNodes.includes(d.id);
-                return !isTrigger && !isInActivePath && !isInBackgroundPath;
-            });
-            
-        svg.selectAll('.node-html')
-            .classed('selected', (d: any) => {
-                // Node is selected if:
-                // 1. It's the trigger in background state (was selected and now something else is hovered), OR
-                // 2. It's the trigger in active state and should animate (was just clicked/selected)
-                const isBackgroundTrigger = backgroundState?.trigger?.type === 'node' && backgroundState.trigger.id === d.id;
-                const isActiveTriggerWithAnimation = activeState?.trigger?.type === 'node' && activeState.trigger.id === d.id && shouldAnimateTrigger;
-                
-                return isBackgroundTrigger || isActiveTriggerWithAnimation;
+                return highlightedLinkSet.has(linkId);
             })
             .classed('hovered', (d: any) => {
-                // Node is currently being hovered (but not selected, or hovered while something else is selected)
-                return activeState?.trigger?.type === 'node' && activeState.trigger.id === d.id && !shouldAnimateTrigger;
-            })
-            .classed('connected-to-selected', (d: any) => {
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                return isTrigger || isInActivePath;
-            })
-            .classed('active-path', (d: any) => {
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                return isTrigger || isInActivePath;
-            })
-            .classed('background-trigger', (d: any) => {
-                const isBackgroundTrigger = backgroundState?.trigger?.type === 'node' && backgroundState.trigger.id === d.id;
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                return isBackgroundTrigger && !isTrigger && !isInActivePath;
-            })
-            .classed('background-path', (d: any) => {
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                const isInBackgroundPath = backgroundPathNodes.includes(d.id);
-                const isBackgroundTrigger = backgroundState?.trigger?.type === 'node' && backgroundState.trigger.id === d.id;
-                return !isTrigger && !isInActivePath && !isBackgroundTrigger && isInBackgroundPath;
-            })
-            .classed('inactive', (d: any) => {
-                const isTrigger = triggerItem?.type === 'node' && triggerItem.id === d.id;
-                const isInActivePath = activePathNodes.includes(d.id);
-                const isInBackgroundPath = backgroundPathNodes.includes(d.id);
-                const isBackgroundTrigger = backgroundState?.trigger?.type === 'node' && backgroundState.trigger.id === d.id;
-                return !isTrigger && !isInActivePath && !isInBackgroundPath && !isBackgroundTrigger;
-            });
-        
-        // Add animation class to trigger item if needed
-        if (shouldAnimateTrigger && triggerItem?.type === 'link') {
-            // Apply animation to the specific selected link
-            svg.selectAll('.link').each(function(d: any) {
                 const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
                 const targetId = typeof d.target === 'object' ? d.target.id : d.target;
                 const linkId = `${sourceId}-${targetId}`;
-                const isAnimatedLink = linkId === triggerItem.id;
-                
-                if (isAnimatedLink) {
-                    // Add animation class
-                    d3.select(this)
-                        .classed('animate-pulse', true);
-                } else {
-                    d3.select(this).classed('animate-pulse', false);
-                }
+                return hoverLinks.includes(linkId);
+            })
+            .classed('inactive', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                const linkId = `${sourceId}-${targetId}`;
+                return hasHighlights && !highlightedLinkSet.has(linkId);
             });
-        } else {
-            // Clear animation from all links
-            svg.select('.link-group').selectAll('.link').classed('animate-pulse', false);
+    }
+    
+    /**
+     * Updates D3 Sankey layout positions without recreating DOM elements
+     * Used when container size changes to preserve selection state
+     */
+    function updateSankeyLayout() {
+        if (!svg || !$sankeyData || !container) {
+            console.warn('Cannot update layout: missing svg, $sankeyData, or container');
+            return;
         }
         
-        /*console.log('applyUnifiedVisualState: Applied styling for', {
-            activeNodes: activePathNodes.length,
-            activeLinks: activePathLinks.length,
-            backgroundNodes: backgroundPathNodes.length,
-            backgroundLinks: backgroundPathLinks.length,
-            shouldAnimate: shouldAnimateTrigger
-        });*/
+        console.log('🔄 updateSankeyLayout() - Updating positions only, preserving DOM elements and state');
+        
+        // Get current container dimensions
+        const bounds = container.getBoundingClientRect();
+        const newWidth = Math.max(bounds.width, container.offsetWidth || 0);
+        const newHeight = Math.max(bounds.height, container.offsetHeight || 0);
+        
+        // Update SVG viewBox if dimensions changed significantly
+        if (Math.abs(newWidth - width) > 10 || Math.abs(newHeight - height) > 10) {
+            width = newWidth;
+            height = newHeight;
+            svg.attr('viewBox', `0 0 ${width} ${height}`);
+        }
+        
+        // Recalculate layout with new dimensions
+        const chartWidth = width - margins.left - margins.right;
+        const chartHeight = height - margins.top - margins.bottom;
+        const htmlNodeWidth = isMobile ? 120 : 160;
+        
+        // Recalculate column positions
+        const availableWidth = chartWidth;
+        const columnWidth = availableWidth / 3;
+        const columnCenterX = [
+            columnWidth * 0.5,
+            columnWidth * 1.5, 
+            columnWidth * 2.5
+        ];
+        
+        // Create a temporary sankey generator for position calculations
+        const sankeyGenerator = sankey<SankeyNode, SankeyLink>()
+            .nodeWidth(50)
+            .nodePadding(isMobile ? 8 : 12)
+            .extent([[0, 0], [chartWidth, chartHeight]])
+            .nodeId(d => d.id)
+            .nodeSort((a: SankeyNode, b: SankeyNode) => {
+                if (a.type === 'symptom' && b.type === 'symptom') {
+                    return (a.sortIndex || 0) - (b.sortIndex || 0);
+                }
+                return (b.value || 50) - (a.value || 50);
+            });
+        
+        // Recalculate positions using existing node data
+        let updatedResult: any;
+        try {
+            const nodesForD3 = $sankeyData.nodes.map(d => ({ 
+                ...d,
+                sourceLinks: [],
+                targetLinks: [],
+                value: d.value || 50
+            }));
+            
+            const linksForD3 = $sankeyData.links.map(d => ({ 
+                ...d,
+                source: d.source,
+                target: d.target,
+                value: d.value || 1
+            }));
+            
+            updatedResult = sankeyGenerator({
+                nodes: nodesForD3,
+                links: linksForD3
+            });
+            
+            // Override positions with our column-based layout
+            if (updatedResult?.nodes) {
+                updatedResult.nodes.forEach((node: any) => {
+                    const typeColumnMap = { symptom: 0, diagnosis: 1, treatment: 2 };
+                    const targetColumn = typeColumnMap[node.type as keyof typeof typeColumnMap] ?? 1;
+                    
+                    const centerX = columnCenterX[targetColumn];
+                    node.x0 = centerX - (htmlNodeWidth / 2);
+                    node.x1 = centerX + (htmlNodeWidth / 2);
+                });
+                
+                // Position nodes within columns
+                const nodesByColumn: { symptom: any[], diagnosis: any[], treatment: any[] } = { 
+                    symptom: [], diagnosis: [], treatment: [] 
+                };
+                updatedResult.nodes.forEach((node: any) => {
+                    if (nodesByColumn[node.type as keyof typeof nodesByColumn]) {
+                        nodesByColumn[node.type as keyof typeof nodesByColumn].push(node);
+                    }
+                });
+                
+                Object.values(nodesByColumn).forEach((columnNodes: any[]) => {
+                    columnNodes.sort((a, b) => (b.value || 50) - (a.value || 50));
+                    
+                    let currentY = 20;
+                    columnNodes.forEach((node) => {
+                        const nodeHeight = Math.max(NODE_SIZE.MIN_HEIGHT_PX, node.value || NODE_SIZE.MIN_HEIGHT_PX);
+                        node.y0 = currentY;
+                        node.y1 = currentY + nodeHeight;
+                        currentY = node.y1 + (isMobile ? 8 : 12);
+                    });
+                });
+                
+                // Update link positions to match new node positions
+                if (updatedResult.links) {
+                    updatedResult.links.forEach((link: any) => {
+                        const sourceNode = updatedResult.nodes.find((n: any) => n.id === (typeof link.source === 'object' ? link.source.id : link.source));
+                        const targetNode = updatedResult.nodes.find((n: any) => n.id === (typeof link.target === 'object' ? link.target.id : link.target));
+                        
+                        if (sourceNode && targetNode) {
+                            link.source = sourceNode;
+                            link.target = targetNode;
+                            // Simplified link positioning for layout updates
+                            link.y0 = sourceNode.y0 + (sourceNode.y1 - sourceNode.y0) / 2;
+                            link.y1 = targetNode.y0 + (targetNode.y1 - targetNode.y0) / 2;
+                            link.width = Math.max(1, link.value || 2);
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error in layout update calculation:', error);
+            return;
+        }
+        
+        if (!updatedResult?.nodes || !updatedResult?.links) {
+            console.error('Invalid layout update result:', updatedResult);
+            return;
+        }
+        
+        // Update existing DOM elements positions using D3 update pattern
+        // This preserves all existing classes and states
+        
+        // Update node positions
+        svg.select('.node-group').selectAll('.node')
+            .data(updatedResult.nodes, (d: any) => d.id)
+            .transition()
+            .duration(200)
+            .attr('transform', (d: any) => `translate(${d.x0}, ${d.y0})`);
+        
+        // Update foreignObject dimensions
+        svg.select('.node-group').selectAll('.node-html')
+            .data(updatedResult.nodes, (d: any) => d.id)
+            .transition()
+            .duration(200)
+            .attr('height', (d: any) => d.y1! - d.y0!);
+        
+        // Update link paths using the same generator as in renderSankey
+        const baseLinkGenerator = LINK_CONFIG.ALGORITHM === 'default' 
+            ? sankeyLinkHorizontal()
+            : getLinkPathGenerator(LINK_CONFIG.ALGORITHM, LINK_CONFIG.RENDER_MODE);
+        
+        const linkPathGenerator = LINK_CONFIG.ALGORITHM === 'default' 
+            ? sankeyLinkHorizontal()
+            : createEnhancedLinkGenerator(baseLinkGenerator);
+        
+        svg.select('.link-group').selectAll('.link')
+            .data(updatedResult.links, (d: any) => `${d.source.id}-${d.target.id}`)
+            .transition()
+            .duration(200)
+            .attr('d', (d: any) => {
+                if (LINK_CONFIG.ALGORITHM === 'default') {
+                    return sankeyLinkHorizontal()(d);
+                }
+                return linkPathGenerator(d);
+            });
+        
+        console.log('🔄 updateSankeyLayout() - Layout positions updated, DOM elements and state preserved');
     }
     
     function resetToDefault() {
@@ -1564,7 +1583,7 @@
         
         // Use new unified hover system
         if (!isEntering) {
-            analysisActions.clearHover();
+    viewerStoreModule.sessionViewerActions.setHoveredItem(null);
             // Explicitly remove hover classes and reset all opacity states
             svg.selectAll('.node-html.hovered').classed('hovered', false);
             svg.selectAll('.link.hovered').classed('hovered', false);
@@ -1581,12 +1600,12 @@
         
         // Find the node object for hovering
         const allNodeArrays = [
-            sankeyData?.nodes || [],
+            $sankeyData?.nodes || [],
         ].flat();
         const nodeObject = allNodeArrays.find(n => n.id === nodeId);
         
         if (nodeObject) {
-            analysisActions.hoverItem('node', nodeObject);
+    viewerStoreModule.sessionViewerActions.setHoveredItem('node', nodeObject.id, nodeObject.data || nodeObject);
         }
     }
 
@@ -1594,29 +1613,25 @@
         const newWidth = Math.max(contentRect.width, 300);
         const newHeight = Math.max(contentRect.height, 200);
         
-        // Update viewBox immediately for smooth visual feedback during resize
-        if (svg) {
-            svg.attr('viewBox', `0 0 ${newWidth} ${newHeight}`);
-        }
-        
-        // Clear existing debounce timer
-        if (resizeDebounceTimer) {
-            clearTimeout(resizeDebounceTimer);
-        }
-        
-        // Check if resize is significant enough to require full re-render
-        const significantWidthChange = Math.abs(newWidth - width) > SIGNIFICANT_WIDTH_THRESHOLD;
-        const significantHeightChange = Math.abs(newHeight - height) > SIGNIFICANT_HEIGHT_THRESHOLD;
+        // Check if resize is significant enough to update
+        const significantWidthChange = Math.abs(newWidth - width) > 10; // Lower threshold for smoother updates
+        const significantHeightChange = Math.abs(newHeight - height) > 10;
         
         if (significantWidthChange || significantHeightChange) {
-            // Debounce expensive recalculation for significant changes
-            resizeDebounceTimer = setTimeout(() => {
-                // This will trigger the main effect to re-render
-                width = newWidth;
-                height = newHeight;
+            // Update dimensions (non-reactive variables)
+            width = newWidth;
+            height = newHeight;
+            
+            // Update viewBox for visual feedback
+            if (svg) {
+                svg.attr('viewBox', `0 0 ${width} ${height}`);
                 
-                resizeDebounceTimer = null;
-            }, RESIZE_DEBOUNCE_DELAY);
+                // Update layout positions without re-rendering nodes
+                if ($sankeyData) {
+                    console.log('📐 Container resized, updating layout positions');
+                    updateSankeyLayout();
+                }
+            }
         }
     }
 
@@ -1661,7 +1676,7 @@
 
     // Zoom utility functions
     function zoomToFit() {
-        if (!svg || !sankeyData.nodes.length || !zoomBehavior) return;
+        if (!svg || !$sankeyData.nodes.length || !zoomBehavior) return;
         
         const mainGroupElement = svg.select('.main-group').node() as SVGGElement;
         if (!mainGroupElement) return;
@@ -1742,7 +1757,7 @@
 
     // Transform constraint function to keep content within reasonable bounds
     function constrainTransform(transform: d3.ZoomTransform): d3.ZoomTransform {
-        if (!sankeyData.nodes.length) return transform;
+        if (!$sankeyData.nodes.length) return transform;
         
         // Calculate content bounds
         const padding = isMobile ? 100 : 200;
@@ -1783,7 +1798,7 @@
      role="application"
      aria-label="Interactive Sankey diagram with zoom and pan controls"
      style="--hover-link-opacity: {OPACITY.CSS_HOVER_LINK}; --hover-node-opacity: {OPACITY.CSS_HOVER_NODE}; --shadow-light-opacity: {OPACITY.SHADOW_LIGHT}; --shadow-medium-opacity: {OPACITY.SHADOW_MEDIUM}">
-    {#if !sankeyData.nodes.length}
+    {#if !$sankeyData.nodes.length}
         <div class="empty-state">
             <p>{$t('session.empty-states.no-data')}</p>
         </div>

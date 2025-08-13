@@ -6,7 +6,7 @@
     import AlertsSection from '../shared/AlertsSection.svelte';
     import NodeActions from '../shared/NodeActions.svelte';
     import type { TreatmentNode, ActionNode } from '../types/visualization';
-    import { questionsForNode, alertsForNode, analysisActions } from '$lib/session/stores/analysis-store';
+    import { questionsForNode, alertsForNode, sessionDataActions } from '$lib/session/stores/session-data-store';
 
     interface Props {
         treatment: TreatmentNode;
@@ -20,7 +20,7 @@
     // Use store actions for alerts
 
     function handleAlertAcknowledge(alertId: string) {
-        analysisActions.acknowledgeAlert(alertId);
+        sessionDataActions.acknowledgeAlert(alertId);
     }
 
     function getPriorityLabel(priority: number): string {

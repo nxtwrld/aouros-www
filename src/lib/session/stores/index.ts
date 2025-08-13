@@ -9,6 +9,10 @@ export { default as unifiedSessionStore, unifiedSessionActions } from "./unified
 export * from "./transcript-store";
 export { default as transcriptStore, transcriptActions } from "./transcript-store";
 
-// Analysis Store - Reactive store for session analysis and visualization
-export * from "./analysis-store";
-export { default as analysisStore, analysisActions } from "./analysis-store";
+// Session Data Store - Immutable data store with derived calculations
+export * from "./session-data-store";
+export { sessionDataActions, sessionData } from "./session-data-store";
+
+// Session Viewer Store - UI interaction state management
+export * from "./session-viewer-store";
+export { sessionViewerActions, sessionViewerStore } from "./session-viewer-store";

@@ -2,11 +2,12 @@
     import { onMount } from 'svelte';
     import SankeyDiagram from './SankeyDiagram.svelte';
     import SessionSidebar from './SessionSidebar.svelte';
+    import SessionToolbar from './SessionToolbar.svelte';
     import sampleTranscript from './sample.transcript.1.cz.json';
     import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
-    // import { analysisActions } from '$lib/session/stores/analysis-store';
     import { t } from '$lib/i18n';
+    import { selectedItem } from '$lib/session/stores/session-viewer-store';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -34,6 +35,7 @@
     let sidebarWidth = $state(400);
     let isResizing = $state(false);
     let tabsRef = $state<any>();
+    let activeTabId = $state<string>('questions');
     
     // Responsive breakpoints
     const MOBILE_BREAKPOINT = 640;
@@ -62,11 +64,20 @@
 
     function checkViewport() {
         const width = window.innerWidth;
-        isMobile = width < MOBILE_BREAKPOINT;
-        showSidebar = width >= TABLET_BREAKPOINT;
+        const newIsMobile = width < MOBILE_BREAKPOINT;
+        const newShowSidebar = width >= TABLET_BREAKPOINT;
         
-        // Auto-hide sidebar on mobile
-        if (isMobile) {
+        // Only update if values actually changed to prevent unnecessary re-renders
+        if (newIsMobile !== isMobile) {
+            isMobile = newIsMobile;
+        }
+        
+        if (newShowSidebar !== showSidebar && !newIsMobile) {
+            showSidebar = newShowSidebar;
+        }
+        
+        // Auto-hide sidebar on mobile (only if changed to mobile)
+        if (newIsMobile && showSidebar) {
             showSidebar = false;
         }
     }
@@ -118,8 +129,7 @@
         selectedNodeId = null;
         selectedLink = null;
         
-        // Also clear the unified selection system (SankeyDiagram handles this internally) 
-        // analysisActions.clearSelection();
+        // Also clear the unified selection system (SankeyDiagram handles this internally)
         
         // console.log('🖱️ Selection cleared via canvas click');
     }
@@ -159,6 +169,27 @@
     function toggleSidebar() {
         showSidebar = !showSidebar;
     }
+    
+    function handleTabSelect(tabId: string) {
+        activeTabId = tabId;
+        if (tabsRef?.selectTab) {
+            const tabIndex = getTabIndex(tabId);
+            if (tabIndex !== -1) {
+                tabsRef.selectTab(tabIndex);
+            }
+        }
+    }
+    
+    function getTabIndex(tabId: string): number {
+        const hasTranscript = transcript && transcript.length > 0;
+        const tabOrder = [
+            'questions',
+            ...(hasTranscript ? ['transcript'] : []),
+            'details',
+            ...(!isMobile ? ['legend'] : [])
+        ];
+        return tabOrder.indexOf(tabId);
+    }
 
     // Handle sidebar resize
     function startResize(event: MouseEvent) {
@@ -186,21 +217,8 @@
     const questionCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question')?.length || 0);
     const pendingQuestions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question' && a.status === 'pending')?.length || 0);
     const alertCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'alert')?.length || 0);
-    const selectedNode = $derived.by(() => {
-        if (!selectedNodeId) {
-            return null;
-        }
-        
-        const allNodes = [
-            ...(sessionData.nodes.symptoms || []), 
-            ...(sessionData.nodes.diagnoses || []), 
-            ...(sessionData.nodes.treatments || []), 
-            ...(sessionData.nodes.actions || [])
-        ];
-        
-        const foundNode = allNodes.find(n => n.id === selectedNodeId);
-        return foundNode || null;
-    });
+    // Get selected node from viewer store (no reactive sessionData reads!)
+    const selectedNode = $derived($selectedItem?.type === 'node' ? $selectedItem.item : null);
 
     // Handle tab selection when selectedNodeId or selectedLink changes
     $effect(() => {
@@ -212,6 +230,7 @@
             }
             
             // Auto-select Details tab when node is selected
+            activeTabId = 'details';
             if (tabsRef?.selectTab) {
                 const hasTranscript = transcript && transcript.length > 0;
                 // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
@@ -231,6 +250,7 @@
             }
             
             // Auto-select Details tab when link is selected
+            activeTabId = 'details';
             if (tabsRef?.selectTab) {
                 const hasTranscript = transcript && transcript.length > 0;
                 // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
@@ -241,9 +261,38 @@
             }
         }
     });
+    
+    // No reactive effects needed - path calculation is handled by the store
+    
+    // Track active tab changes from the SessionTabs component
+    $effect(() => {
+        if (tabsRef?.activeTab !== undefined) {
+            const tabIds = [
+                'questions',
+                ...(transcript && transcript.length > 0 ? ['transcript'] : []),
+                'details',
+                ...(!isMobile ? ['legend'] : [])
+            ];
+            activeTabId = tabIds[tabsRef.activeTab] || 'questions';
+        }
+    });
 </script>
 
 <div class="session-visualizer" class:mobile={isMobile}>
+    <!-- Desktop Toolbar -->
+    {#if !isMobile}
+        <SessionToolbar 
+            {showSidebar}
+            activeTab={activeTabId}
+            hasQuestions={questionCount > 0}
+            hasTranscript={transcript && transcript.length > 0}
+            {pendingQuestions}
+            {isMobile}
+            onToggleSidebar={toggleSidebar}
+            onTabSelect={handleTabSelect}
+        />
+    {/if}
+    
     <!-- Mobile Header -->
     {#if isMobile}
         <header class="mobile-header">
@@ -270,10 +319,7 @@
         <!-- Main Sankey Diagram -->
         <div class="diagram-area">
             <SankeyDiagram 
-                data={sessionData}
                 {isMobile}
-                {selectedNodeId}
-                {focusedNodeIndex}
                 onnodeSelect={handleNodeSelect}
                 onlinkSelect={handleLinkSelect}
                 onselectionClear={handleSelectionClear}
@@ -406,7 +452,7 @@
         margin: 0.5rem;
     }
 
-    /* Responsive breakpoints */
+    /* Responsive breakpoints 
     @media (min-width: 1024px) {
         .session-visualizer {
             flex-direction: row;
@@ -419,5 +465,5 @@
         .visualization-container {
             flex: 1;
         }
-    }
+    }*/
 </style>

@@ -108,10 +108,21 @@ export interface RelationshipIndex {
  * Derived store that builds a bidirectional relationship index
  * This enables O(1) lookups for both forward and reverse relationships
  */
+// Memoized relationship index that only recalculates when node data actually changes
+let cachedSessionId: string | null = null;
+let cachedIndex: RelationshipIndex | null = null;
+
 export const relationshipIndex: Readable<RelationshipIndex | null> = derived(
   currentSession,
   ($session) => {
     if (!$session?.nodes) return null;
+    
+    // Check if we can reuse the cached index
+    const sessionId = $session.sessionId;
+    if (cachedSessionId === sessionId && cachedIndex) {
+      logger.session.debug("Reusing cached relationship index", { sessionId });
+      return cachedIndex;
+    }
 
     const index: RelationshipIndex = {
       forward: new Map(),
@@ -245,6 +256,10 @@ export const relationshipIndex: Readable<RelationshipIndex | null> = derived(
       reverseRelationships: index.reverse.size,
     });
 
+    // Cache the index for reuse
+    cachedSessionId = sessionId;
+    cachedIndex = index;
+    
     return index;
   },
 );
@@ -824,7 +839,6 @@ export function calculatePathFromNode(
     }
   }
 
-  // removed debug log
   
   // Build medical reasoning path based on starting node type
   const startingNodeType = index.nodeTypes.get(nodeId);
@@ -944,6 +958,7 @@ export function calculatePathFromNode(
     sessionData.nodes?.diagnoses?.find((n) => n.id === nodeId) ||
     sessionData.nodes?.treatments?.find((n) => n.id === nodeId) ||
     sessionData.nodes?.actions?.find((n) => n.id === nodeId);
+
 
   logger.session.debug("Calculated path from node", {
     nodeId,

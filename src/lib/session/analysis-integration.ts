@@ -1,5 +1,5 @@
 import type { SessionAnalysis } from "$components/session/types/visualization";
-import { analysisActions } from "./stores/analysis-store";
+import { sessionDataActions } from "./stores/session-data-store";
 import { globalAnalysisManager } from "./analysis-manager";
 import { getSessionEmitter, type SessionData, type SSEUpdate } from "./manager";
 import { logger } from "$lib/logging/logger";
@@ -59,7 +59,7 @@ function handleAnalysisUpdate(event: { sessionId: string; analysis: any }): void
     const sessionAnalysis = transformAnalysisData(event.analysis, event.sessionId);
     if (sessionAnalysis) {
         // Update the store - components will react automatically via $store syntax
-        analysisActions.updateSession(sessionAnalysis);
+        sessionDataActions.updateSession(sessionAnalysis);
         
         // Update the global manager
         globalAnalysisManager.setSessionData(sessionAnalysis);
@@ -85,7 +85,7 @@ function handleSSEUpdate(sseUpdate: SSEUpdate): void {
             if (currentSessionId && sseUpdate.data) {
                 const sessionAnalysis = transformAnalysisData(sseUpdate.data, currentSessionId);
                 if (sessionAnalysis) {
-                    analysisActions.updatePartial(sessionAnalysis);
+                    sessionDataActions.updatePartial(sessionAnalysis);
                     globalAnalysisManager.setSessionData(sessionAnalysis);
                 }
             }
@@ -93,12 +93,12 @@ function handleSSEUpdate(sseUpdate: SSEUpdate): void {
             
         case 'ai_thinking':
             // Update loading state - components will react automatically
-            analysisActions.setLoading(sseUpdate.data.thinking);
+            sessionDataActions.setLoading(sseUpdate.data.thinking);
             break;
             
         case 'error':
             // Handle error updates - components will react automatically
-            analysisActions.setError(sseUpdate.data.message || 'Unknown error occurred');
+            sessionDataActions.setError(sseUpdate.data.message || 'Unknown error occurred');
             break;
             
         default:
@@ -119,7 +119,7 @@ function handleSessionUpdate(event: { sessionId: string; updates: Partial<Sessio
     if (event.updates.analysis) {
         const sessionAnalysis = transformAnalysisData(event.updates.analysis, event.sessionId);
         if (sessionAnalysis) {
-            analysisActions.updateSession(sessionAnalysis);
+            sessionDataActions.updateSession(sessionAnalysis);
             globalAnalysisManager.setSessionData(sessionAnalysis);
         }
     }
@@ -169,7 +169,7 @@ export function disconnectSessionFromAnalysisStore(sessionId: string): void {
 
     if (currentSessionId === sessionId) {
         currentSessionId = null;
-        analysisActions.clearSession();
+        sessionDataActions.clearSession();
     }
 
     logger.session.info("Successfully disconnected session from analysis store", { sessionId });
@@ -183,11 +183,11 @@ export async function initializeSessionAnalysis(sessionId: string, initialData?:
     logger.session.info("Initializing session analysis", { sessionId });
     
     try {
-        analysisActions.setLoading(true);
+        sessionDataActions.setLoading(true);
 
         if (initialData) {
             // Load initial data into store
-            analysisActions.loadSession(initialData);
+            sessionDataActions.loadSession(initialData);
             globalAnalysisManager.setSessionData(initialData);
         } else {
             // Create minimal session structure
@@ -204,7 +204,7 @@ export async function initializeSessionAnalysis(sessionId: string, initialData?:
                 userActions: []
             };
             
-            analysisActions.loadSession(emptySession);
+            sessionDataActions.loadSession(emptySession);
             globalAnalysisManager.setSessionData(emptySession);
         }
 
@@ -219,9 +219,9 @@ export async function initializeSessionAnalysis(sessionId: string, initialData?:
             error: error instanceof Error ? error.message : String(error)
         });
         
-        analysisActions.setError("Failed to initialize analysis");
+        sessionDataActions.setError("Failed to initialize analysis");
     } finally {
-        analysisActions.setLoading(false);
+        sessionDataActions.setLoading(false);
     }
 }
 

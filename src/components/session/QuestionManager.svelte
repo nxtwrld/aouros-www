@@ -3,7 +3,7 @@
     import AlertsSection from './shared/AlertsSection.svelte';
     import type { ActionNode } from './types/visualization';
     import { t } from '$lib/i18n';
-    import { analysisActions } from '$lib/session/stores/analysis-store';
+    import { sessionDataActions } from '$lib/session/stores/session-data-store';
 
     interface Props {
         questions?: ActionNode[];
@@ -20,7 +20,7 @@
 
     function handleAlertAcknowledge(alertId: string) {
         // Use centralized store action
-        analysisActions.acknowledgeAlert(alertId);
+        sessionDataActions.acknowledgeAlert(alertId);
     }
 </script>
 

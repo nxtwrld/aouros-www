@@ -30,28 +30,29 @@
    SOURCE TYPE COLORS (for symptoms and other source-based nodes)
    ============================================================================ */
 
-.session-source-transcript {
-    border-left-color: #10b981; /* Green */
+/* Source colors with higher specificity to override default */
+.session-node.session-source-transcript {
+    border-left-color: #10b981 !important; /* Green */
 }
 
-.session-source-medical_history {
-    border-left-color: #3b82f6; /* Blue */
+.session-node.session-source-medical_history {
+    border-left-color: #3b82f6 !important; /* Blue */
 }
 
-.session-source-family_history {
-    border-left-color: #8b5cf6; /* Purple */
+.session-node.session-source-family_history {
+    border-left-color: #8b5cf6 !important; /* Purple */
 }
 
-.session-source-social_history {
-    border-left-color: #f59e0b; /* Orange */
+.session-node.session-source-social_history {
+    border-left-color: #f59e0b !important; /* Orange */
 }
 
-.session-source-medication_history {
-    border-left-color: #06b6d4; /* Cyan */
+.session-node.session-source-medication_history {
+    border-left-color: #06b6d4 !important; /* Cyan */
 }
 
-.session-source-suspected {
-    border-left-color: #f97316; /* Orange-red */
+.session-node.session-source-suspected {
+    border-left-color: #f97316 !important; /* Orange-red */
 }
 
 /* ============================================================================
@@ -199,7 +200,7 @@
 }
 
 .node-html.inactive {
-    filter: grayscale(0.7) opacity(0.4);
+    filter: grayscale(1) opacity(0.4);
 }
 
 /* ============================================================================
@@ -404,7 +405,7 @@
 .session-node.symptom {
     --base-color-rgb: 204, 204, 204;  /* Default gray */
     background-color: rgba(var(--base-color-rgb), var(--color-opacity));
-    border-left-color: #6b7280;
+    border-left-color: #6b7280; /* Default gray - will be overridden by source classes */
 }
 
 /* Diagnosis nodes */
@@ -562,7 +563,30 @@
 .session-severity-badge {
     font-size: 0.65em;
     padding: 2px 4px;
-    background: rgba(220, 38, 38, 0.9);
+    background: rgba(220, 38, 38, 0.9); /* Default red for critical */
+}
+
+/* Severity-based colors for symptom badges */
+.session-severity-badge.severity-1,
+.session-severity-badge.severity-2,
+.session-severity-badge.severity-3 {
+    background: rgba(220, 38, 38, 0.9); /* Critical - Red */
+}
+
+.session-severity-badge.severity-4,
+.session-severity-badge.severity-5 {
+    background: rgba(234, 88, 12, 0.9); /* High - Orange */
+}
+
+.session-severity-badge.severity-6,
+.session-severity-badge.severity-7 {
+    background: rgba(245, 158, 11, 0.9); /* Medium - Yellow/Orange */
+}
+
+.session-severity-badge.severity-8,
+.session-severity-badge.severity-9,
+.session-severity-badge.severity-10 {
+    background: rgba(16, 185, 129, 0.9); /* Low - Green */
 }
 
 /* Mobile badge adjustments */
@@ -948,7 +972,7 @@
     cursor: grabbing;
 }
 
-/* Semantic Link Strength Classes */
+/* Semantic Link Strength Classes 
 .link.strength-minimal {
     stroke-width: 1px;
 }
@@ -972,7 +996,7 @@
 .link.strength-maximum {
     stroke-width: 25px;
 }
-
+*/
 /* Polygon mode links don't use stroke-width */
 .link.render-polygon.strength-minimal,
 .link.render-polygon.strength-weak,

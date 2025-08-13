@@ -8,7 +8,7 @@ import type {
     SankeyNode,
     UserAction
 } from "$components/session/types/visualization";
-import { analysisActions } from "./stores/analysis-store";
+import { sessionDataActions } from "./stores/session-data-store";
 import { logger } from "$lib/logging/logger";
 
 /**
@@ -77,7 +77,7 @@ export class SessionAnalysisManager {
         logger.session.info("Answering question", { questionId, answer });
 
         // Update store
-        analysisActions.answerQuestion(questionId, answer, confidence);
+        sessionDataActions.answerQuestion(questionId, answer, confidence);
 
         // Update local data if we have it
         if (this.sessionData?.nodes?.actions) {
@@ -102,7 +102,7 @@ export class SessionAnalysisManager {
         logger.session.info("Acknowledging alert", { alertId });
 
         // Update store
-        analysisActions.acknowledgeAlert(alertId);
+        sessionDataActions.acknowledgeAlert(alertId);
 
         // Update local data if we have it
         if (this.sessionData?.nodes?.actions) {
@@ -126,7 +126,7 @@ export class SessionAnalysisManager {
         logger.session.info("Handling node action", { action, targetId, reason });
 
         // Update store
-        analysisActions.handleNodeAction(action, targetId, reason);
+        sessionDataActions.handleNodeAction(action, targetId, reason);
 
         // Update local data if we have it
         if (action === 'suppress' && this.sessionData?.nodes?.diagnoses) {

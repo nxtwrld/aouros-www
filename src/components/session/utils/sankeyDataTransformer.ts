@@ -18,9 +18,35 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
     }
 
     // Process symptoms (Column 1)
-    const symptoms = sessionData.nodes.symptoms || [];
-    // Sort by severity (most severe first)
-    symptoms.sort((a, b) => (a.severity || 5) - (b.severity || 5));
+    const symptoms = [...(sessionData.nodes.symptoms || [])];
+    
+    // Define source priority order for consistent grouping
+    const sourceOrder = {
+        'transcript': 1,
+        'medical_history': 2,
+        'family_history': 3,
+        'social_history': 4,
+        'medication_history': 5,
+        'suspected': 6
+    };
+    
+    // Sort by severity first (most severe = lowest number), then by source, then alphabetically
+    symptoms.sort((a, b) => {
+        // Primary: Severity (1-10, lower is more severe)
+        const aSeverity = typeof a.severity === 'number' ? a.severity : 5;
+        const bSeverity = typeof b.severity === 'number' ? b.severity : 5;
+        const severityDiff = aSeverity - bSeverity;
+        if (severityDiff !== 0) return severityDiff;
+        
+        // Secondary: Source priority
+        const aSourcePriority = sourceOrder[a.source as keyof typeof sourceOrder] || 999;
+        const bSourcePriority = sourceOrder[b.source as keyof typeof sourceOrder] || 999;
+        const sourceDiff = aSourcePriority - bSourcePriority;
+        if (sourceDiff !== 0) return sourceDiff;
+        
+        // Tertiary: Alphabetical by symptom text
+        return a.text.localeCompare(b.text);
+    });
     
     symptoms.forEach((symptom, index) => {
         const node: SankeyNode = {
@@ -36,14 +62,16 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
             y: index * 80,
             color: getNodeColor('symptom', symptom.severity || 5, symptom.source),
             // Calculate node value (height) based on severity and confidence
-            value: calculateNodeValue(symptom.severity || 5, symptom.confidence || 0.5)
+            value: calculateNodeValue(symptom.severity || 5, symptom.confidence || 0.5),
+            // Add explicit sort index to preserve our intended order
+            sortIndex: index
         };
         nodes.push(node);
         nodeMap.set(node.id, node);
     });
 
     // Process diagnoses (Column 2)
-    const diagnoses = sessionData.nodes.diagnoses || [];
+    const diagnoses = [...(sessionData.nodes.diagnoses || [])];
     // Sort by priority (most critical first) and then by probability (highest first)
     diagnoses.sort((a, b) => {
         const aCoeff = calculateNodeValue(a.priority || 5, a.probability || 0.5);
@@ -72,7 +100,7 @@ export function transformToSankeyData(sessionData: SessionAnalysis): SankeyData 
     });
 
     // Process treatments (Column 3)
-    const treatments = sessionData.nodes.treatments || [];
+    const treatments = [...(sessionData.nodes.treatments || [])];
     // Sort by priority (most critical first) and then by effectiveness
     treatments.sort((a, b) => {
         const aCoeff = calculateNodeValue(a.priority || 5, a.effectiveness || 0.5);
