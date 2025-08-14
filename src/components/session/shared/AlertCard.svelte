@@ -60,10 +60,8 @@
     }
 </script>
 
-<div class="alert-card" class:compact use:bubble>
+<div class="alert-card {getPriorityClass(alert.priority || 5)}" class:compact use:bubble>
     <div class="alert-header">
-        <div class="priority-indicator {getPriorityClass(alert.priority || 5)} dynamic-bg">
-        </div>
         <div class="alert-content">
             <div class="alert-text">{alert.text}</div>
             <div class="alert-meta">
@@ -91,9 +89,8 @@
 <style>
     .alert-card {
         background: var(--color-surface-2, #f8fafc);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-left: 4px solid var(--color-error, #dc2626);
-        border-radius: 8px;
+        border: 0px;
+        border-left: .5rem solid var(--priority-color, #dc2626);
         margin-bottom: 0.75rem;
         overflow: hidden;
         transition: box-shadow 0.2s ease;
@@ -101,7 +98,6 @@
 
     .alert-card.compact {
         margin-bottom: 0.5rem;
-        border-radius: 6px;
     }
 
     .alert-card:hover {
@@ -156,7 +152,7 @@
     }
 
     .priority {
-        background: var(--color-primary-bg, #dbeafe);
+        background: var(--color-primary-bg, #dbeafe););
         color: var(--color-primary, #3b82f6);
     }
 

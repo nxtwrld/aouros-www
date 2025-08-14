@@ -177,18 +177,17 @@
         margin: 0;
         padding: 0.75rem 0.75rem 0.75rem 2rem;
         background: var(--color-surface-2, #f8fafc);
-        border-radius: 6px;
         font-size: 0.875rem;
         color: var(--color-text-primary, #1f2937);
         line-height: 1.5;
     }
 
     .side-effects-list {
-        border-left: 3px solid var(--color-warning, #f59e0b);
+        border-left: .5rem solid var(--color-warning, #f59e0b);
     }
 
     .contraindications-list {
-        border-left: 3px solid var(--color-error, #dc2626);
+        border-left: .5rem solid var(--color-error, #dc2626);
     }
 
     .side-effects-list li,

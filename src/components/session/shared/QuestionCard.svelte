@@ -66,14 +66,12 @@
     }
 </script>
 
-<div class="question-card" class:compact use:bubble>
+<div class="question-card  {getPriorityClass(question.priority || 5)} " class:compact use:bubble>
     <button 
         class="question-header"
         onclick={handleToggleExpanded}
     >
         <div class="header-content">
-            <div class="priority-indicator {getPriorityClass(question.priority || 5)} dynamic-bg">
-            </div>
             <div class="question-info">
                 <span class="question-text">{question.text}</span>
                 <div class="question-meta">
@@ -186,8 +184,8 @@
 <style>
     .question-card {
         background: var(--color-surface-2, #f8fafc);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: 8px;
+        border: 0;
+        border-left: .5rem solid var(--priority-color, #e2e8f0);
         margin-bottom: 0.75rem;
         overflow: hidden;
         transition: box-shadow 0.2s ease;
@@ -195,7 +193,6 @@
 
     .question-card.compact {
         margin-bottom: 0.5rem;
-        border-radius: 6px;
     }
 
     .question-card:hover {
