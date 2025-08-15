@@ -249,9 +249,20 @@
           return `M${sourceX},${sourceY}A${dr * 0.3},${dr * 0.3} 0 0,1 ${targetX},${targetY}`;
         }
         
-        // Create slightly curved path for forward flow to look more natural
+        // Check if this is a mostly vertical link (small horizontal difference)
+        const isVerticalLink = Math.abs(dx) < 50; // Less than 50px horizontal difference
+        
+        if (isVerticalLink) {
+          // Straight line for vertical connections
+          return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+        }
+        
+        // Create curved path for horizontal flows - curve direction based on flow relative to center
         const midX = (sourceX + targetX) / 2;
-        const midY = (sourceY + targetY) / 2 - 15; // Slight curve upward
+        const centerX = actualWidth / 2;
+        const isFlowingOutward = (source.x < centerX && target.x < source.x) || (source.x > centerX && target.x > source.x);
+        const curveOffset = isFlowingOutward ? -15 : 15; // Curve up when flowing outward, down when flowing inward
+        const midY = (sourceY + targetY) / 2 + curveOffset;
         return `M${sourceX},${sourceY}Q${midX},${midY} ${targetX},${targetY}`;
       })
       .on('click', handleLinkClick)
