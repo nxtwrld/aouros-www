@@ -29,8 +29,8 @@
     
     // Main area view tabs (left side)
     const mainViewTabs = $derived([
-        { id: 'diagram', label: $t('session.diagram') }
-        // Future: Could add more views like 'timeline', 'statistics', etc.
+        { id: 'diagram', label: $t('session.diagram') },
+        { id: 'dag', label: $t('session.dag') }
     ]);
     
     // Sidebar content tabs (right side)

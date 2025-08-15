@@ -1,0 +1,334 @@
+{
+  "id": "universal_medical_dag_v1",
+  "description": "Universal Multi-Expert Medical Analysis DAG",
+  "expertTemplates": {
+    "data_source": {
+      "type": "input",
+      "execution": "always_active",
+      "outputs": ["raw_transcript", "patient_context", "session_metadata"],
+      "decisionLogic": "data_validation",
+      "modelConfig": {
+        "provider": "none",
+        "model": "none",
+        "temperature": 0,
+        "maxTokens": 0,
+        "timeoutMs": 0
+      }
+    },
+    "primary_analyzer": {
+      "type": "primary",
+      "execution": "always_active",
+      "outputs": ["symptoms", "diagnoses", "trigger_conditions"],
+      "decisionLogic": "complexity_threshold_check",
+      "modelConfig": {
+        "provider": "openai",
+        "model": "gpt4",
+        "temperature": 0,
+        "maxTokens": 4096,
+        "timeoutMs": 30000
+      }
+    },
+    "specialist_expert": {
+      "type": "specialist",
+      "execution": "trigger_based",
+      "outputs": ["symptoms", "diagnoses", "treatments", "questions"],
+      "decisionLogic": "specialization_depth_check",
+      "modelConfig": {
+        "provider": "openai",
+        "model": "gpt4",
+        "temperature": 0,
+        "maxTokens": 4096,
+        "timeoutMs": 30000
+      }
+    },
+    "sub_specialist_expert": {
+      "type": "sub-specialist",
+      "execution": "trigger_based",
+      "outputs": ["symptoms", "diagnoses", "treatments", "questions"],
+      "decisionLogic": "deep_specialization_check",
+      "modelConfig": {
+        "provider": "openai",
+        "model": "gpt4",
+        "temperature": 0,
+        "maxTokens": 4096,
+        "timeoutMs": 30000
+      }
+    },
+    "functional_expert": {
+      "type": "functional",
+      "execution": "conditional",
+      "outputs": ["alerts", "contraindications", "safety_questions"],
+      "decisionLogic": "safety_completeness_check",
+      "modelConfig": {
+        "provider": "openai",
+        "model": "gpt4",
+        "temperature": 0,
+        "maxTokens": 2048,
+        "timeoutMs": 20000
+      }
+    },
+    "consensus_merger": {
+      "type": "merger",
+      "execution": "after_layer_complete",
+      "outputs": ["unified_analysis", "conflict_alerts"],
+      "decisionLogic": "weighted_consensus_building",
+      "modelConfig": {
+        "provider": "openai",
+        "model": "gpt4_turbo",
+        "temperature": 0,
+        "maxTokens": 4096,
+        "timeoutMs": 30000
+      }
+    }
+  },
+  "triggerConditions": {
+    "symptomMapping": {
+      "chest_pain": ["cardiology", "emergency", "pulmonology"],
+      "headache": ["neurology", "emergency"],
+      "abdominal_pain": ["gastroenterology", "surgery", "emergency"],
+      "shortness_of_breath": ["pulmonology", "cardiology", "emergency"],
+      "palpitations": ["cardiology", "emergency"],
+      "dizziness": ["neurology", "cardiology", "emergency"],
+      "fever": ["infectious_disease", "emergency"],
+      "rash": ["dermatology", "allergy", "infectious_disease"],
+      "joint_pain": ["rheumatology", "orthopedics"],
+      "anxiety": ["psychiatry", "emergency"]
+    },
+    "contextMapping": {
+      "age_over_65": ["geriatrics"],
+      "age_under_18": ["pediatrics"],
+      "pregnancy": ["obstetrics"],
+      "multiple_medications": ["clinical_pharmacology"],
+      "chronic_conditions": ["internal_medicine"],
+      "recent_surgery": ["surgery", "emergency"],
+      "immunocompromised": ["infectious_disease", "oncology"]
+    },
+    "subSpecialtyTriggers": {
+      "cardiology": {
+        "arrhythmia": ["electrophysiology"],
+        "heart_failure": ["heart_failure_specialist"],
+        "coronary_symptoms": ["interventional_cardiology"],
+        "valve_disease": ["structural_heart"]
+      },
+      "neurology": {
+        "seizures": ["epileptology"],
+        "movement_disorders": ["movement_specialist"],
+        "headache_chronic": ["headache_specialist"],
+        "stroke_symptoms": ["stroke_specialist"]
+      },
+      "gastroenterology": {
+        "liver_symptoms": ["hepatology"],
+        "inflammatory_bowel": ["ibd_specialist"],
+        "pancreatic": ["pancreatic_specialist"]
+      }
+    }
+  },
+  "behaviorRules": {
+    "complexityThreshold": 0.7,
+    "specializationThreshold": 0.8,
+    "consensusThreshold": 0.75,
+    "conflictThreshold": 0.4,
+    "agreementBoost": 0.15,
+    "maxLayerDepth": 4,
+    "parallelExecutionLimit": 5,
+    "useSimpleModelThreshold": 0.3,
+    "usePremiumModelThreshold": 0.8,
+    "alwaysPremiumFor": ["emergency", "critical_safety"]
+  },
+  "consensusStrategy": {
+    "type": "weighted",
+    "conflictThreshold": 0.4,
+    "agreementBoost": 0.15,
+    "weights": {
+      "primary": 0.2,
+      "specialist": 0.35,
+      "sub-specialist": 0.3,
+      "functional": 0.15
+    }
+  },
+  "initialNodes": [
+    {
+      "id": "session_input",
+      "name": "Session Data",
+      "type": "input",
+      "category": "session_data",
+      "layer": 0,
+      "children": ["symptoms_detector"],
+      "state": "completed",
+      "template": "data_source",
+      "radius": 35,
+      "description": "Transcript + Patient Context"
+    },
+    {
+      "id": "symptoms_detector",
+      "name": "Symptoms Detection",
+      "type": "detector",
+      "category": "detection",
+      "layer": 1,
+      "parent": "session_input",
+      "children": ["primary_analyzer", "safety_monitor"],
+      "state": "pending",
+      "template": "primary_analyzer",
+      "radius": 38,
+      "description": "Identifies and categorizes symptoms from transcript"
+    },
+    {
+      "id": "primary_analyzer",
+      "name": "Primary Analyzer",
+      "type": "primary",
+      "category": "analysis",
+      "layer": 2,
+      "parent": "symptoms_detector",
+      "children": ["consensus_merger"],
+      "state": "pending",
+      "template": "primary_analyzer",
+      "radius": 40,
+      "description": "GP-level analysis of symptoms and medical relevance"
+    },
+    {
+      "id": "safety_monitor",
+      "name": "Safety Monitor",
+      "type": "functional",
+      "category": "safety",
+      "layer": 2,
+      "parent": "symptoms_detector",
+      "children": ["consensus_merger"],
+      "state": "pending",
+      "template": "functional_expert",
+      "radius": 32,
+      "description": "Continuous safety and risk assessment"
+    },
+    {
+      "id": "consensus_merger",
+      "name": "Consensus Builder",
+      "type": "merger",
+      "category": "consensus",
+      "layer": 3,
+      "parent": ["primary_analyzer", "safety_monitor"],
+      "children": ["final_output"],
+      "state": "pending",
+      "template": "consensus_merger",
+      "radius": 45,
+      "description": "Merges all expert analyses into unified output"
+    },
+    {
+      "id": "final_output",
+      "name": "Final Analysis",
+      "type": "output",
+      "category": "output",
+      "layer": 4,
+      "parent": "consensus_merger",
+      "children": [],
+      "state": "pending",
+      "template": "data_source",
+      "radius": 38,
+      "description": "Complete medical analysis ready for physician review"
+    }
+  ],
+  "initialLinks": [
+    {
+      "id": "session_input_to_symptoms_detector",
+      "source": "session_input",
+      "target": "symptoms_detector",
+      "type": "data_flow",
+      "direction": "forward",
+      "strength": 0.8,
+      "active": true,
+      "description": "Session data flows to symptoms detection"
+    },
+    {
+      "id": "symptoms_detector_to_primary_analyzer",
+      "source": "symptoms_detector",
+      "target": "primary_analyzer",
+      "type": "data_flow",
+      "direction": "forward",
+      "strength": 0.8,
+      "active": false,
+      "description": "Detected symptoms flow to primary analysis"
+    },
+    {
+      "id": "symptoms_detector_to_safety_monitor",
+      "source": "symptoms_detector",
+      "target": "safety_monitor",
+      "type": "data_flow",
+      "direction": "forward",
+      "strength": 0.6,
+      "active": false,
+      "description": "Detected symptoms monitored for safety concerns"
+    },
+    {
+      "id": "primary_analyzer_to_consensus",
+      "source": "primary_analyzer",
+      "target": "consensus_merger",
+      "type": "contributes",
+      "direction": "forward",
+      "strength": 0.4,
+      "active": false,
+      "description": "Primary analysis contributes to final consensus"
+    },
+    {
+      "id": "safety_monitor_to_consensus",
+      "source": "safety_monitor",
+      "target": "consensus_merger",
+      "type": "contributes",
+      "direction": "forward",
+      "strength": 0.3,
+      "active": false,
+      "description": "Safety analysis contributes to final consensus"
+    },
+    {
+      "id": "consensus_to_final_output",
+      "source": "consensus_merger",
+      "target": "final_output",
+      "type": "data_flow",
+      "direction": "forward",
+      "strength": 0.9,
+      "active": false,
+      "description": "Consensus analysis generates final output"
+    }
+  ],
+  "dynamicExpertTemplates": {
+    "specialist_experts": [
+      {
+        "id": "cardiology_expert",
+        "name": "Cardiology Expert",
+        "category": "cardiology",
+        "layer": 2,
+        "triggerConditions": ["chest_pain", "shortness_of_breath", "palpitations", "heart_murmur", "cardiac_symptoms"],
+        "subExpertTriggers": {
+          "electrophysiology": ["arrhythmia", "palpitations", "syncope", "irregular_heartbeat"],
+          "heart_failure": ["shortness_of_breath", "edema", "fatigue", "heart_failure_symptoms"],
+          "interventional": ["chest_pain", "st_elevation", "acute_mi", "unstable_angina"]
+        }
+      },
+      {
+        "id": "neurology_expert",
+        "name": "Neurology Expert", 
+        "category": "neurology",
+        "layer": 2,
+        "triggerConditions": ["headache", "dizziness", "seizure", "confusion", "neurological_symptoms"],
+        "subExpertTriggers": {
+          "stroke_specialist": ["stroke_symptoms", "weakness", "speech_problems", "facial_droop"],
+          "epileptology": ["seizures", "epilepsy", "convulsions"],
+          "movement_specialist": ["tremor", "parkinson", "movement_disorders"]
+        }
+      },
+      {
+        "id": "emergency_expert",
+        "name": "Emergency Expert",
+        "category": "emergency", 
+        "layer": 2,
+        "triggerConditions": ["severe_pain", "acute_symptoms", "life_threatening", "emergency_indicators"],
+        "subExpertTriggers": {}
+      },
+      {
+        "id": "pulmonology_expert",
+        "name": "Pulmonology Expert",
+        "category": "pulmonology",
+        "layer": 2, 
+        "triggerConditions": ["cough", "shortness_of_breath", "chest_tightness", "respiratory_symptoms"],
+        "subExpertTriggers": {}
+      }
+    ]
+  }
+}

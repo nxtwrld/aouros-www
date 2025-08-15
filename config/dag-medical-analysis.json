@@ -1,0 +1,312 @@
+{
+  "id": "universal_medical_dag_v2",
+  "description": "AI-Driven Medical Analysis DAG with Dynamic Parallel Expert Generation",
+  "version": "2.0.0",
+  
+  "defaultFlow": {
+    "description": "Basic medical analysis flow that every session starts with",
+    "nodes": [
+      {
+        "id": "session_input",
+        "name": "Session Data",
+        "type": "input",
+        "category": "data_source",
+        "template": "data_source",
+        "description": "Patient transcript and context data",
+        "outputs": ["raw_transcript", "patient_context", "session_metadata"],
+        "alwaysActive": true
+      },
+      {
+        "id": "symptoms_detector", 
+        "name": "Symptoms Detection",
+        "type": "detector",
+        "category": "analysis",
+        "template": "primary_analyzer",
+        "description": "Identifies and categorizes symptoms from transcript",
+        "inputs": ["session_input"],
+        "outputs": ["detected_symptoms", "symptom_categories", "medical_relevance_score"],
+        "decisionCapability": "trigger_experts"
+      },
+      {
+        "id": "primary_analyzer",
+        "name": "Primary Medical Analyzer", 
+        "type": "primary",
+        "category": "analysis",
+        "template": "primary_analyzer",
+        "description": "GP-level medical analysis with expert generation capability",
+        "inputs": ["symptoms_detector"],
+        "outputs": ["medical_analysis", "expert_recommendations", "custom_expert_definitions"],
+        "decisionCapability": "generate_custom_experts",
+        "expertGenerationRules": {
+          "maxParallelExperts": 4,
+          "complexityThresholds": {
+            "simple": 1,
+            "moderate": 2, 
+            "complex": 3,
+            "critical": 4
+          }
+        }
+      },
+      {
+        "id": "safety_monitor",
+        "name": "Safety Monitor", 
+        "type": "safety",
+        "category": "safety",
+        "template": "safety_analyzer",
+        "description": "Monitors for safety concerns and risk factors in parallel with primary analysis",
+        "inputs": ["symptoms_detector"],
+        "outputs": ["safety_alerts", "risk_assessment", "contraindications"],
+        "decisionCapability": "trigger_safety_protocols",
+        "alwaysActive": true
+      },
+      {
+        "id": "consensus_merger",
+        "name": "Medical Consensus Builder",
+        "type": "consensus", 
+        "category": "consensus",
+        "template": "consensus_merger",
+        "description": "Merges multiple expert analyses into unified medical recommendations",
+        "inputs": ["primary_analyzer", "safety_monitor", "dynamic_experts"],
+        "outputs": ["unified_analysis", "expert_agreements", "conflict_resolutions"],
+        "consensusStrategies": ["weighted_majority", "risk_stratified", "evidence_based"]
+      },
+      {
+        "id": "final_output",
+        "name": "Final Medical Analysis",
+        "type": "output",
+        "category": "output", 
+        "template": "medical_output",
+        "description": "Complete medical analysis ready for physician review",
+        "inputs": ["consensus_merger"],
+        "outputs": ["final_recommendations", "confidence_scores", "expert_attributions"]
+      }
+    ],
+    "connections": [
+      {"from": "session_input", "to": "symptoms_detector", "type": "data_flow"},
+      {"from": "symptoms_detector", "to": "primary_analyzer", "type": "data_flow"},
+      {"from": "symptoms_detector", "to": "safety_monitor", "type": "data_flow"},
+      {"from": "primary_analyzer", "to": "consensus_merger", "type": "analysis_input"},
+      {"from": "safety_monitor", "to": "consensus_merger", "type": "safety_input"},
+      {"from": "consensus_merger", "to": "final_output", "type": "data_flow"}
+    ]
+  },
+
+  "expertTemplates": {
+    "primary_analyzer": {
+      "type": "primary",
+      "execution": "always_active",
+      "capabilities": ["symptom_analysis", "expert_generation", "medical_reasoning"],
+      "modelConfig": {
+        "provider": "openai",
+        "model": "gpt-4",
+        "temperature": 0.1,
+        "maxTokens": 4096,
+        "timeoutMs": 30000
+      },
+      "expertGenerationPrompt": "Based on the medical analysis, determine if specialized expertise is needed. You can create 1-4 parallel experts with different approaches to get multiple medical opinions. Consider complexity, risk factors, and diagnostic uncertainty."
+    },
+    
+    "specialist_expert": {
+      "type": "specialist",
+      "execution": "ai_generated",
+      "capabilities": ["specialized_analysis", "sub_expert_generation", "risk_assessment"],
+      "variationTypes": [
+        {
+          "id": "conservative",
+          "description": "Conservative, guideline-based approach",
+          "riskTolerance": "low",
+          "promptModifier": "Focus on standard guidelines, conservative management, and proven treatments"
+        },
+        {
+          "id": "aggressive",
+          "description": "Aggressive workup and intervention",
+          "riskTolerance": "high", 
+          "promptModifier": "Focus on comprehensive workup, early intervention, and not missing diagnoses"
+        },
+        {
+          "id": "holistic",
+          "description": "Comprehensive patient-centered approach",
+          "riskTolerance": "moderate",
+          "promptModifier": "Consider whole patient, psychosocial factors, and quality of life"
+        },
+        {
+          "id": "evidence_based",
+          "description": "Strict evidence-based medicine approach",
+          "riskTolerance": "moderate",
+          "promptModifier": "Focus on high-quality evidence, clinical trials, and proven interventions"
+        }
+      ],
+      "modelConfig": {
+        "provider": "openai", 
+        "model": "gpt-4",
+        "temperature": 0.1,
+        "maxTokens": 4096,
+        "timeoutMs": 30000
+      }
+    },
+
+    "safety_analyzer": {
+      "type": "safety",
+      "execution": "always_active",
+      "capabilities": ["risk_assessment", "safety_monitoring", "contraindication_detection"],
+      "modelConfig": {
+        "provider": "openai",
+        "model": "gpt-4",
+        "temperature": 0.0,
+        "maxTokens": 4096,
+        "timeoutMs": 30000
+      },
+      "safetyPrompt": "Focus on patient safety, contraindications, drug interactions, and potential adverse effects. Flag high-risk situations immediately."
+    },
+
+    "consensus_merger": {
+      "type": "consensus",
+      "execution": "after_experts_complete",
+      "capabilities": ["expert_comparison", "conflict_resolution", "recommendation_synthesis"],
+      "consensusAlgorithms": {
+        "weighted_majority": {
+          "description": "Weight expert opinions by specialty relevance and confidence",
+          "weights": {
+            "primary": 0.15,
+            "safety": 0.25,
+            "specialist": 0.35,
+            "sub_specialist": 0.2,
+            "functional": 0.05
+          }
+        },
+        "risk_stratified": {
+          "description": "Prioritize safety and risk mitigation in consensus",
+          "safetyWeight": 0.4,
+          "conservativeBonus": 0.2
+        },
+        "evidence_based": {
+          "description": "Weight by quality of evidence cited",
+          "evidenceScoring": true,
+          "requireCitations": true
+        }
+      },
+      "modelConfig": {
+        "provider": "openai",
+        "model": "gpt-4-turbo", 
+        "temperature": 0.0,
+        "maxTokens": 6144,
+        "timeoutMs": 45000
+      }
+    }
+  },
+
+  "parallelExpertExamples": {
+    "cardiology_consultation": {
+      "triggerConditions": ["chest_pain", "cardiac_symptoms", "heart_disease_history"],
+      "expertVariations": [
+        {
+          "id": "conservative_cardiologist",
+          "name": "Conservative Cardiologist",
+          "specialization": "cardiology",
+          "approach": "conservative",
+          "promptTemplate": "You are a conservative cardiologist. Focus on evidence-based guidelines, prefer non-invasive testing, and emphasize medical optimization before procedures.",
+          "weight": 0.3
+        },
+        {
+          "id": "interventional_cardiologist", 
+          "name": "Interventional Cardiologist",
+          "specialization": "interventional_cardiology",
+          "approach": "aggressive", 
+          "promptTemplate": "You are an interventional cardiologist. Consider early invasive strategies, catheterization when appropriate, and comprehensive revascularization options.",
+          "weight": 0.35
+        },
+        {
+          "id": "preventive_cardiologist",
+          "name": "Preventive Cardiologist",
+          "specialization": "preventive_cardiology",
+          "approach": "holistic",
+          "promptTemplate": "You are a preventive cardiologist. Focus on risk factor modification, lifestyle interventions, and long-term cardiovascular health optimization.",
+          "weight": 0.35
+        }
+      ]
+    },
+
+    "geriatric_assessment": {
+      "triggerConditions": ["age_over_65", "polypharmacy", "falls", "cognitive_concerns"],
+      "expertVariations": [
+        {
+          "id": "geriatrician",
+          "name": "Geriatric Medicine Specialist", 
+          "specialization": "geriatrics",
+          "approach": "holistic",
+          "promptTemplate": "You are a geriatrician. Consider age-related physiology, polypharmacy, functional status, and quality of life in elderly patients.",
+          "weight": 0.4
+        },
+        {
+          "id": "geriatric_pharmacist",
+          "name": "Geriatric Pharmacist",
+          "specialization": "geriatric_pharmacy",
+          "approach": "evidence_based", 
+          "promptTemplate": "You are a geriatric pharmacist. Focus on medication optimization, drug interactions, age-appropriate dosing, and deprescribing opportunities.",
+          "weight": 0.3
+        },
+        {
+          "id": "geriatric_psychiatrist",
+          "name": "Geriatric Psychiatrist",
+          "specialization": "geriatric_psychiatry",
+          "approach": "conservative",
+          "promptTemplate": "You are a geriatric psychiatrist. Consider cognitive function, depression screening, medication effects on mental status, and behavioral interventions.",
+          "weight": 0.3
+        }
+      ]
+    }
+  },
+
+  "dynamicExpertGeneration": {
+    "triggerLogic": {
+      "complexityFactors": [
+        "multiple_symptoms",
+        "atypical_presentation", 
+        "high_risk_patient",
+        "diagnostic_uncertainty",
+        "treatment_complications"
+      ],
+      "specialtyMapping": {
+        "cardiac_symptoms": ["cardiology", "emergency_medicine"],
+        "neurological_symptoms": ["neurology", "emergency_medicine"],
+        "pediatric_patient": ["pediatrics"],
+        "geriatric_patient": ["geriatrics"], 
+        "pregnant_patient": ["obstetrics", "maternal_fetal_medicine"],
+        "psychiatric_symptoms": ["psychiatry"],
+        "drug_interactions": ["pharmacy", "clinical_pharmacology"]
+      }
+    },
+    
+    "expertCreationRules": {
+      "minExperts": 1,
+      "maxExperts": 4,
+      "complexityScaling": {
+        "low": 1,
+        "moderate": 2,
+        "high": 3, 
+        "critical": 4
+      },
+      "diversityRequirements": {
+        "requireDifferentApproaches": true,
+        "maxSameSpecialty": 2,
+        "balanceRiskTolerances": true
+      }
+    }
+  },
+
+  "consensusStrategies": {
+    "agreement_threshold": 0.6,
+    "conflict_resolution": {
+      "safety_prioritized": "When experts disagree, prioritize the safest recommendation",
+      "evidence_weighted": "Weight recommendations by quality of evidence provided",
+      "senior_expert_decides": "Give higher weight to more experienced expert designations",
+      "patient_preference": "Consider patient-centered factors in tie-breaking"
+    },
+    "output_format": {
+      "include_dissenting_opinions": true,
+      "show_confidence_levels": true,
+      "attribute_recommendations": true,
+      "explain_reasoning": true
+    }
+  }
+}

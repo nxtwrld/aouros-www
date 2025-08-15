@@ -4,6 +4,7 @@ import { type ViteDevServer, defineConfig, normalizePath } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 //import topLevelAwait from "vite-plugin-top-level-await"
 import path from "path";
+import { dagConfigPlugin } from "./vite-plugin-dag-config";
 //import { Server } from 'socket.io'
 /*
 const webSocketServer = {
@@ -22,6 +23,7 @@ const webSocketServer = {
 export default defineConfig({
   //plugins: [sveltekit(), webSocketServer],
   plugins: [
+    dagConfigPlugin(),
     viteStaticCopy({
       targets: [
         {

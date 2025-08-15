@@ -37,42 +37,38 @@ graph TB
     end
 ```
 
-### Concrete Example: Chest Pain Analysis DAG
+### Enhanced Example: AI-Generated Expert Analysis DAG
 
 ```mermaid
 graph TB
     subgraph "Layer 1: Primary Analysis"
         A[Transcript + Patient Context] --> B[GP Expert]
         B --> C{GP Decision}
-        C -->|Cardiac Symptoms Detected| D[Cardiology Expert]
-        C -->|Respiratory Symptoms| E[Pulmonology Expert]
-        C -->|High Risk Indicators| F[Emergency Expert]
+        C -->|Generate Custom Experts| D["AI Creates:\n- Pediatric Cardio Expert\n- Drug Interaction Expert\n- Anxiety Assessment Expert"]
         C -->|Complete Primary Analysis| G[GP Analysis Output]
     end
     
-    subgraph "Layer 2: Specialized Analysis"
-        D --> H{Cardiology Decision}
-        H -->|Complex Arrhythmia| I[Electrophysiology Expert]
-        H -->|Heart Failure Signs| J[Heart Failure Expert]
-        H -->|Standard Cardiac Analysis| K[Cardiology Output]
+    subgraph "Layer 2: AI-Generated Specialized Analysis"
+        D --> E["Pediatric Cardiology Expert\n(Age 8, Heart Murmur Focus)"]
+        D --> F["Polypharmacy Expert\n(12 Medications, Interactions)"]
+        D --> H["Pediatric Anxiety Specialist\n(School-Age Mental Health)"]
         
-        E --> L[Pulmonology Output]
-        F --> M[Emergency Output]
+        E --> I{Pediatric Cardio Decision}
+        I -->|Needs Subspecialty| J["AI Creates:\nCongenital Heart Defect Expert\n(Custom: 8yo + murmur + family history)"]
+        I -->|Standard Analysis| K[Pediatric Cardio Output]
     end
     
-    subgraph "Layer 3: Sub-Specialty Analysis"
-        I --> N[EP Analysis: Symptoms + Diagnosis + Treatments + Questions]
-        J --> O[HF Analysis: Symptoms + Diagnosis + Treatments + Questions]
+    subgraph "Layer 3: AI-Generated Sub-Specialty Analysis"
+        J --> L["Congenital Heart Defect Expert:\nSymptoms + Diagnosis + Treatments + Questions"]
     end
     
     subgraph "Consensus Building"
-        G --> P[Final Consensus Merger]
-        K --> P
-        L --> P
-        M --> P
-        N --> P
-        O --> P
-        P --> Q[Unified Analysis: All Symptoms + All Diagnoses + All Treatments + All Questions + Conflict Alerts]
+        G --> M[Dynamic Consensus Merger]
+        K --> M
+        F --> M
+        H --> M
+        L --> M
+        M --> N["Unified Analysis:\nAge-Appropriate Recommendations +\nDrug Safety Alerts +\nPsychosocial Considerations"]
     end
 ```
 
@@ -80,11 +76,21 @@ graph TB
 
 | Category | Expert Types | Triggering Logic | Output Format |
 |----------|-------------|------------------|---------------|
-| **Primary Analyzers** | GP, Initial Assessment, Symptom Analyzer | Always Active | Symptoms + Initial Diagnosis + Trigger Conditions |
-| **Specialist Experts** | Cardiology, Neurology, Emergency, Pediatrics, Geriatrics | Symptom/Context-Based Dynamic Triggering | Specialized Symptoms + Diagnosis + Treatments + Questions |
-| **Sub-Specialists** | Electrophysiology, Heart Failure, Interventional | Triggered by Parent Specialists | Highly Specialized Analysis |
-| **Functional Experts** | Safety Monitor, Drug Interaction, Risk Assessor | Always Active or Treatment-Triggered | Warnings + Contraindications + Safety Questions |
-| **Consensus Mergers** | Layer Merger, Final Merger | After Expert Groups Complete | Unified Analysis + Conflict Alerts |
+| **Primary Analyzers** | GP, Initial Assessment, Symptom Analyzer | Always Active | Symptoms + Initial Diagnosis + Custom Expert Instructions |
+| **Pre-Configured Specialists** | Cardiology, Neurology, Emergency | Symptom/Context-Based Dynamic Triggering | Specialized Analysis + Sub-Expert Triggers |
+| **AI-Generated Specialists** | Custom experts created by AI analysis | AI Decision-Based Dynamic Creation | Patient-Specific Specialized Analysis |
+| **AI-Generated Sub-Specialists** | Custom sub-experts for complex cases | Created by AI Specialists when needed | Highly Targeted Analysis |
+| **Functional Experts** | Safety Monitor, Drug Interaction, Risk Assessor | Always Active or AI-Triggered | Warnings + Contraindications + Safety Questions |
+| **Dynamic Consensus Mergers** | Layer Merger, Final Merger | After AI-Generated Expert Groups Complete | Unified Analysis + Conflict Resolution |
+
+### AI-Generated Expert Examples
+
+| Patient Context | AI-Generated Expert | Custom Prompt | Focus Areas |
+|----------------|-------------------|---------------|-------------|
+| 85yo, 12 medications, dizziness | "Geriatric Polypharmacy Expert" | "You are a geriatrician specializing in medication management for elderly patients with complex drug regimens" | Drug interactions, fall risk, cognitive effects |
+| 6mo infant, seizures, fever | "Pediatric Emergency Neurologist" | "You are a pediatric neurologist specializing in infant seizure disorders and febrile seizures" | Infantile spasms, febrile seizures, developmental impact |
+| 28yo pregnant, palpitations | "Maternal Cardiology Specialist" | "You are an obstetrician-cardiologist specializing in cardiac conditions during pregnancy" | Pregnancy-safe treatments, fetal impact, postpartum care |
+| 45yo diabetic, chest pain | "Diabetic Cardiology Expert" | "You are a cardiologist with expertise in diabetic cardiovascular complications" | Silent MI risk, diabetic cardiomyopathy, medication interactions |
 
 ### Universal Expert Interface
 
@@ -100,8 +106,8 @@ interface UniversalExpertNode {
     triggerConditions?: string[];
   };
   
-  // Decision Logic
-  decision: 'complete_analysis' | 'trigger_sub_experts';
+  // Decision Logic - Enhanced for AI-Generated Experts
+  decision: 'complete_analysis' | 'trigger_sub_experts' | 'generate_custom_experts';
   
   // Output Interface (when complete_analysis)
   outputs?: {
@@ -113,12 +119,34 @@ interface UniversalExpertNode {
     reasoning: string;
   };
   
-  // Sub-Expert Triggering (when trigger_sub_experts)
+  // Sub-Expert Triggering (when trigger_sub_experts) - Pre-configured experts
   triggers?: {
-    subExperts: string[];
+    subExperts: string[];  // Pre-defined expert types: 'cardiology', 'neurology'
     triggerConditions: string[];
     enrichedContext: any;
   };
+  
+  // AI-Generated Expert Creation (when generate_custom_experts)
+  customExperts?: {
+    experts: CustomExpertDefinition[];
+    reasoning: string;
+    parallelExecution: boolean;
+  };
+}
+
+// NEW: AI-Generated Expert Definition
+interface CustomExpertDefinition {
+  id: string;                    // Generated unique ID: 'pediatric_cardio_expert_001'
+  name: string;                  // Human-readable: 'Pediatric Cardiology Expert'
+  expertPrompt: string;          // Custom AI prompt: 'You are a pediatric cardiologist specializing in...'
+  specialization: string;        // Domain: 'pediatric_cardiology', 'geriatric_pharmacology'
+  focusAreas: string[];          // ['congenital_heart_defects', 'pediatric_arrhythmia']
+  contextInstructions: string;   // 'Focus on age-appropriate assessment for 8-year-old patient'
+  patientSpecificContext: any;   // Filtered patient data relevant to this expert
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  expectedOutputs: string[];     // ['risk_assessment', 'treatment_recommendations', 'follow_up_questions']
+  parentExpert: string;          // Which expert created this one
+  creationReasoning: string;     // Why this expert was deemed necessary
 }
 ```
 
@@ -768,34 +796,37 @@ Example: GP Expert → triggers → Cardiology Expert → triggers → Electroph
 
 ## Implementation Checklist
 
-### Phase 1: Configuration Setup ✅
-- [x] Define DAG structure in models.yaml
-- [x] Create TypeScript runtime interfaces
-- [x] Design minimal SSE event types
-- [x] Define D3 force-directed bidirectional visualization concept
+### Phase 1: AI-Generated Expert System ✅
+- [x] Define Universal Expert Interface with custom expert generation
+- [x] Create CustomExpertDefinition interface
+- [x] Design AI-generated expert examples
+- [x] Update DAG visualization concept for dynamic experts
 
-### Phase 2: Runtime Engine
-- [ ] Implement `buildDAGRuntime()` function
-- [ ] Create LangGraph workflow generator
-- [ ] Integrate with EnhancedAIProvider
-- [ ] Add fallback handling logic
+### Phase 2: Dynamic Expert Creation Engine
+- [ ] Implement AI expert generation logic in Primary Analyzer
+- [ ] Create custom expert prompt construction system
+- [ ] Build patient-specific context filtering
+- [ ] Add dynamic expert ID and naming system
 
-### Phase 3: SSE Integration
-- [ ] Implement SSE event emitter
-- [ ] Create client-side event handler
-- [ ] Connect to existing session infrastructure
+### Phase 3: Enhanced Simulation & Visualization
+- [ ] Update simulation to demonstrate AI-generated experts
+- [ ] Create dynamic DAG layout for emerging expert nodes
+- [ ] Implement real-time expert creation visualization
+- [ ] Add expert creation reasoning display
 
-### Phase 4: D3 Force-Directed Visualization
-- [ ] Create DAGVisualizer.svelte component with D3 force simulation
-- [ ] Implement bidirectional curved link rendering
-- [ ] Add animated flow particles for real-time updates
-- [ ] Enable interactive bidirectional exploration features
+### Phase 4: Advanced Multi-Expert Consensus Building
+- [ ] Build parallel expert execution engine
+- [ ] Implement multiple perspective consensus algorithms
+- [ ] Create expert disagreement analysis and resolution
+- [ ] Add confidence scoring based on expert agreement
+- [ ] Develop risk-stratified consensus strategies
+- [ ] Implement tie-breaking mechanisms for expert conflicts
 
-### Phase 5: Testing & Optimization
-- [ ] Unit test DAG builder
-- [ ] Integration test with real transcripts
-- [ ] Performance benchmarking
-- [ ] Cost tracking validation
+### Phase 5: Production Integration
+- [ ] Integrate with EnhancedAIProvider for custom expert execution
+- [ ] Add cost tracking for dynamic expert creation
+- [ ] Implement expert creation audit logging
+- [ ] Performance optimization for parallel AI-generated experts
 
 ## Benefits of Simplified Architecture
 
@@ -806,29 +837,70 @@ Example: GP Expert → triggers → Cardiology Expert → triggers → Electroph
 5. **Clear Separation**: YAML for config, TypeScript for logic, JSON for visuals
 6. **Extensible**: Easy to add new nodes or modify workflow
 
-## Usage Example
+## Usage Example: AI-Generated Expert Analysis
 
 ```typescript
-// Using the DAG in session analysis
+// Using the AI-Generated Expert DAG in session analysis
 import { executeDAG } from './dag-executor';
 import { DAGVisualizer } from './DAGVisualizer.svelte';
 
 // In your session component
-async function analyzeSession(transcript: string) {
+async function analyzeSessionWithAIExperts(transcript: string) {
   const sessionId = generateSessionId();
   
-  // Execute DAG
+  // Execute DAG with AI expert generation enabled
   const result = await executeDAG(sessionId, transcript, {
     patientHistory: getPatientHistory(),
+    enableAIExpertGeneration: true,
+    maxCustomExperts: 5,
     language: 'en'
   });
   
-  // Visualize execution
-  <DAGVisualizer {sessionId} />
+  // The DAG will dynamically create experts like:
+  // - "Pediatric Cardiology Expert for 8-year-old with innocent murmur"
+  // - "Geriatric Polypharmacy Specialist for 12-medication patient"
+  // - "Pregnancy Safety Expert for cardiac medications"
   
-  // Results available in structured format
-  return result.node_cleaner_output;
+  // Visualize real-time expert creation and analysis
+  <DAGVisualizer {sessionId} showExpertCreation={true} />
+  
+  // Results include AI-generated expert contributions
+  return {
+    unifiedAnalysis: result.consensus_output,
+    aiGeneratedExperts: result.custom_experts_created,
+    expertCreationReasons: result.expert_reasoning,
+    conflictResolution: result.consensus_conflicts
+  };
 }
+
+// Example of what the Primary Analyzer might output:
+const primaryAnalyzerOutput = {
+  decision: 'generate_custom_experts',
+  reasoning: 'Complex pediatric case requiring specialized expertise',
+  customExperts: [
+    {
+      id: 'pediatric_cardio_expert_001',
+      name: 'Pediatric Cardiology Expert',
+      expertPrompt: 'You are a pediatric cardiologist with 20+ years experience. Focus on innocent vs pathological murmurs in school-age children. Consider family history and physical exam findings.',
+      specialization: 'pediatric_cardiology',
+      focusAreas: ['innocent_murmurs', 'congenital_heart_disease', 'family_history_assessment'],
+      contextInstructions: 'Patient is 8 years old with grade 2/6 systolic murmur detected during school physical. No symptoms reported.',
+      priority: 'medium',
+      creationReasoning: 'Pediatric heart murmur requires age-specific expertise for proper assessment'
+    }
+  ]
+};
 ```
 
-This simplified architecture provides a clean, maintainable, and extensible foundation for the Mixture of Experts medical analysis workflow.
+This AI-driven architecture provides a truly intelligent, adaptive, and self-organizing foundation for medical analysis. The system demonstrates **AI-by-AI decision making** where artificial intelligence experts autonomously determine what additional expertise is needed and dynamically create specialized analysis nodes tailored to each unique patient case.
+
+### Key Benefits of AI-Generated Expert System:
+
+1. **True Adaptive Intelligence**: No pre-configured expert limits - AI creates exactly the expertise needed
+2. **Patient-Specific Analysis**: Custom experts with patient-tailored prompts and context
+3. **Unlimited Specialization**: Can create any combination of expertise ("Pregnant Diabetic Cardiologist")
+4. **Self-Improving System**: Each case teaches the system new expert combinations
+5. **Cost-Efficient**: Only creates experts when genuinely needed, not every possible specialist
+6. **Transparent Reasoning**: AI explains why each expert was created and what they contribute
+
+This represents the future of medical AI: **intelligent systems that think about how to think** about medical problems.

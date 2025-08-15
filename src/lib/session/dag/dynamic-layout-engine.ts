@@ -1,0 +1,366 @@
+// Dynamic Layout Engine for AI-Generated DAG Visualization
+// Automatically positions nodes based on AI configuration and relationships
+
+export interface LayoutNode {
+  id: string;
+  name: string;
+  type: string;
+  category: string;
+  x: number;
+  y: number;
+  layer: number;
+  isParallel: boolean;
+  parallelGroup?: string;
+  parentNodes: string[];
+  childNodes: string[];
+}
+
+export interface LayoutLink {
+  id: string;
+  source: string;
+  target: string;
+  type: 'data_flow' | 'triggers' | 'contributes' | 'consensus';
+}
+
+export interface LayoutConfig {
+  width: number;
+  height: number;
+  margins: { top: number; right: number; bottom: number; left: number };
+  nodeSpacing: { x: number; y: number };
+  parallelSpacing: number;
+}
+
+export class DynamicLayoutEngine {
+  private config: LayoutConfig;
+  private nodes: Map<string, LayoutNode> = new Map();
+  private links: LayoutLink[] = [];
+  private layers: Map<number, LayoutNode[]> = new Map();
+
+  constructor(config: LayoutConfig) {
+    this.config = config;
+  }
+
+  /**
+   * Generate layout from DAG configuration
+   */
+  generateLayout(dagConfig: any): { nodes: LayoutNode[], links: LayoutLink[] } {
+    this.resetLayout();
+    
+    // Create nodes from default flow
+    this.createNodesFromConfig(dagConfig.defaultFlow);
+    
+    // Assign layers based on dependencies
+    this.assignLayers();
+    
+    // Calculate positions using auto-layout algorithm
+    this.calculatePositions();
+    
+    return {
+      nodes: Array.from(this.nodes.values()),
+      links: this.links
+    };
+  }
+
+  /**
+   * Add dynamically created parallel experts
+   */
+  addParallelExperts(
+    parentNodeId: string, 
+    expertDefinitions: any[],
+    consensusNodeId: string
+  ): { nodes: LayoutNode[], links: LayoutLink[] } {
+    const parentNode = this.nodes.get(parentNodeId);
+    if (!parentNode) throw new Error(`Parent node ${parentNodeId} not found`);
+
+    // Create parallel expert nodes
+    const parallelNodes: LayoutNode[] = [];
+    const parallelGroup = `${parentNodeId}_experts`;
+    
+    expertDefinitions.forEach((expert, index) => {
+      const expertNode: LayoutNode = {
+        id: expert.expertId,
+        name: expert.name || expert.variation?.name || `Expert ${index + 1}`,
+        type: 'specialist',
+        category: 'ai_generated',
+        x: 0, // Will be calculated
+        y: 0, // Will be calculated  
+        layer: parentNode.layer + 1,
+        isParallel: true,
+        parallelGroup,
+        parentNodes: [parentNodeId],
+        childNodes: [consensusNodeId]
+      };
+      
+      this.nodes.set(expertNode.id, expertNode);
+      parallelNodes.push(expertNode);
+      
+      // Create links from parent to expert
+      this.links.push({
+        id: `${parentNodeId}_to_${expertNode.id}`,
+        source: parentNodeId,
+        target: expertNode.id,
+        type: 'triggers'
+      });
+      
+      // Create links from expert to consensus
+      this.links.push({
+        id: `${expertNode.id}_to_${consensusNodeId}`,
+        source: expertNode.id,
+        target: consensusNodeId,
+        type: 'contributes'
+      });
+    });
+
+    // Create or update consensus node
+    const consensusNode = this.nodes.get(consensusNodeId) || this.createConsensusNode(consensusNodeId, parentNode.layer + 2);
+    consensusNode.parentNodes = parallelNodes.map(n => n.id);
+    this.nodes.set(consensusNodeId, consensusNode);
+
+    // Recalculate layout with new nodes
+    this.assignLayers();
+    this.calculatePositions();
+
+    return {
+      nodes: Array.from(this.nodes.values()),
+      links: this.links
+    };
+  }
+
+  private resetLayout() {
+    this.nodes.clear();
+    this.links = [];
+    this.layers.clear();
+  }
+
+  private createNodesFromConfig(defaultFlow: any) {
+    // Create nodes from default flow configuration
+    defaultFlow.nodes.forEach((nodeConfig: any) => {
+      const node: LayoutNode = {
+        id: nodeConfig.id,
+        name: nodeConfig.name,
+        type: nodeConfig.type,
+        category: nodeConfig.category,
+        x: 0, // Will be calculated
+        y: 0, // Will be calculated
+        layer: 0, // Will be calculated
+        isParallel: false,
+        parentNodes: [], // Will be calculated from connections
+        childNodes: [] // Will be calculated from connections
+      };
+      
+      this.nodes.set(node.id, node);
+    });
+
+    // Create links and parent/child relationships from connections
+    defaultFlow.connections.forEach((conn: any) => {
+      this.links.push({
+        id: `${conn.from}_to_${conn.to}`,
+        source: conn.from,
+        target: conn.to,
+        type: conn.type || 'data_flow'
+      });
+      
+      // Update parent-child relationships
+      const sourceNode = this.nodes.get(conn.from);
+      const targetNode = this.nodes.get(conn.to);
+      
+      if (sourceNode && targetNode) {
+        // Source node has this target as a child
+        if (!sourceNode.childNodes.includes(conn.to)) {
+          sourceNode.childNodes.push(conn.to);
+        }
+        
+        // Target node has this source as a parent
+        if (!targetNode.parentNodes.includes(conn.from)) {
+          targetNode.parentNodes.push(conn.from);
+        }
+      }
+    });
+  }
+
+  private assignLayers() {
+    this.layers.clear();
+    
+    // Initialize all nodes to layer 0
+    const nodeLayers = new Map<string, number>();
+    Array.from(this.nodes.values()).forEach(node => {
+      nodeLayers.set(node.id, 0);
+    });
+    
+    // Find root nodes (no parents)
+    const rootNodes = Array.from(this.nodes.values()).filter(n => n.parentNodes.length === 0);
+    
+    // Recursively assign layers using depth-first search
+    const assignNodeLayer = (nodeId: string, currentLayer: number, visited: Set<string>): void => {
+      if (visited.has(nodeId)) return;
+      visited.add(nodeId);
+      
+      const node = this.nodes.get(nodeId);
+      if (!node) return;
+      
+      // Update layer to be the maximum of current assignment and new layer
+      const newLayer = Math.max(nodeLayers.get(nodeId) || 0, currentLayer);
+      nodeLayers.set(nodeId, newLayer);
+      node.layer = newLayer;
+      
+      // Process children at the next layer
+      node.childNodes.forEach(childId => {
+        assignNodeLayer(childId, newLayer + 1, visited);
+      });
+    };
+    
+    // Start with root nodes at layer 0
+    const globalVisited = new Set<string>();
+    rootNodes.forEach(rootNode => {
+      assignNodeLayer(rootNode.id, 0, globalVisited);
+    });
+    
+    // Group nodes by layer
+    Array.from(this.nodes.values()).forEach(node => {
+      const layer = node.layer;
+      if (!this.layers.has(layer)) {
+        this.layers.set(layer, []);
+      }
+      this.layers.get(layer)!.push(node);
+    });
+    
+    console.log('📊 Assigned layers:', {
+      totalLayers: this.layers.size,
+      layerDistribution: Array.from(this.layers.entries()).map(([layer, nodes]) => ({
+        layer,
+        nodeCount: nodes.length,
+        nodeIds: nodes.map(n => n.id)
+      }))
+    });
+  }
+
+  private calculatePositions() {
+    const { width, height, margins, nodeSpacing, parallelSpacing } = this.config;
+    const usableWidth = width - margins.left - margins.right;
+    const usableHeight = height - margins.top - margins.bottom;
+    
+    const maxLayer = Math.max(...Array.from(this.layers.keys()));
+    const layerHeight = maxLayer > 0 ? usableHeight / (maxLayer + 1) : usableHeight;
+    
+    console.log('📊 Positioning nodes:', {
+      totalLayers: maxLayer + 1,
+      layerHeight,
+      usableWidth,
+      usableHeight
+    });
+    
+    // Position nodes layer by layer (top to bottom)
+    this.layers.forEach((layerNodes, layer) => {
+      const y = margins.top + (layer * layerHeight) + (layerHeight / 2);
+      
+      // Group parallel nodes
+      const parallelGroups = new Map<string, LayoutNode[]>();
+      const regularNodes: LayoutNode[] = [];
+      
+      layerNodes.forEach(node => {
+        if (node.isParallel && node.parallelGroup) {
+          if (!parallelGroups.has(node.parallelGroup)) {
+            parallelGroups.set(node.parallelGroup, []);
+          }
+          parallelGroups.get(node.parallelGroup)!.push(node);
+        } else {
+          regularNodes.push(node);
+        }
+      });
+      
+      // Calculate horizontal positioning
+      const totalItems = regularNodes.length + parallelGroups.size;
+      
+      if (totalItems === 1) {
+        // Center single node or group
+        if (regularNodes.length === 1) {
+          regularNodes[0].x = margins.left + (usableWidth / 2);
+          regularNodes[0].y = y;
+        } else if (parallelGroups.size === 1) {
+          // Center parallel group
+          const groupNodes = Array.from(parallelGroups.values())[0];
+          const groupCenterX = margins.left + (usableWidth / 2);
+          const groupStartX = groupCenterX - ((groupNodes.length - 1) * parallelSpacing) / 2;
+          
+          groupNodes.forEach((node, index) => {
+            node.x = groupStartX + (index * parallelSpacing);
+            node.y = y;
+          });
+        }
+      } else {
+        // Distribute multiple items across the width
+        const itemSpacing = usableWidth / totalItems;
+        let itemIndex = 0;
+        
+        // Position regular nodes
+        regularNodes.forEach(node => {
+          node.x = margins.left + (itemIndex * itemSpacing) + (itemSpacing / 2);
+          node.y = y;
+          itemIndex++;
+        });
+        
+        // Position parallel groups
+        parallelGroups.forEach(groupNodes => {
+          const groupCenterX = margins.left + (itemIndex * itemSpacing) + (itemSpacing / 2);
+          const groupStartX = groupCenterX - ((groupNodes.length - 1) * parallelSpacing) / 2;
+          
+          groupNodes.forEach((node, index) => {
+            node.x = groupStartX + (index * parallelSpacing);
+            node.y = y;
+          });
+          
+          itemIndex++;
+        });
+      }
+      
+      console.log(`📊 Layer ${layer} positioned:`, layerNodes.map(n => ({ id: n.id, x: n.x, y: n.y })));
+    });
+  }
+
+  private createConsensusNode(consensusNodeId: string, layer: number): LayoutNode {
+    return {
+      id: consensusNodeId,
+      name: 'Expert Consensus',
+      type: 'consensus',
+      category: 'consensus',
+      x: 0, // Will be calculated
+      y: 0, // Will be calculated
+      layer,
+      isParallel: false,
+      parentNodes: [], // Will be set by caller
+      childNodes: []
+    };
+  }
+
+  /**
+   * Get layout configuration for visualization
+   */
+  getLayoutMetrics() {
+    const layerCount = this.layers.size;
+    const maxParallelNodes = Math.max(...Array.from(this.layers.values()).map(layer => 
+      layer.filter(n => n.isParallel).length
+    ));
+    
+    return {
+      totalNodes: this.nodes.size,
+      totalLayers: layerCount,
+      maxParallelNodes,
+      layoutDensity: this.nodes.size / (layerCount || 1)
+    };
+  }
+}
+
+// Default layout configuration
+export const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {
+  width: 1200,
+  height: 800,
+  margins: { top: 60, right: 60, bottom: 60, left: 60 },
+  nodeSpacing: { x: 200, y: 150 },
+  parallelSpacing: 120
+};
+
+// Helper function to create layout engine
+export function createLayoutEngine(config?: Partial<LayoutConfig>): DynamicLayoutEngine {
+  const fullConfig = { ...DEFAULT_LAYOUT_CONFIG, ...config };
+  return new DynamicLayoutEngine(fullConfig);
+}

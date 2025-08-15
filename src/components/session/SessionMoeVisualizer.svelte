@@ -1,13 +1,17 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import SankeyDiagram from './SankeyDiagram.svelte';
+    import DAGVisualizer from './DAGVisualizer.svelte';
     import SessionSidebar from './SessionSidebar.svelte';
     import SessionToolbar from './SessionToolbar.svelte';
     import sampleTranscript from './sample.transcript.1.cz.json';
     import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
+    import type { D3DAGNode, D3DAGLink } from './types/dag';
     import { t } from '$lib/i18n';
     import { selectedItem } from '$lib/session/stores/session-viewer-store';
+    import { dagActions } from '$lib/session/stores/dag-execution-store';
+    import { dagEventProcessor, simulateDAGExecution } from '$lib/session/dag/dag-event-processor';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -46,7 +50,18 @@
         checkViewport();
         window.addEventListener('resize', checkViewport);
         
-        // Minimal mount work; avoid noisy logs in production
+        // Initialize DAG for session
+        if (sessionData?.sessionId) {
+            dagActions.initialize(sessionData.sessionId);
+            
+            // For development: Start DAG simulation after 2 seconds when viewing DAG
+            if (activeMainView === 'dag' && typeof window !== 'undefined') {
+                setTimeout(() => {
+                    console.log('🎭 Starting DAG simulation for development');
+                    simulateDAGExecution(sessionData.sessionId, 3000);
+                }, 2000);
+            }
+        }
 
         // Setup keyboard shortcuts
         const off = [
@@ -95,6 +110,34 @@
         // Tab switching and sidebar opening will be handled by $effect
     }
 
+    // DAG event handlers
+    function handleDAGNodeSelect(node: D3DAGNode) {
+        selectedNodeId = node.id;
+        selectedLink = null;
+        // Auto-show sidebar and switch to details tab
+        if (!showSidebar && !isMobile) {
+            showSidebar = true;
+        }
+        activeTabId = 'details';
+        selectDetailsTab();
+    }
+
+    function handleDAGLinkSelect(link: D3DAGLink) {
+        selectedLink = {
+            id: link.id,
+            type: link.type,
+            source: link.source,
+            target: link.target,
+            strength: link.strength
+        };
+        selectedNodeId = null;
+        // Auto-show sidebar and switch to details tab
+        if (!showSidebar && !isMobile) {
+            showSidebar = true;
+        }
+        activeTabId = 'details';
+        selectDetailsTab();
+    }
 
     function handleNodeAction(detail: { action: string; targetId: string; reason?: string }) {
         onnodeAction?.(detail);
@@ -324,15 +367,25 @@
     {/if}
 
     <div class="visualization-container">
-        <!-- Main Sankey Diagram -->
+        <!-- Main Visualization Area -->
         <div class="diagram-area">
-            <SankeyDiagram 
-                {isMobile}
-                onnodeSelect={handleNodeSelect}
-                onlinkSelect={handleLinkSelect}
-                onselectionClear={handleSelectionClear}
-                onfocusChange={handleFocusChange}
-            />
+            {#if activeMainView === 'diagram'}
+                <SankeyDiagram 
+                    {isMobile}
+                    onnodeSelect={handleNodeSelect}
+                    onlinkSelect={handleLinkSelect}
+                    onselectionClear={handleSelectionClear}
+                    onfocusChange={handleFocusChange}
+                />
+            {:else if activeMainView === 'dag'}
+                <DAGVisualizer 
+                    sessionId={sessionData.sessionId}
+                    enableZoom={true}
+                    enableInteractions={true}
+                    onnodeSelect={handleDAGNodeSelect}
+                    onlinkSelect={handleDAGLinkSelect}
+                />
+            {/if}
         </div>
 
         <!-- Sidebar -->
