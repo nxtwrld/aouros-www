@@ -43,7 +43,7 @@ export interface MedicalAnalysisOutput {
 export interface DAGNode {
   id: string;
   name: string;
-  type: 'primary' | 'specialist' | 'sub-specialist' | 'functional' | 'merger';
+  type: 'input' | 'detector' | 'primary' | 'specialist' | 'sub-specialist' | 'functional' | 'merger' | 'safety' | 'consensus' | 'output';
   category: string; // e.g., 'cardiology', 'emergency', 'safety'
   layer: number; // 0=primary, 1=specialist, 2=sub-specialist, etc.
   parent?: string; // Parent expert ID
@@ -93,7 +93,7 @@ export interface DAGLink {
   id: string;
   source: string | DAGNode;
   target: string | DAGNode;
-  type: 'triggers' | 'refines' | 'contributes' | 'merges';
+  type: 'data_flow' | 'analysis_input' | 'safety_input' | 'bypass_flow' | 'triggers' | 'refines' | 'contributes' | 'merges';
   direction: 'forward' | 'reverse' | 'bidirectional';
   strength: number; // 0.0-1.0
   active: boolean;

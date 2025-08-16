@@ -10,7 +10,9 @@ export const DAG_VISUAL_CONFIG: DAGVisualizationConfig = {
     height: 800,
     margins: { top: 10, right: 10, bottom: 10, left: 10 },
     layerSpacing: 250,
-    nodeSpacing: 200
+    nodeSpacing: 200,
+    panelWidth: 150,
+    panelHeight: 40
   },
   
   forces: {
@@ -416,7 +418,9 @@ export const TOOLTIP_CONFIG = {
 
 // Export functions for D3 integration
 export function getNodeRadius(node: D3DAGNode): number {
-  const baseRadius = 45; // Fixed size for all nodes
+  // Smaller radius since panels handle visual size
+  // This is just for link anchor calculations
+  const baseRadius = 25; // Reduced from 45
   const stateMultiplier = node.state === 'running' ? 1.1 : 1; // Keep subtle pulse for running state
   
   return baseRadius * stateMultiplier;

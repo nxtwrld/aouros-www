@@ -114,7 +114,8 @@
       { id: 'arrowhead-triggers', fill: '#3B82F6' },
       { id: 'arrowhead-refines', fill: '#EF4444' },
       { id: 'arrowhead-contributes', fill: '#6366F1' },
-      { id: 'arrowhead-merges', fill: '#8B5CF6' }
+      { id: 'arrowhead-merges', fill: '#8B5CF6' },
+      { id: 'arrowhead-bypass_flow', fill: '#FCD34D' }
     ];
 
     arrowTypes.forEach(arrow => {
@@ -228,20 +229,44 @@
         if (!source || !target) return '';
         
         // Get radii for source and target nodes
-        const sourceRadius = getNodeRadius(source);
-        const targetRadius = getNodeRadius(target);
+        const sourceRadius = getNodeRadius(source) + 10; // Add 5px spacing
+        const targetRadius = getNodeRadius(target) + 10; // Add 5px spacing
         
         // Calculate angle from source to target
         const dx = target.x - source.x;
         const dy = target.y - source.y;
         const angle = Math.atan2(dy, dx);
         
-        // Calculate connection points at circle edges
-        const sourceX = source.x + Math.cos(angle) * sourceRadius;
-        const sourceY = source.y + Math.sin(angle) * sourceRadius;
-        // Stop the line at the circle edge - arrow will extend from here
-        const targetX = target.x - Math.cos(angle) * targetRadius;
-        const targetY = target.y - Math.sin(angle) * targetRadius;
+        let sourceX, sourceY, targetX, targetY;
+        
+        // Special handling for bypass flow - connect right edge to right edge
+        if (d.type === 'bypass_flow') {
+          const panelWidth = DAG_VISUAL_CONFIG.layout.panelWidth || 150;
+          const spacing = 10;
+          
+          // Connect from right edge of source to right edge of target
+          sourceX = source.x + (panelWidth / 2) + spacing;
+          sourceY = source.y;
+          targetX = target.x + (panelWidth / 2) + spacing;
+          targetY = target.y;
+          
+          // Calculate bypass arc that goes around the main flow
+          const verticalDistance = Math.abs(targetY - sourceY);
+          const arcRadius = verticalDistance * 0.4; // Arc extends 40% of vertical distance to the side
+          
+          // Create a smooth cubic bezier curve that arcs around
+          const controlX = Math.max(sourceX, targetX) + arcRadius;
+          const control1Y = sourceY + (verticalDistance * 0.25);
+          const control2Y = targetY - (verticalDistance * 0.25);
+          
+          return `M${sourceX},${sourceY}C${controlX},${control1Y} ${controlX},${control2Y} ${targetX},${targetY}`;
+        } else {
+          // Standard connection points for all other link types
+          sourceX = source.x + Math.cos(angle) * sourceRadius;
+          sourceY = source.y + Math.sin(angle) * sourceRadius;
+          targetX = target.x - Math.cos(angle) * targetRadius;
+          targetY = target.y - Math.sin(angle) * targetRadius;
+        }
         
         // Create smooth curved arrow for better visual flow
         if (d.direction === 'bidirectional' || d.type === 'refines') {
@@ -289,32 +314,33 @@
       .attr('class', 'dag-node')
       .attr('transform', d => `translate(${d.x},${d.y}) scale(0)`);
 
-    // Add circle to new nodes
+    // Add invisible circle for link calculations
     nodeEnter.append('circle')
       .attr('class', 'dag-node-circle')
       .attr('r', d => getNodeRadius(d));
 
-    // Add SVG icon to new nodes
-    nodeEnter.append('use')
-      .attr('class', 'dag-node-icon')
-      .style('pointer-events', 'none')
-      .attr('href', d => `/icons-o.svg#${getNodeIcon(d)}`);
-
-    // Add text label below the icon
-    nodeEnter.append('text')
-      .attr('class', 'dag-node-label')
-      .attr('y', 20)  // Position closer to icon, above arrow connection points
-      .attr('text-anchor', 'middle')
-      .style('font-size', '12px')
-      .style('font-weight', '500')
-      .style('pointer-events', 'none');
-
-    // Add status icon for new nodes
-    nodeEnter.append('text')
-      .attr('class', 'dag-node-status')
-      .attr('dy', -20)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '14px');
+    // Add foreignObject for HTML content
+    const panelWidth = DAG_VISUAL_CONFIG.layout.panelWidth || 150;
+    const panelHeight = DAG_VISUAL_CONFIG.layout.panelHeight || 40;
+    
+    nodeEnter.append('foreignObject')
+      .attr('class', 'dag-node-foreign')
+      .attr('x', -panelWidth / 2)
+      .attr('y', -panelHeight / 2)
+      .attr('width', panelWidth)
+      .attr('height', panelHeight)
+      .html(d => `
+        <div class="dag-node-panel dag-node-panel-${d.state}" data-node-id="${d.id}">
+          <div class="dag-node-icon-wrapper">
+            <svg class="dag-node-icon-svg" width="24" height="24">
+              <use href="/icons-o.svg#${getNodeIcon(d)}"/>
+            </svg>
+          </div>
+          <div class="dag-node-content">
+            <div class="dag-node-name">${d.name}</div>
+          </div>
+        </div>
+      `);
 
     // Update + Enter
     const nodeUpdate = nodeEnter.merge(nodeSelection);
@@ -325,35 +351,27 @@
       .on('mouseenter', handleNodeHover)
       .on('mouseleave', handleNodeLeave);
 
-    // Update node visuals
+    // Update invisible circle for link calculations
     nodeUpdate.select('.dag-node-circle')
-      .attr('fill', d => getNodeStyle(d).fill)
-      .attr('stroke', d => getNodeStyle(d).stroke)
-      .attr('stroke-width', d => getNodeStyle(d).strokeWidth)
-      .attr('opacity', d => getNodeStyle(d).opacity)
       .attr('r', d => getNodeRadius(d));
 
-    // Update icon reference
-    nodeUpdate.select('.dag-node-icon')
-      .attr('href', d => `/icons-o.svg#${getNodeIcon(d)}`);
-
-    nodeUpdate.select('.dag-node-label')
-      .text(d => d.name)
-      .style('fill', d => d.state === 'pending' ? '#6B7280' : '#1F2937');
-
-    nodeUpdate.select('.dag-node-status')
-      .text(d => {
-        if (d.state === 'running') return '⚡';
-        if (d.state === 'completed') return '✓';
-        if (d.state === 'failed') return '✗';
-        return '';
-      })
-      .style('fill', d => {
-        if (d.state === 'running') return '#F59E0B';
-        if (d.state === 'completed') return '#10B981';
-        if (d.state === 'failed') return '#EF4444';
-        return 'transparent';
-      });
+    // Update HTML content in foreignObject
+    nodeUpdate.select('.dag-node-foreign')
+      .html(d => `
+        <div class="dag-node-panel dag-node-panel-${d.state}" data-node-id="${d.id}">
+          <div class="dag-node-icon-wrapper">
+            <svg class="dag-node-icon-svg" width="24" height="24">
+              <use href="/icons-o.svg#${getNodeIcon(d)}"/>
+            </svg>
+          </div>
+          <div class="dag-node-content">
+            <div class="dag-node-name">${d.name}</div>
+            ${d.state === 'running' ? '<div class="dag-node-status">Running...</div>' : ''}
+            ${d.state === 'completed' ? '<div class="dag-node-status status-completed">✓</div>' : ''}
+            ${d.state === 'failed' ? '<div class="dag-node-status status-failed">✗</div>' : ''}
+          </div>
+        </div>
+      `);
 
     // Animate entering nodes with fixed positions
     nodeUpdate
@@ -361,18 +379,6 @@
       .duration(TRANSITIONS.nodeEnter.duration)
       .delay((d, i) => TRANSITIONS.nodeEnter.delay(d, i))
       .attr('transform', d => `translate(${d.x},${d.y}) scale(1)`);
-
-    // Add CSS classes based on node state
-    nodeUpdate.each(function(d) {
-      const nodeGroup = d3.select(this);
-      const circle = nodeGroup.select('.dag-node-circle');
-      
-      // Apply state classes
-      nodeGroup.classed('node-pending', d.state === 'pending');
-      nodeGroup.classed('node-running', d.state === 'running');
-      nodeGroup.classed('node-completed', d.state === 'completed');
-      nodeGroup.classed('node-failed', d.state === 'failed');
-    });
 
     // Fixed positioning doesn't need to save positions to store
 
@@ -485,26 +491,124 @@
   :global(.dag-node-circle) {
     fill: transparent;
     stroke: transparent;
+    pointer-events: none;
   }
 
-  /* DAG Node Icon Styles */
-  :global(.dag-node-icon) {
-    transform: translate(-50%, calc(-50% - 1rem)) scale(.05);
-    transform-origin: center;
-    fill: currentColor;
-    color: #374151;
+  /* DAG Node Panel Styles */
+  :global(.dag-node-panel) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    height: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
   }
 
-  :global(.dag-node.node-running .dag-node-icon) {
-    color: #F59E0B;
+  :global(.dag-node-panel:hover) {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
   }
 
-  :global(.dag-node.node-completed .dag-node-icon) {
-    color: #10B981;
+  :global(.dag-node-icon-wrapper) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
   }
 
-  :global(.dag-node.node-failed .dag-node-icon) {
-    color: #EF4444;
+  :global(.dag-node-icon-svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  :global(.dag-node-icon-svg use) {
+    fill: #6b7280;
+  }
+
+  :global(.dag-node-content) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  :global(.dag-node-name) {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.dag-node-status) {
+    font-size: 10px;
+    color: #6b7280;
+  }
+
+  :global(.dag-node-status.status-completed) {
+    color: #10b981;
+    font-weight: 600;
+  }
+
+  :global(.dag-node-status.status-failed) {
+    color: #ef4444;
+    font-weight: 600;
+  }
+
+  /* State-based panel styling */
+  :global(.dag-node-panel-pending) {
+    border-color: #e5e7eb;
+    background: #fafafa;
+  }
+
+  :global(.dag-node-panel-pending .dag-node-icon-svg use) {
+    fill: #9ca3af;
+  }
+
+  :global(.dag-node-panel-running) {
+    border-color: #fbbf24;
+    background: #fffbeb;
+    animation: panel-pulse 2s ease-in-out infinite;
+  }
+
+  :global(.dag-node-panel-running .dag-node-icon-svg use) {
+    fill: #f59e0b;
+  }
+
+  :global(.dag-node-panel-completed) {
+    border-color: #10b981;
+    background: #f0fdf4;
+  }
+
+  :global(.dag-node-panel-completed .dag-node-icon-svg use) {
+    fill: #10b981;
+  }
+
+  :global(.dag-node-panel-failed) {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+
+  :global(.dag-node-panel-failed .dag-node-icon-svg use) {
+    fill: #ef4444;
+  }
+
+  @keyframes panel-pulse {
+    0%, 100% {
+      box-shadow: 0 1px 3px rgba(245, 158, 11, 0.2);
+    }
+    50% {
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
   }
 
   /* DAG Link Styles */
@@ -684,35 +788,13 @@
     opacity: 0.8;
   }
 
-  /* Simple CSS animations for node states */
-  :global(.node-running .dag-node-circle) {
-    animation: node-pulse 2s ease-in-out infinite;
+  :global(.link-bypass_flow) {
+    stroke: #FCD34D;
+    stroke-width: 2px;
+    stroke-dasharray: 10, 5;
+    opacity: 0.6;
   }
 
-  @keyframes node-pulse {
-    0%, 100% { 
-      transform: scale(1);
-      opacity: 1;
-    }
-    50% { 
-      transform: scale(1.1);
-      opacity: 0.8;
-    }
-  }
-
-  :global(.node-completed .dag-node-circle) {
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-  }
-
-  :global(.node-failed .dag-node-circle) {
-    animation: node-error 0.5s ease-in-out 3;
-  }
-
-  @keyframes node-error {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-2px); }
-    75% { transform: translateX(2px); }
-  }
 
   .simulate-btn {
     background: var(--color-primary, #3b82f6);

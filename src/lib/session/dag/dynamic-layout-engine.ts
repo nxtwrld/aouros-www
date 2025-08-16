@@ -19,7 +19,7 @@ export interface LayoutLink {
   id: string;
   source: string;
   target: string;
-  type: 'data_flow' | 'triggers' | 'contributes' | 'consensus';
+  type: 'data_flow' | 'analysis_input' | 'safety_input' | 'bypass_flow' | 'triggers' | 'contributes' | 'consensus' | 'merges';
 }
 
 export interface LayoutConfig {

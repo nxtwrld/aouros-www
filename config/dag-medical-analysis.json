@@ -18,14 +18,14 @@
       },
       {
         "id": "symptoms_detector", 
-        "name": "Symptoms Detection",
+        "name": "Medical Relevance Detector",
         "type": "detector",
         "category": "analysis",
         "template": "primary_analyzer",
-        "description": "Identifies and categorizes symptoms from transcript",
+        "description": "Identifies medical relevance and determines if analysis is needed",
         "inputs": ["session_input"],
-        "outputs": ["detected_symptoms", "symptom_categories", "medical_relevance_score"],
-        "decisionCapability": "trigger_experts"
+        "outputs": ["detected_symptoms", "symptom_categories", "medical_relevance_score", "analysis_decision"],
+        "decisionCapability": "trigger_experts_or_bypass"
       },
       {
         "id": "primary_analyzer",
@@ -77,14 +77,16 @@
         "category": "output", 
         "template": "medical_output",
         "description": "Complete medical analysis ready for physician review",
-        "inputs": ["consensus_merger"],
-        "outputs": ["final_recommendations", "confidence_scores", "expert_attributions"]
+        "inputs": ["consensus_merger", "symptoms_detector"],
+        "outputs": ["final_recommendations", "confidence_scores", "expert_attributions"],
+        "inputRouting": "consensus_or_bypass"
       }
     ],
     "connections": [
       {"from": "session_input", "to": "symptoms_detector", "type": "data_flow"},
       {"from": "symptoms_detector", "to": "primary_analyzer", "type": "data_flow"},
       {"from": "symptoms_detector", "to": "safety_monitor", "type": "data_flow"},
+      {"from": "symptoms_detector", "to": "final_output", "type": "bypass_flow"},
       {"from": "primary_analyzer", "to": "consensus_merger", "type": "analysis_input"},
       {"from": "safety_monitor", "to": "consensus_merger", "type": "safety_input"},
       {"from": "consensus_merger", "to": "final_output", "type": "data_flow"}
