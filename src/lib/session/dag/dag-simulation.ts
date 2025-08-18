@@ -95,94 +95,112 @@ const SAMPLE_BASED_EXPERT_GENERATION = {
   }
 };
 
-// Generate realistic DAG events based on sample medical case
-export function createRealisticMedicalDAGEvents(sessionId: string): EventStep[] {
-  const eventSequence: EventStep[] = [];
+// Generate realistic DAG events based on sample medical case with smart timing
+export function createRealisticMedicalDAGEvents(sessionId: string): TimedEventStep[] {
+  const eventSequence: TimedEventStep[] = [];
   
-  // Step 1: DAG initialization
+  // Step 1: DAG initialization (no delay - immediate start)
   eventSequence.push({
-    type: 'dag_initialized',
-    dagModelId: 'universal_medical_dag_v2',
-    nodes: [], // Empty - store will preserve existing nodes from configuration
-    links: [], // Empty - store will preserve existing links from configuration
-  } as DAGInitializedEvent);
+    events: {
+      type: 'dag_initialized',
+      dagModelId: 'universal_medical_dag_v2',
+      nodes: [], // Empty - store will preserve existing nodes from configuration
+      links: [], // Empty - store will preserve existing links from configuration
+    } as DAGInitializedEvent,
+    delayAfter: 0 // Immediate transition to first node
+  });
 
-  // Step 2: Session input node starts
+  // Step 2: Session input node starts (immediate transition)
   eventSequence.push({
-    type: 'node_started',
-    nodeId: 'session_input',
-    nodeName: 'Session Data',
-    model: 'gpt-4',
-    provider: 'openai',
-  } as NodeStartedEvent);
-
-  // Step 3: Session input completes
-  eventSequence.push({
-    type: 'node_completed',
-    nodeId: 'session_input',
-    duration: 100,
-    cost: 0,
-    tokenUsage: {
-      input: 0,
-      output: 0
-    },
-    output: {
-      rawTranscript: "Patient presents with fatigue, heavy menstruation, and mood changes",
-      sessionMetadata: { sessionId }
-    },
-  } as NodeCompletedEvent);
-
-  // Step 4: Medical Relevance Detector starts
-  eventSequence.push({
-    type: 'node_started',
-    nodeId: 'symptoms_detector',
-    nodeName: 'Relevance Detector',
-    model: 'gpt-4',
-    provider: 'openai',
-  } as NodeStartedEvent);
-
-  // Step 5: Symptoms detector completes
-  eventSequence.push({
-    type: 'node_completed',
-    nodeId: 'symptoms_detector',
-    duration: 1500,
-    cost: 0.018,
-    tokenUsage: {
-      input: 800,
-      output: 400
-    },
-    output: {
-      detectedSymptoms: [
-        'fatigue', 'heavy_menstruation', 'hair_thinning', 
-        'cold_intolerance', 'dry_skin', 'mood_changes', 'sleep_disturbance'
-      ],
-      symptomSeverity: {
-        fatigue: 8,
-        heavy_menstruation: 7,
-        mood_changes: 6
-      },
-      medicalRelevance: 0.9,
-      analysisDecision: 'proceed_with_analysis'
-    },
-  } as NodeCompletedEvent);
-
-  // Step 6: Start parallel analysis nodes (safety monitor + quorum manager)
-  eventSequence.push([
-    {
+    events: {
       type: 'node_started',
-      nodeId: 'safety_monitor',
-      nodeName: 'Safety Monitor',
+      nodeId: 'session_input',
+      nodeName: 'Session Data',
       model: 'gpt-4',
       provider: 'openai',
     } as NodeStartedEvent,
-    {
+    delayAfter: 100 // Brief processing time for data input
+  });
+
+  // Step 3: Session input completes (immediate child start)
+  eventSequence.push({
+    events: {
+      type: 'node_completed',
+      nodeId: 'session_input',
+      duration: 100,
+      cost: 0,
+      tokenUsage: {
+        input: 0,
+        output: 0
+      },
+      output: {
+        rawTranscript: "Patient presents with fatigue, heavy menstruation, and mood changes",
+        sessionMetadata: { sessionId }
+      },
+    } as NodeCompletedEvent,
+    delayAfter: 0 // Immediate child start - no delay
+  });
+
+  // Step 4: Medical Relevance Detector starts (immediate transition)
+  eventSequence.push({
+    events: {
       type: 'node_started',
-      nodeId: 'quorum_manager',
-      nodeName: 'Quorum Manager',
+      nodeId: 'symptoms_detector',
+      nodeName: 'Relevance Detector',
       model: 'gpt-4',
       provider: 'openai',
-    } as NodeStartedEvent
-  ]);
+    } as NodeStartedEvent,
+    delayAfter: 1500 // AI processing time for medical relevance detection
+  });
+
+  // Step 5: Symptoms detector completes (immediate child start)
+  eventSequence.push({
+    events: {
+      type: 'node_completed',
+      nodeId: 'symptoms_detector',
+      duration: 1500,
+      cost: 0.018,
+      tokenUsage: {
+        input: 800,
+        output: 400
+      },
+      output: {
+        detectedSymptoms: [
+          'fatigue', 'heavy_menstruation', 'hair_thinning', 
+          'cold_intolerance', 'dry_skin', 'mood_changes', 'sleep_disturbance'
+        ],
+        symptomSeverity: {
+          fatigue: 8,
+          heavy_menstruation: 7,
+          mood_changes: 6
+        },
+        medicalRelevance: 0.9,
+        analysisDecision: 'proceed_with_analysis'
+      },
+    } as NodeCompletedEvent,
+    delayAfter: 0 // Immediate start of parallel analysis nodes
+  });
+
+  // Step 6: Start parallel analysis nodes (safety monitor + quorum manager)
+  eventSequence.push({
+    events: [
+      {
+        type: 'node_started',
+        nodeId: 'safety_monitor',
+        nodeName: 'Safety Monitor',
+        model: 'gpt-4',
+        provider: 'openai',
+      } as NodeStartedEvent,
+      {
+        type: 'node_started',
+        nodeId: 'quorum_manager',
+        nodeName: 'Quorum Manager',
+        model: 'gpt-4',
+        provider: 'openai',
+      } as NodeStartedEvent
+    ],
+    delayAfter: 1000 // Brief delay to allow UI to show both nodes starting
+  });
 
   // For simulation purposes, trigger all experts (no probability filtering)
   const triggeredExperts = Object.entries(SAMPLE_BASED_EXPERT_GENERATION)
@@ -199,27 +217,33 @@ export function createRealisticMedicalDAGEvents(sessionId: string): EventStep[] 
       layer: expert.layer
     } as ExpertTriggeredEvent));
     
-    eventSequence.push(expertTriggerEvents);
+    eventSequence.push({
+      events: expertTriggerEvents,
+      delayAfter: 500 // Brief delay to show expert generation visually
+    });
   }
 
-  // Step 8: Safety monitor completes
+  // Step 8: Safety monitor completes (standalone node - uses processing delay)
   eventSequence.push({
-    type: 'node_completed',
-    nodeId: 'safety_monitor',
-    duration: 2000,
-    cost: 0.015,
-    tokenUsage: {
-      input: 600,
-      output: 350
-    },
-    output: {
-      safetyAlerts: [],
-      riskAssessment: 'low',
-      contraindications: []
-    }
-  } as NodeCompletedEvent);
+    events: {
+      type: 'node_completed',
+      nodeId: 'safety_monitor',
+      duration: 2000,
+      cost: 0.015,
+      tokenUsage: {
+        input: 600,
+        output: 350
+      },
+      output: {
+        safetyAlerts: [],
+        riskAssessment: 'low',
+        contraindications: []
+      }
+    } as NodeCompletedEvent,
+    delayAfter: 1000 // Brief delay before starting expert processing
+  });
 
-  // Step 9: Start all expert nodes in parallel
+  // Step 9: Start all expert nodes in parallel (immediate after trigger)
   if (triggeredExperts.length > 0) {
     const expertStartEvents: NodeStartedEvent[] = triggeredExperts.map(({ expert }) => ({
       type: 'node_started',
@@ -229,31 +253,37 @@ export function createRealisticMedicalDAGEvents(sessionId: string): EventStep[] 
       provider: 'openai',
     } as NodeStartedEvent));
     
-    eventSequence.push(expertStartEvents);
+    eventSequence.push({
+      events: expertStartEvents,
+      delayAfter: 0 // Experts start immediately after being triggered
+    });
   }
 
-  // Step 10: Quorum manager completes
+  // Step 10: Quorum manager completes (has child nodes - no delay for children)
   eventSequence.push({
-    type: 'node_completed',
-    nodeId: 'quorum_manager',
-    duration: 4500,
-    cost: 0.032,
-    tokenUsage: {
-      input: 1500,
-      output: 900
-    },
-    output: {
-      symptoms: [],
-      diagnoses: [],
-      treatments: [],
-      questions: [],
-      confidence: 0.78,
-      reasoning: `Complex multi-system symptoms require ${triggeredExperts.length} specialist evaluations for comprehensive analysis`,
-      expertId: 'quorum_manager',
-      layer: 2,
-      customExpertsGenerated: triggeredExperts.map(({ expert }) => expert.expertId)
-    }
-  } as NodeCompletedEvent);
+    events: {
+      type: 'node_completed',
+      nodeId: 'quorum_manager',
+      duration: 4500,
+      cost: 0.032,
+      tokenUsage: {
+        input: 1500,
+        output: 900
+      },
+      output: {
+        symptoms: [],
+        diagnoses: [],
+        treatments: [],
+        questions: [],
+        confidence: 0.78,
+        reasoning: `Complex multi-system symptoms require ${triggeredExperts.length} specialist evaluations for comprehensive analysis`,
+        expertId: 'quorum_manager',
+        layer: 2,
+        customExpertsGenerated: triggeredExperts.map(({ expert }) => expert.expertId)
+      }
+    } as NodeCompletedEvent,
+    delayAfter: 0 // No delay - children (expert processing) can begin immediately
+  });
 
   // Step 11: Experts complete (each at different times based on processing time)
   // We'll complete them in order of processing time for more realistic simulation
@@ -261,96 +291,115 @@ export function createRealisticMedicalDAGEvents(sessionId: string): EventStep[] 
     a.expert.processingTime - b.expert.processingTime
   );
   
-  sortedExperts.forEach(({ key, expert }) => {
+  sortedExperts.forEach(({ key, expert }, index) => {
     const analysis = generateSpecialistAnalysis(key, expert);
+    const isLastExpert = index === sortedExperts.length - 1;
     
     eventSequence.push({
-      type: 'node_completed',
-      nodeId: expert.expertId,
-      duration: expert.processingTime,
-      cost: 0.045,
-      tokenUsage: {
-        input: 1800,
-        output: 1100
-      },
-      output: analysis,
-    } as NodeCompletedEvent);
+      events: {
+        type: 'node_completed',
+        nodeId: expert.expertId,
+        duration: expert.processingTime,
+        cost: 0.045,
+        tokenUsage: {
+          input: 1800,
+          output: 1100
+        },
+        output: analysis,
+      } as NodeCompletedEvent,
+      delayAfter: isLastExpert ? 0 : 500 // No delay for last expert (triggers consensus), brief gap for others
+    });
   });
 
-  // Step 12: Consensus merger starts (after all experts complete)
+  // Step 12: Consensus merger starts (immediate after experts complete)
   if (triggeredExperts.length > 0) {
     eventSequence.push({
-      type: 'node_started',
-      nodeId: 'consensus_merger',
-      nodeName: 'Consensus Builder',
-      model: 'gpt-4-turbo',
-      provider: 'openai',
-    } as NodeStartedEvent);
+      events: {
+        type: 'node_started',
+        nodeId: 'consensus_merger',
+        nodeName: 'Consensus Builder',
+        model: 'gpt-4-turbo',
+        provider: 'openai',
+      } as NodeStartedEvent,
+      delayAfter: 4200 // Processing time for consensus building
+    });
 
-    // Step 13: Consensus merger completes
+    // Step 13: Consensus merger completes (immediate child start)
     eventSequence.push({
-      type: 'node_completed',
-      nodeId: 'consensus_merger',
-      duration: 4200,
-      cost: 0.035,
-      tokenUsage: {
-        input: 2500,
-        output: 1200
-      },
-      output: generateConsensusAnalysis(triggeredExperts),
-    } as NodeCompletedEvent);
+      events: {
+        type: 'node_completed',
+        nodeId: 'consensus_merger',
+        duration: 4200,
+        cost: 0.035,
+        tokenUsage: {
+          input: 2500,
+          output: 1200
+        },
+        output: generateConsensusAnalysis(triggeredExperts),
+      } as NodeCompletedEvent,
+      delayAfter: 0 // Immediate transition to final output
+    });
   }
 
-  // Step 14: Final output node starts
+  // Step 14: Final output node starts (immediate after consensus)
   eventSequence.push({
-    type: 'node_started',
-    nodeId: 'final_output',
-    nodeName: 'Final Medical Analysis',
-    model: 'gpt-4',
-    provider: 'openai',
-  } as NodeStartedEvent);
+    events: {
+      type: 'node_started',
+      nodeId: 'final_output',
+      nodeName: 'Final Medical Analysis',
+      model: 'gpt-4',
+      provider: 'openai',
+    } as NodeStartedEvent,
+    delayAfter: 1000 // Processing time for final output
+  });
 
-  // Step 15: Final output completes
+  // Step 15: Final output completes (triggers completion)
   eventSequence.push({
-    type: 'node_completed',
-    nodeId: 'final_output',
-    duration: 1000,
-    cost: 0.01,
-    tokenUsage: {
-      input: 500,
-      output: 200
-    },
-    output: {
-      finalRecommendations: "Based on comprehensive analysis...",
-      confidenceScores: { overall: 0.85 },
-      expertAttributions: triggeredExperts.map(({ expert }) => expert.name)
-    },
-  } as NodeCompletedEvent);
+    events: {
+      type: 'node_completed',
+      nodeId: 'final_output',
+      duration: 1000,
+      cost: 0.01,
+      tokenUsage: {
+        input: 500,
+        output: 200
+      },
+      output: {
+        finalRecommendations: "Based on comprehensive analysis...",
+        confidenceScores: { overall: 0.85 },
+        expertAttributions: triggeredExperts.map(({ expert }) => expert.name)
+      },
+    } as NodeCompletedEvent,
+    delayAfter: 0 // Immediate DAG completion
+  });
 
-  // Step 16: DAG completion
+  // Step 16: DAG completion (final event)
   eventSequence.push({
-    type: 'dag_completed',
-    totalDuration: 15000, // Approximate total duration
-    totalCost: 0.18,
-    nodeCount: 6 + triggeredExperts.length,
-    successCount: 6 + triggeredExperts.length,
-    failureCount: 0,
-    parallelExpertsGenerated: triggeredExperts.length,
-    consensusAchieved: true,
-    finalOutput: {
-      symptoms: [],
-      diagnoses: [],
-      treatments: [],
-      questions: [],
-      confidence: 0.85,
-      reasoning: `Integrated analysis from ${triggeredExperts.length} specialists based on sample medical case`,
-      expertId: 'consensus_merger',
-      layer: 4,
-      expertContributions: triggeredExperts.map(({ expert }) => 
-        `${expert.name}: ${expert.investigationFocus}`
-      )
-    },
-  } as DAGCompletedEvent);
+    events: {
+      type: 'dag_completed',
+      totalDuration: 15000, // Approximate total duration
+      totalCost: 0.18,
+      nodeCount: 6 + triggeredExperts.length,
+      successCount: 6 + triggeredExperts.length,
+      failureCount: 0,
+      parallelExpertsGenerated: triggeredExperts.length,
+      consensusAchieved: true,
+      finalOutput: {
+        symptoms: [],
+        diagnoses: [],
+        treatments: [],
+        questions: [],
+        confidence: 0.85,
+        reasoning: `Integrated analysis from ${triggeredExperts.length} specialists based on sample medical case`,
+        expertId: 'consensus_merger',
+        layer: 4,
+        expertContributions: triggeredExperts.map(({ expert }) => 
+          `${expert.name}: ${expert.investigationFocus}`
+        )
+      },
+    } as DAGCompletedEvent,
+    delayAfter: 0 // Final event - no delay needed
+  });
 
   return eventSequence;
 }
@@ -449,11 +498,11 @@ function generateConsensusAnalysis(triggeredExperts: any[]) {
   };
 }
 
-// Main simulation function - now uses chronological event sequence
-export function simulateRealisticMedicalDAG(sessionId: string, intervalMs = 2500) {
+// Main simulation function - now uses smart timing with context-aware delays
+export function simulateRealisticMedicalDAG(sessionId: string, _intervalMs = 2500) {
   const eventSequence = createRealisticMedicalDAGEvents(sessionId);
   
-  console.log('🏥 Starting realistic medical DAG simulation');
+  console.log('🏥 Starting realistic medical DAG simulation with smart timing');
   console.log(`📊 Generated ${eventSequence.length} event steps`);
   
   let currentStep = 0;
@@ -465,32 +514,29 @@ export function simulateRealisticMedicalDAG(sessionId: string, intervalMs = 2500
       return;
     }
     
-    // Get events for this step (single or array)
-    const stepEvents = Array.isArray(eventSequence[currentStep]) 
-      ? eventSequence[currentStep] as DAGEvent[]
-      : [eventSequence[currentStep] as DAGEvent];
+    // Get current timed event step
+    const timedStep = eventSequence[currentStep];
+    const stepEvents = Array.isArray(timedStep.events) 
+      ? timedStep.events as DAGEvent[]
+      : [timedStep.events as DAGEvent];
     
-    //console.log(`🎭 Step ${currentStep + 1}: Processing ${stepEvents.length} event(s):`);
+    console.log(`🎭 Step ${currentStep + 1}: Processing ${stepEvents.length} event(s), delay after: ${timedStep.delayAfter}ms`);
     
     // Process all events in this step
     stepEvents.forEach(event => {
-      const eventInfo = event.type === 'node_started' || event.type === 'node_completed'
-        ? `${event.type} (${(event as any).nodeId})`
-        : event.type === 'expert_triggered'
-        ? `${event.type} (${(event as ExpertTriggeredEvent).expertName})`
-        : event.type;
-      
-      //console.log(`   📅 ${eventInfo}`);
-      
-      // Process the event
+      //console.log(`   📅 ${event.type}`);
       dagEventProcessor.processEvent(event);
     });
     
     currentStep++;
     
-    // Schedule next step
+    // Schedule next step with smart delay
     if (currentStep < eventSequence.length) {
-      timeoutId = window.setTimeout(processNextStep, intervalMs);
+      const delay = timedStep.delayAfter; // Use smart delay from timing metadata
+      if (delay > 0) {
+        console.log(`⏱️  Waiting ${delay}ms before next step (${delay === 0 ? 'immediate parent→child' : 'processing time'})`);
+      }
+      timeoutId = window.setTimeout(processNextStep, delay);
     }
   };
   

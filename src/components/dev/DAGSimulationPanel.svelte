@@ -34,15 +34,15 @@
     // Initialize DAG first
     dagActions.initialize(sessionId);
     
-    // Start simulation
+    // Start simulation with smart timing (simulationSpeed parameter ignored)
     isRunning = true;
-    currentSimulation = simulateRealisticMedicalDAG(sessionId, simulationSpeed);
+    currentSimulation = simulateRealisticMedicalDAG(sessionId);
     
-    // Auto-stop when simulation completes (estimate based on event count)
+    // Auto-stop when simulation completes (smart timing uses variable delays)
     setTimeout(() => {
       isRunning = false;
       currentSimulation = null;
-    }, simulationSpeed * 15); // Rough estimate of simulation duration
+    }, 25000); // Estimated total duration for smart timing
   }
   
   function stopSimulation() {
