@@ -8,12 +8,12 @@ The AI Session DAG provides a universal framework for orchestrating multiple med
 
 ## Architecture Principles
 
-1. **Universal Expert Pattern**: Every expert follows the same input/output interface
-2. **Dynamic Multi-Layer Expansion**: Experts can trigger sub-experts creating analysis hierarchies
-3. **Hybrid Categorization**: Combination of specialty-based + function-based + dynamically-triggered experts
-4. **Consensus Without Resolution**: Merge agreements, publish conflicts with alerts
-5. **Incremental Processing**: Smart change detection prevents unnecessary re-analysis
-6. **Configuration-Driven Behavior**: All expert logic and triggers defined in YAML
+1. **AI-by-AI Expert Generation**: Primary Analyzer uses AI logic to dynamically create specialized expert nodes via MCP tools
+2. **Universal Statistical Output**: All nodes produce standardized statistical output for mathematical consensus building
+3. **MCP Tool Integration**: Expert creation handled through Model Context Protocol tools with custom prompts and filtered context
+4. **Dynamic DAG Structure**: Runtime DAG modification based on AI decisions, not predetermined flows
+5. **Statistical Consensus Building**: Mathematical aggregation of expert outputs using probability weighting and confidence scores
+6. **No Templates or Registries**: Purely AI-driven expert creation decisions based on case complexity
 
 ## DAG Architecture
 
@@ -161,7 +161,7 @@ The universal DAG framework is configured in the `universal_dag_models` section 
 universal_dag_models:
   # Define reusable expert node templates
   expert_templates:
-    primary_analyzer:
+    quorum_manager:
       type: "primary"
       execution: "always_active"
       outputs: ["symptoms", "diagnoses", "trigger_conditions"]
@@ -194,7 +194,7 @@ universal_dag_models:
       # Layer 1: Primary Analysis
       primary_layer:
         gp_expert:
-          template: "primary_analyzer"
+          template: "quorum_manager"
           provider: "openai"
           model: "gpt4"
           triggers:
@@ -904,3 +904,58 @@ This AI-driven architecture provides a truly intelligent, adaptive, and self-org
 6. **Transparent Reasoning**: AI explains why each expert was created and what they contribute
 
 This represents the future of medical AI: **intelligent systems that think about how to think** about medical problems.
+
+## MCP Tool Integration for Dynamic Expert Creation
+
+### Core Philosophy: AI-by-AI Expert Generation
+
+The fundamental breakthrough in this architecture is **AI systems creating other AI systems** based on analytical need rather than predetermined templates. The Primary Analyzer doesn't follow a registry of possible experts - it intelligently determines what expertise the case requires and dynamically creates custom expert nodes.
+
+**Key Principles:**
+
+1. **Intelligence Creates Intelligence**: AI analyzes case complexity and generates specialized AI experts with custom prompts, context, and focus areas
+2. **Patient-Specific Expertise**: Every expert is tailored to the unique combination of patient factors (age, conditions, medications, history)
+3. **No Predetermined Limits**: System can create any combination of medical expertise (e.g., "Pediatric Diabetic Cardiologist for 8-year-old with Type 1 diabetes")
+4. **Transparent Reasoning**: Each expert creation includes clear reasoning for why this specific expertise was deemed necessary
+
+### MCP Tool Philosophy
+
+Model Context Protocol (MCP) tools enable the Primary Analyzer to:
+- **Create Custom Expert Nodes**: Generate new DAG nodes with specialized prompts and filtered context
+- **Design Expert Interactions**: Define how new experts connect to existing analysis flow
+- **Optimize Resource Usage**: Create only the experts needed, with appropriate model selection and cost estimation
+
+### Universal Statistical Output for Consensus Building
+
+All experts (pre-configured and AI-generated) produce standardized statistical output enabling mathematical consensus building:
+
+**Statistical Foundation:**
+- Every medical finding includes probability distributions and confidence intervals
+- Uncertainty quantification across all analysis dimensions
+- Evidence quality scoring for consensus weighting
+- Temporal relevance and scope coverage metrics
+
+**Consensus Mathematics:**
+- Bayesian probability fusion across multiple expert perspectives
+- Dempster-Shafer evidence theory for conflict resolution
+- Dynamic expert weighting based on relevance, confidence, and evidence quality
+- Automated conflict detection and resolution strategies
+
+### Benefits of AI-Generated Expert Architecture
+
+**Adaptive Intelligence:**
+- System learns optimal expert combinations from each case
+- No static limits on medical specialization depth
+- Intelligent resource allocation based on case complexity
+
+**Medical Accuracy:**
+- Multiple specialized perspectives reduce diagnostic blind spots
+- Conflict resolution through mathematical consensus building
+- Transparent reasoning and evidence weighting
+
+**Scalability:**
+- New medical domains automatically supported through AI generation
+- Cost-efficient expert creation only when genuinely needed
+- Self-improving system through expert generation pattern learning
+
+This architecture represents **meta-medical AI**: artificial intelligence that reasons about what kind of medical reasoning is needed, then creates the appropriate reasoning systems to address complex healthcare challenges.

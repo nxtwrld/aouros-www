@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Core Development
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server - never run it yourself - we are already running it
 - `npm run build` - Build production version
 - `npm run preview` - Preview production build
 - `npm run check` - Run SvelteKit sync and type checking

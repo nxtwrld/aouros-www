@@ -12,7 +12,7 @@ export const DAG_VISUAL_CONFIG: DAGVisualizationConfig = {
     layerSpacing: 250,
     nodeSpacing: 200,
     panelWidth: 150,
-    panelHeight: 40
+    panelHeight: 60
   },
   
   forces: {

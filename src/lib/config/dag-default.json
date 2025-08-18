@@ -15,7 +15,7 @@
         "timeoutMs": 0
       }
     },
-    "primary_analyzer": {
+    "quorum_manager": {
       "type": "primary",
       "execution": "always_active",
       "outputs": ["symptoms", "diagnoses", "trigger_conditions"],
@@ -166,14 +166,14 @@
       "category": "detection",
       "layer": 1,
       "parent": "session_input",
-      "children": ["primary_analyzer", "safety_monitor"],
+      "children": ["quorum_manager", "safety_monitor"],
       "state": "pending",
-      "template": "primary_analyzer",
+      "template": "quorum_manager",
       "radius": 38,
       "description": "Identifies and categorizes symptoms from transcript"
     },
     {
-      "id": "primary_analyzer",
+      "id": "quorum_manager",
       "name": "Primary Analyzer",
       "type": "primary",
       "category": "analysis",
@@ -181,7 +181,7 @@
       "parent": "symptoms_detector",
       "children": ["consensus_merger"],
       "state": "pending",
-      "template": "primary_analyzer",
+      "template": "quorum_manager",
       "radius": 40,
       "description": "GP-level analysis of symptoms and medical relevance"
     },
@@ -204,7 +204,7 @@
       "type": "merger",
       "category": "consensus",
       "layer": 3,
-      "parent": ["primary_analyzer", "safety_monitor"],
+      "parent": ["quorum_manager", "safety_monitor"],
       "children": ["final_output"],
       "state": "pending",
       "template": "consensus_merger",
@@ -237,9 +237,9 @@
       "description": "Session data flows to symptoms detection"
     },
     {
-      "id": "symptoms_detector_to_primary_analyzer",
+      "id": "symptoms_detector_to_quorum_manager",
       "source": "symptoms_detector",
-      "target": "primary_analyzer",
+      "target": "quorum_manager",
       "type": "data_flow",
       "direction": "forward",
       "strength": 0.8,
@@ -257,8 +257,8 @@
       "description": "Detected symptoms monitored for safety concerns"
     },
     {
-      "id": "primary_analyzer_to_consensus",
-      "source": "primary_analyzer",
+      "id": "quorum_manager_to_consensus",
+      "source": "quorum_manager",
       "target": "consensus_merger",
       "type": "contributes",
       "direction": "forward",

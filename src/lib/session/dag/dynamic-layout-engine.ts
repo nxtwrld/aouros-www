@@ -30,6 +30,23 @@ export interface LayoutConfig {
   parallelSpacing: number;
 }
 
+export interface NodeAdditionOptions {
+  insertBetween?: { 
+    parents: string[]; 
+    children: string[]; 
+  };
+  layer?: number;
+  parallelGroup?: string;
+  positioning?: 'auto' | 'manual' | 'relative';
+}
+
+export interface LayoutResult {
+  nodes: LayoutNode[];
+  links: LayoutLink[];
+  layerCount: number;
+  affectedNodeIds: string[];
+}
+
 export class DynamicLayoutEngine {
   private config: LayoutConfig;
   private nodes: Map<string, LayoutNode> = new Map();
@@ -43,11 +60,20 @@ export class DynamicLayoutEngine {
   /**
    * Generate layout from DAG configuration
    */
-  generateLayout(dagConfig: any): { nodes: LayoutNode[], links: LayoutLink[] } {
+  generateLayout(dagConfig: any): LayoutResult {
+    console.group('🎯 DAG Layout Generation Starting');
+    console.log('🔍 Input DAG config:', {
+      id: dagConfig?.id || 'unknown',
+      hasDefaultFlow: !!dagConfig?.defaultFlow,
+      nodeCount: dagConfig?.defaultFlow?.nodes?.length || 0
+    });
+    
     this.resetLayout();
     
     // Create nodes from default flow
     this.createNodesFromConfig(dagConfig.defaultFlow);
+    
+    console.log('✅ Nodes created:', Array.from(this.nodes.keys()));
     
     // Assign layers based on dependencies
     this.assignLayers();
@@ -55,75 +81,222 @@ export class DynamicLayoutEngine {
     // Calculate positions using auto-layout algorithm
     this.calculatePositions();
     
+    console.log('🏁 Layout generation complete');
+    console.groupEnd();
+    
     return {
       nodes: Array.from(this.nodes.values()),
-      links: this.links
+      links: this.links,
+      layerCount: this.layers.size,
+      affectedNodeIds: Array.from(this.nodes.keys())
     };
   }
 
   /**
-   * Add dynamically created parallel experts
+   * Add a single node with optional relationship management
    */
-  addParallelExperts(
-    parentNodeId: string, 
-    expertDefinitions: any[],
-    consensusNodeId: string
-  ): { nodes: LayoutNode[], links: LayoutLink[] } {
-    const parentNode = this.nodes.get(parentNodeId);
-    if (!parentNode) throw new Error(`Parent node ${parentNodeId} not found`);
+  addNode(node: LayoutNode, options?: NodeAdditionOptions): LayoutResult {
+    return this.addNodes([node], options);
+  }
 
-    // Create parallel expert nodes
-    const parallelNodes: LayoutNode[] = [];
-    const parallelGroup = `${parentNodeId}_experts`;
+  /**
+   * Add multiple nodes with optional relationship management - GENERIC VERSION
+   */
+  addNodes(nodes: LayoutNode[], options?: NodeAdditionOptions): LayoutResult {
+    const affectedNodeIds: string[] = [];
     
-    expertDefinitions.forEach((expert, index) => {
-      const expertNode: LayoutNode = {
-        id: expert.expertId,
-        name: expert.name || expert.variation?.name || `Expert ${index + 1}`,
-        type: 'specialist',
-        category: 'ai_generated',
-        x: 0, // Will be calculated
-        y: 0, // Will be calculated  
-        layer: parentNode.layer + 1,
-        isParallel: true,
-        parallelGroup,
-        parentNodes: [parentNodeId],
-        childNodes: [consensusNodeId]
-      };
-      
-      this.nodes.set(expertNode.id, expertNode);
-      parallelNodes.push(expertNode);
-      
-      // Create links from parent to expert
-      this.links.push({
-        id: `${parentNodeId}_to_${expertNode.id}`,
-        source: parentNodeId,
-        target: expertNode.id,
-        type: 'triggers'
-      });
-      
-      // Create links from expert to consensus
-      this.links.push({
-        id: `${expertNode.id}_to_${consensusNodeId}`,
-        source: expertNode.id,
-        target: consensusNodeId,
-        type: 'contributes'
-      });
+    // Add nodes to the internal map
+    nodes.forEach(node => {
+      this.nodes.set(node.id, node);
+      affectedNodeIds.push(node.id);
     });
 
-    // Create or update consensus node
-    const consensusNode = this.nodes.get(consensusNodeId) || this.createConsensusNode(consensusNodeId, parentNode.layer + 2);
-    consensusNode.parentNodes = parallelNodes.map(n => n.id);
-    this.nodes.set(consensusNodeId, consensusNode);
+    // Handle insertBetween option
+    if (options?.insertBetween) {
+      this.handleInsertBetween(nodes, options.insertBetween, affectedNodeIds);
+    }
 
-    // Recalculate layout with new nodes
+    // Recalculate entire layout
     this.assignLayers();
     this.calculatePositions();
 
     return {
       nodes: Array.from(this.nodes.values()),
-      links: this.links
+      links: this.links,
+      layerCount: this.layers.size,
+      affectedNodeIds
     };
+  }
+
+  /**
+   * Handle insertion of nodes between existing parent-child relationships
+   */
+  private handleInsertBetween(
+    newNodes: LayoutNode[], 
+    insertConfig: { parents: string[]; children: string[] },
+    affectedNodeIds: string[]
+  ) {
+    const { parents: parentIds, children: childIds } = insertConfig;
+    
+    // Update parent nodes to point to new nodes instead of children
+    parentIds.forEach(parentId => {
+      const parentNode = this.nodes.get(parentId);
+      if (!parentNode) {
+        console.warn(`Parent node ${parentId} not found`);
+        return;
+      }
+
+      // Remove old parent->child connections
+      childIds.forEach(childId => {
+        const childIndex = parentNode.childNodes.indexOf(childId);
+        if (childIndex > -1) {
+          parentNode.childNodes.splice(childIndex, 1);
+          // Remove corresponding link
+          const linkId = `${parentId}_to_${childId}`;
+          this.links = this.links.filter(link => link.id !== linkId);
+        }
+      });
+
+      // Add new parent->newNode connections
+      newNodes.forEach(newNode => {
+        if (!parentNode.childNodes.includes(newNode.id)) {
+          parentNode.childNodes.push(newNode.id);
+        }
+        if (!newNode.parentNodes.includes(parentId)) {
+          newNode.parentNodes.push(parentId);
+        }
+
+        // Create parent->newNode link
+        const linkId = `${parentId}_to_${newNode.id}`;
+        if (!this.links.find(l => l.id === linkId)) {
+          this.links.push({
+            id: linkId,
+            source: parentId,
+            target: newNode.id,
+            type: 'triggers'
+          });
+        }
+      });
+
+      affectedNodeIds.push(parentId);
+    });
+
+    // Update child nodes to receive from new nodes instead of parents
+    childIds.forEach(childId => {
+      const childNode = this.nodes.get(childId);
+      if (!childNode) {
+        console.warn(`Child node ${childId} not found`);
+        return;
+      }
+
+      // Remove old parent->child connections from child's parent list
+      parentIds.forEach(parentId => {
+        const parentIndex = childNode.parentNodes.indexOf(parentId);
+        if (parentIndex > -1) {
+          childNode.parentNodes.splice(parentIndex, 1);
+        }
+      });
+
+      // Add new newNode->child connections
+      newNodes.forEach(newNode => {
+        if (!childNode.parentNodes.includes(newNode.id)) {
+          childNode.parentNodes.push(newNode.id);
+        }
+        if (!newNode.childNodes.includes(childId)) {
+          newNode.childNodes.push(childId);
+        }
+
+        // Create newNode->child link
+        const linkId = `${newNode.id}_to_${childId}`;
+        if (!this.links.find(l => l.id === linkId)) {
+          this.links.push({
+            id: linkId,
+            source: newNode.id,
+            target: childId,
+            type: 'contributes'
+          });
+        }
+      });
+
+      affectedNodeIds.push(childId);
+    });
+  }
+
+  /**
+   * Add a link between existing nodes
+   */
+  addLink(link: LayoutLink): LayoutResult {
+    // Check if link already exists
+    const existingLink = this.links.find(l => l.id === link.id);
+    if (existingLink) {
+      return {
+        nodes: Array.from(this.nodes.values()),
+        links: this.links,
+        layerCount: this.layers.size,
+        affectedNodeIds: []
+      };
+    }
+
+    this.links.push(link);
+    const affectedNodeIds: string[] = [link.source, link.target];
+
+    // Update parent-child relationships
+    const sourceNode = this.nodes.get(link.source);
+    const targetNode = this.nodes.get(link.target);
+
+    if (sourceNode && !sourceNode.childNodes.includes(link.target)) {
+      sourceNode.childNodes.push(link.target);
+    }
+
+    if (targetNode && !targetNode.parentNodes.includes(link.source)) {
+      targetNode.parentNodes.push(link.source);
+    }
+
+    // Recalculate layout if relationships changed
+    this.assignLayers();
+    this.calculatePositions();
+
+    return {
+      nodes: Array.from(this.nodes.values()),
+      links: this.links,
+      layerCount: this.layers.size,
+      affectedNodeIds
+    };
+  }
+
+  /**
+   * Legacy method - now delegates to generic addNodes
+   * @deprecated Use addNodes with insertBetween option instead
+   */
+  addParallelExperts(
+    parentNodeId: string, 
+    expertDefinitions: any[],
+    consensusNodeId: string
+  ): LayoutResult {
+    // Convert expert definitions to LayoutNodes
+    const expertNodes: LayoutNode[] = expertDefinitions.map((expert, index) => ({
+      id: expert.expertId,
+      name: expert.name || expert.variation?.name || `Expert ${index + 1}`,
+      type: 'specialist',
+      category: 'ai_generated',
+      x: 0,
+      y: 0,
+      layer: 0, // Will be calculated by addNodes
+      isParallel: true,
+      parallelGroup: `${parentNodeId}_experts`,
+      parentNodes: [], // Will be set by insertBetween
+      childNodes: []   // Will be set by insertBetween
+    }));
+
+    // Use generic addNodes with insertBetween option
+    const result = this.addNodes(expertNodes, {
+      insertBetween: {
+        parents: [parentNodeId],
+        children: [consensusNodeId]
+      }
+    });
+
+    return result;
   }
 
   private resetLayout() {
@@ -133,13 +306,26 @@ export class DynamicLayoutEngine {
   }
 
   private createNodesFromConfig(defaultFlow: any) {
+    console.group('🏗️ Creating nodes from DAG config');
+    console.log('📋 Default flow structure:', {
+      nodeCount: defaultFlow?.nodes?.length || 0,
+      connectionCount: defaultFlow?.connections?.length || 0,
+      nodes: defaultFlow?.nodes?.map((n: any) => ({ id: n.id, name: n.name })) || []
+    });
+    
     // Create nodes from default flow configuration
-    defaultFlow.nodes.forEach((nodeConfig: any) => {
+    defaultFlow.nodes.forEach((nodeConfig: any, index: number) => {
+      // Check for data corruption
+      if (nodeConfig.id && nodeConfig.id.includes('rr')) {
+        console.error(`🚨 DETECTED CORRUPTED NODE ID: '${nodeConfig.id}' at index ${index}`);
+        console.error('🔍 Full node config:', nodeConfig);
+      }
+      
       const node: LayoutNode = {
         id: nodeConfig.id,
         name: nodeConfig.name,
         type: nodeConfig.type,
-        category: nodeConfig.category,
+        category: nodeConfig.category || 'default',
         x: 0, // Will be calculated
         y: 0, // Will be calculated
         layer: 0, // Will be calculated
@@ -148,8 +334,11 @@ export class DynamicLayoutEngine {
         childNodes: [] // Will be calculated from connections
       };
       
+      console.log(`📦 Created node: ${node.id} (${node.name})`);
       this.nodes.set(node.id, node);
     });
+    
+    console.groupEnd();
 
     // Create links and parent/child relationships from connections
     defaultFlow.connections.forEach((conn: any) => {
@@ -280,12 +469,21 @@ export class DynamicLayoutEngine {
           // Center parallel group
           const groupNodes = Array.from(parallelGroups.values())[0];
           const groupCenterX = margins.left + (usableWidth / 2);
-          const groupStartX = groupCenterX - ((groupNodes.length - 1) * parallelSpacing) / 2;
+          
+          // Dynamic spacing: use larger spacing for fewer nodes, smaller for many nodes
+          const dynamicSpacing = Math.max(
+            parallelSpacing,
+            Math.min(250, usableWidth / (groupNodes.length + 1))  // Cap at 250px max
+          );
+          
+          const groupStartX = groupCenterX - ((groupNodes.length - 1) * dynamicSpacing) / 2;
           
           groupNodes.forEach((node, index) => {
-            node.x = groupStartX + (index * parallelSpacing);
+            node.x = groupStartX + (index * dynamicSpacing);
             node.y = y;
           });
+          
+          console.log(`📏 Positioned ${groupNodes.length} parallel nodes with ${dynamicSpacing}px spacing`);
         }
       } else {
         // Distribute multiple items across the width
@@ -302,10 +500,17 @@ export class DynamicLayoutEngine {
         // Position parallel groups
         parallelGroups.forEach(groupNodes => {
           const groupCenterX = margins.left + (itemIndex * itemSpacing) + (itemSpacing / 2);
-          const groupStartX = groupCenterX - ((groupNodes.length - 1) * parallelSpacing) / 2;
+          
+          // Dynamic spacing for parallel nodes in mixed layers
+          const dynamicSpacing = Math.max(
+            parallelSpacing,
+            Math.min(250, itemSpacing / (groupNodes.length + 1))  // Adapt to available space
+          );
+          
+          const groupStartX = groupCenterX - ((groupNodes.length - 1) * dynamicSpacing) / 2;
           
           groupNodes.forEach((node, index) => {
-            node.x = groupStartX + (index * parallelSpacing);
+            node.x = groupStartX + (index * dynamicSpacing);
             node.y = y;
           });
           
@@ -356,7 +561,7 @@ export const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {
   height: 800,
   margins: { top: 60, right: 60, bottom: 60, left: 60 },
   nodeSpacing: { x: 200, y: 150 },
-  parallelSpacing: 120
+  parallelSpacing: 180  // Increased from 120 to prevent overlap
 };
 
 // Helper function to create layout engine

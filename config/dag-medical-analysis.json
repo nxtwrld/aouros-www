@@ -18,21 +18,21 @@
       },
       {
         "id": "symptoms_detector", 
-        "name": "Medical Relevance Detector",
+        "name": "Relevance Detector",
         "type": "detector",
         "category": "analysis",
-        "template": "primary_analyzer",
+        "template": "quorum_manager",
         "description": "Identifies medical relevance and determines if analysis is needed",
         "inputs": ["session_input"],
         "outputs": ["detected_symptoms", "symptom_categories", "medical_relevance_score", "analysis_decision"],
         "decisionCapability": "trigger_experts_or_bypass"
       },
       {
-        "id": "primary_analyzer",
-        "name": "Primary Medical Analyzer", 
+        "id": "quorum_manager",
+        "name": "Quorum Manager", 
         "type": "primary",
         "category": "analysis",
-        "template": "primary_analyzer",
+        "template": "quorum_manager",
         "description": "GP-level medical analysis with expert generation capability",
         "inputs": ["symptoms_detector"],
         "outputs": ["medical_analysis", "expert_recommendations", "custom_expert_definitions"],
@@ -53,7 +53,7 @@
         "type": "safety",
         "category": "safety",
         "template": "safety_analyzer",
-        "description": "Monitors for safety concerns and risk factors in parallel with primary analysis",
+        "description": "Monitors for safety concerns and risk factors in parallel with quorum analysis",
         "inputs": ["symptoms_detector"],
         "outputs": ["safety_alerts", "risk_assessment", "contraindications"],
         "decisionCapability": "trigger_safety_protocols",
@@ -61,18 +61,18 @@
       },
       {
         "id": "consensus_merger",
-        "name": "Medical Consensus Builder",
+        "name": "Consensus Builder",
         "type": "consensus", 
         "category": "consensus",
         "template": "consensus_merger",
         "description": "Merges multiple expert analyses into unified medical recommendations",
-        "inputs": ["primary_analyzer", "safety_monitor", "dynamic_experts"],
+        "inputs": ["quorum_manager", "safety_monitor", "dynamic_experts"],
         "outputs": ["unified_analysis", "expert_agreements", "conflict_resolutions"],
         "consensusStrategies": ["weighted_majority", "risk_stratified", "evidence_based"]
       },
       {
         "id": "final_output",
-        "name": "Final Medical Analysis",
+        "name": "Final Analysis",
         "type": "output",
         "category": "output", 
         "template": "medical_output",
@@ -84,17 +84,17 @@
     ],
     "connections": [
       {"from": "session_input", "to": "symptoms_detector", "type": "data_flow"},
-      {"from": "symptoms_detector", "to": "primary_analyzer", "type": "data_flow"},
+      {"from": "symptoms_detector", "to": "quorum_manager", "type": "data_flow"},
       {"from": "symptoms_detector", "to": "safety_monitor", "type": "data_flow"},
       {"from": "symptoms_detector", "to": "final_output", "type": "bypass_flow"},
-      {"from": "primary_analyzer", "to": "consensus_merger", "type": "analysis_input"},
+      {"from": "quorum_manager", "to": "consensus_merger", "type": "analysis_input"},
       {"from": "safety_monitor", "to": "consensus_merger", "type": "safety_input"},
       {"from": "consensus_merger", "to": "final_output", "type": "data_flow"}
     ]
   },
 
   "expertTemplates": {
-    "primary_analyzer": {
+    "quorum_manager": {
       "type": "primary",
       "execution": "always_active",
       "capabilities": ["symptom_analysis", "expert_generation", "medical_reasoning"],

@@ -57,16 +57,84 @@ export class DAGEventProcessor {
     this.eventQueue = [];
 
     try {
-      // Process events in order
-      eventsToProcess.forEach(event => {
+      // Group expert_triggered events for batch processing
+      const expertEvents = eventsToProcess.filter(e => e.type === 'expert_triggered') as ExpertTriggeredEvent[];
+      const otherEvents = eventsToProcess.filter(e => e.type !== 'expert_triggered');
+      
+      // Process non-expert events first
+      otherEvents.forEach(event => {
         this.processIndividualEvent(event);
       });
+      
+      // Batch process expert events by parent
+      if (expertEvents.length > 0) {
+        this.processExpertEventsBatch(expertEvents);
+      }
     } catch (error) {
       console.error('❌ Error processing DAG event batch:', error);
     } finally {
       this.processingQueue = false;
       this.batchTimeout = null;
     }
+  }
+
+  // Process expert events in batches by parent to avoid layout thrashing
+  private processExpertEventsBatch(expertEvents: ExpertTriggeredEvent[]) {
+    // Group experts by parent ID
+    const expertsByParent = new Map<string, ExpertTriggeredEvent[]>();
+    
+    expertEvents.forEach(event => {
+      const parentId = event.parentId;
+      if (!expertsByParent.has(parentId)) {
+        expertsByParent.set(parentId, []);
+      }
+      expertsByParent.get(parentId)!.push(event);
+    });
+    
+    // Process each parent's experts as a batch
+    expertsByParent.forEach((events, parentId) => {
+      console.log(`🎯 Batch processing ${events.length} experts for parent: ${parentId}`);
+      
+      if (events.length === 1) {
+        // Single expert - use individual processing
+        this.handleExpertTriggered(events[0]);
+      } else {
+        // Multiple experts - use batch processing
+        this.handleMultipleExpertsTriggered(events);
+      }
+    });
+  }
+
+  // Handle multiple experts triggered from the same parent
+  private handleMultipleExpertsTriggered(events: ExpertTriggeredEvent[]) {
+    const parentId = events[0].parentId;
+    console.log(`🎯 Batch adding ${events.length} experts from ${parentId}:`, events.map(e => e.expertName));
+    
+    // Create all expert nodes
+    const expertNodes: any[] = events.map(event => ({
+      id: event.expertId,
+      name: event.expertName,
+      type: 'specialist',
+      category: 'ai_generated',
+      layer: 0,
+      parent: event.parentId,
+      children: ['consensus_merger'],
+      state: 'pending',
+      provider: 'openai',
+      model: 'gpt-4',
+      triggerConditions: event.triggerConditions,
+      triggered: true,
+      x: 0,
+      y: 0
+    }));
+
+    // Add all experts in a single batch operation
+    dagActions.addNodes(expertNodes, {
+      insertBetween: {
+        parents: [parentId],
+        children: ['consensus_merger']
+      }
+    });
   }
 
   // Process individual event
@@ -171,12 +239,8 @@ export class DAGEventProcessor {
   private handleExpertTriggered(event: ExpertTriggeredEvent) {
     console.log(`🎯 Expert triggered: ${event.expertName} by ${event.parentId}`);
     
-    // Process through store actions which handles node creation and linking
-    dagActions.processEvent(event);
-    
-    // Activate the trigger link
-    const linkId = `${event.parentId}_to_${event.expertId}`;
-    dagActions.activateLink(linkId);
+    // Use the generic addParallelExpert method
+    dagActions.addParallelExpert(event);
   }
 
   private handleRelationshipAdded(event: RelationshipAddedEvent) {
@@ -243,315 +307,3 @@ export function isValidDAGEvent(event: any): event is DAGEvent {
   return validEventTypes.includes(event.type);
 }
 
-// Helper function to create mock events for development/testing
-export function createMockDAGEvents(sessionId: string): DAGEvent[] {
-  const timestamp = Date.now();
-  
-  return [
-    // 1. DAG initialization with new config
-    {
-      type: 'dag_initialized',
-      dagModelId: 'universal_medical_dag_v2',
-      nodes: [],
-      links: [],
-      timestamp
-    } as DAGInitializedEvent,
-    
-    // 2. Symptoms detector starts processing session data
-    {
-      type: 'node_started',
-      nodeId: 'symptoms_detector',
-      nodeName: 'Symptoms Detection',
-      model: 'gpt-4',
-      provider: 'openai',
-      timestamp: timestamp + 1000
-    } as NodeStartedEvent,
-    
-    // 3. Symptoms detector completes and activates primary analyzer
-    {
-      type: 'node_completed',
-      nodeId: 'symptoms_detector',
-      duration: 2500,
-      cost: 0.018,
-      tokenUsage: {
-        input: 800,
-        output: 400
-      }
-    } as NodeCompletedEvent,
-
-    // 4. Primary analyzer starts processing detected symptoms
-    {
-      type: 'node_started',
-      nodeId: 'primary_analyzer',
-      nodeName: 'Primary Medical Analyzer',
-      model: 'gpt-4',
-      provider: 'openai',
-      timestamp: timestamp + 3500
-    } as NodeStartedEvent,
-
-    // 5. Primary analyzer detects complex cardiac case - creates 3 parallel experts
-    {
-      type: 'expert_triggered',
-      parentId: 'primary_analyzer',
-      expertId: 'conservative_cardiologist',
-      expertName: 'Conservative Cardiologist',
-      triggerConditions: ['chest_pain', 'cardiac_risk_factors', 'complex_case'],
-      layer: 3,
-      parallelGroup: 'cardiology_consultation',
-      expertVariation: {
-        approach: 'conservative',
-        riskTolerance: 'low',
-        perspective: 'guideline_based'
-      }
-    } as ExpertTriggeredEvent,
-    
-    // 6. Second parallel expert created
-    {
-      type: 'expert_triggered',
-      parentId: 'primary_analyzer',
-      expertId: 'interventional_cardiologist',
-      expertName: 'Interventional Cardiologist',
-      triggerConditions: ['chest_pain', 'high_risk_features', 'acute_presentation'],
-      layer: 3,
-      parallelGroup: 'cardiology_consultation',
-      expertVariation: {
-        approach: 'aggressive',
-        riskTolerance: 'high',
-        perspective: 'interventional_focused'
-      }
-    } as ExpertTriggeredEvent,
-    
-    // 7. Third parallel expert created
-    {
-      type: 'expert_triggered',
-      parentId: 'primary_analyzer',
-      expertId: 'diabetic_cardiologist',
-      expertName: 'Diabetic Cardiology Specialist',
-      triggerConditions: ['diabetes', 'cardiac_symptoms', 'silent_ischemia_risk'],
-      layer: 3,
-      parallelGroup: 'cardiology_consultation', 
-      expertVariation: {
-        approach: 'evidence_based',
-        riskTolerance: 'moderate',
-        perspective: 'diabetic_complications'
-      }
-    } as ExpertTriggeredEvent,
-    
-    // 8. Primary analyzer completes with expert generation decision
-    {
-      type: 'node_completed',
-      nodeId: 'primary_analyzer',
-      duration: 4500,
-      cost: 0.032,
-      tokenUsage: {
-        input: 1500,
-        output: 900
-      },
-      output: {
-        symptoms: [],
-        diagnoses: [],
-        treatments: [],
-        questions: [],
-        confidence: 0.78,
-        reasoning: 'Complex diabetic patient with atypical chest pain requires multiple cardiology perspectives',
-        expertId: 'primary_analyzer',
-        layer: 2,
-        customExpertsGenerated: [
-          'conservative_cardiologist',
-          'interventional_cardiologist', 
-          'diabetic_cardiologist'
-        ]
-      }
-    } as NodeCompletedEvent,
-    
-    // 9. Parallel cardiology experts start simultaneously
-    {
-      type: 'node_started',
-      nodeId: 'conservative_cardiologist',
-      nodeName: 'Conservative Cardiologist',
-      model: 'gpt-4',
-      provider: 'openai',
-      timestamp: timestamp + 6000
-    } as NodeStartedEvent,
-    
-    {
-      type: 'node_started',
-      nodeId: 'interventional_cardiologist',
-      nodeName: 'Interventional Cardiologist',
-      model: 'gpt-4',
-      provider: 'openai',
-      timestamp: timestamp + 6100
-    } as NodeStartedEvent,
-    
-    {
-      type: 'node_started',
-      nodeId: 'diabetic_cardiologist',
-      nodeName: 'Diabetic Cardiology Specialist',
-      model: 'gpt-4',
-      provider: 'openai',
-      timestamp: timestamp + 6200
-    } as NodeStartedEvent,
-    
-    // 10. Parallel experts complete with different recommendations
-    {
-      type: 'node_completed',
-      nodeId: 'conservative_cardiologist',
-      duration: 5200,
-      cost: 0.045,
-      tokenUsage: {
-        input: 1800,
-        output: 1100
-      },
-      output: {
-        recommendation: 'Outpatient stress testing, medical optimization',
-        confidence: 0.82,
-        reasoning: 'Standard guideline-based approach appropriate for stable symptoms'
-      }
-    } as NodeCompletedEvent,
-    
-    {
-      type: 'node_completed',
-      nodeId: 'interventional_cardiologist',
-      duration: 5800,
-      cost: 0.052,
-      tokenUsage: {
-        input: 2000,
-        output: 1200
-      },
-      output: {
-        recommendation: 'Urgent cardiac catheterization, rule out ACS',
-        confidence: 0.75,
-        reasoning: 'High-risk features warrant aggressive workup to exclude acute coronary syndrome'
-      }
-    } as NodeCompletedEvent,
-    
-    {
-      type: 'node_completed',
-      nodeId: 'diabetic_cardiologist',
-      duration: 5500,
-      cost: 0.048,
-      tokenUsage: {
-        input: 1900,
-        output: 1150
-      },
-      output: {
-        recommendation: 'Inpatient monitoring, consider silent MI, aggressive diabetes management',
-        confidence: 0.88,
-        reasoning: 'Diabetic patients have high risk of silent ischemia and atypical presentations'
-      }
-    } as NodeCompletedEvent,
-    
-    
-    
-    // 11. Consensus merger starts after all parallel experts complete
-    {
-      type: 'node_started',
-      nodeId: 'consensus_merger',
-      nodeName: 'Medical Consensus Builder',
-      model: 'gpt-4-turbo',
-      provider: 'openai',
-      timestamp: timestamp + 15000
-    } as NodeStartedEvent,
-    
-    // 12. Consensus merger completes with expert synthesis
-    {
-      type: 'node_completed',
-      nodeId: 'consensus_merger',
-      duration: 4200,
-      cost: 0.035,
-      tokenUsage: {
-        input: 2500,
-        output: 1200
-      },
-      output: {
-        consensusRecommendation: 'Inpatient observation with urgent cardiology consultation and diabetes optimization',
-        expertAgreements: [
-          'All experts agree on need for cardiology evaluation',
-          'All experts recommend diabetes management optimization'
-        ],
-        expertDisagreements: [
-          'Conservative: Outpatient vs Interventional: Urgent cath vs Diabetic: Inpatient monitoring'
-        ],
-        finalReasoning: 'Diabetic specialist perspective weighted higher due to silent MI risk in diabetic patients',
-        confidence: 0.85
-      }
-    } as NodeCompletedEvent,
-    
-    // 13. Final output node activates
-    {
-      type: 'node_started',
-      nodeId: 'final_output',
-      nodeName: 'Final Medical Analysis',
-      model: 'none',
-      provider: 'system',
-      timestamp: timestamp + 18000
-    } as NodeStartedEvent,
-    
-    // 14. Final output completes
-    {
-      type: 'node_completed',
-      nodeId: 'final_output',
-      duration: 500,
-      cost: 0.000,
-      tokenUsage: {
-        input: 0,
-        output: 0
-      },
-      output: {
-        finalRecommendations: 'Multi-expert cardiology consultation complete with consensus recommendations',
-        parallelExpertsUsed: 3,
-        consensusAchieved: true,
-        confidenceLevel: 'High (85%)'       
-      }
-    } as NodeCompletedEvent,
-    
-    // 15. DAG completes with multi-expert analysis
-    {
-      type: 'dag_completed',
-      totalDuration: 18500,
-      totalCost: 0.225,
-      nodeCount: 8,  // 5 default + 3 parallel experts
-      successCount: 8,
-      failureCount: 0,
-      parallelExpertsGenerated: 3,
-      consensusAchieved: true,
-      finalOutput: {
-        symptoms: [],
-        diagnoses: [],
-        treatments: [],
-        questions: [],
-        confidence: 0.85,
-        reasoning: 'Multi-expert cardiology consultation with diabetic specialist consensus',
-        expertId: 'consensus_merger',
-        layer: 4,
-        expertContributions: [
-          'Conservative Cardiologist: Guideline-based approach',
-          'Interventional Cardiologist: Aggressive workup perspective', 
-          'Diabetic Cardiologist: Silent ischemia risk assessment'
-        ]
-      }
-    } as DAGCompletedEvent
-  ];
-}
-
-// Export a function to simulate DAG execution for development
-export function simulateDAGExecution(sessionId: string, intervalMs = 2000) {
-  const events = createMockDAGEvents(sessionId);
-  let currentIndex = 0;
-  
-  const interval = setInterval(() => {
-    if (currentIndex >= events.length) {
-      clearInterval(interval);
-      console.log('🎬 DAG simulation completed');
-      return;
-    }
-    
-    const event = events[currentIndex];
-    console.log(`🎭 Simulating event ${currentIndex + 1}/${events.length}:`, event.type);
-    
-    dagEventProcessor.processEvent(event);
-    currentIndex++;
-  }, intervalMs);
-  
-  return () => clearInterval(interval);
-}

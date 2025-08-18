@@ -11,7 +11,7 @@
     import { t } from '$lib/i18n';
     import { selectedItem } from '$lib/session/stores/session-viewer-store';
     import { dagActions } from '$lib/session/stores/dag-execution-store';
-    import { dagEventProcessor, simulateDAGExecution } from '$lib/session/dag/dag-event-processor';
+
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -54,13 +54,7 @@
         if (sessionData?.sessionId) {
             dagActions.initialize(sessionData.sessionId);
             
-            // For development: Start DAG simulation after 2 seconds when viewing DAG
-            if (activeMainView === 'dag' && typeof window !== 'undefined') {
-                setTimeout(() => {
-                    console.log('🎭 Starting DAG simulation for development');
-                    simulateDAGExecution(sessionData.sessionId, 3000);
-                }, 2000);
-            }
+            // DAG initialization only - no automatic simulation
         }
 
         // Setup keyboard shortcuts

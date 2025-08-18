@@ -303,6 +303,8 @@ export interface DAGVisualizationConfig {
     margins: { top: number; right: number; bottom: number; left: number };
     layerSpacing: number;
     nodeSpacing: number;
+    panelWidth?: number;
+    panelHeight?: number;
   };
   forces: {
     linkStrength: number | ((link: D3DAGLink) => number);

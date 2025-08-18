@@ -7,13 +7,13 @@
     getNodeStyle, 
     getLinkStyle,
     getNodeRadius,
-    calculateFixedPosition,
     TRANSITIONS,
     ZOOM_CONFIG
   } from './config/dag-visual-config';
   // Removed shouldAnimateNode import - not needed for CSS animations
   import type { D3DAGNode, D3DAGLink } from './types/dag';
   import { t } from '$lib/i18n';
+  import DAGSimulationPanel from '$components/dev/DAGSimulationPanel.svelte';
 
   // Icon mapping for different node types
   function getNodeIcon(node: D3DAGNode): string {
@@ -58,12 +58,26 @@
   let selectedLink = $state<D3DAGLink | null>(null);
   let hoveredNode = $state<D3DAGNode | null>(null);
 
+  // Track last container dimensions to avoid unnecessary layout updates
+  let lastWidth = 0;
+  let lastHeight = 0;
+
   // No animation tracking needed - using CSS
   // Remove unused pulseIntervals reference
   const pulseIntervals = new Map<string, number>();
 
   onMount(() => {
     initializeVisualization();
+
+    // Set container dimensions immediately after container is available
+    if (container) {
+      const actualWidth = container.clientWidth || width;
+      const actualHeight = container.clientHeight || height;
+      console.log('📐 Setting initial container dimensions:', { actualWidth, actualHeight });
+      dagActions.updateLayoutDimensions(actualWidth, actualHeight);
+      lastWidth = actualWidth;
+      lastHeight = actualHeight;
+    }
 
     // Initialize DAG for session if provided
     if (sessionId) {
@@ -81,9 +95,28 @@
       }
     });
 
+    // Add resize listener for responsive updates
+    const handleResize = () => {
+      if (container) {
+        const actualWidth = container.clientWidth || width;
+        const actualHeight = container.clientHeight || height;
+        
+        // Only update if dimensions actually changed
+        if (actualWidth !== lastWidth || actualHeight !== lastHeight) {
+          console.log('📐 Container resized:', { actualWidth, actualHeight });
+          dagActions.updateLayoutDimensions(actualWidth, actualHeight);
+          lastWidth = actualWidth;
+          lastHeight = actualHeight;
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
     return () => {
       cleanup();
       unsubscribe();
+      window.removeEventListener('resize', handleResize);
     };
   });
 
@@ -169,15 +202,13 @@
       svg.attr('viewBox', `0 0 ${actualWidth} ${actualHeight}`);
     }
 
-    // Calculate fixed positions for all nodes
-    const nodesWithPositions = data.nodes.map(node => {
-      const position = calculateFixedPosition(node, actualWidth, actualHeight);
-      return {
-        ...node,
-        x: position.x,
-        y: position.y
-      };
-    });
+    // Use positions from the store (already calculated by layout engine)
+    // If positions are missing, nodes will have x:0, y:0 from the store
+    const nodesWithPositions = data.nodes.map(node => ({
+      ...node,
+      x: node.x || actualWidth / 2,  // Fallback to center if no position
+      y: node.y || actualHeight / 2
+    }));
 
     // Update links to use positioned nodes (filter out links with missing nodes)
     const linksWithPositions = data.links
@@ -228,9 +259,40 @@
         const target = d.target as D3DAGNode;
         if (!source || !target) return '';
         
-        // Get radii for source and target nodes
-        const sourceRadius = getNodeRadius(source) + 10; // Add 5px spacing
-        const targetRadius = getNodeRadius(target) + 10; // Add 5px spacing
+        // Get panel dimensions
+        const panelWidth = DAG_VISUAL_CONFIG.layout.panelWidth || 150;
+        const panelHeight = DAG_VISUAL_CONFIG.layout.panelHeight || 60;
+        const padding = 5; // Padding from edge to ensure arrow visibility
+        
+        // Helper function to get rectangle edge intersection point
+        const getRectangleIntersection = (centerX: number, centerY: number, angle: number, fromSource: boolean) => {
+          const halfWidth = (panelWidth / 2) + padding;
+          const halfHeight = (panelHeight / 2) + padding;
+          
+          // Adjust angle for target (reverse direction)
+          const adjustedAngle = fromSource ? angle : angle + Math.PI;
+          const cos = Math.cos(adjustedAngle);
+          const sin = Math.sin(adjustedAngle);
+          const tanAngle = sin / cos;
+          
+          let x, y;
+          
+          // Check if line exits through horizontal (left/right) or vertical (top/bottom) edge
+          if (Math.abs(tanAngle) <= halfHeight / halfWidth) {
+            // Exits through left or right edge
+            x = cos > 0 ? halfWidth : -halfWidth;
+            y = x * tanAngle;
+          } else {
+            // Exits through top or bottom edge
+            y = sin > 0 ? halfHeight : -halfHeight;
+            x = y / tanAngle;
+          }
+          
+          return {
+            x: centerX + x,
+            y: centerY + y
+          };
+        };
         
         // Calculate angle from source to target
         const dx = target.x - source.x;
@@ -241,7 +303,6 @@
         
         // Special handling for bypass flow - connect right edge to right edge
         if (d.type === 'bypass_flow') {
-          const panelWidth = DAG_VISUAL_CONFIG.layout.panelWidth || 150;
           const spacing = 10;
           
           // Connect from right edge of source to right edge of target
@@ -261,34 +322,36 @@
           
           return `M${sourceX},${sourceY}C${controlX},${control1Y} ${controlX},${control2Y} ${targetX},${targetY}`;
         } else {
-          // Standard connection points for all other link types
-          sourceX = source.x + Math.cos(angle) * sourceRadius;
-          sourceY = source.y + Math.sin(angle) * sourceRadius;
-          targetX = target.x - Math.cos(angle) * targetRadius;
-          targetY = target.y - Math.sin(angle) * targetRadius;
+          // Calculate connection points on rectangle edges
+          const sourcePoint = getRectangleIntersection(source.x, source.y, angle, true);
+          const targetPoint = getRectangleIntersection(target.x, target.y, angle, false);
+          
+          sourceX = sourcePoint.x;
+          sourceY = sourcePoint.y;
+          targetX = targetPoint.x;
+          targetY = targetPoint.y;
         }
         
-        // Create smooth curved arrow for better visual flow
+        // For most connections, use straight lines to ensure correct arrow angles
+        // Only add subtle curves for very long horizontal connections
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const isLongHorizontalLink = Math.abs(dx) > 200 && Math.abs(dy) < 100;
+        
         if (d.direction === 'bidirectional' || d.type === 'refines') {
-          const dr = Math.sqrt(dx * dx + dy * dy);
+          // Special curved path for bidirectional/refines
+          const dr = distance;
           return `M${sourceX},${sourceY}A${dr * 0.3},${dr * 0.3} 0 0,1 ${targetX},${targetY}`;
-        }
-        
-        // Check if this is a mostly vertical link (small horizontal difference)
-        const isVerticalLink = Math.abs(dx) < 50; // Less than 50px horizontal difference
-        
-        if (isVerticalLink) {
-          // Straight line for vertical connections
+        } else if (isLongHorizontalLink) {
+          // Add very subtle curve for long horizontal connections
+          const midX = (sourceX + targetX) / 2;
+          const midY = (sourceY + targetY) / 2;
+          const subtleCurve = 5; // Very subtle 5px curve
+          const curveY = midY + (dy > 0 ? subtleCurve : -subtleCurve);
+          return `M${sourceX},${sourceY}Q${midX},${curveY} ${targetX},${targetY}`;
+        } else {
+          // Use straight lines for most connections to ensure proper arrow angles
           return `M${sourceX},${sourceY}L${targetX},${targetY}`;
         }
-        
-        // Create curved path for horizontal flows - curve direction based on flow relative to center
-        const midX = (sourceX + targetX) / 2;
-        const centerX = actualWidth / 2;
-        const isFlowingOutward = (source.x < centerX && target.x < source.x) || (source.x > centerX && target.x > source.x);
-        const curveOffset = isFlowingOutward ? -15 : 15; // Curve up when flowing outward, down when flowing inward
-        const midY = (sourceY + targetY) / 2 + curveOffset;
-        return `M${sourceX},${sourceY}Q${midX},${midY} ${targetX},${targetY}`;
       })
       .on('click', handleLinkClick)
       .transition()
@@ -468,22 +531,11 @@
         <span class="metric-value">{(metrics.totalDuration / 1000).toFixed(1)}s</span>
       </div>
       
-      <!-- Development Controls -->
-      {#if typeof window !== 'undefined' && window.location.hostname === 'localhost'}
-        <button 
-          class="simulate-btn"
-          onclick={() => {
-            console.log('🎭 Starting DAG simulation manually');
-            import('$lib/session/dag/dag-event-processor').then(({ simulateDAGExecution }) => {
-              simulateDAGExecution(sessionId || 'dev-session', 2500);
-            });
-          }}
-        >
-          Simulate DAG
-        </button>
-      {/if}
     </div>
   {/if}
+
+  <!-- Development Simulation Panel -->
+  <DAGSimulationPanel {sessionId} />
 </div>
 
 <style>
@@ -498,8 +550,8 @@
   :global(.dag-node-panel) {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: .5rem;
+    padding: 4px;
     background: white;
     border: 2px solid #e5e7eb;
     border-radius: 8px;
@@ -518,14 +570,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 2rem;
+    height: 2rem;
     flex-shrink: 0;
   }
 
   :global(.dag-node-icon-svg) {
-    width: 24px;
-    height: 24px;
+    width: 100%;
+    height: 100%;
   }
 
   :global(.dag-node-icon-svg use) {
@@ -544,9 +596,13 @@
     font-size: 12px;
     font-weight: 500;
     color: #1f2937;
-    white-space: nowrap;
+    white-space: normal;
+    word-wrap: break-word;
     overflow: hidden;
-    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
   }
 
   :global(.dag-node-status) {
@@ -796,18 +852,4 @@
   }
 
 
-  .simulate-btn {
-    background: var(--color-primary, #3b82f6);
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    cursor: pointer;
-    margin-left: 8px;
-  }
-
-  .simulate-btn:hover {
-    background: var(--color-primary-dark, #2563eb);
-  }
 </style>
