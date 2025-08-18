@@ -155,7 +155,7 @@
       const marker = defs.append('marker')
         .attr('id', arrow.id)
         .attr('viewBox', '0 0 10 10')
-        .attr('refX', '10')  // Position at tip
+        .attr('refX', '5')  // Position at tip
         .attr('refY', '5')   // Center vertically
         .attr('markerWidth', '15')  // Bigger arrow
         .attr('markerHeight', '15')
@@ -672,6 +672,8 @@
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
+    cursor: pointer;
+    transition: all 0.3s ease;
   }
 
   :global(.dag-link.link-data_flow) {
@@ -694,22 +696,19 @@
 
   :global(.dag-link.link-triggers) {
     stroke: #3B82F6;
-    stroke-width: 4px;
-    stroke-dasharray: 5,3;
+    stroke-width: 3px;
     opacity: 0.7;
   }
 
   :global(.dag-link.link-contributes) {
     stroke: #6366F1;
-    stroke-width: 4px;
-    stroke-dasharray: 6,3;
+    stroke-width: 3px;
     opacity: 0.7;
   }
 
   :global(.dag-link.link-refines) {
     stroke: #EF4444;
-    stroke-width: 4px;
-    stroke-dasharray: 8,4;
+    stroke-width: 3px;
     opacity: 0.7;
   }
 
@@ -717,6 +716,15 @@
     stroke: #8B5CF6;
     stroke-width: 5px;
     opacity: 0.7;
+  }
+
+
+
+  :global(.dag-link.link-bypass_flow) {
+    stroke: #FCD34D;
+    stroke-width: 4px;
+    stroke-dasharray: 10, 10;
+    opacity: 0.6;
   }
 
   .dag-visualizer {
@@ -804,52 +812,6 @@
     filter: brightness(1.1);
   }
 
-  /* Link base styles */
-  :global(.dag-link) {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    fill: none;
-  }
-
-  /* Link type styles - reduced thickness */
-  :global(.link-data_flow) {
-    stroke: #10B981;
-    stroke-width: 4px;  /* Much thinner */
-    opacity: 0.8;
-  }
-
-  :global(.link-triggers) {
-    stroke: #3B82F6;
-    stroke-width: 3px;  /* Much thinner */
-    opacity: 0.8;
-  }
-
-  :global(.link-refines) {
-    stroke: #EF4444;
-    stroke-width: 2px;  /* Much thinner */
-    stroke-dasharray: 8, 4;
-    opacity: 0.7;
-  }
-
-  :global(.link-contributes) {
-    stroke: #6366F1;
-    stroke-width: 2px;  /* Much thinner */
-    stroke-dasharray: 6, 3;
-    opacity: 0.7;
-  }
-
-  :global(.link-merges) {
-    stroke: #8B5CF6;
-    stroke-width: 3px;  /* Much thinner */
-    opacity: 0.8;
-  }
-
-  :global(.link-bypass_flow) {
-    stroke: #FCD34D;
-    stroke-width: 2px;
-    stroke-dasharray: 10, 5;
-    opacity: 0.6;
-  }
 
 
 </style>
