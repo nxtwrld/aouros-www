@@ -280,6 +280,9 @@ export class EnhancedAIProvider {
       maxTokens: options.maxTokens,
     });
 
+    // Report progress before making the API call
+    options.progressCallback?.("ai_processing", 70, "Sending request to AI model...");
+
     const model = new ChatOpenAI({
       model: options.modelId,
       apiKey: options.apiKey,
@@ -339,6 +342,9 @@ export class EnhancedAIProvider {
       humanMessage,
     ]);
     const requestDuration = Date.now() - requestStartTime;
+    
+    // Report progress after receiving response
+    options.progressCallback?.("ai_processing", 85, "Processing AI response...");
 
     // Record AI request for debugging if recording is enabled
     if (workflowRecorder.isRecordingEnabled()) {

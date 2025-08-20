@@ -503,45 +503,70 @@ export class SSEImportClient {
       options.onStageChange?.("extract");
       const assessments = await this.extractDocumentsFromTasks(tasks);
 
-      // Stage 2: Post-extraction routing and analysis (UNIFIED PATH ONLY)
+      // Stage 2: Analyze extracted documents
+      options.onStageChange?.("analyze");
       const analyses: ReportAnalysis[] = [];
       
-      console.log('🚀 SSE: Starting unified analysis routing', {
+      console.log('🚀 SSE: Starting document analysis', {
         assessmentsCount: assessments.length,
         totalDocuments: assessments.reduce((sum, a) => sum + a.documents.length, 0)
       });
 
       for (const assessment of assessments) {
-        for (const document of assessment.documents) {
-          // ALL processing should go through TaskProcessors - no fallback paths
-          // Check if the assessment contains analysis results from TaskProcessor
-          const hasDirectAnalysis = !!(assessment as any).report || !!(assessment as any).type;
+        // Check if the assessment already contains analysis data (e.g., from DICOM processor)
+        const hasDirectAnalysis = !!(assessment as any).report || !!(assessment as any).type;
+        
+        if (hasDirectAnalysis) {
+          console.log(
+            `✅ Using pre-analyzed data (e.g., DICOM)`,
+            {
+              hasReport: !!(assessment as any).report,
+              hasType: !!(assessment as any).type,
+              analysisType: (assessment as any).type
+            }
+          );
+          // The assessment itself IS the analysis result - add it directly
+          analyses.push(assessment as any);
+        } else {
+          // Regular documents need separate analysis
+          console.log(`📄 Analyzing extracted documents from assessment`);
           
-          if (hasDirectAnalysis) {
+          for (const document of assessment.documents) {
+            const documentText = assessment.pages
+              .filter((page) => document.pages.includes(page.page))
+              .map((page) => page.text)
+              .join("\n");
+
+            const analysisInput = {
+              text: documentText,
+              language: options.language || "English",
+            };
+
             console.log(
-              `✅ Using TaskProcessor analysis for "${document.title}"`,
+              `🔬 Analyzing document "${document.title}":`,
               {
-                hasReport: !!(assessment as any).report,
-                hasType: !!(assessment as any).type,
-                analysisType: (assessment as any).type
-              }
+                documentTitle: document.title,
+                textLength: documentText.length,
+                pages: document.pages,
+                hasText: !!documentText,
+              },
             );
-            // The assessment itself IS the analysis result - add it directly
-            analyses.push(assessment as any);
-          } else {
-            // This should NOT happen if TaskProcessors are working correctly
-            console.error(
-              `❌ TaskProcessor failed to provide analysis for "${document.title}"`,
-              {
-                assessmentKeys: Object.keys(assessment),
-                documentType: document.isMedicalImaging ? 'medical_imaging' : 'document',
-                hasPages: !!assessment.pages?.length,
-                hasDocuments: !!assessment.documents?.length
-              }
+
+            const fileId = `doc-${document.title}-${Date.now()}`;
+            const result = await this.analyzeSingleDocument(
+              analysisInput,
+              fileId,
             );
-            
-            // Instead of fallback processing, throw error to identify the issue
-            throw new Error(`TaskProcessor failed to provide proper analysis structure for document: ${document.title}`);
+
+            console.log(`✅ Analysis completed for "${document.title}":`, {
+              documentTitle: document.title,
+              resultType: result.type,
+              isMedical: result.isMedical,
+              hasReport: !!result.report,
+              reportKeys: result.report ? Object.keys(result.report) : [],
+            });
+
+            analyses.push(result);
           }
         }
       }

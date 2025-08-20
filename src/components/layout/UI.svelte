@@ -250,7 +250,7 @@
     {/if}
 
     {#if dialogs.healthForm}
-        <Modal on:close={() => {
+        <Modal onclose={() => {
             logger.ui.debug('Health form modal close event fired');
             dialogs.healthForm = false;
         }}>
@@ -261,7 +261,7 @@
         </Modal>
     {/if}
     {#if dialogs.healthProperty}
-        <Modal on:close={() => {
+        <Modal onclose={() => {
             logger.ui.debug('Health property modal close event fired');
             dialogs.healthProperty = false;
         }}>
