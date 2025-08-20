@@ -1,6 +1,148 @@
 import type { Assessment, ReportAnalysis } from "$lib/import/types";
+import type { Task } from "$lib/files/index";
 import { resizeImage } from "$lib/images";
 import { PROCESS_SIZE } from "$lib/files/CONFIG";
+
+// Generic Task Processor Interface
+interface TaskProcessor {
+  canHandle(task: Task): boolean;
+  process(task: Task, fileId: string): Promise<Assessment>;
+}
+
+// DICOM Task Processor - Routes to medical imaging SSE endpoint
+class DicomTaskProcessor implements TaskProcessor {
+  constructor(private sseClient: SSEImportClient) {}
+
+  canHandle(task: Task): boolean {
+    return task.type === "application/dicom";
+  }
+
+  async process(task: Task, fileId: string): Promise<Assessment> {
+    console.log(
+      `🏥 Processing DICOM task via medical imaging SSE endpoint: ${task.title}`,
+    );
+
+    // Prepare data for medical imaging SSE endpoint
+    const images = Array.isArray(task.data)
+      ? task.data
+      : typeof task.data === "string"
+        ? [task.data]
+        : [];
+
+    const sseInput = {
+      images,
+      metadata: {
+        isDicomExtracted: true,
+        dicomMetadata: task.dicomMetadata,
+      },
+      language: "English", // TODO: Get from user preferences
+    };
+
+    // Use SSE streaming endpoint for real-time progress
+    const result = await this.sseClient.makeSSERequest(
+      "/v1/import/medical-imaging/stream",
+      sseInput,
+      fileId,
+    );
+
+    console.log(
+      `✅ DICOM medical imaging SSE analysis completed for: ${task.title}`,
+      {
+        hasResult: !!result,
+        resultKeys: result ? Object.keys(result) : [],
+        hasReport: !!(result as any)?.report,
+        reportKeys: (result as any)?.report ? Object.keys((result as any).report) : [],
+      }
+    );
+
+    // Return SSE result directly as Assessment (consistent with DocumentTaskProcessor)
+    const firstImage = images[0] || "";
+    const medicalResult = result as any; // Type assertion for medical imaging result
+    
+    // Debug logging for medical result structure
+    console.log(`🔍 DICOM: Medical result structure (returning directly):`, {
+      hasReport: !!medicalResult.report,
+      reportKeys: medicalResult.report ? Object.keys(medicalResult.report) : [],
+      topLevelKeys: Object.keys(medicalResult),
+      hasBodyParts: !!medicalResult.report?.bodyParts,
+      hasSummary: !!medicalResult.report?.summary,
+      hasDiagnosis: !!medicalResult.report?.diagnosis,
+    });
+    
+    // Ensure pages have correct image references (replace server placeholders with actual client images)
+    if (medicalResult.pages) {
+      medicalResult.pages = medicalResult.pages.map((page: any, index: number) => ({
+        ...page,
+        // Always use original client-side images, never the references from server
+        image: images[index] || firstImage,
+        thumbnail: images[index] || firstImage,
+      }));
+    }
+    
+    // Add fallback pages if none exist
+    if (!medicalResult.pages || medicalResult.pages.length === 0) {
+      medicalResult.pages = [
+        {
+          page: 1,
+          text: `Medical Imaging Analysis: ${task.dicomMetadata?.studyDescription || "DICOM Study"}`,
+          language: "english",
+          images: [],
+          image: firstImage,
+          thumbnail: firstImage,
+        },
+      ];
+    }
+    
+    // Add fallback documents if none exist
+    if (!medicalResult.documents || medicalResult.documents.length === 0) {
+      medicalResult.documents = [
+        {
+          title: task.dicomMetadata?.studyDescription || task.title,
+          date:
+            task.dicomMetadata?.studyDate ||
+            new Date().toISOString().split("T")[0],
+          language: "english",
+          isMedical: true,
+          isMedicalImaging: true,
+          pages: [1],
+        },
+      ];
+    }
+
+    // Return the medical result directly (same pattern as DocumentTaskProcessor)
+    return medicalResult;
+  }
+}
+
+// Document Task Processor - Routes to OCR extraction endpoint
+class DocumentTaskProcessor implements TaskProcessor {
+  constructor(private sseClient: SSEImportClient) {}
+
+  canHandle(task: Task): boolean {
+    return task.type === "application/pdf" || task.type === "images";
+  }
+
+  async process(task: Task, fileId: string): Promise<Assessment> {
+    console.log(`📄 Processing document task via OCR endpoint: ${task.title}`);
+
+    // Convert task data to images for processing
+    let images: string[];
+    if (Array.isArray(task.data)) {
+      images = task.data;
+    } else if (typeof task.data === "string") {
+      images = [task.data];
+    } else {
+      throw new Error("Invalid task data format for document processing");
+    }
+
+    // Make SSE request to the stream endpoint
+    return this.sseClient.makeSSERequest(
+      "/v1/import/extract/stream",
+      { images },
+      fileId,
+    );
+  }
+}
 
 // SSE Progress Event interface
 export interface SSEProgressEvent {
@@ -24,6 +166,15 @@ export class SSEImportClient {
   private onProgressCallback?: ProgressCallback;
   private onErrorCallback?: ErrorCallback;
   private activeConnections: Map<string, EventSource> = new Map();
+  private taskProcessors: TaskProcessor[];
+
+  constructor() {
+    // Initialize task processors
+    this.taskProcessors = [
+      new DicomTaskProcessor(this),
+      new DocumentTaskProcessor(this),
+    ];
+  }
 
   // Set progress callback
   onProgress(callback: ProgressCallback): void {
@@ -33,6 +184,40 @@ export class SSEImportClient {
   // Set error callback
   onError(callback: ErrorCallback): void {
     this.onErrorCallback = callback;
+  }
+
+  // Process task using appropriate processor
+  private async processTask(task: Task, fileId: string): Promise<Assessment> {
+    const processor = this.taskProcessors.find((p) => p.canHandle(task));
+
+    if (!processor) {
+      throw new Error(`No processor available for task type: ${task.type}`);
+    }
+
+    return processor.process(task, fileId);
+  }
+
+  // Extract documents using task-based routing
+  async extractDocumentsFromTasks(tasks: Task[]): Promise<Assessment[]> {
+    const results: Assessment[] = [];
+
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+      try {
+        const fileId = `${task.title}-${i}-${Date.now()}`;
+        const result = await this.processTask(task, fileId);
+        results.push(result);
+      } catch (error) {
+        console.error(`Failed to process task ${task.title}:`, error);
+        this.onErrorCallback?.(
+          error instanceof Error ? error : new Error(String(error)),
+          task.title,
+        );
+        throw error;
+      }
+    }
+
+    return results;
   }
 
   // Extract documents using SSE endpoint
@@ -303,7 +488,119 @@ export class SSEImportClient {
     this.activeConnections.clear();
   }
 
-  // Complete document processing workflow with SSE
+  // Complete document processing workflow with SSE using tasks
+  async processTasksSSE(
+    tasks: Task[],
+    options: {
+      language?: string;
+      onStageChange?: (
+        stage: "extract" | "analyze" | "medical_imaging",
+      ) => void;
+    } = {},
+  ): Promise<{ assessments: Assessment[]; analyses: ReportAnalysis[] }> {
+    try {
+      // Stage 1: Extract documents from tasks (for non-DICOM) and direct process DICOM
+      options.onStageChange?.("extract");
+      const assessments = await this.extractDocumentsFromTasks(tasks);
+
+      // Stage 2: Post-extraction routing and analysis
+      const analyses: ReportAnalysis[] = [];
+
+      for (const assessment of assessments) {
+        for (const document of assessment.documents) {
+          // Since all TaskProcessors now return consistent structures,
+          // check if the assessment already contains analysis results (from DICOM or other direct processors)
+          const hasDirectAnalysis = !!(assessment as any).report || !!(assessment as any).type;
+          
+          if (hasDirectAnalysis) {
+            console.log(
+              `✅ Using direct analysis result for "${document.title}" (processed by TaskProcessor)`,
+            );
+            // The assessment itself IS the analysis result - add it directly
+            analyses.push(assessment as any);
+          } else if (document.isMedicalImaging) {
+            console.log(
+              `🏥 Routing document "${document.title}" to medical imaging SSE`,
+            );
+            options.onStageChange?.("medical_imaging");
+
+            // Extract images for this specific document
+            const documentImages = assessment.pages
+              .filter((page) => document.pages.includes(page.page))
+              .map((page) => page.image || page.thumbnail)
+              .filter(Boolean) as string[];
+
+            if (documentImages.length > 0) {
+              const medicalAnalysis = await this.analyzeMedicalImaging(
+                documentImages,
+                document,
+                options.language,
+              );
+              analyses.push(medicalAnalysis);
+            } else {
+              console.warn(
+                `No images found for medical imaging document: ${document.title}`,
+              );
+            }
+          } else {
+            console.log(
+              `📄 Routing document "${document.title}" to text analysis SSE`,
+            );
+            options.onStageChange?.("analyze");
+
+            // Regular text document analysis
+            const documentText = assessment.pages
+              .filter((page) => document.pages.includes(page.page))
+              .map((page) => page.text)
+              .join("\n");
+
+            const analysisInput = {
+              text: documentText,
+              language: options.language || "English",
+            };
+
+            const fileId = `doc-${document.title}-${Date.now()}`;
+            const textAnalysis = await this.analyzeSingleDocument(
+              analysisInput,
+              fileId,
+            );
+            analyses.push(textAnalysis);
+          }
+        }
+      }
+
+      return { assessments, analyses };
+    } catch (error) {
+      console.error("SSE task processing failed:", error);
+      throw error;
+    }
+  }
+
+  // Analyze medical imaging documents using SSE
+  private async analyzeMedicalImaging(
+    images: string[],
+    document: { title: string; date: string; language: string },
+    language?: string,
+  ): Promise<ReportAnalysis> {
+    const input = {
+      images,
+      language: language || "English",
+      metadata: {
+        documentTitle: document.title,
+        documentDate: document.date,
+        documentLanguage: document.language,
+      },
+    };
+
+    const fileId = `medical-${document.title}-${Date.now()}`;
+    return this.makeSSERequest(
+      "/v1/import/medical-imaging/stream",
+      input,
+      fileId,
+    );
+  }
+
+  // Complete document processing workflow with SSE (legacy method - keep for backward compatibility)
   async processDocumentsSSE(
     files: File[],
     options: {

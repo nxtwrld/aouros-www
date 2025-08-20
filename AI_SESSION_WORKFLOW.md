@@ -86,7 +86,7 @@ graph TB
         O3 --> M
         M --> F[Final Medical Analysis]
     end
-    
+
     subgraph "Concrete Example: Cardiology Case"
         N2 --> GP[GP Expert]
         GP --> GD{GP Decision}
@@ -94,7 +94,7 @@ graph TB
         GD -->|Complete Primary Assessment| GPO[GP Analysis Output]
         CARD --> CD{Cardiology Decision}
         CD -->|Complex Arrhythmia| EP[Electrophysiology Expert]
-        CD -->|Heart Failure| HF[Heart Failure Expert]  
+        CD -->|Heart Failure| HF[Heart Failure Expert]
         CD -->|Standard Cardiac Analysis| CO[Cardiology Output]
         EP --> EPO[Electrophysiology Analysis]
         HF --> HFO[Heart Failure Analysis]
@@ -120,14 +120,18 @@ graph TB
 Every expert node in the DAG follows a universal pattern with two possible outcomes:
 
 #### 1. Complete Analysis Output
+
 When an expert determines it can provide a complete analysis, it outputs:
+
 - **Symptoms**: Identified symptoms with confidence scores and sources
 - **Diagnosis**: Differential diagnoses with probabilities and reasoning
 - **Treatments**: Treatment recommendations with risk assessments
 - **Questions**: Follow-up questions to prove/disprove/redirect diagnoses
 
 #### 2. Trigger Additional Expert Analysis
+
 When an expert identifies the need for specialized knowledge, it can:
+
 - **Activate Specialist Experts**: Trigger domain-specific experts (cardiology, neurology, etc.)
 - **Activate Functional Experts**: Trigger role-specific experts (safety monitor, drug interaction checker)
 - **Pass Enriched Context**: Provide its preliminary analysis as additional input to sub-experts
@@ -146,16 +150,19 @@ END IF
 ### Multi-Layer Consensus Building
 
 #### Layer-by-Layer Merging
+
 - Each layer of experts produces analysis outputs
 - Layer consensus mergers combine outputs from experts at the same level
 - Final merger combines all layer outputs into unified medical analysis
 
 #### Weighted Integration
+
 - **Specialty Relevance**: Weight expert opinions based on case relevance
 - **Confidence Scoring**: Higher confidence experts have more influence
 - **Evidence Quality**: Well-supported recommendations get priority
 
 #### Conflict Handling
+
 - **Consensus Detection**: When >75% agreement exists, boost probabilities
 - **Conflict Publication**: When experts disagree, publish all perspectives with conflict alerts
 - **No Resolution**: Present conflicting diagnoses/treatments to clinician for discussion
@@ -163,6 +170,7 @@ END IF
 ### Expert Triggering Mechanisms
 
 #### Symptom-Based Triggers
+
 ```yaml
 trigger_conditions:
   cardiology: ["chest_pain", "shortness_of_breath", "palpitations", "syncope"]
@@ -171,15 +179,17 @@ trigger_conditions:
 ```
 
 #### Context-Based Triggers
+
 ```yaml
 context_triggers:
   geriatrics: "patient_age > 65"
-  pediatrics: "patient_age < 18" 
+  pediatrics: "patient_age < 18"
   obstetrics: "pregnancy_status = true"
   critical_care: "severity_score > high_threshold"
 ```
 
 #### Dynamic Depth Control
+
 - **Maximum Layers**: Prevent infinite expert recursion
 - **Confidence Thresholds**: Only trigger sub-experts when needed
 - **Cost Optimization**: Balance analysis depth with processing costs
@@ -214,25 +224,26 @@ context_triggers:
 
 3.5. **Transcript Output with Medical Relevance Metadata**
 
-   The reconstructed transcript is sent to the client with the following structure:
-   ```json
-   {
-     "sessionId": "session_id",
-     "timestamp": "2024-03-15T14:25:00Z",
-     "transcript": {
-       "text": "Doctor: How are you feeling today?\nPatient: I've had a terrible headache for three days...",
-       "speakers": ["doctor", "patient"],
-       "duration": 120
-     },
-     "medicalRelevance": {
-       "isRelevant": true,
-       "confidence": 0.85,
-       "categories": ["symptom_mention", "medication_reference"],
-       "triggers": ["headache", "three days", "pain medication"],
-       "requiresAnalysis": true
-     }
-   }
-   ```
+The reconstructed transcript is sent to the client with the following structure:
+
+```json
+{
+  "sessionId": "session_id",
+  "timestamp": "2024-03-15T14:25:00Z",
+  "transcript": {
+    "text": "Doctor: How are you feeling today?\nPatient: I've had a terrible headache for three days...",
+    "speakers": ["doctor", "patient"],
+    "duration": 120
+  },
+  "medicalRelevance": {
+    "isRelevant": true,
+    "confidence": 0.85,
+    "categories": ["symptom_mention", "medication_reference"],
+    "triggers": ["headache", "three days", "pain medication"],
+    "requiresAnalysis": true
+  }
+}
+```
 
 4. **Client-Side Decision Point**
 
@@ -262,8 +273,9 @@ context_triggers:
    - Identification of relevant historical consultations through term matching
    - Pattern recognition for recurring symptoms and treatment responses
    - Document categorization and relevance scoring without embeddings
-   
+
    **Classification Approach Details:**
+
    - Uses `MedicalExpertTools.searchDocuments()` with extracted medical terms
    - Documents contain pre-classified medical terms arrays for efficient matching
    - Relevance calculated by term frequency and document type matching
@@ -303,15 +315,15 @@ context_triggers:
 
 10. **Input Enhancement with Assembled Context**
 
-   - Assembled context provides rich historical perspective
-   - Previous symptoms and treatments are automatically linked
-   - Chronic conditions and patterns are factored into analysis
-   - Historical inputs are clearly marked with origin tags:
-     - `transcript`: Mentioned in current conversation
-     - `history`: From medical records via context assembly
-     - `context`: Inferred from semantic patterns
-     - `previous`: From earlier in session
-     - `assembled`: From context assembly system
+- Assembled context provides rich historical perspective
+- Previous symptoms and treatments are automatically linked
+- Chronic conditions and patterns are factored into analysis
+- Historical inputs are clearly marked with origin tags:
+  - `transcript`: Mentioned in current conversation
+  - `history`: From medical records via context assembly
+  - `context`: Inferred from semantic patterns
+  - `previous`: From earlier in session
+  - `assembled`: From context assembly system
 
 11. **Question-Answer Evaluation with Context**
 
@@ -351,9 +363,10 @@ context_triggers:
 15. **Core Expert Node Definitions**
 
     **Node 1: transcript_parser**
+
     - **Role**: Parser and Structural Analyzer
     - **Input**: Raw transcript chunk with timestamps
-    - **Processing**: 
+    - **Processing**:
       - Extracts structured utterances with speaker identification
       - Preserves exact quotes with timestamps and confidence scores
       - Identifies speaker turns and conversation flow
@@ -361,7 +374,8 @@ context_triggers:
     - **Output**: Structured transcript segments ready for medical analysis
     - **Schema Impact**: Provides accurate quotes for symptom nodes
 
-    **Node 2: symptom_extractor** 
+    **Node 2: symptom_extractor**
+
     - **Role**: Medical NER and Clinical Inference Engine
     - **Input**: Structured transcript + Previous symptoms + Context
     - **Processing**:
@@ -375,6 +389,7 @@ context_triggers:
     - **Schema Impact**: Populates nodes.symptoms array (signals are represented as SymptomNode items, optionally tagged via characteristics)
 
     **Node 3: diagnosis_mapper**
+
     - **Role**: Differential Diagnosis Engine
     - **Input**: Current symptoms + Previous diagnoses + Medical context
     - **Processing**:
@@ -387,7 +402,8 @@ context_triggers:
     - **Schema Impact**: Creates/updates nodes.diagnoses with probabilities and clinical reasoning
 
     **Node 4: treatment_recommender**
-    - **Role**: Clinical Decision Support Engine  
+
+    - **Role**: Clinical Decision Support Engine
     - **Input**: Confirmed/probable diagnoses + Patient history + Previous treatments
     - **Processing**:
       - Suggests evidence-based treatments per diagnosis
@@ -399,11 +415,12 @@ context_triggers:
     - **Schema Impact**: Populates nodes.treatments with comprehensive treatment plans
 
     **Node 5: question_generator**
+
     - **Role**: Strategic Clinical Interrogator
     - **Input**: Current differential + Diagnostic uncertainty + Previous Q&A
     - **Processing**:
       - Generates targeted questions to disambiguate differential diagnoses
-      - Creates confirmatory questions to strengthen high-probability diagnoses  
+      - Creates confirmatory questions to strengthen high-probability diagnoses
       - Develops exclusionary questions to rule out serious conditions
       - Prioritizes questions by diagnostic yield and clinical impact
       - Avoids redundant questions from previous iterations
@@ -411,6 +428,7 @@ context_triggers:
     - **Schema Impact**: Adds questions to nodes.actions with impact predictions
 
     **Node 6: warning_annotator**
+
     - **Role**: Clinical Risk and Safety Monitor
     - **Input**: Diagnoses + Treatments + Patient profile + Drug database
     - **Processing**:
@@ -423,6 +441,7 @@ context_triggers:
     - **Schema Impact**: Adds safety alerts to nodes.actions with urgency levels
 
     **Node 7: relationship_builder**
+
     - **Role**: Semantic Graph Constructor
     - **Input**: All nodes from previous experts + Relationship ontology
     - **Processing**:
@@ -435,6 +454,7 @@ context_triggers:
     - **Schema Impact**: Populates relationships arrays in all node types
 
     **Node 8: schema_merger**
+
     - **Role**: Version Control and Integration Engine
     - **Input**: New analysis + Previous JSON + Change tracking
     - **Processing**:
@@ -457,6 +477,7 @@ context_triggers:
     - **Schema Impact**: Creates unified, versioned analysis output
 
     **Node 9: user_feedback_applier**
+
     - **Role**: Human-AI Interaction Processor
     - **Input**: Merged schema + User actions (suppress, accept, modify)
     - **Processing**:
@@ -469,6 +490,7 @@ context_triggers:
     - **Schema Impact**: Updates node states and userActions array
 
     **Node 10: node_cleaner**
+
     - **Role**: Relevance Filter and Optimization Engine
     - **Input**: User-validated schema + Relevance thresholds
     - **Processing**:
@@ -484,17 +506,19 @@ context_triggers:
     - **Schema Impact**: Final pruned schema with optimal node set
 
     Additional execution utilities:
+
     - id_allocator_deduplicator: Generates stable IDs and removes duplicates across all node types.
     - change_detector_gate: Compares current Symptoms/Answers to the previous iteration and conditionally triggers MoE.
 
 16. **DAG Execution Flow and Dependencies**
 
     **Sequential Dependencies:**
+
     ```
     transcript_parser → symptom_extractor → diagnosis_mapper
                                          ↓
     relationship_builder ← treatment_recommender
-           ↓              ← question_generator  
+           ↓              ← question_generator
     schema_merger         ← warning_annotator
            ↓
     user_feedback_applier
@@ -503,6 +527,7 @@ context_triggers:
     ```
 
     **Parallel Execution Opportunities:**
+
     - treatment_recommender, question_generator, and warning_annotator can run in parallel after diagnosis_mapper
     - relationship_builder waits for all parallel nodes to complete
     - Context assembly can run in parallel with transcript_parser
@@ -510,24 +535,28 @@ context_triggers:
 17. **Incremental Conversational Processing**
 
     **Version Control:**
+
     - Each iteration increments analysisVersion
     - Node IDs persist across conversations for tracking
     - Confidence scores evolve with new evidence
     - Relationship strengths adapt to clinical developments
 
     **Memory Management:**
+
     - Previous analysis provides conversational context
     - User actions influence subsequent reasoning
     - Clinical patterns learned from interaction history
     - Schema grows incrementally rather than rebuilding entirely
 
     **Real-time Adaptation:**
+
     - New symptoms modify existing diagnosis probabilities
     - Treatment recommendations adjust to patient responses
     - Questions evolve based on previous answers
     - Safety alerts adapt to changing clinical picture
 
     **Schema Integration:**
+
     - Node IDs persist across DAG executions for consistent tracking
     - relationships arrays populated by relationship_builder expert node
     - analysisVersion incremented by schema_merger for version control
@@ -541,8 +570,9 @@ context_triggers:
     - Each element receives a unique ID for tracking
     - All nodes contain embedded relationships arrays
     - Confidence scores and priorities are assigned using 1-10 scale
-    
+
     **Unified Node Structure:**
+
     - All symptoms (current, historical, suspected) in single symptom array with source indicators:
       - `transcript`: From current conversation
       - `medical_history`: From patient records
@@ -556,7 +586,7 @@ context_triggers:
 
     **a) Diagnosis Nodes**
 
-    - Unique diagnosis ID (diag_*)
+    - Unique diagnosis ID (diag\_\*)
     - Short title (1-3 words)
     - Detailed description
     - Clinical reasoning
@@ -567,7 +597,7 @@ context_triggers:
 
     **b) Treatment Nodes**
 
-    - Unique treatment ID (treat_*)
+    - Unique treatment ID (treat\_\*)
     - Treatment type: medication, procedure, therapy, lifestyle, investigation, immediate
     - Treatment name and dosing details
     - Priority (1=critical to 10=low)
@@ -578,7 +608,7 @@ context_triggers:
 
     **c) Action Nodes (Questions and Safety Alerts)**
 
-    - Action ID (q_* for questions, safety_* for alerts)
+    - Action ID (q*\* for questions, safety*\* for alerts)
     - Action text
     - Action type: "question" or "alert"
     - Category:
@@ -590,6 +620,7 @@ context_triggers:
     - Embedded relationships with connected nodes
 
     Question semantics (aligns with ActionNode in visualization types):
+
     - actionType: "question"
     - category: symptom_exploration | diagnostic_clarification | treatment_selection | risk_assessment
     - displayPriority: numeric rank; only top items are expanded by default, others appear as small dots on the path until hovered/clicked

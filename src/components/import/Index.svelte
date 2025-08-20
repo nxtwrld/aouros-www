@@ -130,19 +130,23 @@
     }
 
     async function analyze(files: File[]) {
+        // Always create tasks first for consistent file detection and logging
+        const newTasks = await createTasks(files);
+        tasks = [...tasks, ...newTasks];
+        
         if (useSSE && sseClient) {
-            // Use SSE import for real-time progress
-            await analyzeWithSSE(files);
+            // Use SSE import for real-time progress, but with pre-analyzed tasks
+            await analyzeWithSSE(files, newTasks);
         } else {
             // Use traditional import flow
-            const newTasks = await createTasks(files);
-            tasks = [...tasks, ...newTasks];
             //assess();
         }
     }
     
-    async function analyzeWithSSE(files: File[]) {
+    async function analyzeWithSSE(files: File[], tasks: Task[]) {
         try {
+            // Note: tasks parameter contains pre-analyzed file information from createTasks()
+            // This ensures consistent file detection logging for both SSE and traditional flows
             assessingState = AssessingState.ASSESSING;
             processingState = ProcessingState.PROCESSING;
             
@@ -164,7 +168,7 @@
                 console.error('SSE Import Error:', error);
             });
             
-            const result = await sseClient!.processDocumentsSSE(files, {
+            const result = await sseClient!.processTasksSSE(tasks, {
                 language: ($user as User)?.language || 'English',
                 onStageChange: (stage) => {
                     currentStage = stage;
@@ -187,6 +191,23 @@
                     
                     // Extract the report content from the analysis
                     const reportData = analysis?.report || {};
+                    
+                    // Debug logging for unified structure
+                    console.log('🔍 SSE Analysis data (UNIFIED STRUCTURE):', {
+                        hasAnalysis: !!analysis,
+                        analysisKeys: analysis ? Object.keys(analysis) : [],
+                        analysisType: analysis?.type,
+                        hasReport: !!analysis?.report,
+                        reportKeys: analysis?.report ? Object.keys(analysis.report) : [],
+                        // Check specific properties we need
+                        reportBodyParts: analysis?.report?.bodyParts,
+                        reportSummary: analysis?.report?.summary,
+                        reportDiagnosis: analysis?.report?.diagnosis,
+                        reportRecommendations: analysis?.report?.recommendations,
+                        reportData: reportData,
+                        // Unified structure verification
+                        isUnifiedStructure: !!(analysis?.type && analysis?.report)
+                    });
                     
                     // Create attachment from original file
                     let attachment: {

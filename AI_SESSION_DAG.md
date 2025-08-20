@@ -47,21 +47,21 @@ graph TB
         C -->|Generate Custom Experts| D["AI Creates:\n- Pediatric Cardio Expert\n- Drug Interaction Expert\n- Anxiety Assessment Expert"]
         C -->|Complete Primary Analysis| G[GP Analysis Output]
     end
-    
+
     subgraph "Layer 2: AI-Generated Specialized Analysis"
         D --> E["Pediatric Cardiology Expert\n(Age 8, Heart Murmur Focus)"]
         D --> F["Polypharmacy Expert\n(12 Medications, Interactions)"]
         D --> H["Pediatric Anxiety Specialist\n(School-Age Mental Health)"]
-        
+
         E --> I{Pediatric Cardio Decision}
         I -->|Needs Subspecialty| J["AI Creates:\nCongenital Heart Defect Expert\n(Custom: 8yo + murmur + family history)"]
         I -->|Standard Analysis| K[Pediatric Cardio Output]
     end
-    
+
     subgraph "Layer 3: AI-Generated Sub-Specialty Analysis"
         J --> L["Congenital Heart Defect Expert:\nSymptoms + Diagnosis + Treatments + Questions"]
     end
-    
+
     subgraph "Consensus Building"
         G --> M[Dynamic Consensus Merger]
         K --> M
@@ -74,23 +74,23 @@ graph TB
 
 ### Expert Node Categories
 
-| Category | Expert Types | Triggering Logic | Output Format |
-|----------|-------------|------------------|---------------|
-| **Primary Analyzers** | GP, Initial Assessment, Symptom Analyzer | Always Active | Symptoms + Initial Diagnosis + Custom Expert Instructions |
-| **Pre-Configured Specialists** | Cardiology, Neurology, Emergency | Symptom/Context-Based Dynamic Triggering | Specialized Analysis + Sub-Expert Triggers |
-| **AI-Generated Specialists** | Custom experts created by AI analysis | AI Decision-Based Dynamic Creation | Patient-Specific Specialized Analysis |
-| **AI-Generated Sub-Specialists** | Custom sub-experts for complex cases | Created by AI Specialists when needed | Highly Targeted Analysis |
-| **Functional Experts** | Safety Monitor, Drug Interaction, Risk Assessor | Always Active or AI-Triggered | Warnings + Contraindications + Safety Questions |
-| **Dynamic Consensus Mergers** | Layer Merger, Final Merger | After AI-Generated Expert Groups Complete | Unified Analysis + Conflict Resolution |
+| Category                         | Expert Types                                    | Triggering Logic                          | Output Format                                             |
+| -------------------------------- | ----------------------------------------------- | ----------------------------------------- | --------------------------------------------------------- |
+| **Primary Analyzers**            | GP, Initial Assessment, Symptom Analyzer        | Always Active                             | Symptoms + Initial Diagnosis + Custom Expert Instructions |
+| **Pre-Configured Specialists**   | Cardiology, Neurology, Emergency                | Symptom/Context-Based Dynamic Triggering  | Specialized Analysis + Sub-Expert Triggers                |
+| **AI-Generated Specialists**     | Custom experts created by AI analysis           | AI Decision-Based Dynamic Creation        | Patient-Specific Specialized Analysis                     |
+| **AI-Generated Sub-Specialists** | Custom sub-experts for complex cases            | Created by AI Specialists when needed     | Highly Targeted Analysis                                  |
+| **Functional Experts**           | Safety Monitor, Drug Interaction, Risk Assessor | Always Active or AI-Triggered             | Warnings + Contraindications + Safety Questions           |
+| **Dynamic Consensus Mergers**    | Layer Merger, Final Merger                      | After AI-Generated Expert Groups Complete | Unified Analysis + Conflict Resolution                    |
 
 ### AI-Generated Expert Examples
 
-| Patient Context | AI-Generated Expert | Custom Prompt | Focus Areas |
-|----------------|-------------------|---------------|-------------|
-| 85yo, 12 medications, dizziness | "Geriatric Polypharmacy Expert" | "You are a geriatrician specializing in medication management for elderly patients with complex drug regimens" | Drug interactions, fall risk, cognitive effects |
-| 6mo infant, seizures, fever | "Pediatric Emergency Neurologist" | "You are a pediatric neurologist specializing in infant seizure disorders and febrile seizures" | Infantile spasms, febrile seizures, developmental impact |
-| 28yo pregnant, palpitations | "Maternal Cardiology Specialist" | "You are an obstetrician-cardiologist specializing in cardiac conditions during pregnancy" | Pregnancy-safe treatments, fetal impact, postpartum care |
-| 45yo diabetic, chest pain | "Diabetic Cardiology Expert" | "You are a cardiologist with expertise in diabetic cardiovascular complications" | Silent MI risk, diabetic cardiomyopathy, medication interactions |
+| Patient Context                 | AI-Generated Expert               | Custom Prompt                                                                                                  | Focus Areas                                                      |
+| ------------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 85yo, 12 medications, dizziness | "Geriatric Polypharmacy Expert"   | "You are a geriatrician specializing in medication management for elderly patients with complex drug regimens" | Drug interactions, fall risk, cognitive effects                  |
+| 6mo infant, seizures, fever     | "Pediatric Emergency Neurologist" | "You are a pediatric neurologist specializing in infant seizure disorders and febrile seizures"                | Infantile spasms, febrile seizures, developmental impact         |
+| 28yo pregnant, palpitations     | "Maternal Cardiology Specialist"  | "You are an obstetrician-cardiologist specializing in cardiac conditions during pregnancy"                     | Pregnancy-safe treatments, fetal impact, postpartum care         |
+| 45yo diabetic, chest pain       | "Diabetic Cardiology Expert"      | "You are a cardiologist with expertise in diabetic cardiovascular complications"                               | Silent MI risk, diabetic cardiomyopathy, medication interactions |
 
 ### Universal Expert Interface
 
@@ -105,10 +105,13 @@ interface UniversalExpertNode {
     previousAnalysis?: MedicalAnalysis;
     triggerConditions?: string[];
   };
-  
+
   // Decision Logic - Enhanced for AI-Generated Experts
-  decision: 'complete_analysis' | 'trigger_sub_experts' | 'generate_custom_experts';
-  
+  decision:
+    | "complete_analysis"
+    | "trigger_sub_experts"
+    | "generate_custom_experts";
+
   // Output Interface (when complete_analysis)
   outputs?: {
     symptoms: SymptomNode[];
@@ -118,14 +121,14 @@ interface UniversalExpertNode {
     confidence: number;
     reasoning: string;
   };
-  
+
   // Sub-Expert Triggering (when trigger_sub_experts) - Pre-configured experts
   triggers?: {
-    subExperts: string[];  // Pre-defined expert types: 'cardiology', 'neurology'
+    subExperts: string[]; // Pre-defined expert types: 'cardiology', 'neurology'
     triggerConditions: string[];
     enrichedContext: any;
   };
-  
+
   // AI-Generated Expert Creation (when generate_custom_experts)
   customExperts?: {
     experts: CustomExpertDefinition[];
@@ -136,17 +139,17 @@ interface UniversalExpertNode {
 
 // NEW: AI-Generated Expert Definition
 interface CustomExpertDefinition {
-  id: string;                    // Generated unique ID: 'pediatric_cardio_expert_001'
-  name: string;                  // Human-readable: 'Pediatric Cardiology Expert'
-  expertPrompt: string;          // Custom AI prompt: 'You are a pediatric cardiologist specializing in...'
-  specialization: string;        // Domain: 'pediatric_cardiology', 'geriatric_pharmacology'
-  focusAreas: string[];          // ['congenital_heart_defects', 'pediatric_arrhythmia']
-  contextInstructions: string;   // 'Focus on age-appropriate assessment for 8-year-old patient'
-  patientSpecificContext: any;   // Filtered patient data relevant to this expert
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  expectedOutputs: string[];     // ['risk_assessment', 'treatment_recommendations', 'follow_up_questions']
-  parentExpert: string;          // Which expert created this one
-  creationReasoning: string;     // Why this expert was deemed necessary
+  id: string; // Generated unique ID: 'pediatric_cardio_expert_001'
+  name: string; // Human-readable: 'Pediatric Cardiology Expert'
+  expertPrompt: string; // Custom AI prompt: 'You are a pediatric cardiologist specializing in...'
+  specialization: string; // Domain: 'pediatric_cardiology', 'geriatric_pharmacology'
+  focusAreas: string[]; // ['congenital_heart_defects', 'pediatric_arrhythmia']
+  contextInstructions: string; // 'Focus on age-appropriate assessment for 8-year-old patient'
+  patientSpecificContext: any; // Filtered patient data relevant to this expert
+  priority: "low" | "medium" | "high" | "critical";
+  expectedOutputs: string[]; // ['risk_assessment', 'treatment_recommendations', 'follow_up_questions']
+  parentExpert: string; // Which expert created this one
+  creationReasoning: string; // Why this expert was deemed necessary
 }
 ```
 
@@ -166,19 +169,19 @@ universal_dag_models:
       execution: "always_active"
       outputs: ["symptoms", "diagnoses", "trigger_conditions"]
       decision_logic: "complexity_threshold_check"
-      
+
     specialist_expert:
-      type: "specialist" 
+      type: "specialist"
       execution: "trigger_based"
       outputs: ["symptoms", "diagnoses", "treatments", "questions"]
       decision_logic: "specialization_depth_check"
-      
+
     functional_expert:
       type: "functional"
       execution: "conditional"
       outputs: ["alerts", "contraindications", "safety_questions"]
       decision_logic: "safety_completeness_check"
-      
+
     consensus_merger:
       type: "merger"
       execution: "after_layer_complete"
@@ -190,7 +193,7 @@ universal_dag_models:
     chest_pain_assessment:
       id: "chest_pain_dag_v1"
       description: "Multi-layer chest pain differential diagnosis"
-      
+
       # Layer 1: Primary Analysis
       primary_layer:
         gp_expert:
@@ -199,11 +202,12 @@ universal_dag_models:
           model: "gpt4"
           triggers:
             cardiology: ["chest_pain", "shortness_of_breath", "palpitations"]
-            pulmonology: ["cough", "chest_tightness", "breathing_difficulty"] 
-            emergency: ["severe_chest_pain", "crushing_pain", "radiation_to_arm"]
+            pulmonology: ["cough", "chest_tightness", "breathing_difficulty"]
+            emergency:
+              ["severe_chest_pain", "crushing_pain", "radiation_to_arm"]
           complexity_threshold: 0.7
-          
-      # Layer 2: Specialist Analysis  
+
+      # Layer 2: Specialist Analysis
       specialist_layer:
         cardiology_expert:
           template: "specialist_expert"
@@ -216,23 +220,23 @@ universal_dag_models:
             heart_failure: ["shortness_of_breath", "edema", "fatigue"]
             interventional: ["st_elevation", "acute_mi", "unstable_angina"]
           specialization_threshold: 0.8
-          
+
         pulmonology_expert:
-          template: "specialist_expert" 
+          template: "specialist_expert"
           provider: "openai"
           model: "gpt4"
           parent: "gp_expert"
           trigger_conditions: ["pulmonology"]
           sub_expert_triggers: {}
-          
+
         emergency_expert:
           template: "specialist_expert"
-          provider: "openai" 
+          provider: "openai"
           model: "gpt4"
           parent: "gp_expert"
           trigger_conditions: ["emergency"]
           priority: "critical"
-          
+
       # Layer 3: Sub-Specialist Analysis
       sub_specialist_layer:
         electrophysiology_expert:
@@ -241,14 +245,14 @@ universal_dag_models:
           model: "gpt4"
           parent: "cardiology_expert"
           trigger_conditions: ["electrophysiology"]
-          
+
         heart_failure_expert:
           template: "specialist_expert"
           provider: "openai"
-          model: "gpt4" 
+          model: "gpt4"
           parent: "cardiology_expert"
           trigger_conditions: ["heart_failure"]
-          
+
       # Always Active Functional Experts
       functional_layer:
         safety_monitor:
@@ -257,7 +261,7 @@ universal_dag_models:
           model: "gpt4"
           execution: "always_active"
           priority: "critical"
-          
+
       # Consensus Building
       consensus_layer:
         layer_merger:
@@ -277,23 +281,23 @@ universal_dag_models:
     triggering_logic:
       symptom_mapping:
         chest_pain: ["cardiology", "emergency", "pulmonology"]
-        headache: ["neurology", "emergency"] 
+        headache: ["neurology", "emergency"]
         abdominal_pain: ["gastroenterology", "surgery", "emergency"]
-        
+
       context_mapping:
         age_over_65: ["geriatrics"]
         age_under_18: ["pediatrics"]
         pregnancy: ["obstetrics"]
         multiple_medications: ["clinical_pharmacology"]
-        
+
     consensus_rules:
-      agreement_boost: 0.15  # Boost probability when consensus exists
-      conflict_alert_threshold: 0.4  # Generate alert when disagreement > 40%
-      max_layer_depth: 4  # Prevent infinite recursion
-      
+      agreement_boost: 0.15 # Boost probability when consensus exists
+      conflict_alert_threshold: 0.4 # Generate alert when disagreement > 40%
+      max_layer_depth: 4 # Prevent infinite recursion
+
     cost_optimization:
-      simple_cases_model: "gpt3_5"  # Use cheaper model for straightforward cases
-      complex_cases_model: "gpt4"   # Use premium model for complex analysis
+      simple_cases_model: "gpt3_5" # Use cheaper model for straightforward cases
+      complex_cases_model: "gpt4" # Use premium model for complex analysis
       critical_safety_model: "gpt4" # Always use best model for safety
 ```
 
@@ -317,8 +321,12 @@ interface DAGModel {
 }
 
 interface ExpertTemplate {
-  type: 'primary' | 'specialist' | 'functional' | 'merger';
-  execution: 'always_active' | 'trigger_based' | 'conditional' | 'after_layer_complete';
+  type: "primary" | "specialist" | "functional" | "merger";
+  execution:
+    | "always_active"
+    | "trigger_based"
+    | "conditional"
+    | "after_layer_complete";
   outputs: string[];
   decisionLogic: string;
   modelConfig: ModelConfiguration;
@@ -350,12 +358,16 @@ interface MedicalAnalysisOutput {
 
 // Question nodes align to UI ActionNode (actionType='question'); answers deduced from transcript iterations
 interface QuestionNode {
-  id: string;                // q_*
+  id: string; // q_*
   text: string;
-  actionType: 'question';
-  category: 'symptom_exploration' | 'diagnostic_clarification' | 'treatment_selection' | 'risk_assessment';
-  priority: number;          // displayPriority
-  status: 'pending' | 'answered' | 'acknowledged' | 'skipped' | 'resolved';
+  actionType: "question";
+  category:
+    | "symptom_exploration"
+    | "diagnostic_clarification"
+    | "treatment_selection"
+    | "risk_assessment";
+  priority: number; // displayPriority
+  status: "pending" | "answered" | "acknowledged" | "skipped" | "resolved";
   relationships?: Relationship[];
   impact?: {
     diagnoses?: Record<string, number>;
@@ -364,14 +376,14 @@ interface QuestionNode {
   };
   answer?: string;
   // Optional internal hint for runtime behavior
-  qType?: 'prove' | 'disprove' | 'redirect';
+  qType?: "prove" | "disprove" | "redirect";
 }
 
 interface Relationship {
   nodeId: string;
-  type: 'supports' | 'contradicts' | 'confirms' | 'treats' | 'investigates';
-  direction: 'incoming' | 'outgoing' | 'bidirectional';
-  strength: number;          // 0.0-1.0
+  type: "supports" | "contradicts" | "confirms" | "treats" | "investigates";
+  direction: "incoming" | "outgoing" | "bidirectional";
+  strength: number; // 0.0-1.0
   reasoning?: string;
 }
 
@@ -384,10 +396,13 @@ interface ConsensusResult {
 }
 
 interface ConflictAlert {
-  type: 'diagnosis_conflict' | 'treatment_conflict' | 'question_priority_conflict';
+  type:
+    | "diagnosis_conflict"
+    | "treatment_conflict"
+    | "question_priority_conflict";
   conflictingExperts: string[];
   conflictingItems: any[];
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   recommendedAction: string;
 }
 
@@ -397,14 +412,13 @@ export class UniversalDAGExecutor {
     transcript: string,
     patientContext: PatientContext,
     dagModelId: string,
-    previousAnalysis?: MedicalAnalysisOutput
+    previousAnalysis?: MedicalAnalysisOutput,
   ): Promise<ConsensusResult> {
-    
     const dagModel = this.loadDAGModel(dagModelId);
     const executionPlan = this.buildExecutionPlan(dagModel);
-    
+
     let layerResults = new Map<string, MedicalAnalysisOutput[]>();
-    
+
     // Execute layers sequentially, experts within layers in parallel
     for (const layer of executionPlan.layers) {
       const layerOutputs = await this.executeLayer(
@@ -412,58 +426,56 @@ export class UniversalDAGExecutor {
         transcript,
         patientContext,
         previousAnalysis,
-        layerResults
+        layerResults,
       );
       layerResults.set(layer.id, layerOutputs);
     }
-    
+
     // Build final consensus
     return this.buildConsensus(layerResults, dagModel.consensusStrategy);
   }
-  
+
   private async executeLayer(
     layer: ExpertLayer,
     transcript: string,
     patientContext: PatientContext,
     previousAnalysis?: MedicalAnalysisOutput,
-    previousLayers?: Map<string, MedicalAnalysisOutput[]>
+    previousLayers?: Map<string, MedicalAnalysisOutput[]>,
   ): Promise<MedicalAnalysisOutput[]> {
-    
     const activeExperts = this.determineActiveExperts(layer, previousLayers);
-    const expertPromises = activeExperts.map(expert => 
-      this.executeExpert(expert, transcript, patientContext, previousAnalysis)
+    const expertPromises = activeExperts.map((expert) =>
+      this.executeExpert(expert, transcript, patientContext, previousAnalysis),
     );
-    
+
     return Promise.all(expertPromises);
   }
-  
+
   private async executeExpert(
     expert: ExpertNode,
     transcript: string,
     patientContext: PatientContext,
-    previousAnalysis?: MedicalAnalysisOutput
+    previousAnalysis?: MedicalAnalysisOutput,
   ): Promise<MedicalAnalysisOutput> {
-    
     // Execute expert analysis
     const analysis = await this.runExpertAnalysis(expert, {
       transcript,
-      patientContext, 
-      previousAnalysis
+      patientContext,
+      previousAnalysis,
     });
-    
+
     // Check if expert wants to trigger sub-experts
-    if (analysis.decision === 'trigger_sub_experts') {
+    if (analysis.decision === "trigger_sub_experts") {
       const subExperts = this.getTriggeredSubExperts(expert, analysis);
       const subAnalyses = await this.executeSubExperts(subExperts, {
         transcript,
         patientContext,
-        parentAnalysis: analysis
+        parentAnalysis: analysis,
       });
-      
+
       // Merge parent and sub-expert analyses
       return this.mergeAnalyses([analysis, ...subAnalyses]);
     }
-    
+
     return analysis;
   }
 }
@@ -483,16 +495,16 @@ import { buildDAGRuntime } from "./dag-runtime";
 export async function executeDAG(
   sessionId: string,
   transcript: string,
-  context?: any
+  context?: any,
 ) {
   const dag = buildDAGRuntime();
-  
+
   // Change gate: skip MoE when Symptoms/Answers unchanged
-  if (!await shouldAnalyze(sessionId, transcript, context)) {
-    return { skipped: true, reason: 'no_changes' } as any;
+  if (!(await shouldAnalyze(sessionId, transcript, context))) {
+    return { skipped: true, reason: "no_changes" } as any;
   }
   const workflow = new StateGraph<DAGState>({
-    channels: createStateChannels(dag)
+    channels: createStateChannels(dag),
   });
 
   // Add nodes dynamically from configuration
@@ -505,7 +517,7 @@ export async function executeDAG(
     if (nodeConfig.dependencies.length === 0) {
       workflow.addEdge("__start__", nodeId);
     } else {
-      nodeConfig.dependencies.forEach(depId => {
+      nodeConfig.dependencies.forEach((depId) => {
         workflow.addEdge(depId, nodeId);
       });
     }
@@ -515,7 +527,7 @@ export async function executeDAG(
   const result = await workflow.compile().invoke({
     sessionId,
     transcript,
-    context
+    context,
   });
 
   return result;
@@ -524,13 +536,13 @@ export async function executeDAG(
 function createNodeExecutor(nodeConfig: DAGNode) {
   return async (state: DAGState) => {
     const startTime = Date.now();
-    
+
     // Emit node started event
     emitSSE({
-      type: 'node_started',
+      type: "node_started",
       nodeId: nodeConfig.id,
       model: nodeConfig.model,
-      provider: nodeConfig.provider
+      provider: nodeConfig.provider,
     });
 
     try {
@@ -542,23 +554,22 @@ function createNodeExecutor(nodeConfig: DAGNode) {
         {
           temperature: nodeConfig.modelConfig.temperature,
           maxTokens: nodeConfig.modelConfig.maxTokens,
-          timeoutMs: nodeConfig.modelConfig.timeoutMs
+          timeoutMs: nodeConfig.modelConfig.timeoutMs,
         },
-        state[nodeConfig.id + '_input']
+        state[nodeConfig.id + "_input"],
       );
 
       // Emit completion
       emitSSE({
-        type: 'node_completed',
+        type: "node_completed",
         nodeId: nodeConfig.id,
         duration: Date.now() - startTime,
-        cost: result.cost
+        cost: result.cost,
       });
 
       return {
-        [nodeConfig.id + '_output']: result.data
+        [nodeConfig.id + "_output"]: result.data,
       };
-
     } catch (error) {
       // Handle fallback
       if (nodeConfig.fallbackChain.length > 0) {
@@ -577,7 +588,7 @@ function createNodeExecutor(nodeConfig: DAGNode) {
 ```typescript
 // sse-events.ts - Minimal SSE event definitions
 
-type DAGEvent = 
+type DAGEvent =
   | NodeStartedEvent
   | NodeProgressEvent
   | NodeCompletedEvent
@@ -586,7 +597,7 @@ type DAGEvent =
   | DAGCompletedEvent;
 
 interface NodeStartedEvent {
-  type: 'node_started';
+  type: "node_started";
   nodeId: string;
   nodeName: string;
   model: string;
@@ -595,14 +606,14 @@ interface NodeStartedEvent {
 }
 
 interface NodeProgressEvent {
-  type: 'node_progress';
+  type: "node_progress";
   nodeId: string;
   percent: number;
   message?: string;
 }
 
 interface NodeCompletedEvent {
-  type: 'node_completed';
+  type: "node_completed";
   nodeId: string;
   duration: number;
   cost: number;
@@ -613,7 +624,7 @@ interface NodeCompletedEvent {
 }
 
 interface NodeFailedEvent {
-  type: 'node_failed';
+  type: "node_failed";
   nodeId: string;
   error: string;
   willRetry: boolean;
@@ -621,7 +632,7 @@ interface NodeFailedEvent {
 }
 
 interface ModelSwitchedEvent {
-  type: 'model_switched';
+  type: "model_switched";
   nodeId: string;
   fromModel: string;
   toModel: string;
@@ -629,7 +640,7 @@ interface ModelSwitchedEvent {
 }
 
 interface DAGCompletedEvent {
-  type: 'dag_completed';
+  type: "dag_completed";
   totalDuration: number;
   totalCost: number;
   nodeCount: number;
@@ -664,7 +675,11 @@ export function emitSSE(event: DAGEvent) {
   "styles": {
     "nodes": {
       "pending": { "fill": "#E0E0E0", "stroke": "#BDBDBD" },
-      "running": { "fill": "#FFD54F", "stroke": "#F57C00", "animation": "pulse" },
+      "running": {
+        "fill": "#FFD54F",
+        "stroke": "#F57C00",
+        "animation": "pulse"
+      },
       "completed": { "fill": "#66BB6A", "stroke": "#388E3C" },
       "failed": { "fill": "#EF5350", "stroke": "#C62828" }
     },
@@ -699,26 +714,26 @@ export function emitSSE(event: DAGEvent) {
   import * as d3 from 'd3';
   import { buildDAGRuntime } from './dag-runtime';
   import visualConfig from './dag-visualization.json';
-  
+
   export let sessionId: string;
-  
+
   let container: HTMLElement;
   let dag = buildDAGRuntime();
   let nodeStates = new Map<string, string>();
-  
+
   onMount(() => {
     const svg = d3.select(container)
       .append('svg')
       .attr('width', visualConfig.layout.width)
       .attr('height', visualConfig.layout.height);
-    
+
     // Build hierarchical layout from DAG
     const hierarchy = buildHierarchy(dag);
     const layout = d3.tree()
       .size([visualConfig.layout.width - 100, visualConfig.layout.height - 100]);
-    
+
     const root = layout(d3.hierarchy(hierarchy));
-    
+
     // Render nodes
     const nodes = svg.selectAll('.node')
       .data(root.descendants())
@@ -726,17 +741,17 @@ export function emitSSE(event: DAGEvent) {
       .append('g')
       .attr('class', 'node')
       .attr('transform', d => `translate(${d.x}, ${d.y})`);
-    
+
     nodes.append('circle')
       .attr('r', visualConfig.layout.node.radius)
       .attr('fill', d => visualConfig.styles.nodes.pending.fill);
-    
+
     nodes.append('text')
       .text(d => d.data.name)
       .attr('dy', 4)
       .style('text-anchor', 'middle')
       .style('font-size', visualConfig.styles.labels.fontSize);
-    
+
     // Render links
     const links = svg.selectAll('.link')
       .data(root.links())
@@ -749,17 +764,17 @@ export function emitSSE(event: DAGEvent) {
       .style('fill', 'none')
       .style('stroke', visualConfig.styles.links.default.stroke)
       .style('stroke-width', visualConfig.styles.links.default.strokeWidth);
-    
+
     // Subscribe to SSE events
     subscribeToSSE(sessionId, (event) => {
       updateNodeState(event.nodeId, event.type);
     });
   });
-  
+
   function updateNodeState(nodeId: string, eventType: string) {
     const newState = eventTypeToState(eventType);
     nodeStates.set(nodeId, newState);
-    
+
     // Update visualization
     d3.select(`#node-${nodeId}`)
       .select('circle')
@@ -787,7 +802,7 @@ export function emitSSE(event: DAGEvent) {
 The Universal DAG will be visualized using **D3 force-directed graphs** to show the bidirectional nature of expert collaboration:
 
 - **Forward Flow**: Experts trigger sub-experts (blue solid links with animated particles)
-- **Reverse Flow**: Sub-experts refine parent analysis (red dashed links with reverse particles)  
+- **Reverse Flow**: Sub-experts refine parent analysis (red dashed links with reverse particles)
 - **Interactive Exploration**: Hover nodes to highlight bidirectional relationships and trace information flow
 - **Real-Time Updates**: Nodes pulse and change color as DAG executes, showing expert triggering and refinement cycles
 - **Natural Clustering**: Force simulation groups experts by specialty with automatic layout adjustment as new experts spawn
@@ -797,24 +812,28 @@ Example: GP Expert → triggers → Cardiology Expert → triggers → Electroph
 ## Implementation Checklist
 
 ### Phase 1: AI-Generated Expert System ✅
+
 - [x] Define Universal Expert Interface with custom expert generation
 - [x] Create CustomExpertDefinition interface
 - [x] Design AI-generated expert examples
 - [x] Update DAG visualization concept for dynamic experts
 
 ### Phase 2: Dynamic Expert Creation Engine
+
 - [ ] Implement AI expert generation logic in Primary Analyzer
 - [ ] Create custom expert prompt construction system
 - [ ] Build patient-specific context filtering
 - [ ] Add dynamic expert ID and naming system
 
 ### Phase 3: Enhanced Simulation & Visualization
+
 - [ ] Update simulation to demonstrate AI-generated experts
 - [ ] Create dynamic DAG layout for emerging expert nodes
 - [ ] Implement real-time expert creation visualization
 - [ ] Add expert creation reasoning display
 
 ### Phase 4: Advanced Multi-Expert Consensus Building
+
 - [ ] Build parallel expert execution engine
 - [ ] Implement multiple perspective consensus algorithms
 - [ ] Create expert disagreement analysis and resolution
@@ -823,6 +842,7 @@ Example: GP Expert → triggers → Cardiology Expert → triggers → Electroph
 - [ ] Implement tie-breaking mechanisms for expert conflicts
 
 ### Phase 5: Production Integration
+
 - [ ] Integrate with EnhancedAIProvider for custom expert execution
 - [ ] Add cost tracking for dynamic expert creation
 - [ ] Implement expert creation audit logging
@@ -847,7 +867,7 @@ import { DAGVisualizer } from './DAGVisualizer.svelte';
 // In your session component
 async function analyzeSessionWithAIExperts(transcript: string) {
   const sessionId = generateSessionId();
-  
+
   // Execute DAG with AI expert generation enabled
   const result = await executeDAG(sessionId, transcript, {
     patientHistory: getPatientHistory(),
@@ -855,15 +875,15 @@ async function analyzeSessionWithAIExperts(transcript: string) {
     maxCustomExperts: 5,
     language: 'en'
   });
-  
+
   // The DAG will dynamically create experts like:
   // - "Pediatric Cardiology Expert for 8-year-old with innocent murmur"
   // - "Geriatric Polypharmacy Specialist for 12-medication patient"
   // - "Pregnancy Safety Expert for cardiac medications"
-  
+
   // Visualize real-time expert creation and analysis
   <DAGVisualizer {sessionId} showExpertCreation={true} />
-  
+
   // Results include AI-generated expert contributions
   return {
     unifiedAnalysis: result.consensus_output,
@@ -921,6 +941,7 @@ The fundamental breakthrough in this architecture is **AI systems creating other
 ### MCP Tool Philosophy
 
 Model Context Protocol (MCP) tools enable the Primary Analyzer to:
+
 - **Create Custom Expert Nodes**: Generate new DAG nodes with specialized prompts and filtered context
 - **Design Expert Interactions**: Define how new experts connect to existing analysis flow
 - **Optimize Resource Usage**: Create only the experts needed, with appropriate model selection and cost estimation
@@ -930,12 +951,14 @@ Model Context Protocol (MCP) tools enable the Primary Analyzer to:
 All experts (pre-configured and AI-generated) produce standardized statistical output enabling mathematical consensus building:
 
 **Statistical Foundation:**
+
 - Every medical finding includes probability distributions and confidence intervals
 - Uncertainty quantification across all analysis dimensions
 - Evidence quality scoring for consensus weighting
 - Temporal relevance and scope coverage metrics
 
 **Consensus Mathematics:**
+
 - Bayesian probability fusion across multiple expert perspectives
 - Dempster-Shafer evidence theory for conflict resolution
 - Dynamic expert weighting based on relevance, confidence, and evidence quality
@@ -944,16 +967,19 @@ All experts (pre-configured and AI-generated) produce standardized statistical o
 ### Benefits of AI-Generated Expert Architecture
 
 **Adaptive Intelligence:**
+
 - System learns optimal expert combinations from each case
 - No static limits on medical specialization depth
 - Intelligent resource allocation based on case complexity
 
 **Medical Accuracy:**
+
 - Multiple specialized perspectives reduce diagnostic blind spots
 - Conflict resolution through mathematical consensus building
 - Transparent reasoning and evidence weighting
 
 **Scalability:**
+
 - New medical domains automatically supported through AI generation
 - Cost-efficient expert creation only when genuinely needed
 - Self-improving system through expert generation pattern learning

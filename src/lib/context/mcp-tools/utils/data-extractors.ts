@@ -1,6 +1,6 @@
 /**
  * Data Extraction Utilities
- * 
+ *
  * Common utilities for extracting and formatting medical data from documents
  */
 
@@ -17,13 +17,16 @@ export function extractMedicationData(searchResults: any[]): MedicationData[] {
     const content = result.excerpt || result.metadata?.summary || "";
     const contentLower = content.toLowerCase();
 
-    if (contentLower.includes("medication") || 
-        contentLower.includes("prescription") ||
-        contentLower.includes("drug")) {
-      
+    if (
+      contentLower.includes("medication") ||
+      contentLower.includes("prescription") ||
+      contentLower.includes("drug")
+    ) {
       // Basic medication extraction
       // In a real implementation, this would use more sophisticated NLP
-      const medicationMatch = content.match(/(?:prescribed|taking|medication)\s+([A-Za-z]+)/i);
+      const medicationMatch = content.match(
+        /(?:prescribed|taking|medication)\s+([A-Za-z]+)/i,
+      );
       if (medicationMatch) {
         medications.push({
           name: medicationMatch[1],
@@ -48,10 +51,11 @@ export function extractTestResults(searchResults: any[]): TestResult[] {
     const content = result.excerpt || result.metadata?.summary || "";
     const contentLower = content.toLowerCase();
 
-    if (contentLower.includes("test") || 
-        contentLower.includes("result") ||
-        contentLower.includes("lab")) {
-      
+    if (
+      contentLower.includes("test") ||
+      contentLower.includes("result") ||
+      contentLower.includes("lab")
+    ) {
       // Basic test result extraction
       testResults.push({
         name: result.metadata?.title || "Test Result",
@@ -70,8 +74,8 @@ export function extractTestResults(searchResults: any[]): TestResult[] {
  */
 export function extractTimelineEvents(searchResults: any[]): TimelineEvent[] {
   return searchResults
-    .filter(result => result.metadata?.date)
-    .map(result => ({
+    .filter((result) => result.metadata?.date)
+    .map((result) => ({
       date: result.metadata.date,
       type: result.metadata.documentType || "medical-record",
       title: result.metadata.title || "Medical event",
@@ -85,7 +89,9 @@ export function extractTimelineEvents(searchResults: any[]): TimelineEvent[] {
 /**
  * Extract conditions from search results
  */
-export function extractConditionsFromSearchResults(searchResults: any[]): Array<{
+export function extractConditionsFromSearchResults(
+  searchResults: any[],
+): Array<{
   name: string;
   date?: string;
   documentId?: string;
@@ -102,12 +108,15 @@ export function extractConditionsFromSearchResults(searchResults: any[]): Array<
     const content = result.excerpt || result.metadata?.summary || "";
     const contentLower = content.toLowerCase();
 
-    if (contentLower.includes("diagnosis") || 
-        contentLower.includes("condition") ||
-        contentLower.includes("disease")) {
-      
+    if (
+      contentLower.includes("diagnosis") ||
+      contentLower.includes("condition") ||
+      contentLower.includes("disease")
+    ) {
       // Extract condition name from content
-      const conditionMatch = content.match(/(?:diagnosis|diagnosed with|condition)\s*:?\s*([A-Za-z\s]+)/i);
+      const conditionMatch = content.match(
+        /(?:diagnosis|diagnosed with|condition)\s*:?\s*([A-Za-z\s]+)/i,
+      );
       if (conditionMatch) {
         conditions.push({
           name: conditionMatch[1].trim(),
@@ -125,7 +134,9 @@ export function extractConditionsFromSearchResults(searchResults: any[]): Array<
 /**
  * Extract procedures from search results
  */
-export function extractProceduresFromSearchResults(searchResults: any[]): Array<{
+export function extractProceduresFromSearchResults(
+  searchResults: any[],
+): Array<{
   name: string;
   date?: string;
   documentId?: string;
@@ -142,10 +153,11 @@ export function extractProceduresFromSearchResults(searchResults: any[]): Array<
     const content = result.excerpt || result.metadata?.summary || "";
     const contentLower = content.toLowerCase();
 
-    if (contentLower.includes("procedure") || 
-        contentLower.includes("surgery") ||
-        contentLower.includes("operation")) {
-      
+    if (
+      contentLower.includes("procedure") ||
+      contentLower.includes("surgery") ||
+      contentLower.includes("operation")
+    ) {
       procedures.push({
         name: result.metadata?.title || "Medical procedure",
         date: result.metadata?.date,
@@ -178,12 +190,15 @@ export function extractAllergiesFromSearchResults(searchResults: any[]): Array<{
     const content = result.excerpt || result.metadata?.summary || "";
     const contentLower = content.toLowerCase();
 
-    if (contentLower.includes("allergy") || 
-        contentLower.includes("allergic") ||
-        contentLower.includes("reaction")) {
-      
+    if (
+      contentLower.includes("allergy") ||
+      contentLower.includes("allergic") ||
+      contentLower.includes("reaction")
+    ) {
       // Extract allergen from content
-      const allergenMatch = content.match(/(?:allergic to|allergy to)\s+([A-Za-z\s]+)/i);
+      const allergenMatch = content.match(
+        /(?:allergic to|allergy to)\s+([A-Za-z\s]+)/i,
+      );
       if (allergenMatch) {
         allergies.push({
           substance: allergenMatch[1].trim(),
@@ -276,15 +291,22 @@ export function extractKeyFindings(searchResults: any[]): string[] {
  */
 export function identifyRiskFactors(searchResults: any[]): string[] {
   const riskKeywords = [
-    "smoking", "diabetes", "hypertension", "obesity", "family history",
-    "high cholesterol", "sedentary", "alcohol", "stress"
+    "smoking",
+    "diabetes",
+    "hypertension",
+    "obesity",
+    "family history",
+    "high cholesterol",
+    "sedentary",
+    "alcohol",
+    "stress",
   ];
 
   const riskFactors = new Set<string>();
 
   for (const result of searchResults) {
     const content = (result.excerpt || "").toLowerCase();
-    riskKeywords.forEach(keyword => {
+    riskKeywords.forEach((keyword) => {
       if (content.includes(keyword)) {
         riskFactors.add(keyword);
       }
@@ -304,13 +326,13 @@ function extractNumericValue(content: string): string | undefined {
 function extractSeverity(content: string): string | undefined {
   const severityTerms = ["mild", "moderate", "severe", "critical"];
   const contentLower = content.toLowerCase();
-  
+
   for (const term of severityTerms) {
     if (contentLower.includes(term)) {
       return term;
     }
   }
-  
+
   return undefined;
 }
 
@@ -322,19 +344,21 @@ function extractReaction(content: string): string | undefined {
 function extractOutcome(content: string): string | undefined {
   const outcomeTerms = ["successful", "completed", "failed", "complications"];
   const contentLower = content.toLowerCase();
-  
+
   for (const term of outcomeTerms) {
     if (contentLower.includes(term)) {
       return term;
     }
   }
-  
+
   return undefined;
 }
 
 function isBloodPressureNormal(bp: string): boolean {
-  const [systolic, diastolic] = bp.split('/').map(Number);
-  return systolic >= 90 && systolic <= 140 && diastolic >= 60 && diastolic <= 90;
+  const [systolic, diastolic] = bp.split("/").map(Number);
+  return (
+    systolic >= 90 && systolic <= 140 && diastolic >= 60 && diastolic <= 90
+  );
 }
 
 function isHeartRateNormal(hr: number): boolean {

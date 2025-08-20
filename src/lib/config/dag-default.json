@@ -294,21 +294,53 @@
         "name": "Cardiology Expert",
         "category": "cardiology",
         "layer": 2,
-        "triggerConditions": ["chest_pain", "shortness_of_breath", "palpitations", "heart_murmur", "cardiac_symptoms"],
+        "triggerConditions": [
+          "chest_pain",
+          "shortness_of_breath",
+          "palpitations",
+          "heart_murmur",
+          "cardiac_symptoms"
+        ],
         "subExpertTriggers": {
-          "electrophysiology": ["arrhythmia", "palpitations", "syncope", "irregular_heartbeat"],
-          "heart_failure": ["shortness_of_breath", "edema", "fatigue", "heart_failure_symptoms"],
-          "interventional": ["chest_pain", "st_elevation", "acute_mi", "unstable_angina"]
+          "electrophysiology": [
+            "arrhythmia",
+            "palpitations",
+            "syncope",
+            "irregular_heartbeat"
+          ],
+          "heart_failure": [
+            "shortness_of_breath",
+            "edema",
+            "fatigue",
+            "heart_failure_symptoms"
+          ],
+          "interventional": [
+            "chest_pain",
+            "st_elevation",
+            "acute_mi",
+            "unstable_angina"
+          ]
         }
       },
       {
         "id": "neurology_expert",
-        "name": "Neurology Expert", 
+        "name": "Neurology Expert",
         "category": "neurology",
         "layer": 2,
-        "triggerConditions": ["headache", "dizziness", "seizure", "confusion", "neurological_symptoms"],
+        "triggerConditions": [
+          "headache",
+          "dizziness",
+          "seizure",
+          "confusion",
+          "neurological_symptoms"
+        ],
         "subExpertTriggers": {
-          "stroke_specialist": ["stroke_symptoms", "weakness", "speech_problems", "facial_droop"],
+          "stroke_specialist": [
+            "stroke_symptoms",
+            "weakness",
+            "speech_problems",
+            "facial_droop"
+          ],
           "epileptology": ["seizures", "epilepsy", "convulsions"],
           "movement_specialist": ["tremor", "parkinson", "movement_disorders"]
         }
@@ -316,17 +348,27 @@
       {
         "id": "emergency_expert",
         "name": "Emergency Expert",
-        "category": "emergency", 
+        "category": "emergency",
         "layer": 2,
-        "triggerConditions": ["severe_pain", "acute_symptoms", "life_threatening", "emergency_indicators"],
+        "triggerConditions": [
+          "severe_pain",
+          "acute_symptoms",
+          "life_threatening",
+          "emergency_indicators"
+        ],
         "subExpertTriggers": {}
       },
       {
         "id": "pulmonology_expert",
         "name": "Pulmonology Expert",
         "category": "pulmonology",
-        "layer": 2, 
-        "triggerConditions": ["cough", "shortness_of_breath", "chest_tightness", "respiratory_symptoms"],
+        "layer": 2,
+        "triggerConditions": [
+          "cough",
+          "shortness_of_breath",
+          "chest_tightness",
+          "respiratory_symptoms"
+        ],
         "subExpertTriggers": {}
       }
     ]

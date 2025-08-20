@@ -17,6 +17,16 @@ type Input = {
   images: string[];
   //text?: string;
   //language?: string;
+  metadata?: {
+    isDicomExtracted?: boolean;
+    imageSource?: "dicom" | "upload";
+    dicomMetadata?: any;
+    imageContentType?:
+      | "medical_imaging"
+      | "document_scan"
+      | "mixed_content"
+      | "non_medical";
+  };
 };
 
 // Re-export types from shared types

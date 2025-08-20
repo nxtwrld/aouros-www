@@ -3,18 +3,14 @@
  *
  * Provides AI with tools to access patient medical context, documents,
  * and health data following the Model Context Protocol (MCP) specification.
- * 
+ *
  * This file acts as a thin orchestrator that delegates to individual tool classes.
  *
  * MCP Specification: 2024-11-05
  * https://modelcontextprotocol.io/specification
  */
 
-import { 
-  getToolDefinitions, 
-  executeTool, 
-  getAvailableTools 
-} from "./tools";
+import { getToolDefinitions, executeTool, getAvailableTools } from "./tools";
 import type { MCPSecurityContext } from "./security-audit";
 import { mcpSecurityService } from "./security-audit";
 import { logger } from "$lib/logging/logger";
@@ -46,11 +42,11 @@ export class MedicalExpertTools {
   static async executeToolSecurely(
     toolName: string,
     params: any,
-    context: MCPSecurityContext
+    context: MCPSecurityContext,
   ) {
     try {
       const result = await executeTool(toolName, params, context);
-      
+
       logger.namespace("MCPTools")?.info("Tool executed successfully", {
         toolName,
         profileId: context.profileId,
@@ -141,7 +137,7 @@ export const toolHandlers = {
     return await MedicalExpertTools.executeToolSecurely(
       "searchDocuments",
       params,
-      context
+      context,
     );
   },
 
@@ -149,7 +145,7 @@ export const toolHandlers = {
     return await MedicalExpertTools.executeToolSecurely(
       "getAssembledContext",
       params,
-      context
+      context,
     );
   },
 
@@ -157,7 +153,7 @@ export const toolHandlers = {
     return await MedicalExpertTools.executeToolSecurely(
       "getProfileData",
       params,
-      context
+      context,
     );
   },
 
@@ -165,7 +161,7 @@ export const toolHandlers = {
     return await MedicalExpertTools.executeToolSecurely(
       "queryMedicalHistory",
       params,
-      context
+      context,
     );
   },
 
@@ -173,7 +169,7 @@ export const toolHandlers = {
     return await MedicalExpertTools.executeToolSecurely(
       "getDocumentById",
       params,
-      context
+      context,
     );
   },
 
@@ -181,7 +177,7 @@ export const toolHandlers = {
     return await MedicalExpertTools.executeToolSecurely(
       "getPatientTimeline",
       params,
-      context
+      context,
     );
   },
 };

@@ -1,18 +1,40 @@
-import { writable, derived, get, readable } from 'svelte/store';
-import type { Writable, Readable } from 'svelte/store';
-import type { SessionAnalysis, ActionNode } from '$components/session/types/visualization';
-import { transformToSankeyData } from '$components/session/utils/sankeyDataTransformer';
-import { QUESTION_SCORING, type QuestionCategory } from '$lib/session/constants';
+import { writable, derived, get, readable } from "svelte/store";
+import type { Writable, Readable } from "svelte/store";
+import type {
+  SessionAnalysis,
+  ActionNode,
+} from "$components/session/types/visualization";
+import { transformToSankeyData } from "$components/session/utils/sankeyDataTransformer";
+import {
+  QUESTION_SCORING,
+  type QuestionCategory,
+} from "$lib/session/constants";
 
 // Types for derived calculations
 interface RelationshipIndex {
-  forward: Map<string, Set<{ targetId: string; type: string; confidence: number; targetType: string }>>;
-  reverse: Map<string, Set<{ sourceId: string; type: string; confidence: number; sourceType: string }>>;
+  forward: Map<
+    string,
+    Set<{
+      targetId: string;
+      type: string;
+      confidence: number;
+      targetType: string;
+    }>
+  >;
+  reverse: Map<
+    string,
+    Set<{
+      sourceId: string;
+      type: string;
+      confidence: number;
+      sourceType: string;
+    }>
+  >;
   nodeTypes: Map<string, string>;
 }
 
 interface PathCalculation {
-  trigger: { type: 'node' | 'link'; id: string; item: any };
+  trigger: { type: "node" | "link"; id: string; item: any };
   path: { nodes: string[]; links: string[] };
 }
 
@@ -31,7 +53,9 @@ const sessionDataStore: Writable<SessionComputedData | null> = writable(null);
 /**
  * Builds the relationship index for efficient lookups
  */
-function buildRelationshipIndex(sessionData: SessionAnalysis): RelationshipIndex {
+function buildRelationshipIndex(
+  sessionData: SessionAnalysis,
+): RelationshipIndex {
   const index: RelationshipIndex = {
     forward: new Map(),
     reverse: new Map(),
@@ -61,7 +85,10 @@ function buildRelationshipIndex(sessionData: SessionAnalysis): RelationshipIndex
           const targetType = index.nodeTypes.get(rel.nodeId) || "unknown";
 
           // Handle relationship direction
-          if (rel.direction === "outgoing" || rel.direction === "bidirectional") {
+          if (
+            rel.direction === "outgoing" ||
+            rel.direction === "bidirectional"
+          ) {
             // Add to forward map (this node -> target)
             if (!index.forward.has(node.id)) {
               index.forward.set(node.id, new Set());
@@ -85,7 +112,10 @@ function buildRelationshipIndex(sessionData: SessionAnalysis): RelationshipIndex
             });
           }
 
-          if (rel.direction === "incoming" || rel.direction === "bidirectional") {
+          if (
+            rel.direction === "incoming" ||
+            rel.direction === "bidirectional"
+          ) {
             // Add to forward map (target -> this node) - reverse of what's defined
             if (!index.forward.has(rel.nodeId)) {
               index.forward.set(rel.nodeId, new Set());
@@ -119,7 +149,7 @@ function buildRelationshipIndex(sessionData: SessionAnalysis): RelationshipIndex
     for (const rel of relationships) {
       updatedRels.add({
         targetId: rel.sourceId,
-        type: rel.type,  // Keep this as rel.type since we're building it from existing relationship objects
+        type: rel.type, // Keep this as rel.type since we're building it from existing relationship objects
         confidence: rel.confidence,
         targetType: index.nodeTypes.get(rel.sourceId) || "unknown",
       });
@@ -135,7 +165,10 @@ function buildRelationshipIndex(sessionData: SessionAnalysis): RelationshipIndex
 /**
  * Builds node and link maps for quick lookups
  */
-function buildNodeAndLinkMaps(sessionData: SessionAnalysis): { nodeMap: Map<string, any>; linkMap: Map<string, any> } {
+function buildNodeAndLinkMaps(sessionData: SessionAnalysis): {
+  nodeMap: Map<string, any>;
+  linkMap: Map<string, any>;
+} {
   const nodeMap = new Map<string, any>();
   const linkMap = new Map<string, any>();
 
@@ -144,10 +177,10 @@ function buildNodeAndLinkMaps(sessionData: SessionAnalysis): { nodeMap: Map<stri
     ...(sessionData.nodes.symptoms || []),
     ...(sessionData.nodes.diagnoses || []),
     ...(sessionData.nodes.treatments || []),
-    ...(sessionData.nodes.actions || [])
+    ...(sessionData.nodes.actions || []),
   ];
-  
-  allNodeGroups.forEach(node => {
+
+  allNodeGroups.forEach((node) => {
     nodeMap.set(node.id, node);
   });
 
@@ -170,7 +203,6 @@ export const sessionDataActions = {
    * Load new session data and compute all derived data
    */
   loadSession(sessionData: SessionAnalysis): void {
-
     // Build all derived data
     const relationshipIndex = buildRelationshipIndex(sessionData);
     const { nodeMap, linkMap } = buildNodeAndLinkMaps(sessionData);
@@ -181,11 +213,10 @@ export const sessionDataActions = {
       nodeMap,
       linkMap,
       isLoading: false,
-      error: null
+      error: null,
     };
 
     sessionDataStore.set(computedData);
-    
   },
 
   /**
@@ -197,7 +228,6 @@ export const sessionDataActions = {
 
     // Calculate path without mutating store
     const pathCalculation = calculatePathFromNode(nodeId, data);
-    
 
     return pathCalculation;
   },
@@ -216,18 +246,19 @@ export const sessionDataActions = {
     const data = get(sessionDataStore);
     if (!data?.sessionData?.nodes?.actions) return;
 
-    const updatedActions = data.sessionData.nodes.actions.map((action: ActionNode) => 
-      action.id === alertId && action.actionType === 'alert'
-        ? { ...action, status: 'acknowledged' as const }
-        : action
+    const updatedActions = data.sessionData.nodes.actions.map(
+      (action: ActionNode) =>
+        action.id === alertId && action.actionType === "alert"
+          ? { ...action, status: "acknowledged" as const }
+          : action,
     );
 
     const updatedSessionData = {
       ...data.sessionData,
       nodes: {
         ...data.sessionData.nodes,
-        actions: updatedActions
-      }
+        actions: updatedActions,
+      },
     };
 
     this.loadSession(updatedSessionData);
@@ -236,22 +267,27 @@ export const sessionDataActions = {
   /**
    * Answer a question
    */
-  answerQuestion(questionId: string, answer: string, confidence?: number): void {
+  answerQuestion(
+    questionId: string,
+    answer: string,
+    confidence?: number,
+  ): void {
     const data = get(sessionDataStore);
     if (!data?.sessionData?.nodes?.actions) return;
 
-    const updatedActions = data.sessionData.nodes.actions.map((action: ActionNode) => 
-      action.id === questionId && action.actionType === 'question'
-        ? { ...action, status: 'answered' as const, answer, confidence }
-        : action
+    const updatedActions = data.sessionData.nodes.actions.map(
+      (action: ActionNode) =>
+        action.id === questionId && action.actionType === "question"
+          ? { ...action, status: "answered" as const, answer, confidence }
+          : action,
     );
 
     const updatedSessionData = {
       ...data.sessionData,
       nodes: {
         ...data.sessionData.nodes,
-        actions: updatedActions
-      }
+        actions: updatedActions,
+      },
     };
 
     this.loadSession(updatedSessionData);
@@ -269,7 +305,7 @@ export const sessionDataActions = {
   getNodeDisplayText(nodeId: string): string {
     const node = this.findNodeById(nodeId);
     if (!node) return nodeId;
-    
+
     return node.name || node.text || nodeId;
   },
 
@@ -286,13 +322,18 @@ export const sessionDataActions = {
     if (action === "suppress") {
       // Update diagnoses
       if (updatedSessionData.nodes.diagnoses) {
-        updatedSessionData.nodes.diagnoses = updatedSessionData.nodes.diagnoses.map(diagnosis => 
-          diagnosis.id === targetId
-            ? { ...diagnosis, suppressed: true, suppressionReason: reason || "User suppressed" }
-            : diagnosis
-        );
+        updatedSessionData.nodes.diagnoses =
+          updatedSessionData.nodes.diagnoses.map((diagnosis) =>
+            diagnosis.id === targetId
+              ? {
+                  ...diagnosis,
+                  suppressed: true,
+                  suppressionReason: reason || "User suppressed",
+                }
+              : diagnosis,
+          );
       }
-      
+
       // Could handle other node types here
     }
 
@@ -304,8 +345,11 @@ export const sessionDataActions = {
         targetId: targetId,
         reason: reason,
       };
-      
-      updatedSessionData.userActions = [...updatedSessionData.userActions, userAction];
+
+      updatedSessionData.userActions = [
+        ...updatedSessionData.userActions,
+        userAction,
+      ];
     }
 
     this.loadSession(updatedSessionData);
@@ -329,22 +373,27 @@ export const sessionDataActions = {
    * Set loading state
    */
   setLoading(loading: boolean): void {
-    sessionDataStore.update(data => data ? { ...data, isLoading: loading } : null);
+    sessionDataStore.update((data) =>
+      data ? { ...data, isLoading: loading } : null,
+    );
   },
 
   /**
    * Set error state
    */
   setError(error: string | null): void {
-    sessionDataStore.update(data => data ? { ...data, error } : null);
-  }
+    sessionDataStore.update((data) => (data ? { ...data, error } : null));
+  },
 };
 
 /**
  * Calculate medical reasoning path from a node using relationship index
  * Follows medical logic: Symptoms → Diagnoses → Treatments
  */
-function calculatePathFromNode(nodeId: string, data: SessionComputedData): PathCalculation {
+function calculatePathFromNode(
+  nodeId: string,
+  data: SessionComputedData,
+): PathCalculation {
   const { relationshipIndex, nodeMap } = data;
 
   const pathNodes = new Set<string>();
@@ -352,7 +401,6 @@ function calculatePathFromNode(nodeId: string, data: SessionComputedData): PathC
   pathNodes.add(nodeId);
 
   const startingNodeType = relationshipIndex.nodeTypes.get(nodeId) || "unknown";
-  
 
   // Medical reasoning path calculation based on node type
   switch (startingNodeType) {
@@ -370,7 +418,6 @@ function calculatePathFromNode(nodeId: string, data: SessionComputedData): PathC
   }
 
   const nodeItem = nodeMap.get(nodeId);
-  
 
   return {
     trigger: { type: "node", id: nodeId, item: nodeItem },
@@ -386,60 +433,57 @@ function calculatePathFromNode(nodeId: string, data: SessionComputedData): PathC
  * Treatments have incoming relationships from diagnoses they treat
  */
 function calculateTreatmentPath(
-  treatmentId: string, 
-  pathNodes: Set<string>, 
-  pathLinks: Set<string>, 
-  relationshipIndex: RelationshipIndex
+  treatmentId: string,
+  pathNodes: Set<string>,
+  pathLinks: Set<string>,
+  relationshipIndex: RelationshipIndex,
 ) {
   // Find diagnoses that this treatment treats (incoming relationships)
   const reverseRels = relationshipIndex.reverse.get(treatmentId);
-  
+
   // Debug what relationships actually exist for this treatment
   const forwardRels = relationshipIndex.forward.get(treatmentId);
-  
-  
+
   // Process reverse relationships (diagnoses that require/treat this treatment)
   if (reverseRels) {
     for (const rel of reverseRels) {
-      
       if (rel.sourceType === "diagnosis") {
         pathNodes.add(rel.sourceId);
         pathLinks.add(`${rel.sourceId}-${treatmentId}`);
-        
-        
+
         // Find symptoms that support this diagnosis
-        const diagnosisReverseRels = relationshipIndex.reverse.get(rel.sourceId);
+        const diagnosisReverseRels = relationshipIndex.reverse.get(
+          rel.sourceId,
+        );
         if (diagnosisReverseRels) {
           for (const symptomRel of diagnosisReverseRels) {
             if (symptomRel.sourceType === "symptom") {
               pathNodes.add(symptomRel.sourceId);
               pathLinks.add(`${symptomRel.sourceId}-${rel.sourceId}`);
-              
             }
           }
         }
       }
     }
   }
-  
+
   // Process forward relationships (what this treatment investigates/clarifies/explores)
   if (forwardRels) {
     for (const rel of forwardRels) {
-      
       if (rel.targetType === "diagnosis") {
         pathNodes.add(rel.targetId);
         // For investigates relationships, the link direction might be reversed visually
         pathLinks.add(`${rel.targetId}-${treatmentId}`);
-        
-        
+
         // Find symptoms that support the investigated diagnosis
-        const diagnosisReverseRels = relationshipIndex.reverse.get(rel.targetId);
+        const diagnosisReverseRels = relationshipIndex.reverse.get(
+          rel.targetId,
+        );
         if (diagnosisReverseRels) {
           for (const symptomRel of diagnosisReverseRels) {
             if (symptomRel.sourceType === "symptom") {
               pathNodes.add(symptomRel.sourceId);
               pathLinks.add(`${symptomRel.sourceId}-${rel.targetId}`);
-              
             }
           }
         }
@@ -453,10 +497,10 @@ function calculateTreatmentPath(
  * Symptoms have outgoing relationships to diagnoses they support
  */
 function calculateSymptomPath(
-  symptomId: string, 
-  pathNodes: Set<string>, 
-  pathLinks: Set<string>, 
-  relationshipIndex: RelationshipIndex
+  symptomId: string,
+  pathNodes: Set<string>,
+  pathLinks: Set<string>,
+  relationshipIndex: RelationshipIndex,
 ) {
   // Find diagnoses that this symptom supports (outgoing relationships)
   const forwardRels = relationshipIndex.forward.get(symptomId);
@@ -465,9 +509,11 @@ function calculateSymptomPath(
       if (rel.targetType === "diagnosis") {
         pathNodes.add(rel.targetId);
         pathLinks.add(`${symptomId}-${rel.targetId}`);
-        
+
         // Find treatments that this diagnosis requires
-        const diagnosisForwardRels = relationshipIndex.forward.get(rel.targetId);
+        const diagnosisForwardRels = relationshipIndex.forward.get(
+          rel.targetId,
+        );
         if (diagnosisForwardRels) {
           for (const treatmentRel of diagnosisForwardRels) {
             if (treatmentRel.targetType === "treatment") {
@@ -486,10 +532,10 @@ function calculateSymptomPath(
  * Diagnoses connect symptoms (incoming) with treatments (outgoing)
  */
 function calculateDiagnosisPath(
-  diagnosisId: string, 
-  pathNodes: Set<string>, 
-  pathLinks: Set<string>, 
-  relationshipIndex: RelationshipIndex
+  diagnosisId: string,
+  pathNodes: Set<string>,
+  pathLinks: Set<string>,
+  relationshipIndex: RelationshipIndex,
 ) {
   // Find symptoms that support this diagnosis (incoming relationships)
   const reverseRels = relationshipIndex.reverse.get(diagnosisId);
@@ -501,7 +547,7 @@ function calculateDiagnosisPath(
       }
     }
   }
-  
+
   // Find treatments that this diagnosis requires (outgoing relationships)
   const forwardRels = relationshipIndex.forward.get(diagnosisId);
   if (forwardRels) {
@@ -517,56 +563,60 @@ function calculateDiagnosisPath(
 // Exported stores and derived stores
 export const sessionData: Readable<SessionAnalysis | null> = derived(
   sessionDataStore,
-  ($store) => $store?.sessionData || null
+  ($store) => $store?.sessionData || null,
 );
 
-export const sankeyData: Readable<any | null> = readable<any | null>(null, (set) => {
-  let lastSessionRef: SessionAnalysis | null = null;
+export const sankeyData: Readable<any | null> = readable<any | null>(
+  null,
+  (set) => {
+    let lastSessionRef: SessionAnalysis | null = null;
 
-  const unsubscribe = sessionDataStore.subscribe(($store) => {
-    const nextSession = $store?.sessionData || null;
-    if (nextSession !== lastSessionRef) {
-      lastSessionRef = nextSession;
-      set(nextSession ? transformToSankeyData(nextSession) : null);
-    }
-  });
+    const unsubscribe = sessionDataStore.subscribe(($store) => {
+      const nextSession = $store?.sessionData || null;
+      if (nextSession !== lastSessionRef) {
+        lastSessionRef = nextSession;
+        set(nextSession ? transformToSankeyData(nextSession) : null);
+      }
+    });
 
-  return unsubscribe;
-});
+    return unsubscribe;
+  },
+);
 
 export const relationshipIndex: Readable<RelationshipIndex | null> = derived(
   sessionDataStore,
-  ($store) => $store?.relationshipIndex || null
+  ($store) => $store?.relationshipIndex || null,
 );
 
 export const nodeMap: Readable<Map<string, any> | null> = derived(
   sessionDataStore,
-  ($store) => $store?.nodeMap || null
+  ($store) => $store?.nodeMap || null,
 );
 
 export const linkMap: Readable<Map<string, any> | null> = derived(
   sessionDataStore,
-  ($store) => $store?.linkMap || null
+  ($store) => $store?.linkMap || null,
 );
 
 export const isLoading: Readable<boolean> = derived(
   sessionDataStore,
-  ($store) => $store?.isLoading || false
+  ($store) => $store?.isLoading || false,
 );
 
 export const error: Readable<string | null> = derived(
   sessionDataStore,
-  ($store) => $store?.error || null
+  ($store) => $store?.error || null,
 );
 
 // Factory function for node-specific questions and alerts
 export function questionsForNode(nodeId: string): Readable<ActionNode[]> {
   return derived(sessionData, ($sessionData) => {
     if (!$sessionData?.nodes?.actions) return [];
-    
-    return $sessionData.nodes.actions.filter((action: ActionNode) => 
-      action.actionType === 'question' && 
-      action.relationships?.some((rel: any) => rel.nodeId === nodeId)
+
+    return $sessionData.nodes.actions.filter(
+      (action: ActionNode) =>
+        action.actionType === "question" &&
+        action.relationships?.some((rel: any) => rel.nodeId === nodeId),
     );
   });
 }
@@ -574,44 +624,58 @@ export function questionsForNode(nodeId: string): Readable<ActionNode[]> {
 export function alertsForNode(nodeId: string): Readable<ActionNode[]> {
   return derived(sessionData, ($sessionData) => {
     if (!$sessionData?.nodes?.actions) return [];
-    
-    return $sessionData.nodes.actions.filter((action: ActionNode) => 
-      action.actionType === 'alert' && 
-      action.relationships?.some((rel: any) => rel.nodeId === nodeId)
+
+    return $sessionData.nodes.actions.filter(
+      (action: ActionNode) =>
+        action.actionType === "alert" &&
+        action.relationships?.some((rel: any) => rel.nodeId === nodeId),
     );
   });
 }
 
 // Additional derived stores for actions
-export const questions: Readable<ActionNode[]> = derived(sessionData, ($sessionData) => 
-  $sessionData?.nodes?.actions?.filter((action: ActionNode) => action.actionType === 'question') || []
+export const questions: Readable<ActionNode[]> = derived(
+  sessionData,
+  ($sessionData) =>
+    $sessionData?.nodes?.actions?.filter(
+      (action: ActionNode) => action.actionType === "question",
+    ) || [],
 );
 
-export const alerts: Readable<ActionNode[]> = derived(sessionData, ($sessionData) =>
-  $sessionData?.nodes?.actions?.filter((action: ActionNode) => action.actionType === 'alert') || []
+export const alerts: Readable<ActionNode[]> = derived(
+  sessionData,
+  ($sessionData) =>
+    $sessionData?.nodes?.actions?.filter(
+      (action: ActionNode) => action.actionType === "alert",
+    ) || [],
 );
 
-export const pendingQuestions: Readable<ActionNode[]> = derived(questions, ($questions) =>
-  $questions.filter(q => q.status === 'pending')
+export const pendingQuestions: Readable<ActionNode[]> = derived(
+  questions,
+  ($questions) => $questions.filter((q) => q.status === "pending"),
 );
 
-export const pendingAlerts: Readable<ActionNode[]> = derived(alerts, ($alerts) =>
-  $alerts.filter(a => a.status === 'pending')
+export const pendingAlerts: Readable<ActionNode[]> = derived(
+  alerts,
+  ($alerts) => $alerts.filter((a) => a.status === "pending"),
 );
 
 // Factory functions for link-related actions
 export function questionsForLink(link: any): Readable<ActionNode[]> {
   return derived(sessionData, ($sessionData) => {
     if (!$sessionData?.nodes?.actions || !link) return [];
-    
-    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-    
-    return $sessionData.nodes.actions.filter((action: ActionNode) => 
-      action.actionType === 'question' && 
-      action.relationships?.some((rel: any) => 
-        rel.nodeId === sourceId || rel.nodeId === targetId
-      )
+
+    const sourceId =
+      typeof link.source === "object" ? link.source.id : link.source;
+    const targetId =
+      typeof link.target === "object" ? link.target.id : link.target;
+
+    return $sessionData.nodes.actions.filter(
+      (action: ActionNode) =>
+        action.actionType === "question" &&
+        action.relationships?.some(
+          (rel: any) => rel.nodeId === sourceId || rel.nodeId === targetId,
+        ),
     );
   });
 }
@@ -619,15 +683,18 @@ export function questionsForLink(link: any): Readable<ActionNode[]> {
 export function alertsForLink(link: any): Readable<ActionNode[]> {
   return derived(sessionData, ($sessionData) => {
     if (!$sessionData?.nodes?.actions || !link) return [];
-    
-    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-    
-    return $sessionData.nodes.actions.filter((action: ActionNode) => 
-      action.actionType === 'alert' && 
-      action.relationships?.some((rel: any) => 
-        rel.nodeId === sourceId || rel.nodeId === targetId
-      )
+
+    const sourceId =
+      typeof link.source === "object" ? link.source.id : link.source;
+    const targetId =
+      typeof link.target === "object" ? link.target.id : link.target;
+
+    return $sessionData.nodes.actions.filter(
+      (action: ActionNode) =>
+        action.actionType === "alert" &&
+        action.relationships?.some(
+          (rel: any) => rel.nodeId === sourceId || rel.nodeId === targetId,
+        ),
     );
   });
 }
@@ -637,19 +704,22 @@ export function alertsForLink(link: any): Readable<ActionNode[]> {
  * Combines urgency, diagnosis relevance, and question priority
  */
 function calculateCompositeScore(
-  question: ActionNode, 
-  sessionData: SessionAnalysis
+  question: ActionNode,
+  sessionData: SessionAnalysis,
 ): number {
   const { URGENCY_SCORES, WEIGHTS, SCALING } = QUESTION_SCORING;
 
   // 1. Urgency Score (0-10 based on category)
-  const urgencyScore = URGENCY_SCORES[question.category as QuestionCategory] || 3;
+  const urgencyScore =
+    URGENCY_SCORES[question.category as QuestionCategory] || 3;
 
   // 2. Relevance Score - highest probability among related diagnoses
   let maxDiagnosisProbability = 0;
   if (question.impact?.diagnoses && sessionData?.nodes?.diagnoses) {
-    const diagnosisMap = new Map(sessionData.nodes.diagnoses.map(d => [d.id, d.probability]));
-    
+    const diagnosisMap = new Map(
+      sessionData.nodes.diagnoses.map((d) => [d.id, d.probability]),
+    );
+
     Object.entries(question.impact.diagnoses).forEach(([diagnosisId]) => {
       const probability = diagnosisMap.get(diagnosisId) || 0;
       maxDiagnosisProbability = Math.max(maxDiagnosisProbability, probability);
@@ -660,10 +730,12 @@ function calculateCompositeScore(
   const priorityScore = SCALING.PRIORITY_INVERSION - (question.priority || 5);
 
   // Calculate weighted composite score
-  const compositeScore = 
-    (WEIGHTS.URGENCY * urgencyScore) + 
-    (WEIGHTS.RELEVANCE * maxDiagnosisProbability * SCALING.PROBABILITY_MULTIPLIER) + 
-    (WEIGHTS.PRIORITY * priorityScore);
+  const compositeScore =
+    WEIGHTS.URGENCY * urgencyScore +
+    WEIGHTS.RELEVANCE *
+      maxDiagnosisProbability *
+      SCALING.PROBABILITY_MULTIPLIER +
+    WEIGHTS.PRIORITY * priorityScore;
 
   return compositeScore;
 }
@@ -673,26 +745,26 @@ function calculateCompositeScore(
  * Considers urgency, diagnosis probability, and question priority
  */
 export const sortedQuestions: Readable<ActionNode[]> = derived(
-  [questions, sessionData], 
+  [questions, sessionData],
   ([$questions, $sessionData]) => {
     if (!$questions.length || !$sessionData) return $questions;
 
     return [...$questions].sort((a, b) => {
       const scoreA = calculateCompositeScore(a, $sessionData);
       const scoreB = calculateCompositeScore(b, $sessionData);
-      
+
       // Sort by highest score first
       return scoreB - scoreA;
     });
-  }
+  },
 );
 
 /**
  * Derived store for pending questions sorted by composite score
  */
 export const sortedPendingQuestions: Readable<ActionNode[]> = derived(
-  sortedQuestions, 
-  ($sortedQuestions) => $sortedQuestions.filter(q => q.status === 'pending')
+  sortedQuestions,
+  ($sortedQuestions) => $sortedQuestions.filter((q) => q.status === "pending"),
 );
 
 // Export the main store for direct access if needed

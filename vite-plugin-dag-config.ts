@@ -1,9 +1,9 @@
 // Vite Plugin for Processing DAG Configuration at Build Time
 // Extracts client-safe visualization data from full server-side configuration
 
-import type { Plugin } from 'vite';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import type { Plugin } from "vite";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 
 interface ClientSafeDAGConfig {
   id: string;
@@ -33,34 +33,43 @@ interface ClientSafeDAGConfig {
       type: string;
     }>;
   };
-  expertTemplates: Record<string, {
-    type: string;
-    execution: string;
-    capabilities: string[];
-    variationTypes?: Array<{
-      id: string;
-      description: string;
-      riskTolerance: string;
-    }>;
-    consensusAlgorithms?: Record<string, {
-      description: string;
-      weights?: Record<string, number>;
-      safetyWeight?: number;
-      conservativeBonus?: number;
-      evidenceScoring?: boolean;
-      requireCitations?: boolean;
-    }>;
-  }>;
-  parallelExpertExamples: Record<string, {
-    triggerConditions: string[];
-    expertVariations: Array<{
-      id: string;
-      name: string;
-      specialization: string;
-      approach: string;
-      weight: number;
-    }>;
-  }>;
+  expertTemplates: Record<
+    string,
+    {
+      type: string;
+      execution: string;
+      capabilities: string[];
+      variationTypes?: Array<{
+        id: string;
+        description: string;
+        riskTolerance: string;
+      }>;
+      consensusAlgorithms?: Record<
+        string,
+        {
+          description: string;
+          weights?: Record<string, number>;
+          safetyWeight?: number;
+          conservativeBonus?: number;
+          evidenceScoring?: boolean;
+          requireCitations?: boolean;
+        }
+      >;
+    }
+  >;
+  parallelExpertExamples: Record<
+    string,
+    {
+      triggerConditions: string[];
+      expertVariations: Array<{
+        id: string;
+        name: string;
+        specialization: string;
+        approach: string;
+        weight: number;
+      }>;
+    }
+  >;
   dynamicExpertGeneration: {
     triggerLogic: {
       complexityFactors: string[];
@@ -95,7 +104,7 @@ function extractClientSafeConfig(fullConfig: any): ClientSafeDAGConfig {
     id: fullConfig.id,
     description: fullConfig.description,
     version: fullConfig.version,
-    
+
     defaultFlow: {
       description: fullConfig.defaultFlow.description,
       nodes: fullConfig.defaultFlow.nodes.map((node: any) => ({
@@ -109,75 +118,86 @@ function extractClientSafeConfig(fullConfig: any): ClientSafeDAGConfig {
         decisionCapability: node.decisionCapability,
         expertGenerationRules: node.expertGenerationRules,
         consensusStrategies: node.consensusStrategies,
-        alwaysActive: node.alwaysActive
+        alwaysActive: node.alwaysActive,
       })),
-      connections: fullConfig.defaultFlow.connections
+      connections: fullConfig.defaultFlow.connections,
     },
-    
+
     expertTemplates: Object.fromEntries(
-      Object.entries(fullConfig.expertTemplates).map(([key, template]: [string, any]) => [
-        key,
-        {
-          type: template.type,
-          execution: template.execution,
-          capabilities: template.capabilities,
-          variationTypes: template.variationTypes?.map((variation: any) => ({
-            id: variation.id,
-            description: variation.description,
-            riskTolerance: variation.riskTolerance
-            // Exclude promptModifier - that's sensitive AI instruction data
-          })),
-          consensusAlgorithms: template.consensusAlgorithms && Object.fromEntries(
-            Object.entries(template.consensusAlgorithms).map(([algKey, alg]: [string, any]) => [
-              algKey,
-              {
-                description: alg.description,
-                weights: alg.weights,
-                safetyWeight: alg.safetyWeight,
-                conservativeBonus: alg.conservativeBonus,
-                evidenceScoring: alg.evidenceScoring,
-                requireCitations: alg.requireCitations
-              }
-            ])
-          )
-          // Exclude modelConfig - contains API credentials and sensitive model parameters
-          // Exclude expertGenerationPrompt - contains AI instruction prompts
-        }
-      ])
+      Object.entries(fullConfig.expertTemplates).map(
+        ([key, template]: [string, any]) => [
+          key,
+          {
+            type: template.type,
+            execution: template.execution,
+            capabilities: template.capabilities,
+            variationTypes: template.variationTypes?.map((variation: any) => ({
+              id: variation.id,
+              description: variation.description,
+              riskTolerance: variation.riskTolerance,
+              // Exclude promptModifier - that's sensitive AI instruction data
+            })),
+            consensusAlgorithms:
+              template.consensusAlgorithms &&
+              Object.fromEntries(
+                Object.entries(template.consensusAlgorithms).map(
+                  ([algKey, alg]: [string, any]) => [
+                    algKey,
+                    {
+                      description: alg.description,
+                      weights: alg.weights,
+                      safetyWeight: alg.safetyWeight,
+                      conservativeBonus: alg.conservativeBonus,
+                      evidenceScoring: alg.evidenceScoring,
+                      requireCitations: alg.requireCitations,
+                    },
+                  ],
+                ),
+              ),
+            // Exclude modelConfig - contains API credentials and sensitive model parameters
+            // Exclude expertGenerationPrompt - contains AI instruction prompts
+          },
+        ],
+      ),
     ),
-    
+
     parallelExpertExamples: Object.fromEntries(
-      Object.entries(fullConfig.parallelExpertExamples).map(([key, example]: [string, any]) => [
-        key,
-        {
-          triggerConditions: example.triggerConditions,
-          expertVariations: example.expertVariations.map((variation: any) => ({
-            id: variation.id,
-            name: variation.name,
-            specialization: variation.specialization,
-            approach: variation.approach,
-            weight: variation.weight
-            // Exclude promptTemplate - contains AI instruction prompts
-          }))
-        }
-      ])
+      Object.entries(fullConfig.parallelExpertExamples).map(
+        ([key, example]: [string, any]) => [
+          key,
+          {
+            triggerConditions: example.triggerConditions,
+            expertVariations: example.expertVariations.map(
+              (variation: any) => ({
+                id: variation.id,
+                name: variation.name,
+                specialization: variation.specialization,
+                approach: variation.approach,
+                weight: variation.weight,
+                // Exclude promptTemplate - contains AI instruction prompts
+              }),
+            ),
+          },
+        ],
+      ),
     ),
-    
+
     dynamicExpertGeneration: {
       triggerLogic: fullConfig.dynamicExpertGeneration.triggerLogic,
-      expertCreationRules: fullConfig.dynamicExpertGeneration.expertCreationRules
+      expertCreationRules:
+        fullConfig.dynamicExpertGeneration.expertCreationRules,
     },
-    
-    consensusStrategies: fullConfig.consensusStrategies
+
+    consensusStrategies: fullConfig.consensusStrategies,
   };
 }
 
 export function dagConfigPlugin(): Plugin {
-  const VIRTUAL_MODULE_ID = 'virtual:dag-config';
-  const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID;
+  const VIRTUAL_MODULE_ID = "virtual:dag-config";
+  const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
 
   return {
-    name: 'dag-config',
+    name: "dag-config",
     resolveId(id) {
       if (id === VIRTUAL_MODULE_ID) {
         return RESOLVED_VIRTUAL_MODULE_ID;
@@ -187,19 +207,22 @@ export function dagConfigPlugin(): Plugin {
       if (id === RESOLVED_VIRTUAL_MODULE_ID) {
         try {
           // Read the full configuration from the server-side config folder
-          const configPath = resolve(process.cwd(), 'config/dag-medical-analysis.json');
-          const fullConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
-          
+          const configPath = resolve(
+            process.cwd(),
+            "config/dag-medical-analysis.json",
+          );
+          const fullConfig = JSON.parse(readFileSync(configPath, "utf-8"));
+
           // Extract only client-safe data
           const clientSafeConfig = extractClientSafeConfig(fullConfig);
-          
+
           // Return as ES module
           return `export default ${JSON.stringify(clientSafeConfig, null, 2)};`;
         } catch (error) {
-          console.error('Failed to load DAG configuration:', error);
-          return 'export default {};';
+          console.error("Failed to load DAG configuration:", error);
+          return "export default {};";
         }
       }
-    }
+    },
   };
 }

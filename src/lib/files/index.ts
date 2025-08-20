@@ -8,13 +8,74 @@ import type {
 } from "../import.server/assessInputs";
 import { type Document, DocumentState } from "../import/index";
 import type { DocumentNew } from "$lib/documents/types.d";
+import { DocumentType } from "$lib/documents/types.d";
 import { writable, type Writable } from "svelte/store";
 import { selectPagesFromPdf, createPdfFromImageBuffers } from "$lib/files/pdf";
 import { type Task, TaskState } from "../import/index";
+
+// Re-export Task and TaskState for use in other modules
+export { type Task, TaskState };
 import { toBase64 } from "$lib/arrays";
 import { checkPassword } from "./pdf";
+import { dicomHandler } from "./dicom-handler";
+import { resizeImage } from "$lib/images";
+import { THUMBNAIL_SIZE, PROCESS_SIZE } from "./CONFIG";
 
 export const files: Writable<File[]> = writable([]);
+
+/**
+ * Process DICOM-extracted images (already converted to PNG)
+ */
+async function processDicomImages(
+  images: string[],
+  dicomMetadata: any,
+): Promise<AssessmentClient> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Resize images for processing (if needed)
+      const resizedImages = await Promise.all(
+        images.map(async (image) => resizeImage(image, PROCESS_SIZE)),
+      );
+
+      // Enhanced request with DICOM metadata - call specialized medical imaging endpoint
+      const response = await fetch("/v1/import/medical-imaging", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          images: resizedImages,
+          language: "English", // Default language for DICOM processing
+          metadata: {
+            isDicomExtracted: true,
+            imageSource: "dicom",
+            dicomMetadata: dicomMetadata,
+          },
+        }),
+      });
+
+      const processed = await response.json();
+
+      // Attach original images and thumbnails
+      processed.pages = await Promise.all(
+        processed.pages.map(async (page: any, index: number) => {
+          const image = images[index];
+          return {
+            ...page,
+            image,
+            thumbnail: await resizeImage(image, THUMBNAIL_SIZE),
+            dicomMetadata: dicomMetadata, // Include DICOM context
+          };
+        }),
+      );
+
+      resolve(processed);
+    } catch (error) {
+      console.error("❌ Error processing DICOM images:", error);
+      reject(error);
+    }
+  });
+}
 
 interface AssessmentPagesClient extends AssessmentPage {
   image?: string;
@@ -28,17 +89,99 @@ interface AssessmentClient extends Assessment {
 export async function createTasks(files: File[]): Promise<Task[]> {
   const tasks: Task[] = [];
 
-  // split the files into images and the rest
+  console.log(
+    "🔍 FILE ANALYSIS - Analyzing",
+    files.length,
+    "file(s) for import:",
+  );
+  console.log(
+    "Files:",
+    files.map(
+      (f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)}MB, ${f.type})`,
+    ),
+  );
+
+  // split the files into images, DICOM, and the rest
   const groupped = {
     images: [] as File[],
+    dicom: [] as File[],
     rest: [] as File[],
   };
 
   for (let file of files) {
+    const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+
     if (file.type.startsWith("image")) {
+      console.log(
+        `📷 IMAGE DETECTED: ${file.name} (${fileSizeMB}MB) - Will process as image document`,
+      );
       groupped.images.push(file);
+    } else if (await dicomHandler.detectDicomFile(file)) {
+      console.log(
+        `🏥 DICOM DETECTED: ${file.name} (${fileSizeMB}MB) - Will extract medical imaging data`,
+      );
+      groupped.dicom.push(file);
     } else {
+      console.log(
+        `📄 DOCUMENT DETECTED: ${file.name} (${fileSizeMB}MB, ${file.type}) - Will process as document`,
+      );
       groupped.rest.push(file);
+    }
+  }
+
+  // Log processing strategy summary
+  console.log("📋 PROCESSING STRATEGY SUMMARY:");
+  console.log(
+    `  • Images: ${groupped.images.length} files → Image OCR + AI analysis`,
+  );
+  console.log(
+    `  • DICOM: ${groupped.dicom.length} files → Medical imaging extraction + specialized analysis`,
+  );
+  console.log(
+    `  • Documents: ${groupped.rest.length} files → Document processing (PDF, etc.)`,
+  );
+  console.log(
+    "⚠️  PAUSING before server submission - waiting for user confirmation...",
+  );
+
+  // process DICOM files first - CRITICAL: if ANY DICOM processing fails, TERMINATE import
+  for (const dicomFile of groupped.dicom) {
+    try {
+      console.log(`🏥 Processing DICOM file: ${dicomFile.name}`);
+      const dicomResult = await dicomHandler.processDicomFile(dicomFile);
+
+      // Validate that we actually extracted images
+      if (
+        !dicomResult.extractedImages ||
+        dicomResult.extractedImages.length === 0
+      ) {
+        throw new Error("No images extracted from DICOM file");
+      }
+
+      tasks.push({
+        title: dicomFile.name,
+        type: "application/dicom",
+        icon: "dicom",
+        data: dicomResult.extractedImages, // Base64 PNG images
+        dicomMetadata: dicomResult.metadata,
+        originalDicom: dicomResult.originalDicomBuffer,
+        state: TaskState.NEW,
+        files: [dicomFile],
+      });
+
+      console.log(
+        `✅ DICOM processing completed for: ${dicomFile.name} - Extracted ${dicomResult.extractedImages.length} images`,
+      );
+    } catch (error) {
+      console.error(`❌ DICOM processing failed for ${dicomFile.name}:`, error);
+      console.error(
+        `🛑 TERMINATING IMPORT - DICOM processing is required for medical imaging files`,
+      );
+
+      // CRITICAL: Throw error to terminate the entire import process
+      throw new Error(
+        `DICOM processing failed for ${dicomFile.name}: ${(error as Error).message}. Import terminated to prevent sending empty data to server.`,
+      );
     }
   }
 
@@ -102,6 +245,13 @@ export async function processTask(task: Task): Promise<DocumentNew[]> {
       return (await processImages(task.data as string[]).then((assessment) => {
         return processMultipageAssessmentToDocumnets(assessment, [], task);
       })) as DocumentNew[];
+    case "application/dicom":
+      return (await processDicomImages(
+        task.data as string[], // Base64 PNG images
+        task.dicomMetadata, // DICOM metadata
+      ).then((assessment) => {
+        return processMultipageAssessmentToDocumnets(assessment, [], task);
+      })) as DocumentNew[];
     default:
       return Promise.reject("Unsupported task type");
   }
@@ -128,12 +278,18 @@ async function processMultipageAssessmentToDocumnets(
         page: number;
         language: string;
         text: string;
+        image?: string;
+        thumbnail?: string;
+        type?: string;
+        dicomMetadata?: any;
       }[];
 
       let attachment: {
-        thumbnail: string;
-        type: string;
-        file: string;
+        path: string;
+        url: string;
+        type?: string;
+        thumbnail?: string;
+        file?: string;
       };
       switch (task.type) {
         case "application/pdf":
@@ -142,6 +298,8 @@ async function processMultipageAssessmentToDocumnets(
           //console.log('splitting pdf', pages.map((p) => p.page), pdf);
 
           attachment = {
+            path: "", // Will be set by addDocument
+            url: "", // Will be set by addDocument
             thumbnail: pages[0].thumbnail,
             type: "application/pdf",
             file: await toBase64(
@@ -165,10 +323,23 @@ async function processMultipageAssessmentToDocumnets(
           // merge images into a single pdf
           const imageBuffers = pages.map((p) => p.image);
           attachment = {
+            path: "", // Will be set by addDocument
+            url: "", // Will be set by addDocument
             thumbnail: pages[0].thumbnail,
             type: "application/pdf",
             file: await toBase64(await createPdfFromImageBuffers(imageBuffers)),
           };
+          break;
+        case "application/dicom":
+          // For DICOM files, store the original DICOM as the primary attachment
+          attachment = {
+            path: "", // Will be set by addDocument
+            url: "", // Will be set by addDocument
+            thumbnail: pages[0].thumbnail || "",
+            type: "application/dicom",
+            file: await toBase64(task.originalDicom!), // Original DICOM file
+          };
+          // Note: Extracted PNG images are available in pages[].image for AI processing
           break;
         default:
           throw new Error("Unsupported task type");
@@ -178,7 +349,7 @@ async function processMultipageAssessmentToDocumnets(
         ...doc,
         state: DocumentState.NEW,
         pages,
-        type: task.type,
+        type: DocumentType.document, // All imports are documents
         files: task.data,
         attachments: [attachment],
         task,

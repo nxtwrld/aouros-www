@@ -7,7 +7,7 @@ export * from "./stores";
 // Export transport layer
 export * from "./transport";
 
-// Export testing utilities  
+// Export testing utilities
 export * from "./testing";
 
 // Export session management (keep manager.ts here for server APIs)

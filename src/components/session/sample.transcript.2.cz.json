@@ -1,40 +1,188 @@
 {
   "conversation": [
-    { "speaker": "patient", "text": "Poslední dobou jsem pořád úplně vyčerpaná. Budím se unavená a v poledne mám pocit, že sotva funguji.", "stress": "medium", "urgency": "medium" },
-    { "speaker": "doctor", "text": "Kdy to začalo?", "stress": "low", "urgency": "medium" },
-    { "speaker": "patient", "text": "Před pár měsíci, možná koncem května. Postupně se to zhoršuje.", "stress": "medium", "urgency": "medium" },
-    { "speaker": "doctor", "text": "Spíte špatně, nebo je to spíš tak, že i po spánku se cítíte vyčerpaná?", "stress": "low", "urgency": "medium" },
-    { "speaker": "patient", "text": "Spím, ale není to odpočinkové. Můžu spát 8 hodin a stejně mám pocit, jako bych nespala.", "stress": "medium", "urgency": "medium" },
-    { "speaker": "doctor", "text": "Máte potíže se soustředěním nebo s pamětí?", "stress": "low", "urgency": "medium" },
-    { "speaker": "patient", "text": "Ano, je to hodně frustrující. Na schůzkách úplně ztrácím nit. Jako by můj mozek byl v mlze.", "stress": "high", "urgency": "medium" },
-    { "speaker": "doctor", "text": "Cítíte se sklesle, nebo vás méně zajímají věci, které vás obvykle baví?", "stress": "low", "urgency": "medium" },
-    { "speaker": "patient", "text": "Neřekla bych, že jsem depresivní, ale rozhodně se cítím přetížená a tak nějak emočně plochá.", "stress": "medium", "urgency": "medium" },
-    { "speaker": "doctor", "text": "A co fyzické příznaky? Změny hmotnosti, vlasů nebo kůže?", "stress": "low", "urgency": "medium" },
-    { "speaker": "patient", "text": "Ano. Všimla jsem si, že mi více řídnou vlasy. A v poslední době mám hodně suchou kůži.", "stress": "medium", "urgency": "medium" },
-    { "speaker": "doctor", "text": "Jak vypadá vaše menstruace?", "stress": "low", "urgency": "medium" },
-    { "speaker": "patient", "text": "Mnohem silnější a trvá déle. Dřív trvala 4 dny, teď spíš 6–7 a musím měnit vložky každé dvě hodiny.", "stress": "medium", "urgency": "high" },
-    { "speaker": "doctor", "text": "Měla jste někdy anémii nebo potíže se štítnou žlázou?", "stress": "low", "urgency": "medium" },
-    { "speaker": "patient", "text": "Před pár lety jsem byla na hraně anémie, ale o problémech se štítnou žlázou nevím.", "stress": "low", "urgency": "medium" },
-    { "speaker": "doctor", "text": "Prodělala jste za poslední rok COVID?", "stress": "low", "urgency": "medium" },
-    { "speaker": "patient", "text": "Ano, v březnu jsem měla lehký průběh. Jen pár dní bolest v krku a kašel, nic vážného.", "stress": "low", "urgency": "low" },
-    { "speaker": "doctor", "text": "Začaly vaše obtíže po tom onemocnění?", "stress": "low", "urgency": "high" },
-    { "speaker": "patient", "text": "Když o tom mluvíte… ano, myslím, že únava začala pár týdnů po zotavení.", "stress": "high", "urgency": "high" },
-    { "speaker": "doctor", "text": "Máme dnešní laboratorní výsledky. Ferritin je 8 ng/mL (nízký), hemoglobin 10,9 g/dL (nízký) a MCV 76 fL (mikrocytární). Tento obraz odpovídá anémii z nedostatku železa.", "stress": "low", "urgency": "high" },
-    { "speaker": "patient", "text": "To dává smysl vzhledem k mé únavě.", "stress": "medium", "urgency": "medium" }
+    {
+      "speaker": "patient",
+      "text": "Poslední dobou jsem pořád úplně vyčerpaná. Budím se unavená a v poledne mám pocit, že sotva funguji.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Kdy to začalo?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Před pár měsíci, možná koncem května. Postupně se to zhoršuje.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Spíte špatně, nebo je to spíš tak, že i po spánku se cítíte vyčerpaná?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Spím, ale není to odpočinkové. Můžu spát 8 hodin a stejně mám pocit, jako bych nespala.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Máte potíže se soustředěním nebo s pamětí?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Ano, je to hodně frustrující. Na schůzkách úplně ztrácím nit. Jako by můj mozek byl v mlze.",
+      "stress": "high",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Cítíte se sklesle, nebo vás méně zajímají věci, které vás obvykle baví?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Neřekla bych, že jsem depresivní, ale rozhodně se cítím přetížená a tak nějak emočně plochá.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "A co fyzické příznaky? Změny hmotnosti, vlasů nebo kůže?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Ano. Všimla jsem si, že mi více řídnou vlasy. A v poslední době mám hodně suchou kůži.",
+      "stress": "medium",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Jak vypadá vaše menstruace?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Mnohem silnější a trvá déle. Dřív trvala 4 dny, teď spíš 6–7 a musím měnit vložky každé dvě hodiny.",
+      "stress": "medium",
+      "urgency": "high"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Měla jste někdy anémii nebo potíže se štítnou žlázou?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Před pár lety jsem byla na hraně anémie, ale o problémech se štítnou žlázou nevím.",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Prodělala jste za poslední rok COVID?",
+      "stress": "low",
+      "urgency": "medium"
+    },
+    {
+      "speaker": "patient",
+      "text": "Ano, v březnu jsem měla lehký průběh. Jen pár dní bolest v krku a kašel, nic vážného.",
+      "stress": "low",
+      "urgency": "low"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Začaly vaše obtíže po tom onemocnění?",
+      "stress": "low",
+      "urgency": "high"
+    },
+    {
+      "speaker": "patient",
+      "text": "Když o tom mluvíte… ano, myslím, že únava začala pár týdnů po zotavení.",
+      "stress": "high",
+      "urgency": "high"
+    },
+    {
+      "speaker": "doctor",
+      "text": "Máme dnešní laboratorní výsledky. Ferritin je 8 ng/mL (nízký), hemoglobin 10,9 g/dL (nízký) a MCV 76 fL (mikrocytární). Tento obraz odpovídá anémii z nedostatku železa.",
+      "stress": "low",
+      "urgency": "high"
+    },
+    {
+      "speaker": "patient",
+      "text": "To dává smysl vzhledem k mé únavě.",
+      "stress": "medium",
+      "urgency": "medium"
+    }
   ],
   "symptoms": [
-    { "name": "Chronická únava", "duration": "months", "severity": "severe", "bodyParts": ["body"] },
-    { "name": "Neosvěžující spánek", "duration": "months", "severity": "severe", "bodyParts": ["body"] },
-    { "name": "Mozková mlha", "duration": "months", "severity": "moderate", "bodyParts": ["head"] },
-    { "name": "Potíže se soustředěním", "duration": "months", "severity": "moderate", "bodyParts": ["head"] },
-    { "name": "Řídnutí vlasů", "duration": "months", "severity": "mild", "bodyParts": ["head"] },
-    { "name": "Suchá kůže", "duration": "months", "severity": "mild", "bodyParts": ["skin"] },
-    { "name": "Silné menstruační krvácení", "duration": "months", "severity": "moderate", "bodyParts": ["reproductive"] },
-    { "name": "Prodloužená menstruace", "duration": "months", "severity": "moderate", "bodyParts": ["reproductive"] },
-    { "name": "Emoční otupělost", "duration": "months", "severity": "mild", "bodyParts": ["body"] }
+    {
+      "name": "Chronická únava",
+      "duration": "months",
+      "severity": "severe",
+      "bodyParts": ["body"]
+    },
+    {
+      "name": "Neosvěžující spánek",
+      "duration": "months",
+      "severity": "severe",
+      "bodyParts": ["body"]
+    },
+    {
+      "name": "Mozková mlha",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Potíže se soustředěním",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Řídnutí vlasů",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Suchá kůže",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["skin"]
+    },
+    {
+      "name": "Silné menstruační krvácení",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["reproductive"]
+    },
+    {
+      "name": "Prodloužená menstruace",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["reproductive"]
+    },
+    {
+      "name": "Emoční otupělost",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["body"]
+    }
   ],
   "complaint": "Chronická únava a kognitivní potíže po prodělaném COVID‑19, s doprovodnými příznaky včetně řídnutí vlasů, suché kůže a silného menstruačního krvácení",
   "tokenUsage": { "total": 3160 }
 }
-
-

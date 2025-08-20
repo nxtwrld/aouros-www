@@ -396,7 +396,7 @@ interface SankeyData {
 interface SankeyNode {
   id: string; // Unique identifier
   name: string; // Short title (1-3 words)
-  type: 'symptom' | 'diagnosis' | 'treatment' | 'question' | 'alert';
+  type: "symptom" | "diagnosis" | "treatment" | "question" | "alert";
   column: number; // 0=symptoms, 1=diagnoses, 2=treatments, floating=actions
   priority: number;
   confidence: number;
@@ -404,7 +404,7 @@ interface SankeyNode {
   source?: string; // transcript | medical_history | family_history | social_history | medication_history | suspected
   data: any; // Original node data (SymptomNode | DiagnosisNode | TreatmentNode | ActionNode)
   value: number; // Node height derived from priority/probability
-};
+}
 
 interface SankeyLink {
   source: string | number | SankeyNode;
@@ -413,8 +413,8 @@ interface SankeyLink {
   type: string; // relationship type
   strength: number;
   reasoning?: string;
-  direction: 'incoming' | 'outgoing' | 'bidirectional';
-};
+  direction: "incoming" | "outgoing" | "bidirectional";
+}
 ```
 
 ### Enhanced Clinical Inquiry Structure (Per Workflow)
@@ -755,6 +755,7 @@ This section outlines the user stories that drive the design and implementation 
 **So that** I can reliably track how the analysis evolves each iteration
 
 **Acceptance Criteria:**
+
 - Node IDs persist across iterations; rephrases update labels only
 - Per-node action is recorded: prove, disprove, keep, rephrase, or remove
 - New nodes appear only on explicit add
@@ -864,6 +865,7 @@ This section outlines the user stories that drive the design and implementation 
 **So that** I can quickly understand what changed and why
 
 **Acceptance Criteria:**
+
 - Nodes/links changed in latest iteration are highlighted
 - Tooltip shows per-node action (prove/disprove/keep/rephrase/remove) and deltas
 - Timeline scrubber jumps to previous versions and shows diffs
@@ -927,6 +929,7 @@ This section outlines the user stories that drive the design and implementation 
 **So that** I don’t need to manually mark answers
 
 **Acceptance Criteria:**
+
 - ActionNode.status updates based on transcript-deduced answers in subsequent iterations
 - Optional `answer` text and evidence snippet displayed on hover
 - Probability and link strengths update according to configured impact/relationships
@@ -990,6 +993,7 @@ This section outlines the user stories that drive the design and implementation 
 **So that** the care plan is unambiguous
 
 **Acceptance Criteria:**
+
 - Accepting a diagnosis automatically unsets the prior accepted diagnosis (same for treatment)
 - Suppressed items reduce visible priority using suppression coefficient
 - SSE broadcasts accept/suppress changes so UI stays consistent
@@ -1053,6 +1057,7 @@ This section outlines the user stories that drive the design and implementation 
 **So that** analysis is fast and resource-efficient
 
 **Acceptance Criteria:**
+
 - When Symptoms/Answers signature is unchanged, MoE analysis is skipped
 - UI displays a “no changes detected” notice near the stream indicator
 - Next analysis runs immediately when a new transcript chunk changes the signature
@@ -1100,6 +1105,7 @@ This section outlines the user stories that drive the design and implementation 
 **So that** audits and case reviews are traceable
 
 **Acceptance Criteria:**
+
 - Export includes per-node action (prove/disprove/keep/rephrase/remove)
 - Probability/priority/strength deltas are included
 - Timestamps and expert provenance recorded for each change

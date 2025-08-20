@@ -15,6 +15,7 @@ export interface AssessmentDocument {
   date: string;
   language: string;
   isMedical: boolean;
+  isMedicalImaging?: boolean; // Flag for post-extraction routing to medical imaging analysis
   pages: number[];
 }
 

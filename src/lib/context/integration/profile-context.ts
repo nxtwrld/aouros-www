@@ -29,10 +29,7 @@ export class ProfileContextManager {
     } = {},
   ): Promise<void> {
     // Check if already initialized (and not forced to reinitialize)
-    if (
-      this.initializedProfiles.has(profileId) &&
-      !options.forceReinitialize
-    ) {
+    if (this.initializedProfiles.has(profileId) && !options.forceReinitialize) {
       return;
     }
 

@@ -34,7 +34,7 @@ export interface TrendData {
     value: number;
     unit?: string;
   }>;
-  trend: 'increasing' | 'decreasing' | 'stable';
+  trend: "increasing" | "decreasing" | "stable";
   significance: number;
 }
 
@@ -46,7 +46,7 @@ export interface MedicationData {
   endDate?: string;
   prescribedBy?: string;
   indication?: string;
-  status: 'active' | 'discontinued' | 'completed';
+  status: "active" | "discontinued" | "completed";
 }
 
 export interface TestResult {

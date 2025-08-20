@@ -68,29 +68,29 @@ export interface TranscriptState {
   items: TranscriptItem[];
   segments: TranscriptSegment[];
   speakers: Map<string, SpeakerInfo>;
-  
+
   // Processing state
   isProcessing: boolean;
   processingQueue: TranscriptItem[];
   currentSegment: TranscriptSegment | null;
-  
+
   // Real-time streaming
   isStreaming: boolean;
   streamBuffer: string;
   lastSegmentTime: number;
-  
+
   // Analytics and insights
   analytics: TranscriptAnalytics | null;
-  
+
   // Search and filtering
   searchQuery: string;
   filteredSegments: TranscriptSegment[];
   selectedSpeaker: string | null;
-  
+
   // Export and persistence
   sessionId: string | null;
   lastSaved: number | null;
-  
+
   // Error handling
   error: string | null;
   warnings: string[];
@@ -117,7 +117,8 @@ const initialState: TranscriptState = {
 };
 
 // Main transcript store
-export const transcriptStore: Writable<TranscriptState> = writable(initialState);
+export const transcriptStore: Writable<TranscriptState> =
+  writable(initialState);
 
 // Derived stores for easy access
 export const transcriptItems: Readable<TranscriptItem[]> = derived(
@@ -127,9 +128,7 @@ export const transcriptItems: Readable<TranscriptItem[]> = derived(
 
 export const transcriptSegments: Readable<TranscriptSegment[]> = derived(
   transcriptStore,
-  ($store) => $store.searchQuery 
-    ? $store.filteredSegments 
-    : $store.segments,
+  ($store) => ($store.searchQuery ? $store.filteredSegments : $store.segments),
 );
 
 export const speakers: Readable<SpeakerInfo[]> = derived(
@@ -142,14 +141,12 @@ export const isProcessingTranscripts: Readable<boolean> = derived(
   ($store) => $store.isProcessing || $store.isStreaming,
 );
 
-export const transcriptAnalytics: Readable<TranscriptAnalytics | null> = derived(
-  transcriptStore,
-  ($store) => $store.analytics,
-);
+export const transcriptAnalytics: Readable<TranscriptAnalytics | null> =
+  derived(transcriptStore, ($store) => $store.analytics);
 
 export const currentTranscriptText: Readable<string> = derived(
   transcriptStore,
-  ($store) => $store.segments.map(s => s.text).join(" "),
+  ($store) => $store.segments.map((s) => s.text).join(" "),
 );
 
 // Actions for transcript management
@@ -160,7 +157,7 @@ export const transcriptActions = {
       ...state,
       items: [...state.items, item],
       processingQueue: [...state.processingQueue, item],
-      streamBuffer: item.is_final 
+      streamBuffer: item.is_final
         ? state.streamBuffer + " " + item.text
         : item.text,
       lastSegmentTime: item.timestamp,
@@ -182,8 +179,11 @@ export const transcriptActions = {
   // Process queued transcript items into segments
   processQueuedItems(): void {
     const currentState = get(transcriptStore);
-    
-    if (currentState.isProcessing || currentState.processingQueue.length === 0) {
+
+    if (
+      currentState.isProcessing ||
+      currentState.processingQueue.length === 0
+    ) {
       return;
     }
 
@@ -197,8 +197,10 @@ export const transcriptActions = {
     });
 
     // Group items into segments based on speaker and timing
-    const segments = transcriptActions.groupItemsIntoSegments(currentState.processingQueue);
-    
+    const segments = transcriptActions.groupItemsIntoSegments(
+      currentState.processingQueue,
+    );
+
     transcriptStore.update((state) => ({
       ...state,
       segments: [...state.segments, ...segments],
@@ -209,7 +211,7 @@ export const transcriptActions = {
 
     // Update speakers
     transcriptActions.updateSpeakerInfo(segments);
-    
+
     // Recalculate analytics
     transcriptActions.calculateAnalytics();
 
@@ -226,29 +228,32 @@ export const transcriptActions = {
     const segments: TranscriptSegment[] = [];
     let currentSegmentItems: TranscriptItem[] = [];
     let currentSpeaker = items[0].speaker;
-    
+
     const SEGMENT_GAP_MS = 5000; // 5 seconds gap creates new segment
     const MAX_SEGMENT_LENGTH = 30000; // 30 seconds max per segment
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const prevItem = items[i - 1];
-      
-      const shouldCreateNewSegment = (
+
+      const shouldCreateNewSegment =
         // Different speaker
         item.speaker !== currentSpeaker ||
         // Time gap too large
-        (prevItem && (item.timestamp - prevItem.timestamp) > SEGMENT_GAP_MS) ||
+        (prevItem && item.timestamp - prevItem.timestamp > SEGMENT_GAP_MS) ||
         // Segment too long
-        (currentSegmentItems.length > 0 && 
-         (item.timestamp - currentSegmentItems[0].timestamp) > MAX_SEGMENT_LENGTH)
-      );
+        (currentSegmentItems.length > 0 &&
+          item.timestamp - currentSegmentItems[0].timestamp >
+            MAX_SEGMENT_LENGTH);
 
       if (shouldCreateNewSegment && currentSegmentItems.length > 0) {
         // Create segment from current items
-        const segment = transcriptActions.createSegmentFromItems(currentSegmentItems, currentSpeaker);
+        const segment = transcriptActions.createSegmentFromItems(
+          currentSegmentItems,
+          currentSpeaker,
+        );
         segments.push(segment);
-        
+
         // Start new segment
         currentSegmentItems = [item];
         currentSpeaker = item.speaker;
@@ -259,7 +264,10 @@ export const transcriptActions = {
 
     // Create final segment
     if (currentSegmentItems.length > 0) {
-      const segment = transcriptActions.createSegmentFromItems(currentSegmentItems, currentSpeaker);
+      const segment = transcriptActions.createSegmentFromItems(
+        currentSegmentItems,
+        currentSpeaker,
+      );
       segments.push(segment);
     }
 
@@ -267,21 +275,29 @@ export const transcriptActions = {
   },
 
   // Create a segment from grouped items
-  createSegmentFromItems(items: TranscriptItem[], speaker?: string): TranscriptSegment {
+  createSegmentFromItems(
+    items: TranscriptItem[],
+    speaker?: string,
+  ): TranscriptSegment {
     const sortedItems = items.sort((a, b) => a.timestamp - b.timestamp);
-    const combinedText = sortedItems.map(item => item.text).join(" ").trim();
+    const combinedText = sortedItems
+      .map((item) => item.text)
+      .join(" ")
+      .trim();
     const startTime = sortedItems[0].timestamp;
     const endTime = sortedItems[sortedItems.length - 1].timestamp;
-    const averageConfidence = sortedItems.reduce((sum, item) => sum + item.confidence, 0) / sortedItems.length;
+    const averageConfidence =
+      sortedItems.reduce((sum, item) => sum + item.confidence, 0) /
+      sortedItems.length;
 
     // Create tokens from items (simplified)
-    const tokens: TranscriptToken[] = sortedItems.flatMap(item => 
+    const tokens: TranscriptToken[] = sortedItems.flatMap((item) =>
       item.text.split(" ").map((word, index) => ({
         word,
-        startTime: item.timestamp + (index * 100), // Rough estimation
-        endTime: item.timestamp + ((index + 1) * 100),
+        startTime: item.timestamp + index * 100, // Rough estimation
+        endTime: item.timestamp + (index + 1) * 100,
         confidence: item.confidence,
-      }))
+      })),
     );
 
     const segment: TranscriptSegment = {
@@ -309,7 +325,7 @@ export const transcriptActions = {
 
       for (const segment of segments) {
         const speakerId = segment.speaker || "Unknown";
-        
+
         if (!updatedSpeakers.has(speakerId)) {
           updatedSpeakers.set(speakerId, {
             id: speakerId,
@@ -322,13 +338,17 @@ export const transcriptActions = {
 
         const speaker = updatedSpeakers.get(speakerId)!;
         speaker.segments.push(segment.id);
-        speaker.totalSpeakingTime += (segment.endTime - segment.startTime);
-        
+        speaker.totalSpeakingTime += segment.endTime - segment.startTime;
+
         // Recalculate average confidence
-        const allSegments = state.segments.filter(s => s.speaker === speakerId);
-        speaker.averageConfidence = allSegments.length > 0
-          ? allSegments.reduce((sum, s) => sum + s.confidence, 0) / allSegments.length
-          : segment.confidence;
+        const allSegments = state.segments.filter(
+          (s) => s.speaker === speakerId,
+        );
+        speaker.averageConfidence =
+          allSegments.length > 0
+            ? allSegments.reduce((sum, s) => sum + s.confidence, 0) /
+              allSegments.length
+            : segment.confidence;
 
         updatedSpeakers.set(speakerId, speaker);
       }
@@ -350,11 +370,16 @@ export const transcriptActions = {
       return;
     }
 
-    const totalDuration = Math.max(...segments.map(s => s.endTime)) - Math.min(...segments.map(s => s.startTime));
-    const allText = segments.map(s => s.text).join(" ");
-    const wordCount = allText.split(/\s+/).filter(word => word.length > 0).length;
+    const totalDuration =
+      Math.max(...segments.map((s) => s.endTime)) -
+      Math.min(...segments.map((s) => s.startTime));
+    const allText = segments.map((s) => s.text).join(" ");
+    const wordCount = allText
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
     const speakerCount = currentState.speakers.size;
-    const averageConfidence = segments.reduce((sum, s) => sum + s.confidence, 0) / segments.length;
+    const averageConfidence =
+      segments.reduce((sum, s) => sum + s.confidence, 0) / segments.length;
 
     // Extract key terms (simplified)
     const keyTerms = transcriptActions.extractKeyTerms(allText);
@@ -389,10 +414,29 @@ export const transcriptActions = {
   extractKeyTerms(text: string): TranscriptAnalytics["keyTerms"] {
     // Simple keyword extraction - in production, use NLP libraries
     const medicalTerms = [
-      "headache", "migraine", "pain", "fever", "nausea", "dizziness",
-      "blood pressure", "heart rate", "medication", "prescription", "treatment",
-      "symptoms", "diagnosis", "examination", "test", "scan", "x-ray",
-      "doctor", "nurse", "patient", "hospital", "clinic", "appointment"
+      "headache",
+      "migraine",
+      "pain",
+      "fever",
+      "nausea",
+      "dizziness",
+      "blood pressure",
+      "heart rate",
+      "medication",
+      "prescription",
+      "treatment",
+      "symptoms",
+      "diagnosis",
+      "examination",
+      "test",
+      "scan",
+      "x-ray",
+      "doctor",
+      "nurse",
+      "patient",
+      "hospital",
+      "clinic",
+      "appointment",
     ];
 
     const words = text.toLowerCase().split(/\s+/);
@@ -407,7 +451,9 @@ export const transcriptActions = {
     }
 
     // Convert to key terms with importance scoring
-    const keyTerms: TranscriptAnalytics["keyTerms"] = Array.from(termCounts.entries())
+    const keyTerms: TranscriptAnalytics["keyTerms"] = Array.from(
+      termCounts.entries(),
+    )
       .map(([term, frequency]) => ({
         term,
         frequency,
@@ -421,10 +467,31 @@ export const transcriptActions = {
   },
 
   // Categorize key terms
-  categorizeKeyTerm(term: string): "medical" | "symptom" | "treatment" | "general" {
-    const symptomTerms = ["headache", "migraine", "pain", "fever", "nausea", "dizziness"];
-    const treatmentTerms = ["medication", "prescription", "treatment", "scan", "x-ray", "test"];
-    const medicalTerms = ["blood pressure", "heart rate", "diagnosis", "examination"];
+  categorizeKeyTerm(
+    term: string,
+  ): "medical" | "symptom" | "treatment" | "general" {
+    const symptomTerms = [
+      "headache",
+      "migraine",
+      "pain",
+      "fever",
+      "nausea",
+      "dizziness",
+    ];
+    const treatmentTerms = [
+      "medication",
+      "prescription",
+      "treatment",
+      "scan",
+      "x-ray",
+      "test",
+    ];
+    const medicalTerms = [
+      "blood pressure",
+      "heart rate",
+      "diagnosis",
+      "examination",
+    ];
 
     if (symptomTerms.includes(term)) return "symptom";
     if (treatmentTerms.includes(term)) return "treatment";
@@ -436,7 +503,7 @@ export const transcriptActions = {
   searchTranscripts(query: string): void {
     transcriptStore.update((state) => {
       const searchQuery = query.toLowerCase().trim();
-      
+
       if (!searchQuery) {
         return {
           ...state,
@@ -445,9 +512,10 @@ export const transcriptActions = {
         };
       }
 
-      const filteredSegments = state.segments.filter(segment =>
-        segment.text.toLowerCase().includes(searchQuery) ||
-        segment.speaker?.toLowerCase().includes(searchQuery)
+      const filteredSegments = state.segments.filter(
+        (segment) =>
+          segment.text.toLowerCase().includes(searchQuery) ||
+          segment.speaker?.toLowerCase().includes(searchQuery),
       );
 
       return {
@@ -467,8 +535,8 @@ export const transcriptActions = {
     transcriptStore.update((state) => ({
       ...state,
       selectedSpeaker: speakerId,
-      filteredSegments: speakerId 
-        ? state.segments.filter(s => s.speaker === speakerId)
+      filteredSegments: speakerId
+        ? state.segments.filter((s) => s.speaker === speakerId)
         : [],
     }));
   },
@@ -489,24 +557,34 @@ export const transcriptActions = {
 
     switch (format) {
       case "txt":
-        return segments.map(s => `[${s.speaker || 'Unknown'}]: ${s.text}`).join("\n\n");
-      
+        return segments
+          .map((s) => `[${s.speaker || "Unknown"}]: ${s.text}`)
+          .join("\n\n");
+
       case "json":
-        return JSON.stringify({
-          sessionId: currentState.sessionId,
-          segments: segments,
-          speakers: Array.from(currentState.speakers.values()),
-          analytics: currentState.analytics,
-          exportTime: new Date().toISOString(),
-        }, null, 2);
-      
+        return JSON.stringify(
+          {
+            sessionId: currentState.sessionId,
+            segments: segments,
+            speakers: Array.from(currentState.speakers.values()),
+            analytics: currentState.analytics,
+            exportTime: new Date().toISOString(),
+          },
+          null,
+          2,
+        );
+
       case "srt":
-        return segments.map((segment, index) => {
-          const startTime = transcriptActions.formatSRTTime(segment.startTime);
-          const endTime = transcriptActions.formatSRTTime(segment.endTime);
-          return `${index + 1}\n${startTime} --> ${endTime}\n${segment.text}\n`;
-        }).join("\n");
-      
+        return segments
+          .map((segment, index) => {
+            const startTime = transcriptActions.formatSRTTime(
+              segment.startTime,
+            );
+            const endTime = transcriptActions.formatSRTTime(segment.endTime);
+            return `${index + 1}\n${startTime} --> ${endTime}\n${segment.text}\n`;
+          })
+          .join("\n");
+
       default:
         return "";
     }

@@ -14,9 +14,27 @@
         "quote": "I wake up tired, and by midday I feel like I can barely function.",
         "characteristics": ["worsening", "persistent"],
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "supports", "direction": "outgoing", "strength": 0.85, "reasoning": "Persistent fatigue with heavy menstruation suggests iron loss."},
-          {"nodeId": "diag_hypothyroidism", "relationship": "supports", "direction": "outgoing", "strength": 0.8, "reasoning": "Non-restorative sleep and fatigue are common in hypothyroidism."},
-          {"nodeId": "diag_depression", "relationship": "supports", "direction": "outgoing", "strength": 0.7, "reasoning": "Persistent fatigue can be a manifestation of depression."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Persistent fatigue with heavy menstruation suggests iron loss."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Non-restorative sleep and fatigue are common in hypothyroidism."
+          },
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Persistent fatigue can be a manifestation of depression."
+          }
         ]
       },
       {
@@ -28,7 +46,13 @@
         "documentId": "lab_results_2025_08_06",
         "quote": "Ferritin: 8 ng/mL (Ref 15–150)",
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "supports", "direction": "outgoing", "strength": 0.98, "reasoning": "Low ferritin is highly specific for iron deficiency."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.98,
+            "reasoning": "Low ferritin is highly specific for iron deficiency."
+          }
         ]
       },
       {
@@ -40,7 +64,13 @@
         "documentId": "lab_results_2025_08_06",
         "quote": "Hemoglobin: 10.9 g/dL (Ref 12.0–16.0)",
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "supports", "direction": "outgoing", "strength": 0.9, "reasoning": "Anemia consistent with iron deficiency picture."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Anemia consistent with iron deficiency picture."
+          }
         ]
       },
       {
@@ -52,7 +82,13 @@
         "documentId": "lab_results_2025_08_06",
         "quote": "MCV: 76 fL (Ref 80–100)",
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "supports", "direction": "outgoing", "strength": 0.92, "reasoning": "Microcytosis supports iron deficiency anemia vs. anemia of chronic disease."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.92,
+            "reasoning": "Microcytosis supports iron deficiency anemia vs. anemia of chronic disease."
+          }
         ]
       }
     ],
@@ -67,8 +103,20 @@
         "confidence": 0.98,
         "requiresInvestigation": false,
         "relationships": [
-          {"nodeId": "treat_iron_supplementation", "relationship": "requires", "direction": "outgoing", "strength": 0.95, "reasoning": "First-line treatment for confirmed iron deficiency."},
-          {"nodeId": "treat_investigate_bleeding", "relationship": "requires", "direction": "outgoing", "strength": 0.85, "reasoning": "Identify source of iron loss (e.g., gynecologic)."}
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.95,
+            "reasoning": "First-line treatment for confirmed iron deficiency."
+          },
+          {
+            "nodeId": "treat_investigate_bleeding",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Identify source of iron loss (e.g., gynecologic)."
+          }
         ]
       },
       {
@@ -106,7 +154,13 @@
         "reasoning": "Confirmed iron deficiency anemia.",
         "requiresFollowUp": true,
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "treats", "direction": "incoming", "strength": 0.95, "reasoning": "Direct correction of iron deficiency."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.95,
+            "reasoning": "Direct correction of iron deficiency."
+          }
         ]
       },
       {
@@ -129,7 +183,13 @@
         "description": "Imaging to evaluate uterine structure and identify fibroids",
         "reasoning": "Evaluate structural causes of heavy bleeding.",
         "relationships": [
-          {"nodeId": "diag_fibroids", "relationship": "investigates", "direction": "outgoing", "strength": 0.9, "reasoning": "First-line imaging for fibroids."}
+          {
+            "nodeId": "diag_fibroids",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "First-line imaging for fibroids."
+          }
         ]
       }
     ],
@@ -143,10 +203,19 @@
         "status": "answered",
         "answer": "Ferritin 8 ng/mL (low), Hb 10.9 g/dL (low), MCV 76 fL (microcytic)",
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "investigates", "direction": "outgoing", "strength": 1.0, "reasoning": "Labs confirm iron deficiency anemia."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Labs confirm iron deficiency anemia."
+          }
         ],
         "impact": {
-          "diagnoses": {"diag_iron_deficiency_anemia": 0.3, "diag_hypothyroidism": -0.05}
+          "diagnoses": {
+            "diag_iron_deficiency_anemia": 0.3,
+            "diag_hypothyroidism": -0.05
+          }
         }
       },
       {
@@ -170,5 +239,3 @@
     }
   ]
 }
-
-

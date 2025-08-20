@@ -4,10 +4,10 @@ import { browser } from "$app/environment";
 import { page } from "$app/stores";
 import { logger } from "$lib/logging/logger";
 import ui from "$lib/ui";
-import type { 
+import type {
   SessionAnalysis,
   MoEAnalysisOutput,
-  ExpertContext
+  ExpertContext,
 } from "../index";
 // Types extracted from legacy analysis-store (now removed)
 interface AnalysisState {
@@ -39,16 +39,16 @@ export enum AudioState {
   Speaking = "speaking",
   Stopping = "stopping",
   Stopped = "stopped",
-  Error = "error"
+  Error = "error",
 }
 
 // Session state enum - controls AudioButton behavior and visibility
 export enum SessionState {
-  Off = "off",        // Button is hidden (no session context)
-  Ready = "ready",    // Button is centered (new session, no data)
+  Off = "off", // Button is hidden (no session context)
+  Ready = "ready", // Button is centered (new session, no data)
   Running = "running", // Button is in header, actively recording
-  Paused = "paused",  // Button is in header, session has data but not recording
-  Final = "final"     // Session complete, button hidden, show "New Session" button
+  Paused = "paused", // Button is in header, session has data but not recording
+  Final = "final", // Session complete, button hidden, show "New Session" button
 }
 
 // UI positioning types
@@ -173,7 +173,8 @@ const initialState: UnifiedSessionState = {
 };
 
 // Main store
-export const unifiedSessionStore: Writable<UnifiedSessionState> = writable(initialState);
+export const unifiedSessionStore: Writable<UnifiedSessionState> =
+  writable(initialState);
 
 // Derived stores for easy access to specific parts
 export const audioState: Readable<UnifiedSessionState["audio"]> = derived(
@@ -181,10 +182,8 @@ export const audioState: Readable<UnifiedSessionState["audio"]> = derived(
   ($store) => $store.audio,
 );
 
-export const transcriptState: Readable<UnifiedSessionState["transcripts"]> = derived(
-  unifiedSessionStore,
-  ($store) => $store.transcripts,
-);
+export const transcriptState: Readable<UnifiedSessionState["transcripts"]> =
+  derived(unifiedSessionStore, ($store) => $store.transcripts);
 
 export const analysisState: Readable<UnifiedSessionState["analysis"]> = derived(
   unifiedSessionStore,
@@ -196,10 +195,8 @@ export const uiState: Readable<UnifiedSessionState["ui"]> = derived(
   ($store) => $store.ui,
 );
 
-export const transportState: Readable<UnifiedSessionState["transport"]> = derived(
-  unifiedSessionStore,
-  ($store) => $store.transport,
-);
+export const transportState: Readable<UnifiedSessionState["transport"]> =
+  derived(unifiedSessionStore, ($store) => $store.transport);
 
 // Route-aware derived stores
 export const isRecording: Readable<boolean> = derived(
@@ -350,7 +347,9 @@ export const unifiedSessionActions = {
 
   // Load existing session data (for mock data or resuming)
   loadSessionWithData(sessionData: any): void {
-    logger.session.info("Loading session with existing data - transitioning to Paused");
+    logger.session.info(
+      "Loading session with existing data - transitioning to Paused",
+    );
     unifiedSessionStore.update((state) => ({
       ...state,
       ui: {
@@ -369,13 +368,18 @@ export const unifiedSessionActions = {
   // Audio Recording Actions
   async startRecording(useRealtime: boolean = true): Promise<boolean> {
     logger.session.info("Starting audio recording", { useRealtime });
-    
+
     const currentState = get(unifiedSessionStore);
     const { sessionState } = currentState.ui;
-    
+
     // Only allow starting from Ready or Paused states
-    if (sessionState !== SessionState.Ready && sessionState !== SessionState.Paused) {
-      logger.session.warn("Cannot start recording from current state", { sessionState });
+    if (
+      sessionState !== SessionState.Ready &&
+      sessionState !== SessionState.Paused
+    ) {
+      logger.session.warn("Cannot start recording from current state", {
+        sessionState,
+      });
       return false;
     }
 
@@ -399,7 +403,7 @@ export const unifiedSessionActions = {
 
       // Transition to Running state
       unifiedSessionActions.transitionToRunning();
-      
+
       // Update audio-specific data
       unifiedSessionStore.update((state) => ({
         ...state,
@@ -420,7 +424,9 @@ export const unifiedSessionActions = {
       }
 
       // Initialize audio processing (microphone setup will be done in AudioButton component)
-      logger.session.info("Audio recording started successfully", { sessionId });
+      logger.session.info("Audio recording started successfully", {
+        sessionId,
+      });
 
       // Trigger UI events
       ui.emit("audio:recording-started", { sessionId });
@@ -442,11 +448,16 @@ export const unifiedSessionActions = {
     const { sessionId } = currentState.audio;
     const { sessionState } = currentState.ui;
 
-    logger.session.info("Stopping audio recording", { sessionId, sessionState });
-    
+    logger.session.info("Stopping audio recording", {
+      sessionId,
+      sessionState,
+    });
+
     // Only allow stopping from Running state
     if (sessionState !== SessionState.Running) {
-      logger.session.warn("Cannot stop recording - not in Running state", { sessionState });
+      logger.session.warn("Cannot stop recording - not in Running state", {
+        sessionState,
+      });
       return;
     }
 
@@ -461,7 +472,9 @@ export const unifiedSessionActions = {
 
     // Stop media stream
     if (currentState.audio.mediaStream) {
-      currentState.audio.mediaStream.getTracks().forEach(track => track.stop());
+      currentState.audio.mediaStream
+        .getTracks()
+        .forEach((track) => track.stop());
     }
 
     // Close audio context
@@ -471,11 +484,12 @@ export const unifiedSessionActions = {
 
     // Disconnect SSE
     await unifiedSessionActions.disconnectSSE();
-    
+
     // Check if we have data to determine next state
-    const hasData = currentState.transcripts.items.length > 0 || 
-                    currentState.analysis.currentSession !== null ||
-                    currentState.audio.speechChunks.length > 0;
+    const hasData =
+      currentState.transcripts.items.length > 0 ||
+      currentState.analysis.currentSession !== null ||
+      currentState.audio.speechChunks.length > 0;
 
     // Transition to appropriate state based on data presence
     if (hasData) {
@@ -511,7 +525,10 @@ export const unifiedSessionActions = {
       lastUpdated: Date.now(),
     }));
 
-    logger.session.info("Audio recording stopped", { sessionId, nextState: hasData ? "Paused" : "Ready" });
+    logger.session.info("Audio recording stopped", {
+      sessionId,
+      nextState: hasData ? "Paused" : "Ready",
+    });
     ui.emit("audio:recording-stopped", { sessionId });
   },
 
@@ -532,7 +549,7 @@ export const unifiedSessionActions = {
         ...state.transcripts,
         items: [...state.transcripts.items, transcriptItem],
         currentSegment: transcript.is_final ? "" : transcript.text,
-        buffer: transcript.is_final 
+        buffer: transcript.is_final
           ? state.transcripts.buffer + " " + transcript.text
           : state.transcripts.buffer,
       },
@@ -591,10 +608,11 @@ export const unifiedSessionActions = {
 
   // UI State Management
   setRoute(route: string): void {
-    const isNewSessionPage = route.includes("/session") && !route.includes("/session/");
+    const isNewSessionPage =
+      route.includes("/session") && !route.includes("/session/");
     const currentState = get(unifiedSessionStore);
     const { sessionState } = currentState.ui;
-    
+
     // Determine session state based on route change
     if (isNewSessionPage) {
       // Only initialize session if currently Off
@@ -607,7 +625,7 @@ export const unifiedSessionActions = {
         unifiedSessionActions.transitionToOff();
       }
     }
-    
+
     // Update route tracking
     unifiedSessionStore.update((state) => ({
       ...state,
@@ -618,8 +636,8 @@ export const unifiedSessionActions = {
       },
     }));
 
-    logger.session.debug("Route updated", { 
-      route, 
+    logger.session.debug("Route updated", {
+      route,
       isNewSessionPage,
       sessionState: get(unifiedSessionStore).ui.sessionState,
     });
@@ -660,7 +678,7 @@ export const unifiedSessionActions = {
   // SSE Transport Management
   async connectSSE(sessionId: string): Promise<boolean> {
     const currentState = get(unifiedSessionStore);
-    
+
     if (currentState.transport.sseClient) {
       logger.session.warn("SSE already connected", { sessionId });
       return true;
@@ -692,7 +710,7 @@ export const unifiedSessionActions = {
       });
 
       const connected = await sseClient.connect();
-      
+
       if (connected) {
         unifiedSessionStore.update((state) => ({
           ...state,
@@ -725,10 +743,10 @@ export const unifiedSessionActions = {
 
   async disconnectSSE(): Promise<void> {
     const currentState = get(unifiedSessionStore);
-    
+
     if (currentState.transport.sseClient) {
       currentState.transport.sseClient.disconnect();
-      
+
       unifiedSessionStore.update((state) => ({
         ...state,
         transport: {
@@ -737,7 +755,7 @@ export const unifiedSessionActions = {
           connectionStatus: "disconnected",
         },
       }));
-      
+
       logger.session.info("SSE disconnected");
     }
   },
@@ -757,14 +775,15 @@ export const unifiedSessionActions = {
   // Audio Chunk Processing
   async sendAudioChunk(audioData: Float32Array): Promise<boolean> {
     const currentState = get(unifiedSessionStore);
-    
+
     if (!currentState.audio.isRecording || !currentState.transport.sseClient) {
       return false;
     }
 
     try {
-      const success = currentState.transport.sseClient.sendAudioChunk(audioData);
-      
+      const success =
+        currentState.transport.sseClient.sendAudioChunk(audioData);
+
       if (success) {
         unifiedSessionStore.update((state) => ({
           ...state,
@@ -774,7 +793,7 @@ export const unifiedSessionActions = {
           },
         }));
       }
-      
+
       return success;
     } catch (error) {
       logger.session.error("Failed to send audio chunk", { error });

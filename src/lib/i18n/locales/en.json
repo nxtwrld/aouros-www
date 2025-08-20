@@ -841,7 +841,7 @@
     },
     "status": {
       "pending": "Pending",
-      "answered": "Answered", 
+      "answered": "Answered",
       "acknowledged": "Acknowledged",
       "skipped": "Skipped",
       "resolved": "Resolved"

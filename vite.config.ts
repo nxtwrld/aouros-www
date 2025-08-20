@@ -2,27 +2,18 @@ import { sveltekit } from "@sveltejs/kit/vite";
 //import { defineConfig } from 'vitest/config';
 import { type ViteDevServer, defineConfig, normalizePath } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-//import topLevelAwait from "vite-plugin-top-level-await"
+import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
 import { dagConfigPlugin } from "./vite-plugin-dag-config";
-//import { Server } from 'socket.io'
-/*
-const webSocketServer = {
-	name: 'webSocketServer',
-	configureServer(server: ViteDevServer) {
-		if (!server.httpServer) return
-
-		const io = new Server(server.httpServer)
-
-		io.on('connection', (socket) => {
-			socket.emit('eventFromServer', 'Hello, World 👋')
-		})
-	}
-}*/
 
 export default defineConfig({
-  //plugins: [sveltekit(), webSocketServer],
   plugins: [
+    topLevelAwait({
+      // The export name of top-level await promise for each chunk module
+      promiseExportName: "__tla",
+      // The function to generate import names of top-level await promise in each chunk module
+      promiseImportName: (i) => `__tla_${i}`,
+    }),
     dagConfigPlugin(),
     viteStaticCopy({
       targets: [
@@ -58,7 +49,6 @@ export default defineConfig({
         },
       ],
     }),
-    //topLevelAwait(),
     sveltekit(),
   ],
   server: {
@@ -85,11 +75,10 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    //force: true,
-    exclude: [
-      "onnx-runtime-web",
-      //'@ricky0123/vad-web',
-    ],
+    esbuildOptions: {
+      target: "esnext",
+    },
+    exclude: ["onnx-runtime-web"],
   },
   test: {
     include: ["src/**/*.{test,spec}.{js,ts}"],

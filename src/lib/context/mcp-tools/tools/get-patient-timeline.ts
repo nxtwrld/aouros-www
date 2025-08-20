@@ -1,6 +1,6 @@
 /**
  * Get Patient Timeline Tool
- * 
+ *
  * Generates chronological timeline of medical events from patient documents
  */
 
@@ -55,7 +55,7 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
     try {
       const currentUserId = user.getId();
       const targetProfileId = profileId || currentUserId;
-      
+
       if (!targetProfileId) {
         return {
           content: [
@@ -74,7 +74,7 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
 
       // Build timeline events from documents
       const timelineEvents: TimelineEvent[] = [];
-      
+
       for (const doc of documents) {
         if (!doc.content) continue;
 
@@ -160,10 +160,10 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
   ): TimelineEvent[] {
     const events: TimelineEvent[] = [];
     const docDate = this.extractDocumentDate(doc);
-    
+
     if (!docDate) return events;
 
-    const dateStr = docDate.toISOString().split('T')[0];
+    const dateStr = docDate.toISOString().split("T")[0];
     const docType = doc.metadata?.category || doc.type || "medical-record";
 
     // Check if this document type should be included
@@ -185,7 +185,11 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
 
     // Extract specific events from content if it's structured
     if (typeof doc.content === "object" && doc.content !== null) {
-      const additionalEvents = this.extractStructuredEvents(doc.content, dateStr, doc.id);
+      const additionalEvents = this.extractStructuredEvents(
+        doc.content,
+        dateStr,
+        doc.id,
+      );
       events.push(...additionalEvents);
     }
 
@@ -197,13 +201,21 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
    */
   private extractEventDescription(doc: Document): string {
     if (typeof doc.content === "string") {
-      return doc.content.substring(0, 200) + (doc.content.length > 200 ? "..." : "");
+      return (
+        doc.content.substring(0, 200) + (doc.content.length > 200 ? "..." : "")
+      );
     }
 
     if (typeof doc.content === "object" && doc.content !== null) {
       // Try common medical document fields
-      const fields = ["summary", "findings", "diagnosis", "description", "notes"];
-      
+      const fields = [
+        "summary",
+        "findings",
+        "diagnosis",
+        "description",
+        "notes",
+      ];
+
       for (const field of fields) {
         if (doc.content[field] && typeof doc.content[field] === "string") {
           const text = doc.content[field];
@@ -236,9 +248,10 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
           date: dateStr,
           type: "diagnosis",
           title: `Diagnosis: ${diagnosis.name || diagnosis}`,
-          description: typeof diagnosis === "object" ? 
-            diagnosis.description || `Diagnosed with ${diagnosis.name}` :
-            `Diagnosed with ${diagnosis}`,
+          description:
+            typeof diagnosis === "object"
+              ? diagnosis.description || `Diagnosed with ${diagnosis.name}`
+              : `Diagnosed with ${diagnosis}`,
           documentId,
           confidence: 0.9,
         });
@@ -252,9 +265,10 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
           date: dateStr,
           type: "procedure",
           title: `Procedure: ${procedure.name || procedure}`,
-          description: typeof procedure === "object" ? 
-            procedure.description || `Performed ${procedure.name}` :
-            `Performed ${procedure}`,
+          description:
+            typeof procedure === "object"
+              ? procedure.description || `Performed ${procedure.name}`
+              : `Performed ${procedure}`,
           documentId,
           confidence: 0.9,
         });
@@ -268,9 +282,10 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
           date: dateStr,
           type: "medication",
           title: `Medication: ${medication.name || medication}`,
-          description: typeof medication === "object" ? 
-            `${medication.name} - ${medication.dosage || "prescribed"}` :
-            `Prescribed ${medication}`,
+          description:
+            typeof medication === "object"
+              ? `${medication.name} - ${medication.dosage || "prescribed"}`
+              : `Prescribed ${medication}`,
           documentId,
           confidence: 0.8,
         });
@@ -283,7 +298,10 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
   /**
    * Format timeline events for readable output
    */
-  private formatTimeline(events: TimelineEvent[], includeDetails: boolean): string {
+  private formatTimeline(
+    events: TimelineEvent[],
+    includeDetails: boolean,
+  ): string {
     if (events.length === 0) {
       return "No timeline events found for the specified criteria.";
     }
@@ -293,7 +311,7 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
 
     // Group events by date
     const eventsByDate = new Map<string, TimelineEvent[]>();
-    events.forEach(event => {
+    events.forEach((event) => {
       const date = event.date;
       if (!eventsByDate.has(date)) {
         eventsByDate.set(date, []);
@@ -303,19 +321,19 @@ export class GetPatientTimelineTool extends BaseMedicalTool {
 
     // Sort dates and format
     const sortedDates = Array.from(eventsByDate.keys()).sort();
-    
-    sortedDates.forEach(date => {
+
+    sortedDates.forEach((date) => {
       const dateEvents = eventsByDate.get(date)!;
       timelineText += `**${this.formatDate(date)}**\n`;
-      
-      dateEvents.forEach(event => {
+
+      dateEvents.forEach((event) => {
         timelineText += `  • ${event.title}`;
         if (includeDetails && event.description) {
           timelineText += `\n    ${event.description}`;
         }
         timelineText += "\n";
       });
-      
+
       timelineText += "\n";
     });
 

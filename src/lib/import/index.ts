@@ -8,10 +8,12 @@ export enum TaskState {
 
 export interface Task {
   title: string;
-  type: "application/pdf" | "images";
+  type: "application/pdf" | "images" | "application/dicom";
   icon: string;
   data: string | ArrayBuffer | string[];
   password?: string;
+  dicomMetadata?: any; // DICOM-specific metadata
+  originalDicom?: ArrayBuffer; // Original DICOM file for attachment
   state: TaskState;
   files: File[];
 }
@@ -68,8 +70,10 @@ export interface Document {
       treatment: string;
       urgency: number;
     }[];
+    dicomMetadata?: any; // DICOM-specific metadata
+    medicalImageAnalysis?: any; // AI analysis results for medical images
   };
-  type: "application/pdf" | "images";
+  type: "application/pdf" | "images" | "application/dicom";
   files: string | ArrayBuffer | string[];
   task: Task;
   attachments: {

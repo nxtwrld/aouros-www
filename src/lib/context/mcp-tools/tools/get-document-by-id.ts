@@ -1,6 +1,6 @@
 /**
  * Get Document By ID Tool
- * 
+ *
  * Retrieves a specific medical document by its unique identifier
  */
 
@@ -116,7 +116,7 @@ export class GetDocumentByIdTool extends BaseMedicalTool {
       delete sanitized.encryptedData;
       delete sanitized.privateKey;
       delete sanitized.internalNotes;
-      
+
       return sanitized;
     }
 
@@ -135,23 +135,23 @@ export class GetDocumentByIdTool extends BaseMedicalTool {
       // Check for common medical document structures
       if (content.findings || content.diagnosis || content.treatment) {
         let formatted = "";
-        
+
         if (content.findings) {
           formatted += `**Findings:**\n${this.formatSection(content.findings)}\n\n`;
         }
-        
+
         if (content.diagnosis) {
           formatted += `**Diagnosis:**\n${this.formatSection(content.diagnosis)}\n\n`;
         }
-        
+
         if (content.treatment) {
           formatted += `**Treatment:**\n${this.formatSection(content.treatment)}\n\n`;
         }
-        
+
         if (content.recommendations) {
           formatted += `**Recommendations:**\n${this.formatSection(content.recommendations)}\n\n`;
         }
-        
+
         return formatted;
       }
 
@@ -169,17 +169,17 @@ export class GetDocumentByIdTool extends BaseMedicalTool {
     if (typeof section === "string") {
       return section;
     }
-    
+
     if (Array.isArray(section)) {
-      return section.map(item => `• ${this.formatSection(item)}`).join("\n");
+      return section.map((item) => `• ${this.formatSection(item)}`).join("\n");
     }
-    
+
     if (typeof section === "object" && section !== null) {
       return Object.entries(section)
         .map(([key, value]) => `${key}: ${this.formatSection(value)}`)
         .join("\n");
     }
-    
+
     return String(section);
   }
 }

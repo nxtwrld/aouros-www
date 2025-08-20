@@ -81,6 +81,7 @@ export interface AIFeatureDetectionResults {
 
   // Medical specialty section flags
   hasImaging: boolean;
+  isMedicalImaging: boolean; // Specific flag for medical imaging workflow
   hasDental: boolean;
   hasAdmission: boolean;
   hasProcedures: boolean;

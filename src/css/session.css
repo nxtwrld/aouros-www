@@ -8,22 +8,22 @@
    ============================================================================ */
 
 .session-node-base {
-    padding: 0.4rem;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    font-family: system-ui, sans-serif;
-    border-radius: 6px;
-    border: 0px solid transparent;
-    
-    /* Default color with opacity control */
-    --base-color-rgb: 204, 204, 204;  /* #CCC equivalent */
-    --color-opacity: 0.8;             /* Default opacity */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
-    
-    /* Default left border */
-    border-left-color: #6b7280;
-    border-left-width: 0.5rem;
+  padding: 0.4rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, sans-serif;
+  border-radius: 6px;
+  border: 0px solid transparent;
+
+  /* Default color with opacity control */
+  --base-color-rgb: 204, 204, 204; /* #CCC equivalent */
+  --color-opacity: 0.8; /* Default opacity */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+
+  /* Default left border */
+  border-left-color: #6b7280;
+  border-left-width: 0.5rem;
 }
 
 /* ============================================================================
@@ -32,27 +32,27 @@
 
 /* Source colors with higher specificity to override default */
 .session-node.session-source-transcript {
-    border-left-color: #10b981 !important; /* Green */
+  border-left-color: #10b981 !important; /* Green */
 }
 
 .session-node.session-source-medical_history {
-    border-left-color: #3b82f6 !important; /* Blue */
+  border-left-color: #3b82f6 !important; /* Blue */
 }
 
 .session-node.session-source-family_history {
-    border-left-color: #8b5cf6 !important; /* Purple */
+  border-left-color: #8b5cf6 !important; /* Purple */
 }
 
 .session-node.session-source-social_history {
-    border-left-color: #f59e0b !important; /* Orange */
+  border-left-color: #f59e0b !important; /* Orange */
 }
 
 .session-node.session-source-medication_history {
-    border-left-color: #06b6d4 !important; /* Cyan */
+  border-left-color: #06b6d4 !important; /* Cyan */
 }
 
 .session-node.session-source-suspected {
-    border-left-color: #f97316 !important; /* Orange-red */
+  border-left-color: #f97316 !important; /* Orange-red */
 }
 
 /* ============================================================================
@@ -60,36 +60,36 @@
    ============================================================================ */
 
 .session-priority-critical {
-    --priority-color: #dc2626; /* Red */
+  --priority-color: #dc2626; /* Red */
 }
 
 .session-priority-high {
-    --priority-color: #f59e0b; /* Orange */
+  --priority-color: #f59e0b; /* Orange */
 }
 
 .session-priority-medium {
-    --priority-color: #3b82f6; /* Blue */
+  --priority-color: #3b82f6; /* Blue */
 }
 
 .session-priority-low {
-    --priority-color: #10b981; /* Green */
+  --priority-color: #10b981; /* Green */
 }
 
 .session-priority-badge {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.5rem;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    background-color: var(--priority-color, #6b7280);
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  background-color: var(--priority-color, #6b7280);
 }
 
 .session-severity-badge {
-    font-size: 0.65em;
-    font-weight: 700;
-    color: white;
-    background: rgba(220, 38, 38, 0.9);
-    padding: 2px 4px;
+  font-size: 0.65em;
+  font-weight: 700;
+  color: white;
+  background: rgba(220, 38, 38, 0.9);
+  padding: 2px 4px;
 }
 
 /* ============================================================================
@@ -98,13 +98,13 @@
 
 /* Selected state for individual node components */
 .session-node-selected {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 /* Focused state for individual node components */
 .session-node-focused {
-    outline-offset: 2px;
-    animation: outlinePulse 2.5s ease-in-out infinite;
+  outline-offset: 2px;
+  animation: outlinePulse 2.5s ease-in-out infinite;
 }
 
 /* ============================================================================
@@ -113,94 +113,102 @@
 
 /* Default state for nodes - ensure clean reset */
 .node-html {
-    opacity: 1.0;
-    filter: none;
-    transition: opacity 0.3s ease, filter 0.3s ease;
+  opacity: 1;
+  filter: none;
+  transition:
+    opacity 0.3s ease,
+    filter 0.3s ease;
 }
 
 .node-html > div {
-    transition: all 0.3s ease;
-    transform: translateY(0) scale(1);
-    filter: brightness(1);
-    box-shadow: none;
+  transition: all 0.3s ease;
+  transform: translateY(0) scale(1);
+  filter: brightness(1);
+  box-shadow: none;
 }
 
 /* Hovered nodes in Sankey diagram - enhance without overriding background */
 .node-html.hovered {
-    overflow: visible;
-    z-index: 50;
+  overflow: visible;
+  z-index: 50;
 }
 
 .node-html.hovered > div {
-    /* Enhance visibility without changing background color */
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5), 0 4px 12px rgba(0,0,0,0.2);
-    transform: translateY(-2px) scale(1.02);
-    filter: brightness(1.08);
-    transition: all 0.2s ease;
-    position: relative;
-    /* Subtle pulsating outline */
-    animation: subtleOutlinePulse 3s ease-in-out infinite;
+  /* Enhance visibility without changing background color */
+  box-shadow:
+    0 0 0 2px rgba(59, 130, 246, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.08);
+  transition: all 0.2s ease;
+  position: relative;
+  /* Subtle pulsating outline */
+  animation: subtleOutlinePulse 3s ease-in-out infinite;
 }
 
 /* Selected nodes in Sankey diagram - enhance without overriding background */
 .node-html.selected > div {
-    /* Strong visual indication without changing background */
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.6), 0 6px 16px rgba(0,0,0,0.25);
-    transform: translateY(-3px) scale(1.03);
-    filter: brightness(1.1) contrast(1.05);
-    transition: all 0.3s ease-out;
-    position: relative;
-    /* Breathing pulsating animation */
-    animation: outlinePulse 2.2s ease-in-out infinite;
+  /* Strong visual indication without changing background */
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.6),
+    0 6px 16px rgba(0, 0, 0, 0.25);
+  transform: translateY(-3px) scale(1.03);
+  filter: brightness(1.1) contrast(1.05);
+  transition: all 0.3s ease-out;
+  position: relative;
+  /* Breathing pulsating animation */
+  animation: outlinePulse 2.2s ease-in-out infinite;
 }
 
 /* Selected nodes when in background (something else is hovered) - reduced visual intensity */
 .node-html.selected.background-trigger > div {
-    /* Subtle indication without changing background */
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 2px 6px rgba(0,0,0,0.15);
-    transform: scale(1.01);
-    filter: brightness(1.05);
-    transition: all 0.3s ease-out;
-    position: relative;
-    /* Subtle breathing animation for background state */
-    animation: subtleOutlinePulse 3.5s ease-in-out infinite;
+  /* Subtle indication without changing background */
+  box-shadow:
+    0 0 0 2px rgba(59, 130, 246, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: scale(1.01);
+  filter: brightness(1.05);
+  transition: all 0.3s ease-out;
+  position: relative;
+  /* Subtle breathing animation for background state */
+  animation: subtleOutlinePulse 3.5s ease-in-out infinite;
 }
 
 /* Selected nodes - use simple z-index pattern like hovered nodes */
 .node-html.selected {
-    overflow: visible;
-    z-index: 100; /* Higher than hovered (50) */
-    position: relative;
+  overflow: visible;
+  z-index: 100; /* Higher than hovered (50) */
+  position: relative;
 }
 
 /* Connected nodes styling */
 .node.connected-to-selected {
-    filter: none;
-    opacity: 1.0;
+  filter: none;
+  opacity: 1;
 }
 
 .node-html.connected-to-selected {
-    filter: none;
+  filter: none;
 }
 
 /* Visual state classes for nodes */
 .node-html.active-path {
-    filter: none;
-    opacity: 1.0;
+  filter: none;
+  opacity: 1;
 }
 
 .node-html.background-trigger {
-    filter: grayscale(0.8);
-    opacity: 0.6;
-    /* Keep the selected transform working */
+  filter: grayscale(0.8);
+  opacity: 0.6;
+  /* Keep the selected transform working */
 }
 
 .node-html.background-path {
-    filter: grayscale(0.8) opacity(0.5);
+  filter: grayscale(0.8) opacity(0.5);
 }
 
 .node-html.inactive {
-    filter: grayscale(1) opacity(0.4);
+  filter: grayscale(1) opacity(0.4);
 }
 
 /* ============================================================================
@@ -210,44 +218,44 @@
 /* Supportive relationships - Green */
 .link.rel-supports,
 .link.rel-confirms {
-    stroke: #4ade80;
-    fill: #4ade80;
+  stroke: #4ade80;
+  fill: #4ade80;
 }
 
 .link.rel-suggests,
 .link.rel-indicates {
-    stroke: #fb923c;
-    fill: #fb923c;
+  stroke: #fb923c;
+  fill: #fb923c;
 }
 
 /* Negative relationships - Red */
 .link.rel-contradicts,
 .link.rel-rules_out {
-    stroke: #f87171;
-    fill: #f87171;
+  stroke: #f87171;
+  fill: #f87171;
 }
 
 /* Treatment relationships - Blue */
 .link.rel-treats,
 .link.rel-manages,
 .link.rel-requires {
-    stroke: #60a5fa;
-    fill: #60a5fa;
+  stroke: #60a5fa;
+  fill: #60a5fa;
 }
 
 /* Investigation relationships - Purple */
 .link.rel-investigates,
 .link.rel-clarifies,
 .link.rel-explores {
-    stroke: #a78bfa;
-    fill: #a78bfa;
+  stroke: #a78bfa;
+  fill: #a78bfa;
 }
 
 /* Default relationship - Gray */
 .link.rel-default,
 .link {
-    stroke: #6b7280;
-    fill: #6b7280;
+  stroke: #6b7280;
+  fill: #6b7280;
 }
 
 /* ============================================================================
@@ -256,33 +264,33 @@
 
 /* Default link opacity */
 .link {
-    stroke-opacity: 0.6;
-    fill-opacity: 0.6;
-    transition: all 0.3s ease;
+  stroke-opacity: 0.6;
+  fill-opacity: 0.6;
+  transition: all 0.3s ease;
 }
 
 /* Active path - full color intensity */
 .link.active-path {
-    stroke-opacity: 0.9;
-    fill-opacity: 0.9;
-    filter: none;
+  stroke-opacity: 0.9;
+  fill-opacity: 0.9;
+  filter: none;
 }
 
 /* Selected link - only individually selected links pulse */
 .link.selected {
-    stroke-opacity: 0.9;
-    fill-opacity: 0.9;
-    filter: none;
-    animation: linkPulse 1.0s ease-in-out infinite;
+  stroke-opacity: 0.9;
+  fill-opacity: 0.9;
+  filter: none;
+  animation: linkPulse 1s ease-in-out infinite;
 }
 
 /* Inactive/Background states - grayscaled versions of semantic colors */
 .link.background-trigger,
 .link.background-path,
 .link.inactive {
-    filter: grayscale(0.8) opacity(0.4);
-    stroke-opacity: 0.4;
-    fill-opacity: 0.4;
+  filter: grayscale(0.8) opacity(0.4);
+  stroke-opacity: 0.4;
+  fill-opacity: 0.4;
 }
 
 /* ============================================================================
@@ -290,49 +298,51 @@
    ============================================================================ */
 
 @keyframes linkPulse {
-    0%, 100% {
-        filter: none;
-        stroke-opacity: 0.9;
-        fill-opacity: 0.9;
-    }
-    50% {
-        filter: brightness(1.4);
-        stroke-opacity: 0.5;
-        fill-opacity: 0.5;
-    }
-}
-
-.link.animate-pulse {
-    animation: linkPulse 1.0s ease-in-out infinite;
-    /* Preserve semantic colors, just animate opacity and brightness */
+  0%,
+  100% {
     filter: none;
     stroke-opacity: 0.9;
     fill-opacity: 0.9;
+  }
+  50% {
+    filter: brightness(1.4);
+    stroke-opacity: 0.5;
+    fill-opacity: 0.5;
+  }
+}
+
+.link.animate-pulse {
+  animation: linkPulse 1s ease-in-out infinite;
+  /* Preserve semantic colors, just animate opacity and brightness */
+  filter: none;
+  stroke-opacity: 0.9;
+  fill-opacity: 0.9;
 }
 
 @keyframes outlinePulse {
-    0% {
-        outline: 0px solid transparent;
-        outline-offset: 0px;
-    }
-    50% {
-        outline: 3px solid var(--color-primary, #3b82f6);
-    }
-    100% {
-        outline: 5px solid transparent;
-        outline-offset: 5px;
-    }
+  0% {
+    outline: 0px solid transparent;
+    outline-offset: 0px;
+  }
+  50% {
+    outline: 3px solid var(--color-primary, #3b82f6);
+  }
+  100% {
+    outline: 5px solid transparent;
+    outline-offset: 5px;
+  }
 }
 
 @keyframes subtleOutlinePulse {
-    0%, 100% {
-        outline: 1px solid rgba(59, 130, 246, 0.2);
-        outline-offset: 2px;
-    }
-    50% {
-        outline: 2px solid rgba(59, 130, 246, 0.4);
-        outline-offset: 3px;
-    }
+  0%,
+  100% {
+    outline: 1px solid rgba(59, 130, 246, 0.2);
+    outline-offset: 2px;
+  }
+  50% {
+    outline: 2px solid rgba(59, 130, 246, 0.4);
+    outline-offset: 3px;
+  }
 }
 
 /* ============================================================================
@@ -341,60 +351,60 @@
 
 /* Common node structure */
 .session-node {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    padding: 6px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    font-family: system-ui, sans-serif;
-    border: 0px solid transparent;
-    border-left-width: 0.5rem;
-    --color-opacity: 0.8;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, sans-serif;
+  border: 0px solid transparent;
+  border-left-width: 0.5rem;
+  --color-opacity: 0.8;
 }
 
 .session-node.mobile {
-    padding: 4px;
+  padding: 4px;
 }
 
 /* Node content areas */
 .session-node-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    gap: 2px;
-    margin-top: 0.2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 2px;
+  margin-top: 0.2rem;
 }
 
 .session-node-meta {
-    position: absolute;
-    top: 0;
-    right: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 3px;
-    align-items: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  align-items: center;
 }
 
 .session-node-name {
-    font-weight: 700;
-    line-height: 1.1;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Desktop vs mobile node names */
 .session-node:not(.mobile) .session-node-name {
-    font-size: 11px;
+  font-size: 11px;
 }
 
 .session-node.mobile .session-node-name {
-    font-size: 9px;
+  font-size: 9px;
 }
 
 /* ============================================================================
@@ -403,23 +413,23 @@
 
 /* Symptom nodes */
 .session-node.symptom {
-    --base-color-rgb: 204, 204, 204;  /* Default gray */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
-    border-left-color: #6b7280; /* Default gray - will be overridden by source classes */
+  --base-color-rgb: 204, 204, 204; /* Default gray */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  border-left-color: #6b7280; /* Default gray - will be overridden by source classes */
 }
 
 /* Diagnosis nodes */
 .session-node.diagnosis {
-    --base-color-rgb: 167, 209, 255;  /* Light blue */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
-    border-left-color: #ffffff;
+  --base-color-rgb: 167, 209, 255; /* Light blue */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  border-left-color: #ffffff;
 }
 
 /* Treatment nodes - default */
 .session-node.treatment {
-    --base-color-rgb: 178, 255, 229;  /* Light teal */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
-    border-left-color: #ffffff;
+  --base-color-rgb: 178, 255, 229; /* Light teal */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  border-left-color: #ffffff;
 }
 
 /* ============================================================================
@@ -428,81 +438,81 @@
 
 /* Medication treatments - Soft Blue */
 .treatment-node.treatment-type-medication {
-    --base-color-rgb: 227, 242, 253;  /* #E3F2FD */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  --base-color-rgb: 227, 242, 253; /* #E3F2FD */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
 }
 
 /* Procedure treatments - Soft Red */
 .treatment-node.treatment-type-procedure {
-    --base-color-rgb: 255, 235, 238;  /* #FFEBEE */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  --base-color-rgb: 255, 235, 238; /* #FFEBEE */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
 }
 
 /* Therapy treatments - Soft Purple */
 .treatment-node.treatment-type-therapy {
-    --base-color-rgb: 243, 229, 245;  /* #F3E5F5 */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  --base-color-rgb: 243, 229, 245; /* #F3E5F5 */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
 }
 
 /* Lifestyle treatments - Soft Green */
 .treatment-node.treatment-type-lifestyle {
-    --base-color-rgb: 232, 245, 232;  /* #E8F5E8 */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  --base-color-rgb: 232, 245, 232; /* #E8F5E8 */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
 }
 
 /* Investigation treatments - Soft Orange */
 .treatment-node.treatment-type-investigation {
-    --base-color-rgb: 255, 243, 224;  /* #FFF3E0 */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  --base-color-rgb: 255, 243, 224; /* #FFF3E0 */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
 }
 
 /* Immediate treatments - Bright Red (Emergency) */
 .treatment-node.treatment-type-immediate {
-    --base-color-rgb: 255, 205, 210;  /* #FFCDD2 */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  --base-color-rgb: 255, 205, 210; /* #FFCDD2 */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
 }
 
 /* Referral treatments - Soft Teal */
 .treatment-node.treatment-type-referral {
-    --base-color-rgb: 224, 242, 241;  /* #E0F2F1 */
-    background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+  --base-color-rgb: 224, 242, 241; /* #E0F2F1 */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
 }
 
 /* Treatment type labels - use darker colors that work well with background colors */
 .treatment-node.treatment-type-medication .treatment-type-label {
-    color: #0d47a1;  /* Dark blue for blue background */
-    background: rgba(13, 71, 161, 0.15);
+  color: #0d47a1; /* Dark blue for blue background */
+  background: rgba(13, 71, 161, 0.15);
 }
 
 .treatment-node.treatment-type-procedure .treatment-type-label {
-    color: #b71c1c;  /* Dark red for red background */
-    background: rgba(183, 28, 28, 0.15);
+  color: #b71c1c; /* Dark red for red background */
+  background: rgba(183, 28, 28, 0.15);
 }
 
 .treatment-node.treatment-type-therapy .treatment-type-label {
-    color: #4a148c;  /* Dark purple for purple background */
-    background: rgba(74, 20, 140, 0.15);
+  color: #4a148c; /* Dark purple for purple background */
+  background: rgba(74, 20, 140, 0.15);
 }
 
 .treatment-node.treatment-type-lifestyle .treatment-type-label {
-    color: #1b5e20;  /* Dark green for green background */
-    background: rgba(27, 94, 32, 0.15);
+  color: #1b5e20; /* Dark green for green background */
+  background: rgba(27, 94, 32, 0.15);
 }
 
 .treatment-node.treatment-type-investigation .treatment-type-label {
-    color: #e65100;  /* Dark orange for orange background */
-    background: rgba(230, 81, 0, 0.15);
+  color: #e65100; /* Dark orange for orange background */
+  background: rgba(230, 81, 0, 0.15);
 }
 
 .treatment-node.treatment-type-immediate .treatment-type-label {
-    color: #c62828;  /* Dark red for immediate */
-    background: rgba(198, 40, 40, 0.2);
-    font-weight: 700;
+  color: #c62828; /* Dark red for immediate */
+  background: rgba(198, 40, 40, 0.2);
+  font-weight: 700;
 }
 
 .treatment-node.treatment-type-referral .treatment-type-label {
-    color: #004d40;  /* Dark teal for teal background */
-    background: rgba(0, 77, 64, 0.15);
+  color: #004d40; /* Dark teal for teal background */
+  background: rgba(0, 77, 64, 0.15);
 }
 
 /* ============================================================================
@@ -511,28 +521,28 @@
 
 /* Diagnosis priority borders */
 .session-node.diagnosis.priority-critical {
-    border-left-color: #dc2626;
+  border-left-color: #dc2626;
 }
 
 .session-node.diagnosis.priority-high {
-    border-left-color: #ed6700;
+  border-left-color: #ed6700;
 }
 
 .session-node.diagnosis.priority-medium {
-    border-left-color: #fba91b;
+  border-left-color: #fba91b;
 }
 
 /* Treatment urgency borders */
 .treatment-node.urgency-immediate {
-    border-left-color: #dc2626;
+  border-left-color: #dc2626;
 }
 
 .treatment-node.urgency-urgent {
-    border-left-color: #ea580c;
+  border-left-color: #ea580c;
 }
 
 .treatment-node.urgency-routine {
-    border-left-color: #10b981;
+  border-left-color: #10b981;
 }
 
 /* ============================================================================
@@ -541,172 +551,172 @@
 
 /* Base badge styling */
 .session-badge {
-    font-weight: 700;
-    color: white;
-    border-radius: 4px;
-    line-height: 1;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+  color: white;
+  border-radius: 4px;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Specific badge types */
 .session-probability-badge {
-    font-size: 9px;
-    padding: 2px 5px;
+  font-size: 9px;
+  padding: 2px 5px;
 }
 
 .session-effectiveness-badge {
-    font-size: 9px;
-    padding: 2px 5px;
+  font-size: 9px;
+  padding: 2px 5px;
 }
 
 .session-severity-badge {
-    font-size: 0.65em;
-    padding: 2px 4px;
-    background: rgba(220, 38, 38, 0.9); /* Default red for critical */
+  font-size: 0.65em;
+  padding: 2px 4px;
+  background: rgba(220, 38, 38, 0.9); /* Default red for critical */
 }
 
 /* Severity-based colors for symptom badges */
 .session-severity-badge.severity-1,
 .session-severity-badge.severity-2,
 .session-severity-badge.severity-3 {
-    background: rgba(220, 38, 38, 0.9); /* Critical - Red */
+  background: rgba(220, 38, 38, 0.9); /* Critical - Red */
 }
 
 .session-severity-badge.severity-4,
 .session-severity-badge.severity-5 {
-    background: rgba(234, 88, 12, 0.9); /* High - Orange */
+  background: rgba(234, 88, 12, 0.9); /* High - Orange */
 }
 
 .session-severity-badge.severity-6,
 .session-severity-badge.severity-7 {
-    background: rgba(245, 158, 11, 0.9); /* Medium - Yellow/Orange */
+  background: rgba(245, 158, 11, 0.9); /* Medium - Yellow/Orange */
 }
 
 .session-severity-badge.severity-8,
 .session-severity-badge.severity-9,
 .session-severity-badge.severity-10 {
-    background: rgba(16, 185, 129, 0.9); /* Low - Green */
+  background: rgba(16, 185, 129, 0.9); /* Low - Green */
 }
 
 /* Mobile badge adjustments */
 .session-node.mobile .session-probability-badge,
 .session-node.mobile .session-effectiveness-badge {
-    font-size: 8px;
-    padding: 1px 3px;
+  font-size: 8px;
+  padding: 1px 3px;
 }
 
 /* Badge value color classes */
 .session-badge.value-high {
-    background: rgba(16, 185, 129, 0.9); /* Green */
+  background: rgba(16, 185, 129, 0.9); /* Green */
 }
 
 .session-badge.value-medium {
-    background: rgba(59, 130, 246, 0.9); /* Blue */
+  background: rgba(59, 130, 246, 0.9); /* Blue */
 }
 
 .session-badge.value-low {
-    background: rgba(245, 158, 11, 0.9); /* Orange */
+  background: rgba(245, 158, 11, 0.9); /* Orange */
 }
 
 .session-badge.value-very-low,
 .session-badge.value-unknown {
-    background: rgba(107, 114, 128, 0.9); /* Gray */
+  background: rgba(107, 114, 128, 0.9); /* Gray */
 }
 
 /* Small info badges */
 .session-info-badge {
-    font-size: 0.6em;
-    padding: 1px 3px;
-    border-radius: 2px;
-    line-height: 1;
+  font-size: 0.6em;
+  padding: 1px 3px;
+  border-radius: 2px;
+  line-height: 1;
 }
 
 .session-info-badge.icd10 {
-    color: #4338ca;
-    background: rgba(67, 56, 202, 0.1);
-    border: 1px solid rgba(67, 56, 202, 0.2);
+  color: #4338ca;
+  background: rgba(67, 56, 202, 0.1);
+  border: 1px solid rgba(67, 56, 202, 0.2);
 }
 
 .session-info-badge.subtype {
-    color: #6b7280;
-    font-style: italic;
-    background: rgba(255, 255, 255, 0.7);
+  color: #6b7280;
+  font-style: italic;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .session-info-badge.red-flags {
-    color: #dc2626;
-    background: rgba(220, 38, 38, 0.1);
-    border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .session-info-badge.contraindications {
-    color: #dc2626;
-    background: rgba(220, 38, 38, 0.1);
-    border: 1px solid rgba(220, 38, 38, 0.2);
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .session-info-badge.dosage {
-    color: #7c3aed;
-    background: rgba(124, 58, 237, 0.1);
-    border: 1px solid rgba(124, 58, 237, 0.2);
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.2);
 }
 
 .session-info-badge.duration {
-    color: #059669;
-    background: rgba(5, 150, 105, 0.1);
-    border: 1px solid rgba(5, 150, 105, 0.2);
+  color: #059669;
+  background: rgba(5, 150, 105, 0.1);
+  border: 1px solid rgba(5, 150, 105, 0.2);
 }
 
 .session-info-badge.follow-up {
-    color: #3b82f6;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 /* Mobile adjustments for info badges */
 .session-node.mobile .session-info-badge {
-    font-size: 0.55em;
+  font-size: 0.55em;
 }
 
 /* Special indicators */
 .session-investigation-flag {
-    width: 14px;
-    height: 14px;
-    border-radius: 3px;
-    background: rgba(245, 158, 11, 0.9);
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: rgba(245, 158, 11, 0.9);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 .session-node.mobile .session-investigation-flag {
-    width: 12px;
-    height: 12px;
-    font-size: 9px;
+  width: 12px;
+  height: 12px;
+  font-size: 9px;
 }
 
 .session-suppressed-indicator {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    font-size: 0.55em;
-    color: #6b7280;
-    font-weight: 600;
-    background: rgba(107, 114, 128, 0.1);
-    padding: 1px 3px;
-    border-radius: 2px;
-    line-height: 1;
-    opacity: 0.8;
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 0.55em;
+  color: #6b7280;
+  font-weight: 600;
+  background: rgba(107, 114, 128, 0.1);
+  padding: 1px 3px;
+  border-radius: 2px;
+  line-height: 1;
+  opacity: 0.8;
 }
 
 .session-node.mobile .session-suppressed-indicator {
-    font-size: 0.5em;
+  font-size: 0.5em;
 }
 
 /* ============================================================================
@@ -714,81 +724,81 @@
    ============================================================================ */
 
 .session-details-panel {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .session-details-header {
-    padding: 1rem;
-    border-bottom: 1px solid var(--color-border, #e2e8f0);
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
 }
 
 .session-node-type {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .session-type-label {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary, #6b7280);
-    font-weight: 500;
-    text-transform: capitalize;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #6b7280);
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
 .session-node-title {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--color-text-primary, #1f2937);
-    line-height: 1.4;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1f2937);
+  line-height: 1.4;
 }
 
 .session-details-content {
-    flex: 1;
-    padding: 1rem;
-    overflow-y: auto;
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
 }
 
 .session-info-section {
-    margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .session-info-section h4 {
-    margin: 0 0 0.75rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-text-primary, #1f2937);
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1f2937);
 }
 
 .session-info-section label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--color-text-secondary, #6b7280);
-    margin-bottom: 0.5rem;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #6b7280);
+  margin-bottom: 0.5rem;
 }
 
 .session-reasoning-text {
-    margin: 0;
-    padding: 0.75rem;
-    background: var(--color-surface-2, #f8fafc);
-    border-radius: 6px;
-    font-size: 0.875rem;
-    color: var(--color-text-primary, #1f2937);
-    line-height: 1.5;
+  margin: 0;
+  padding: 0.75rem;
+  background: var(--color-surface-2, #f8fafc);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--color-text-primary, #1f2937);
+  line-height: 1.5;
 }
 
 .session-quote-text {
-    margin: 0;
-    padding: 0.75rem 1rem;
-    background: var(--color-surface-2, #f8fafc);
-    border-left: 3px solid var(--color-primary, #3b82f6);
-    border-radius: 0 4px 4px 0;
-    font-style: italic;
-    color: var(--color-text-secondary, #6b7280);
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--color-surface-2, #f8fafc);
+  border-left: 3px solid var(--color-primary, #3b82f6);
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+  color: var(--color-text-secondary, #6b7280);
 }
 
 /* Details actions footer - layout only, button styles now use .button class */
@@ -798,56 +808,56 @@
    ============================================================================ */
 
 .session-info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
 }
 
 .session-info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .session-info-item label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--color-text-secondary, #6b7280);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary, #6b7280);
 }
 
 .session-info-item .value {
-    font-size: 0.875rem;
-    color: var(--color-text-primary, #1f2937);
-    font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-text-primary, #1f2937);
+  font-weight: 500;
 }
 
 /* Info grid value styling */
-.session-info-item .value.source-transcript { 
-    color: var(--color-success, #16a34a); 
+.session-info-item .value.source-transcript {
+  color: var(--color-success, #16a34a);
 }
 
-.session-info-item .value.source-medical_history { 
-    color: var(--color-info, #3b82f6); 
+.session-info-item .value.source-medical_history {
+  color: var(--color-info, #3b82f6);
 }
 
-.session-info-item .value.source-family_history { 
-    color: var(--color-purple, #8b5cf6); 
+.session-info-item .value.source-family_history {
+  color: var(--color-purple, #8b5cf6);
 }
 
-.session-info-item .value.source-suspected { 
-    color: var(--color-warning, #f59e0b); 
+.session-info-item .value.source-suspected {
+  color: var(--color-warning, #f59e0b);
 }
 
-.session-info-item .value.status-pending { 
-    color: var(--color-warning, #f59e0b); 
+.session-info-item .value.status-pending {
+  color: var(--color-warning, #f59e0b);
 }
 
-.session-info-item .value.status-answered { 
-    color: var(--color-success, #16a34a); 
+.session-info-item .value.status-answered {
+  color: var(--color-success, #16a34a);
 }
 
-.session-info-item .value.status-acknowledged { 
-    color: var(--color-info, #3b82f6); 
+.session-info-item .value.status-acknowledged {
+  color: var(--color-info, #3b82f6);
 }
 
 /* ============================================================================
@@ -855,23 +865,23 @@
    ============================================================================ */
 
 .session-relationship-wrapper {
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 6px;
-    padding: 2px;
-    border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid transparent;
 }
 
 .session-relationship-wrapper:hover {
-    background-color: var(--color-primary-bg, #dbeafe);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    border-color: var(--color-primary, #3b82f6);
+  background-color: var(--color-primary-bg, #dbeafe);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary, #3b82f6);
 }
 
 .session-relationship-wrapper:focus {
-    outline: 2px solid var(--color-primary, #3b82f6);
-    outline-offset: 2px;
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
 }
 
 /* ============================================================================
@@ -880,96 +890,96 @@
 
 /* Node State Classes - for SVG nodes */
 .node.state-focus-active {
-    opacity: 1.0;
-    filter: none;
+  opacity: 1;
+  filter: none;
 }
 
 .node.state-focus-inactive {
-    opacity: 0.1;
-    filter: grayscale(0.8);
+  opacity: 0.1;
+  filter: grayscale(0.8);
 }
 
 .node.state-path-active {
-    opacity: 1.0;
-    filter: none;
+  opacity: 1;
+  filter: none;
 }
 
 .node.state-path-background {
-    opacity: 0.6;
-    filter: grayscale(0.8);
+  opacity: 0.6;
+  filter: grayscale(0.8);
 }
 
 .node.state-inactive {
-    opacity: 0.3;
-    filter: grayscale(0.7);
+  opacity: 0.3;
+  filter: grayscale(0.7);
 }
 
 .node.state-reset {
-    opacity: 1.0;
-    filter: none;
+  opacity: 1;
+  filter: none;
 }
 
 /* Link State Classes - Stroke Mode */
 .link.state-active.render-stroke {
-    stroke-opacity: 0.9;
-    fill-opacity: 0;
-    filter: none;
+  stroke-opacity: 0.9;
+  fill-opacity: 0;
+  filter: none;
 }
 
 .link.state-inactive.render-stroke {
-    stroke-opacity: 0.1;
-    fill-opacity: 0;
-    filter: grayscale(1);
+  stroke-opacity: 0.1;
+  fill-opacity: 0;
+  filter: grayscale(1);
 }
 
 .link.state-background.render-stroke {
-    stroke-opacity: 0.4;
-    fill-opacity: 0;
-    filter: grayscale(0.8);
+  stroke-opacity: 0.4;
+  fill-opacity: 0;
+  filter: grayscale(0.8);
 }
 
 .link.state-reset.render-stroke {
-    stroke-opacity: 0.2;
-    fill-opacity: 0;
-    filter: none;
+  stroke-opacity: 0.2;
+  fill-opacity: 0;
+  filter: none;
 }
 
 /* Link State Classes - Polygon Mode */
 .link.state-active.render-polygon {
-    stroke-opacity: 0;
-    fill-opacity: 0.9;
-    filter: none;
+  stroke-opacity: 0;
+  fill-opacity: 0.9;
+  filter: none;
 }
 
 .link.state-inactive.render-polygon {
-    stroke-opacity: 0;
-    fill-opacity: 0.1;
-    filter: grayscale(1);
+  stroke-opacity: 0;
+  fill-opacity: 0.1;
+  filter: grayscale(1);
 }
 
 .link.state-background.render-polygon {
-    stroke-opacity: 0;
-    fill-opacity: 0.4;
-    filter: grayscale(0.8);
+  stroke-opacity: 0;
+  fill-opacity: 0.4;
+  filter: grayscale(0.8);
 }
 
 .link.state-reset.render-polygon {
-    stroke-opacity: 0;
-    fill-opacity: 0.2;
-    filter: none;
+  stroke-opacity: 0;
+  fill-opacity: 0.2;
+  filter: none;
 }
 
 /* Semantic Interaction Classes */
 .interactive-element {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .draggable-surface {
-    cursor: grab;
+  cursor: grab;
 }
 
 .draggable-surface.dragging-active {
-    cursor: grabbing;
+  cursor: grabbing;
 }
 
 /* Semantic Link Strength Classes 
@@ -1004,36 +1014,36 @@
 .link.render-polygon.strength-strong,
 .link.render-polygon.strength-very-strong,
 .link.render-polygon.strength-maximum {
-    stroke-width: 0;
+  stroke-width: 0;
 }
 
 /* CSS Custom Properties for Dynamic Colors */
 .priority-critical {
-    --priority-color: #dc2626;
+  --priority-color: #dc2626;
 }
 
 .priority-high {
-    --priority-color: #f59e0b;
+  --priority-color: #f59e0b;
 }
 
 .priority-medium {
-    --priority-color: #3b82f6;
+  --priority-color: #3b82f6;
 }
 
 .priority-low {
-    --priority-color: #10b981;
+  --priority-color: #10b981;
 }
 
 .priority-unknown {
-    --priority-color: #6b7280;
+  --priority-color: #6b7280;
 }
 
 .dynamic-bg {
-    background-color: var(--priority-color);
+  background-color: var(--priority-color);
 }
 
 .dynamic-color {
-    color: var(--priority-color);
+  color: var(--priority-color);
 }
 
 /* ============================================================================
@@ -1041,27 +1051,27 @@
    ============================================================================ */
 
 @media (max-width: 768px) {
-    .session-node-base {
-        padding: 0.3rem;
-    }
-    
-    .session-details-header,
-    .session-details-content {
-        padding: 0.75rem;
-    }
-    
-    .session-relationship-wrapper {
-        padding: 1px;
-    }
-    
-    /* Mobile adjustments for selected and hovered nodes */
-    .node-html.selected > div {
-        outline-width: 2px; /* Slightly thinner outline on mobile for better fit */
-        outline-offset: 2px; /* Keep consistent offset */
-    }
-    
-    .node-html.hovered > div {
-        outline-width: 1px; /* Thinner outline for hover on mobile */
-        outline-offset: 2px; /* Keep consistent offset */
-    }
+  .session-node-base {
+    padding: 0.3rem;
+  }
+
+  .session-details-header,
+  .session-details-content {
+    padding: 0.75rem;
+  }
+
+  .session-relationship-wrapper {
+    padding: 1px;
+  }
+
+  /* Mobile adjustments for selected and hovered nodes */
+  .node-html.selected > div {
+    outline-width: 2px; /* Slightly thinner outline on mobile for better fit */
+    outline-offset: 2px; /* Keep consistent offset */
+  }
+
+  .node-html.hovered > div {
+    outline-width: 1px; /* Thinner outline for hover on mobile */
+    outline-offset: 2px; /* Keep consistent offset */
+  }
 }
