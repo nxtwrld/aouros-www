@@ -136,14 +136,14 @@
         
         if (useSSE && sseClient) {
             // Use SSE import for real-time progress, but with pre-analyzed tasks
-            await analyzeWithSSE(files, newTasks);
+            await analyzeWithSSE(files);
         } else {
             // Use traditional import flow
             //assess();
         }
     }
     
-    async function analyzeWithSSE(files: File[], tasks: Task[]) {
+    async function analyzeWithSSE(files: File[]) {
         try {
             // Note: tasks parameter contains pre-analyzed file information from createTasks()
             // This ensures consistent file detection logging for both SSE and traditional flows
@@ -327,11 +327,69 @@
             invalids = [...invalids, ...invalidDocs];
             byProfileDetected = mergeNamesOnReports(results);
             
+            // Clean up tasks and files after successful SSE processing (matches traditional flow)
+            console.log('🧹 SSE: Cleaning up processed tasks and files', {
+                tasksBefore: tasks.length,
+                currentFilesBefore: currentFiles.length,
+                processingFilesBefore: processingFiles.length
+            });
+            
+            // Remove successfully processed tasks from tasks array (ensure Svelte reactivity)
+            const processedTaskFiles = new Set(files.map(f => f.name + f.size)); // Create unique identifier
+            console.log('🔍 SSE Cleanup Debug:', {
+                processedTaskFiles: Array.from(processedTaskFiles),
+                tasksToCheck: $state.snapshot(tasks).map(task => ({
+                    title: task.title,
+                    fileIds: task.files.map((f: File) => f.name + f.size)
+                }))
+            });
+            
+            const remainingTasks = tasks.filter(task => {
+                // Keep tasks whose files haven't been processed in this SSE batch
+                const taskFileIds = task.files.map((f: File) => f.name + f.size);
+                const shouldRemove = taskFileIds.some(id => processedTaskFiles.has(id));
+                // Using basic properties to avoid logging $state proxies
+                console.log(`🔍 Task "${task.title}": fileIds=${taskFileIds}, shouldRemove=${shouldRemove}`);
+                return !shouldRemove;
+            });
+            
+            // Direct state update to top-level tasks scope
+            if (remainingTasks.length === 0) {
+                tasks = [];  // Direct empty array assignment for clearer reactivity
+            } else {
+                tasks = [...remainingTasks];
+            }
+            
+            // Remove processed files from currentFiles and processingFiles arrays
+            removeFiles(files);
+            
+            console.log('🧹 SSE: Cleanup completed', {
+                tasksAfter: tasks.length,
+                remainingTaskTitles: tasks.length > 0 ? tasks.map(t => t.title) : [],
+                currentFilesAfter: currentFiles.length,
+                processingFilesAfter: processingFiles.length,
+                validDocsAdded: validDocs.length,
+                invalidDocsAdded: invalidDocs.length
+            });
+            
+            // Use $state.snapshot to avoid Svelte proxy warning
+            console.log('🔄 SSE: Forcing reactivity check - tasks array snapshot:', $state.snapshot(tasks));
+            
             play('focus');
             
         } catch (error) {
             console.error('SSE Import Failed:', error);
             play('error');
+            
+            // Even on error, clean up the files that were being processed to avoid UI duplication
+            console.log('🧹 SSE: Emergency cleanup after error', {
+                tasksBefore: tasks.length,
+                filesBeingProcessed: files.length
+            });
+            
+            // Remove files from processing arrays (but keep tasks for retry/error visibility)
+            removeFiles(files);
+            
             // Could fall back to traditional import here
         } finally {
             assessingState = AssessingState.IDLE;
@@ -451,8 +509,8 @@
     }
 
     function removeFiles(files: File[]) {
-        currentFiles = currentFiles.filter(file => !files.includes(file));
-        processingFiles = processingFiles.filter(file => !files.includes(file));
+        currentFiles = [...currentFiles.filter(file => !files.includes(file))];
+        processingFiles = [...processingFiles.filter(file => !files.includes(file))];
     }
 
 
@@ -629,7 +687,7 @@
                 <ImportDocument {doc} onremove={() => removeItem('invalids', doc)} />
             </div>
             {/each}
-            {#each tasks as task}
+            {#each tasks as task (task.title + task.files?.[0]?.size)}
             <div class="report-import">
                 <ImportDocument doc={task} onremove={() => removeItem('tasks', task)} />
             </div>

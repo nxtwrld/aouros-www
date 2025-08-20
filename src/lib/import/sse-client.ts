@@ -503,68 +503,45 @@ export class SSEImportClient {
       options.onStageChange?.("extract");
       const assessments = await this.extractDocumentsFromTasks(tasks);
 
-      // Stage 2: Post-extraction routing and analysis
+      // Stage 2: Post-extraction routing and analysis (UNIFIED PATH ONLY)
       const analyses: ReportAnalysis[] = [];
+      
+      console.log('🚀 SSE: Starting unified analysis routing', {
+        assessmentsCount: assessments.length,
+        totalDocuments: assessments.reduce((sum, a) => sum + a.documents.length, 0)
+      });
 
       for (const assessment of assessments) {
         for (const document of assessment.documents) {
-          // Since all TaskProcessors now return consistent structures,
-          // check if the assessment already contains analysis results (from DICOM or other direct processors)
+          // ALL processing should go through TaskProcessors - no fallback paths
+          // Check if the assessment contains analysis results from TaskProcessor
           const hasDirectAnalysis = !!(assessment as any).report || !!(assessment as any).type;
           
           if (hasDirectAnalysis) {
             console.log(
-              `✅ Using direct analysis result for "${document.title}" (processed by TaskProcessor)`,
+              `✅ Using TaskProcessor analysis for "${document.title}"`,
+              {
+                hasReport: !!(assessment as any).report,
+                hasType: !!(assessment as any).type,
+                analysisType: (assessment as any).type
+              }
             );
             // The assessment itself IS the analysis result - add it directly
             analyses.push(assessment as any);
-          } else if (document.isMedicalImaging) {
-            console.log(
-              `🏥 Routing document "${document.title}" to medical imaging SSE`,
-            );
-            options.onStageChange?.("medical_imaging");
-
-            // Extract images for this specific document
-            const documentImages = assessment.pages
-              .filter((page) => document.pages.includes(page.page))
-              .map((page) => page.image || page.thumbnail)
-              .filter(Boolean) as string[];
-
-            if (documentImages.length > 0) {
-              const medicalAnalysis = await this.analyzeMedicalImaging(
-                documentImages,
-                document,
-                options.language,
-              );
-              analyses.push(medicalAnalysis);
-            } else {
-              console.warn(
-                `No images found for medical imaging document: ${document.title}`,
-              );
-            }
           } else {
-            console.log(
-              `📄 Routing document "${document.title}" to text analysis SSE`,
+            // This should NOT happen if TaskProcessors are working correctly
+            console.error(
+              `❌ TaskProcessor failed to provide analysis for "${document.title}"`,
+              {
+                assessmentKeys: Object.keys(assessment),
+                documentType: document.isMedicalImaging ? 'medical_imaging' : 'document',
+                hasPages: !!assessment.pages?.length,
+                hasDocuments: !!assessment.documents?.length
+              }
             );
-            options.onStageChange?.("analyze");
-
-            // Regular text document analysis
-            const documentText = assessment.pages
-              .filter((page) => document.pages.includes(page.page))
-              .map((page) => page.text)
-              .join("\n");
-
-            const analysisInput = {
-              text: documentText,
-              language: options.language || "English",
-            };
-
-            const fileId = `doc-${document.title}-${Date.now()}`;
-            const textAnalysis = await this.analyzeSingleDocument(
-              analysisInput,
-              fileId,
-            );
-            analyses.push(textAnalysis);
+            
+            // Instead of fallback processing, throw error to identify the issue
+            throw new Error(`TaskProcessor failed to provide proper analysis structure for document: ${document.title}`);
           }
         }
       }
@@ -576,29 +553,7 @@ export class SSEImportClient {
     }
   }
 
-  // Analyze medical imaging documents using SSE
-  private async analyzeMedicalImaging(
-    images: string[],
-    document: { title: string; date: string; language: string },
-    language?: string,
-  ): Promise<ReportAnalysis> {
-    const input = {
-      images,
-      language: language || "English",
-      metadata: {
-        documentTitle: document.title,
-        documentDate: document.date,
-        documentLanguage: document.language,
-      },
-    };
-
-    const fileId = `medical-${document.title}-${Date.now()}`;
-    return this.makeSSERequest(
-      "/v1/import/medical-imaging/stream",
-      input,
-      fileId,
-    );
-  }
+  // Note: analyzeMedicalImaging method removed - all medical imaging now goes through TaskProcessors
 
   // Complete document processing workflow with SSE (legacy method - keep for backward compatibility)
   async processDocumentsSSE(

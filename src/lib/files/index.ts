@@ -165,6 +165,7 @@ export async function createTasks(files: File[]): Promise<Task[]> {
         data: dicomResult.extractedImages, // Base64 PNG images
         dicomMetadata: dicomResult.metadata,
         originalDicom: dicomResult.originalDicomBuffer,
+        thumbnail: dicomResult.thumbnails[0], // Store first thumbnail for task preview
         state: TaskState.NEW,
         files: [dicomFile],
       });

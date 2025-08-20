@@ -14,6 +14,7 @@ export interface Task {
   password?: string;
   dicomMetadata?: any; // DICOM-specific metadata
   originalDicom?: ArrayBuffer; // Original DICOM file for attachment
+  thumbnail?: string; // Thumbnail for task preview (especially useful for DICOM images)
   state: TaskState;
   files: File[];
 }
