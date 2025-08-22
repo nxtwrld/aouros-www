@@ -218,15 +218,23 @@ export async function createTasks(files: File[]): Promise<Task[]> {
 
   // width images we do not if they are just multiple pages for the same document or different documents - lets assess them
   if (groupped.images.length > 0) {
+    const imageData = await Promise.all(
+      groupped.images.map(async (file) => {
+        return await readAsBase64(file);
+      }),
+    );
+    
+    // Generate thumbnail from first image for immediate preview
+    const taskThumbnail = imageData.length > 0 
+      ? await resizeImage(imageData[0], THUMBNAIL_SIZE)
+      : undefined;
+
     tasks.push({
       title: "Images",
       type: "images",
       icon: groupped.images[0].type.split("/")[1],
-      data: await Promise.all(
-        groupped.images.map(async (file) => {
-          return await readAsBase64(file);
-        }),
-      ),
+      data: imageData,
+      thumbnail: taskThumbnail,
       state: TaskState.NEW,
       files: groupped.images,
     });
@@ -239,12 +247,20 @@ export async function processTask(task: Task): Promise<DocumentNew[]> {
     case "application/pdf":
       return (await processPDF(task.data as ArrayBuffer, task.password).then(
         (assessment) => {
-          return processMultipageAssessmentToDocumnets(assessment, [], task);
+          // Update task with thumbnail from PDF processing
+          if ('taskThumbnail' in assessment && assessment.taskThumbnail) {
+            task.thumbnail = assessment.taskThumbnail;
+          }
+          return processMultipageAssessmentToDocumnets(assessment as AssessmentClient, [], task);
         },
       )) as DocumentNew[];
     case "images":
       return (await processImages(task.data as string[]).then((assessment) => {
-        return processMultipageAssessmentToDocumnets(assessment, [], task);
+        // Update task with thumbnail from image processing
+        if ('taskThumbnail' in assessment && assessment.taskThumbnail) {
+          task.thumbnail = assessment.taskThumbnail;
+        }
+        return processMultipageAssessmentToDocumnets(assessment as AssessmentClient, [], task);
       })) as DocumentNew[];
     case "application/dicom":
       return (await processDicomImages(

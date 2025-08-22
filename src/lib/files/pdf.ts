@@ -173,7 +173,13 @@ async function processInternal(
 
   //if (fileProcessor) fileProcessor.emit('progress', 'extract', 100);
 
-  return processedImages;
+  // Extract first page thumbnail for task preview
+  const taskThumbnail = processedImages.pages[0]?.thumbnail || "";
+
+  return {
+    ...processedImages,
+    taskThumbnail
+  };
 }
 
 export async function loadPdfDocument(config: any) {
@@ -203,6 +209,7 @@ async function renderPDFPageToBase64Image(page: PDFPageProxy): Promise<string> {
   const viewport = page.getViewport({ scale: SCALE });
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2D context from canvas");
   canvas.height = viewport.height;
   canvas.width = viewport.width;
 
@@ -210,7 +217,7 @@ async function renderPDFPageToBase64Image(page: PDFPageProxy): Promise<string> {
   return canvas.toDataURL();
 }
 
-async function makeThumb(page: PDFPageProxy): Promise<string> {
+export async function makeThumb(page: PDFPageProxy): Promise<string> {
   const viewport = page.getViewport({ scale: 1 });
   const canvas = document.createElement("canvas");
   const scale = Math.min(
@@ -219,9 +226,12 @@ async function makeThumb(page: PDFPageProxy): Promise<string> {
   );
   canvas.width = viewport.width * scale;
   canvas.height = viewport.height * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get 2D context from canvas");
+  
   return page
     .render({
-      canvasContext: canvas.getContext("2d"),
+      canvasContext: ctx,
       viewport: page.getViewport({ scale }),
     })
     .promise.then(function () {

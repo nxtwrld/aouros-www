@@ -17,4 +17,5 @@ export interface ProcessedFile {
     language: string;
     pages: number[];
   }>;
+  taskThumbnail?: string; // Thumbnail for task preview, extracted from first page
 }
