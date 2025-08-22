@@ -216,7 +216,7 @@
             {/if}
         {/each}
         <div class="tile">
-            <button class="button --large" onclick={() => ui.emit('modal.healthForm')}>
+            <button class="button --large" onclick={() => ui.emit('modal.healthForm', { data: $profile?.health })}>
                 {$t('app.profile.edit-health-profile')}
             </button>
         </div>
