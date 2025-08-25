@@ -1,6 +1,7 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
     import { onMount } from 'svelte';
+    import { browser } from '$app/environment';
 
     interface Props {
         data: any;
@@ -22,10 +23,17 @@
     let cornerstoneElements: HTMLDivElement[] = [];
     let cornerstoneLoaded = false;
     
-    // Load Cornerstone.js on mount
+    // Load Cornerstone.js on mount - BROWSER ONLY
     onMount(async () => {
+        // Critical: Only load Cornerstone in browser environment
+        if (!browser) {
+            console.warn('[SectionImaging] Cornerstone loading skipped - not in browser');
+            return;
+        }
+
         try {
-            // Dynamically import Cornerstone.js
+            console.log('[SectionImaging] Loading Cornerstone modules...');
+            // Dynamically import Cornerstone.js - browser only
             const cornerstone = await import('cornerstone-core');
             const cornerstoneWADOImageLoader = await import('cornerstone-wado-image-loader');
             const dicomParser = await import('dicom-parser');
@@ -52,7 +60,10 @@
                 await loadDicomImages(cornerstone);
             }
         } catch (error) {
-            console.warn('Failed to load Cornerstone.js:', error);
+            console.error('[SectionImaging] Failed to load Cornerstone.js:', error);
+            console.warn('[SectionImaging] DICOM viewing will not be available');
+            // Set a flag to show fallback UI
+            cornerstoneLoaded = false;
         }
     });
     
