@@ -1,26 +1,26 @@
-// DAG Data Transformer
-// Transforms DAG configuration and state to D3-compatible format
+// QOM Data Transformer
+// Transforms QOM configuration and state to D3-compatible format
 
 import type {
-  DAGNode,
-  DAGLink,
-  D3DAGNode,
-  D3DAGLink,
-} from "$components/session/types/dag";
-import dagConfig from "$lib/config/dag-default.json";
+  QOMNode,
+  QOMLink,
+  D3QOMNode,
+  D3QOMLink,
+} from "$components/session/types/qom";
+import qomConfig from "$lib/config/qom-default.json";
 import {
-  DAG_VISUAL_CONFIG,
+  QOM_VISUAL_CONFIG,
   createForceSimulation,
-} from "$components/session/config/dag-visual-config";
+} from "$components/session/config/qom-visual-config";
 
 // Calculate initial positions for nodes based on their layer
 export function calculateInitialPositions(
-  nodes: DAGNode[],
+  nodes: QOMNode[],
   width: number,
   height: number,
 ): Map<string, { x: number; y: number }> {
   const positions = new Map<string, { x: number; y: number }>();
-  const layerGroups = new Map<number, DAGNode[]>();
+  const layerGroups = new Map<number, QOMNode[]>();
 
   // Group nodes by layer
   nodes.forEach((node) => {
@@ -35,18 +35,18 @@ export function calculateInitialPositions(
   const maxLayer = Math.max(...Array.from(layerGroups.keys()));
   const layerWidth =
     (width -
-      DAG_VISUAL_CONFIG.layout.margins.left -
-      DAG_VISUAL_CONFIG.layout.margins.right) /
+      QOM_VISUAL_CONFIG.layout.margins.left -
+      QOM_VISUAL_CONFIG.layout.margins.right) /
     (maxLayer + 2);
   const usableHeight =
     height -
-    DAG_VISUAL_CONFIG.layout.margins.top -
-    DAG_VISUAL_CONFIG.layout.margins.bottom;
+    QOM_VISUAL_CONFIG.layout.margins.top -
+    QOM_VISUAL_CONFIG.layout.margins.bottom;
 
   layerGroups.forEach((layerNodes, layer) => {
     const nodeCount = layerNodes.length;
     const nodeSpacing = Math.min(
-      DAG_VISUAL_CONFIG.layout.nodeSpacing,
+      QOM_VISUAL_CONFIG.layout.nodeSpacing,
       usableHeight / (nodeCount + 1),
     );
 
@@ -55,9 +55,9 @@ export function calculateInitialPositions(
 
     layerNodes.forEach((node, index) => {
       const x =
-        DAG_VISUAL_CONFIG.layout.margins.left + layerWidth * (layer + 1);
+        QOM_VISUAL_CONFIG.layout.margins.left + layerWidth * (layer + 1);
       const y =
-        DAG_VISUAL_CONFIG.layout.margins.top +
+        QOM_VISUAL_CONFIG.layout.margins.top +
         nodeSpacing * (index + 1) +
         (usableHeight - nodeSpacing * nodeCount) / 2;
 
@@ -70,17 +70,17 @@ export function calculateInitialPositions(
 
 // Transform nodes to D3 format with positions
 export function transformNodesToD3(
-  nodes: Map<string, DAGNode>,
+  nodes: Map<string, QOMNode>,
   width: number,
   height: number,
-): D3DAGNode[] {
+): D3QOMNode[] {
   const nodeArray = Array.from(nodes.values());
   const positions = calculateInitialPositions(nodeArray, width, height);
 
   return nodeArray.map((node, index) => {
     const pos = positions.get(node.id) || { x: width / 2, y: height / 2 };
 
-    const d3Node: D3DAGNode = {
+    const d3Node: D3QOMNode = {
       ...node,
       index,
       x: node.x || pos.x,
@@ -97,10 +97,10 @@ export function transformNodesToD3(
 
 // Transform links to D3 format with node references
 export function transformLinksToD3(
-  links: Map<string, DAGLink>,
-  nodes: D3DAGNode[],
-): D3DAGLink[] {
-  const d3Links: D3DAGLink[] = [];
+  links: Map<string, QOMLink>,
+  nodes: D3QOMNode[],
+): D3QOMLink[] {
+  const d3Links: D3QOMLink[] = [];
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
   links.forEach((link, index) => {
@@ -112,7 +112,7 @@ export function transformLinksToD3(
     );
 
     if (sourceNode && targetNode) {
-      const d3Link: D3DAGLink = {
+      const d3Link: D3QOMLink = {
         ...link,
         source: sourceNode,
         target: targetNode,
@@ -126,8 +126,8 @@ export function transformLinksToD3(
 }
 
 // Create bidirectional refinement links
-export function createRefinementLinks(nodes: D3DAGNode[]): D3DAGLink[] {
-  const refinementLinks: D3DAGLink[] = [];
+export function createRefinementLinks(nodes: D3QOMNode[]): D3QOMLink[] {
+  const refinementLinks: D3QOMLink[] = [];
 
   // Create refinement links from sub-experts back to parents
   nodes.forEach((node) => {
@@ -162,7 +162,7 @@ export function shouldTriggerExpert(
   for (const symptom of symptoms) {
     const normalizedSymptom = symptom.toLowerCase().replace(/\s+/g, "_");
     const mappedExperts =
-      dagConfig.triggerConditions.symptomMapping[normalizedSymptom] || [];
+      qomConfig.triggerConditions.symptomMapping[normalizedSymptom] || [];
     if (mappedExperts.includes(expertCategory)) {
       return true;
     }
@@ -170,7 +170,7 @@ export function shouldTriggerExpert(
 
   // Check context triggers
   for (const [key, value] of Object.entries(context)) {
-    const mappedExperts = dagConfig.triggerConditions.contextMapping[key] || [];
+    const mappedExperts = qomConfig.triggerConditions.contextMapping[key] || [];
     if (mappedExperts.includes(expertCategory) && value === true) {
       return true;
     }
@@ -185,7 +185,7 @@ export function getSubSpecialtyTriggers(
   symptoms: string[],
 ): string[] {
   const triggers =
-    dagConfig.triggerConditions.subSpecialtyTriggers[parentCategory] || {};
+    qomConfig.triggerConditions.subSpecialtyTriggers[parentCategory] || {};
   const triggeredSubSpecialties: string[] = [];
 
   for (const [condition, subspecialties] of Object.entries(triggers)) {
@@ -205,11 +205,11 @@ export function createExpertNode(
   category: string,
   layer: number,
   parent?: string,
-): DAGNode {
+): QOMNode {
   const templateKey = `${type}_expert`;
   const template =
-    dagConfig.expertTemplates[templateKey] ||
-    dagConfig.expertTemplates.specialist_expert;
+    qomConfig.expertTemplates[templateKey] ||
+    qomConfig.expertTemplates.specialist_expert;
 
   return {
     id,
@@ -222,7 +222,7 @@ export function createExpertNode(
     state: "pending",
     provider: template.modelConfig.provider,
     model: template.modelConfig.model,
-    triggerThreshold: dagConfig.behaviorRules.specializationThreshold,
+    triggerThreshold: qomConfig.behaviorRules.specializationThreshold,
     triggered: false,
     radius: 25 + (3 - layer) * 5, // Smaller radius for deeper layers
   };
@@ -231,8 +231,8 @@ export function createExpertNode(
 // Calculate force simulation parameters based on node count
 export function getAdaptiveForceParams(nodeCount: number) {
   const baseConfig = createForceSimulation(
-    DAG_VISUAL_CONFIG.layout.width,
-    DAG_VISUAL_CONFIG.layout.height,
+    QOM_VISUAL_CONFIG.layout.width,
+    QOM_VISUAL_CONFIG.layout.height,
   );
 
   // Adjust forces based on node density
@@ -241,12 +241,12 @@ export function getAdaptiveForceParams(nodeCount: number) {
   return {
     ...baseConfig,
     chargeStrength:
-      DAG_VISUAL_CONFIG.forces.chargeStrength * (1 / densityFactor),
-    collisionRadius: (node: D3DAGNode) => {
+      QOM_VISUAL_CONFIG.forces.chargeStrength * (1 / densityFactor),
+    collisionRadius: (node: D3QOMNode) => {
       const baseRadius =
-        typeof DAG_VISUAL_CONFIG.forces.collisionRadius === "function"
-          ? DAG_VISUAL_CONFIG.forces.collisionRadius(node)
-          : DAG_VISUAL_CONFIG.forces.collisionRadius;
+        typeof QOM_VISUAL_CONFIG.forces.collisionRadius === "function"
+          ? QOM_VISUAL_CONFIG.forces.collisionRadius(node)
+          : QOM_VISUAL_CONFIG.forces.collisionRadius;
       return baseRadius * densityFactor;
     },
     alphaDecay: baseConfig.alphaDecay * (1 + densityFactor * 0.1),
@@ -255,9 +255,9 @@ export function getAdaptiveForceParams(nodeCount: number) {
 
 // Group nodes by category for visual clustering
 export function groupNodesByCategory(
-  nodes: D3DAGNode[],
-): Map<string, D3DAGNode[]> {
-  const groups = new Map<string, D3DAGNode[]>();
+  nodes: D3QOMNode[],
+): Map<string, D3QOMNode[]> {
+  const groups = new Map<string, D3QOMNode[]>();
 
   nodes.forEach((node) => {
     if (!groups.has(node.category)) {
@@ -271,7 +271,7 @@ export function groupNodesByCategory(
 
 // Calculate cluster centers for category grouping
 export function calculateClusterCenters(
-  groups: Map<string, D3DAGNode[]>,
+  groups: Map<string, D3QOMNode[]>,
   width: number,
   height: number,
 ): Map<string, { x: number; y: number }> {
@@ -299,13 +299,13 @@ export function calculateClusterCenters(
   return centers;
 }
 
-// Transform DAG state for visualization
-export function transformDAGState(
-  nodes: Map<string, DAGNode>,
-  links: Map<string, DAGLink>,
+// Transform QOM state for visualization
+export function transformQOMState(
+  nodes: Map<string, QOMNode>,
+  links: Map<string, QOMLink>,
   width: number,
   height: number,
-): { nodes: D3DAGNode[]; links: D3DAGLink[] } {
+): { nodes: D3QOMNode[]; links: D3QOMLink[] } {
   const d3Nodes = transformNodesToD3(nodes, width, height);
   const d3Links = transformLinksToD3(links, d3Nodes);
 
@@ -319,12 +319,12 @@ export function transformDAGState(
 }
 
 // Export utility to check if node should be animated
-export function shouldAnimateNode(node: D3DAGNode): boolean {
+export function shouldAnimateNode(node: D3QOMNode): boolean {
   return node.state === "running";
 }
 
 // Export utility to get node importance for sizing
-export function getNodeImportance(node: D3DAGNode): number {
+export function getNodeImportance(node: D3QOMNode): number {
   const typeWeights = {
     merger: 1.5,
     primary: 1.3,

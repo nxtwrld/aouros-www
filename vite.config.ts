@@ -4,7 +4,7 @@ import { type ViteDevServer, defineConfig, normalizePath } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
-import { dagConfigPlugin } from "./vite-plugin-dag-config";
+import { qomConfigPlugin } from "./vite-plugin-qom-config";
 
 export default defineConfig({
   plugins: [
@@ -14,7 +14,7 @@ export default defineConfig({
       // The function to generate import names of top-level await promise in each chunk module
       promiseImportName: (i) => `__tla_${i}`,
     }),
-    dagConfigPlugin(),
+    qomConfigPlugin(),
     viteStaticCopy({
       targets: [
         {

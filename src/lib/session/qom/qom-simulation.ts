@@ -1,9 +1,9 @@
-// DAG Simulation Module
+// QOM Simulation Module
 // Realistic medical expert generation based on sample.analysis.1.json
 
-import { dagEventProcessor } from "./dag-event-processor";
+import { qomEventProcessor } from "./qom-event-processor";
 import type {
-  DAGEvent,
+  QOMEvent,
   NodeStartedEvent,
   NodeProgressEvent,
   NodeCompletedEvent,
@@ -11,12 +11,12 @@ import type {
   ExpertTriggeredEvent,
   RelationshipAddedEvent,
   ModelSwitchedEvent,
-  DAGCompletedEvent,
-  DAGInitializedEvent,
-} from "$components/session/types/dag";
+  QOMCompletedEvent,
+  QOMInitializedEvent,
+} from "$components/session/types/qom";
 
 // Type for event sequence - either single event or parallel events
-type EventStep = DAGEvent | DAGEvent[];
+type EventStep = QOMEvent | QOMEvent[];
 
 // Type for event step with timing metadata
 interface TimedEventStep {
@@ -99,20 +99,20 @@ const SAMPLE_BASED_EXPERT_GENERATION = {
   },
 };
 
-// Generate realistic DAG events based on sample medical case with smart timing
-export function createRealisticMedicalDAGEvents(
+// Generate realistic QOM events based on sample medical case with smart timing
+export function createRealisticMedicalQOMEvents(
   sessionId: string,
 ): TimedEventStep[] {
   const eventSequence: TimedEventStep[] = [];
 
-  // Step 1: DAG initialization (no delay - immediate start)
+  // Step 1: QOM initialization (no delay - immediate start)
   eventSequence.push({
     events: {
-      type: "dag_initialized",
-      dagModelId: "universal_medical_dag_v2",
+      type: "qom_initialized",
+      qomModelId: "universal_medical_qom_v2",
       nodes: [], // Empty - store will preserve existing nodes from configuration
       links: [], // Empty - store will preserve existing links from configuration
-    } as DAGInitializedEvent,
+    } as QOMInitializedEvent,
     delayAfter: 0, // Immediate transition to first node
   });
 
@@ -391,13 +391,13 @@ export function createRealisticMedicalDAGEvents(
         expertAttributions: triggeredExperts.map(({ expert }) => expert.name),
       },
     } as NodeCompletedEvent,
-    delayAfter: 0, // Immediate DAG completion
+    delayAfter: 0, // Immediate QOM completion
   });
 
-  // Step 16: DAG completion (final event)
+  // Step 16: QOM completion (final event)
   eventSequence.push({
     events: {
-      type: "dag_completed",
+      type: "qom_completed",
       totalDuration: 15000, // Approximate total duration
       totalCost: 0.18,
       nodeCount: 6 + triggeredExperts.length,
@@ -418,7 +418,7 @@ export function createRealisticMedicalDAGEvents(
           ({ expert }) => `${expert.name}: ${expert.investigationFocus}`,
         ),
       },
-    } as DAGCompletedEvent,
+    } as QOMCompletedEvent,
     delayAfter: 0, // Final event - no delay needed
   });
 
@@ -525,13 +525,13 @@ function generateConsensusAnalysis(triggeredExperts: any[]) {
 }
 
 // Main simulation function - now uses smart timing with context-aware delays
-export function simulateRealisticMedicalDAG(
+export function simulateRealisticMedicalQOM(
   sessionId: string,
   _intervalMs = 2500,
 ) {
-  const eventSequence = createRealisticMedicalDAGEvents(sessionId);
+  const eventSequence = createRealisticMedicalQOMEvents(sessionId);
 
-  console.log("🏥 Starting realistic medical DAG simulation with smart timing");
+  console.log("🏥 Starting realistic medical QOM simulation with smart timing");
   console.log(`📊 Generated ${eventSequence.length} event steps`);
 
   let currentStep = 0;
@@ -539,15 +539,15 @@ export function simulateRealisticMedicalDAG(
 
   const processNextStep = () => {
     if (currentStep >= eventSequence.length) {
-      console.log("🎬 Realistic medical DAG simulation completed");
+      console.log("🎬 Realistic medical QOM simulation completed");
       return;
     }
 
     // Get current timed event step
     const timedStep = eventSequence[currentStep];
     const stepEvents = Array.isArray(timedStep.events)
-      ? (timedStep.events as DAGEvent[])
-      : [timedStep.events as DAGEvent];
+      ? (timedStep.events as QOMEvent[])
+      : [timedStep.events as QOMEvent];
 
     console.log(
       `🎭 Step ${currentStep + 1}: Processing ${stepEvents.length} event(s), delay after: ${timedStep.delayAfter}ms`,
@@ -556,7 +556,7 @@ export function simulateRealisticMedicalDAG(
     // Process all events in this step
     stepEvents.forEach((event) => {
       //console.log(`   📅 ${event.type}`);
-      dagEventProcessor.processEvent(event);
+      qomEventProcessor.processEvent(event);
     });
 
     currentStep++;

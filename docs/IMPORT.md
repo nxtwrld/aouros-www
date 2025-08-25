@@ -34,7 +34,7 @@ Key features:
 
 ### 3. LangGraph Workflow Orchestration (`src/lib/langgraph/`)
 
-Advanced workflow management using directed acyclic graphs (DAG):
+Advanced workflow management using query-oriented models (QOM):
 
 #### Core Workflows
 

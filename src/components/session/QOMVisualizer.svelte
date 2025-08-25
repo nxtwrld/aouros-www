@@ -1,22 +1,22 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import * as d3 from 'd3';
-  import { d3DAGData, dagActions, dagMetrics } from '$lib/session/stores/dag-execution-store';
+  import { d3QOMData, qomActions, qomMetrics } from '$lib/session/stores/qom-execution-store';
   import { 
-    DAG_VISUAL_CONFIG, 
+    QOM_VISUAL_CONFIG, 
     getNodeStyle, 
     getLinkStyle,
     getNodeRadius,
     TRANSITIONS,
     ZOOM_CONFIG
-  } from './config/dag-visual-config';
+  } from './config/qom-visual-config';
   // Removed shouldAnimateNode import - not needed for CSS animations
-  import type { D3DAGNode, D3DAGLink } from './types/dag';
+  import type { D3QOMNode, D3QOMLink } from './types/qom';
   import { t } from '$lib/i18n';
-  import DAGSimulationPanel from '$components/dev/DAGSimulationPanel.svelte';
+  import QOMSimulationPanel from '$components/dev/QOMSimulationPanel.svelte';
 
   // Icon mapping for different node types
-  function getNodeIcon(node: D3DAGNode): string {
+  function getNodeIcon(node: D3QOMNode): string {
     const iconMap: Record<string, string> = {
       'input': 'transcript',
       'detector': 'diagnosis',
@@ -34,14 +34,14 @@
     height?: number;
     enableZoom?: boolean;
     enableInteractions?: boolean;
-    onnodeSelect?: (node: D3DAGNode) => void;
-    onlinkSelect?: (link: D3DAGLink) => void;
+    onnodeSelect?: (node: D3QOMNode) => void;
+    onlinkSelect?: (link: D3QOMLink) => void;
   }
 
   let {
     sessionId = '',
-    width = DAG_VISUAL_CONFIG.layout.width,
-    height = DAG_VISUAL_CONFIG.layout.height,
+    width = QOM_VISUAL_CONFIG.layout.width,
+    height = QOM_VISUAL_CONFIG.layout.height,
     enableZoom = true,
     enableInteractions = true,
     onnodeSelect,
@@ -54,9 +54,9 @@
   let zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   
   // Track selected elements
-  let selectedNode = $state<D3DAGNode | null>(null);
-  let selectedLink = $state<D3DAGLink | null>(null);
-  let hoveredNode = $state<D3DAGNode | null>(null);
+  let selectedNode = $state<D3QOMNode | null>(null);
+  let selectedLink = $state<D3QOMLink | null>(null);
+  let hoveredNode = $state<D3QOMNode | null>(null);
 
   // Track last container dimensions to avoid unnecessary layout updates
   let lastWidth = 0;
@@ -74,19 +74,19 @@
       const actualWidth = container.clientWidth || width;
       const actualHeight = container.clientHeight || height;
       console.log('📐 Setting initial container dimensions:', { actualWidth, actualHeight });
-      dagActions.updateLayoutDimensions(actualWidth, actualHeight);
+      qomActions.updateLayoutDimensions(actualWidth, actualHeight);
       lastWidth = actualWidth;
       lastHeight = actualHeight;
     }
 
-    // Initialize DAG for session if provided
+    // Initialize QOM for session if provided
     if (sessionId) {
-      dagActions.initialize(sessionId);
+      qomActions.initialize(sessionId);
     }
 
     // Subscribe to store changes after initialization
-    const unsubscribe = d3DAGData.subscribe((data) => {
-      console.log('📊 DAG data updated:', data);
+    const unsubscribe = d3QOMData.subscribe((data) => {
+      console.log('📊 QOM data updated:', data);
       if (g && data) {
         console.log('📊 Updating visualization with', data.nodes.length, 'nodes and', data.links.length, 'links');
         updateVisualization(data);
@@ -104,7 +104,7 @@
         // Only update if dimensions actually changed
         if (actualWidth !== lastWidth || actualHeight !== lastHeight) {
           console.log('📐 Container resized:', { actualWidth, actualHeight });
-          dagActions.updateLayoutDimensions(actualWidth, actualHeight);
+          qomActions.updateLayoutDimensions(actualWidth, actualHeight);
           lastWidth = actualWidth;
           lastHeight = actualHeight;
         }
@@ -134,7 +134,7 @@
       .append('svg')
       .attr('viewBox', `0 0 ${width} ${height}`)  // Use viewBox for responsive scaling
       .attr('preserveAspectRatio', 'xMidYMid meet')  // Center and scale proportionally
-      .attr('class', 'dag-svg');
+      .attr('class', 'qom-svg');
 
     // Define arrow markers for links
     const defs = svg.append('defs');
@@ -169,7 +169,7 @@
 
     // Create main group for zoom/pan
     g = svg.append('g')
-      .attr('class', 'dag-main-group');
+      .attr('class', 'qom-main-group');
 
     // Setup zoom behavior
     if (enableZoom) {
@@ -183,14 +183,14 @@
     }
 
     // Create groups for links and nodes (links first so they appear behind nodes)
-    g.append('g').attr('class', 'dag-links');
-    g.append('g').attr('class', 'dag-particles'); // For animated particles
-    g.append('g').attr('class', 'dag-nodes');
+    g.append('g').attr('class', 'qom-links');
+    g.append('g').attr('class', 'qom-particles'); // For animated particles
+    g.append('g').attr('class', 'qom-nodes');
 
     // No force simulation needed - using fixed positioning
   }
 
-  function updateVisualization(data: { nodes: D3DAGNode[], links: D3DAGLink[] }) {
+  function updateVisualization(data: { nodes: D3QOMNode[], links: D3QOMLink[] }) {
     if (!g || !container) return;
 
     // Use actual container dimensions or fallback to props
@@ -227,11 +227,11 @@
         }
         return null;
       })
-      .filter(link => link !== null) as D3DAGLink[];
+      .filter(link => link !== null) as D3QOMLink[];
     
     // Update links
-    const linkSelection = g.select('.dag-links')
-      .selectAll<SVGPathElement, D3DAGLink>('.dag-link')
+    const linkSelection = g.select('.qom-links')
+      .selectAll<SVGPathElement, D3QOMLink>('.qom-link')
       .data(linksWithPositions, d => d.id);
 
     // Exit
@@ -244,24 +244,24 @@
     // Enter
     const linkEnter = linkSelection.enter()
       .append('path')
-      .attr('class', d => `dag-link link-${d.type}`)
+      .attr('class', d => `qom-link link-${d.type}`)
       .attr('marker-end', d => `url(#arrowhead-${d.type})`);
 
     // Update + Enter
     const linkUpdate = linkEnter.merge(linkSelection);
     
     linkUpdate
-      .attr('class', d => `dag-link link-${d.type}`)
+      .attr('class', d => `qom-link link-${d.type}`)
       .attr('marker-end', d => `url(#arrowhead-${d.type})`)
       .attr('d', d => {
         // Calculate path using fixed positions
-        const source = d.source as D3DAGNode;
-        const target = d.target as D3DAGNode;
+        const source = d.source as D3QOMNode;
+        const target = d.target as D3QOMNode;
         if (!source || !target) return '';
         
         // Get panel dimensions
-        const panelWidth = DAG_VISUAL_CONFIG.layout.panelWidth || 150;
-        const panelHeight = DAG_VISUAL_CONFIG.layout.panelHeight || 60;
+        const panelWidth = QOM_VISUAL_CONFIG.layout.panelWidth || 150;
+        const panelHeight = QOM_VISUAL_CONFIG.layout.panelHeight || 60;
         const padding = 5; // Padding from edge to ensure arrow visibility
         
         // Helper function to get rectangle edge intersection point
@@ -359,8 +359,8 @@
       .style('opacity', d => getLinkStyle(d).opacity);
 
     // Update nodes
-    const nodeSelection = g.select('.dag-nodes')
-      .selectAll<SVGGElement, D3DAGNode>('.dag-node')
+    const nodeSelection = g.select('.qom-nodes')
+      .selectAll<SVGGElement, D3QOMNode>('.qom-node')
       .data(nodesWithPositions, d => d.id);
 
     // Exit
@@ -374,33 +374,33 @@
     // Enter
     const nodeEnter = nodeSelection.enter()
       .append('g')
-      .attr('class', 'dag-node')
+      .attr('class', 'qom-node')
       .attr('transform', d => `translate(${d.x},${d.y}) scale(0)`);
 
     // Add invisible circle for link calculations
     nodeEnter.append('circle')
-      .attr('class', 'dag-node-circle')
+      .attr('class', 'qom-node-circle')
       .attr('r', d => getNodeRadius(d));
 
     // Add foreignObject for HTML content
-    const panelWidth = DAG_VISUAL_CONFIG.layout.panelWidth || 150;
-    const panelHeight = DAG_VISUAL_CONFIG.layout.panelHeight || 40;
+    const panelWidth = QOM_VISUAL_CONFIG.layout.panelWidth || 150;
+    const panelHeight = QOM_VISUAL_CONFIG.layout.panelHeight || 40;
     
     nodeEnter.append('foreignObject')
-      .attr('class', 'dag-node-foreign')
+      .attr('class', 'qom-node-foreign')
       .attr('x', -panelWidth / 2)
       .attr('y', -panelHeight / 2)
       .attr('width', panelWidth)
       .attr('height', panelHeight)
       .html(d => `
-        <div class="dag-node-panel dag-node-panel-${d.state}" data-node-id="${d.id}">
-          <div class="dag-node-icon-wrapper">
-            <svg class="dag-node-icon-svg" width="24" height="24">
+        <div class="qom-node-panel qom-node-panel-${d.state}" data-node-id="${d.id}">
+          <div class="qom-node-icon-wrapper">
+            <svg class="qom-node-icon-svg" width="24" height="24">
               <use href="/icons-o.svg#${getNodeIcon(d)}"/>
             </svg>
           </div>
-          <div class="dag-node-content">
-            <div class="dag-node-name">${d.name}</div>
+          <div class="qom-node-content">
+            <div class="qom-node-name">${d.name}</div>
           </div>
         </div>
       `);
@@ -409,29 +409,29 @@
     const nodeUpdate = nodeEnter.merge(nodeSelection);
     
     nodeUpdate
-      .attr('class', d => `dag-node node-${d.state}`)
+      .attr('class', d => `qom-node node-${d.state}`)
       .on('click', handleNodeClick)
       .on('mouseenter', handleNodeHover)
       .on('mouseleave', handleNodeLeave);
 
     // Update invisible circle for link calculations
-    nodeUpdate.select('.dag-node-circle')
+    nodeUpdate.select('.qom-node-circle')
       .attr('r', d => getNodeRadius(d));
 
     // Update HTML content in foreignObject
-    nodeUpdate.select('.dag-node-foreign')
+    nodeUpdate.select('.qom-node-foreign')
       .html(d => `
-        <div class="dag-node-panel dag-node-panel-${d.state}" data-node-id="${d.id}">
-          <div class="dag-node-icon-wrapper">
-            <svg class="dag-node-icon-svg" width="24" height="24">
+        <div class="qom-node-panel qom-node-panel-${d.state}" data-node-id="${d.id}">
+          <div class="qom-node-icon-wrapper">
+            <svg class="qom-node-icon-svg" width="24" height="24">
               <use href="/icons-o.svg#${getNodeIcon(d)}"/>
             </svg>
           </div>
-          <div class="dag-node-content">
-            <div class="dag-node-name">${d.name}</div>
-            ${d.state === 'running' ? '<div class="dag-node-status">Running...</div>' : ''}
-            ${d.state === 'completed' ? '<div class="dag-node-status status-completed">✓</div>' : ''}
-            ${d.state === 'failed' ? '<div class="dag-node-status status-failed">✗</div>' : ''}
+          <div class="qom-node-content">
+            <div class="qom-node-name">${d.name}</div>
+            ${d.state === 'running' ? '<div class="qom-node-status">Running...</div>' : ''}
+            ${d.state === 'completed' ? '<div class="qom-node-status status-completed">✓</div>' : ''}
+            ${d.state === 'failed' ? '<div class="qom-node-status status-failed">✗</div>' : ''}
           </div>
         </div>
       `);
@@ -452,25 +452,25 @@
 
   // Drag functionality removed - using fixed positioning
 
-  function handleNodeClick(event: MouseEvent, node: D3DAGNode) {
+  function handleNodeClick(event: MouseEvent, node: D3QOMNode) {
     event.stopPropagation();
     selectedNode = node;
     selectedLink = null;
     onnodeSelect?.(node);
   }
 
-  function handleLinkClick(event: MouseEvent, link: D3DAGLink) {
+  function handleLinkClick(event: MouseEvent, link: D3QOMLink) {
     event.stopPropagation();
     selectedLink = link;
     selectedNode = null;
     onlinkSelect?.(link);
   }
 
-  function handleNodeHover(_event: MouseEvent, node: D3DAGNode) {
+  function handleNodeHover(_event: MouseEvent, node: D3QOMNode) {
     hoveredNode = node;
     
     // Highlight connected links
-    g.selectAll<SVGPathElement, D3DAGLink>('.dag-link')
+    g.selectAll<SVGPathElement, D3QOMLink>('.qom-link')
       .style('opacity', d => {
         const source = typeof d.source === 'object' ? d.source.id : d.source;
         const target = typeof d.target === 'object' ? d.target.id : d.target;
@@ -478,12 +478,12 @@
       });
     
     // Dim non-connected nodes
-    g.selectAll<SVGGElement, D3DAGNode>('.dag-node')
+    g.selectAll<SVGGElement, D3QOMNode>('.qom-node')
       .style('opacity', d => {
         if (d.id === node.id) return 1;
         
         // Check if connected
-        const isConnected = $d3DAGData.links.some(link => {
+        const isConnected = $d3QOMData.links.some(link => {
           const source = typeof link.source === 'object' ? link.source.id : link.source;
           const target = typeof link.target === 'object' ? link.target.id : link.target;
           return (source === node.id && target === d.id) || 
@@ -498,36 +498,36 @@
     hoveredNode = null;
     
     // Reset opacity to default
-    g.selectAll('.dag-link')
+    g.selectAll('.qom-link')
       .style('opacity', null);  // Let CSS handle default opacity
     
-    g.selectAll('.dag-node')
+    g.selectAll('.qom-node')
       .style('opacity', 1);
   }
 
   // Reactive metrics display
-  const metrics = $derived($dagMetrics);
+  const metrics = $derived($qomMetrics);
 </script>
 
-<div class="dag-visualizer" bind:this={container}>
+<div class="qom-visualizer" bind:this={container}>
   {#if metrics}
-    <div class="dag-metrics">
+    <div class="qom-metrics">
       <div class="metric">
-        <span class="metric-label">{$t('session.dag.status')}:</span>
+        <span class="metric-label">{$t('session.qom.status')}:</span>
         <span class="metric-value status-{metrics.status}">{metrics.status}</span>
       </div>
       <div class="metric">
-        <span class="metric-label">{$t('session.dag.nodes')}:</span>
+        <span class="metric-label">{$t('session.qom.nodes')}:</span>
         <span class="metric-value">
           {metrics.completedNodes}/{metrics.totalNodes}
         </span>
       </div>
       <div class="metric">
-        <span class="metric-label">{$t('session.dag.cost')}:</span>
+        <span class="metric-label">{$t('session.qom.cost')}:</span>
         <span class="metric-value">${metrics.totalCost.toFixed(4)}</span>
       </div>
       <div class="metric">
-        <span class="metric-label">{$t('session.dag.duration')}:</span>
+        <span class="metric-label">{$t('session.qom.duration')}:</span>
         <span class="metric-value">{(metrics.totalDuration / 1000).toFixed(1)}s</span>
       </div>
       
@@ -535,19 +535,19 @@
   {/if}
 
   <!-- Development Simulation Panel -->
-  <DAGSimulationPanel {sessionId} />
+  <QOMSimulationPanel {sessionId} />
 </div>
 
 <style>
-  /* DAG Node Circle - Hidden but used for link calculations */
-  :global(.dag-node-circle) {
+  /* QOM Node Circle - Hidden but used for link calculations */
+  :global(.qom-node-circle) {
     fill: transparent;
     stroke: transparent;
     pointer-events: none;
   }
 
-  /* DAG Node Panel Styles */
-  :global(.dag-node-panel) {
+  /* QOM Node Panel Styles */
+  :global(.qom-node-panel) {
     display: flex;
     align-items: center;
     gap: .5rem;
@@ -561,12 +561,12 @@
     transition: all 0.2s ease;
   }
 
-  :global(.dag-node-panel:hover) {
+  :global(.qom-node-panel:hover) {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
   }
 
-  :global(.dag-node-icon-wrapper) {
+  :global(.qom-node-icon-wrapper) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -575,16 +575,16 @@
     flex-shrink: 0;
   }
 
-  :global(.dag-node-icon-svg) {
+  :global(.qom-node-icon-svg) {
     width: 100%;
     height: 100%;
   }
 
-  :global(.dag-node-icon-svg use) {
+  :global(.qom-node-icon-svg use) {
     fill: #6b7280;
   }
 
-  :global(.dag-node-content) {
+  :global(.qom-node-content) {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -592,7 +592,7 @@
     min-width: 0;
   }
 
-  :global(.dag-node-name) {
+  :global(.qom-node-name) {
     font-size: 12px;
     font-weight: 500;
     color: #1f2937;
@@ -605,56 +605,56 @@
     line-height: 1.3;
   }
 
-  :global(.dag-node-status) {
+  :global(.qom-node-status) {
     font-size: 10px;
     color: #6b7280;
   }
 
-  :global(.dag-node-status.status-completed) {
+  :global(.qom-node-status.status-completed) {
     color: #10b981;
     font-weight: 600;
   }
 
-  :global(.dag-node-status.status-failed) {
+  :global(.qom-node-status.status-failed) {
     color: #ef4444;
     font-weight: 600;
   }
 
   /* State-based panel styling */
-  :global(.dag-node-panel-pending) {
+  :global(.qom-node-panel-pending) {
     border-color: #e5e7eb;
     background: #fafafa;
   }
 
-  :global(.dag-node-panel-pending .dag-node-icon-svg use) {
+  :global(.qom-node-panel-pending .qom-node-icon-svg use) {
     fill: #9ca3af;
   }
 
-  :global(.dag-node-panel-running) {
+  :global(.qom-node-panel-running) {
     border-color: #fbbf24;
     background: #fffbeb;
     animation: panel-pulse 2s ease-in-out infinite;
   }
 
-  :global(.dag-node-panel-running .dag-node-icon-svg use) {
+  :global(.qom-node-panel-running .qom-node-icon-svg use) {
     fill: #f59e0b;
   }
 
-  :global(.dag-node-panel-completed) {
+  :global(.qom-node-panel-completed) {
     border-color: #10b981;
     background: #f0fdf4;
   }
 
-  :global(.dag-node-panel-completed .dag-node-icon-svg use) {
+  :global(.qom-node-panel-completed .qom-node-icon-svg use) {
     fill: #10b981;
   }
 
-  :global(.dag-node-panel-failed) {
+  :global(.qom-node-panel-failed) {
     border-color: #ef4444;
     background: #fef2f2;
   }
 
-  :global(.dag-node-panel-failed .dag-node-icon-svg use) {
+  :global(.qom-node-panel-failed .qom-node-icon-svg use) {
     fill: #ef4444;
   }
 
@@ -667,8 +667,8 @@
     }
   }
 
-  /* DAG Link Styles */
-  :global(.dag-link) {
+  /* QOM Link Styles */
+  :global(.qom-link) {
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -676,43 +676,43 @@
     transition: all 0.3s ease;
   }
 
-  :global(.dag-link.link-data_flow) {
+  :global(.qom-link.link-data_flow) {
     stroke: #10B981;
     stroke-width: 3px;
     opacity: 0.8;
   }
 
-  :global(.dag-link.link-analysis_input) {
+  :global(.qom-link.link-analysis_input) {
     stroke: #3B82F6;
     stroke-width: 3px;
     opacity: 0.8;
   }
 
-  :global(.dag-link.link-safety_input) {
+  :global(.qom-link.link-safety_input) {
     stroke: #EC4899;
     stroke-width: 3px;
     opacity: 0.8;
   }
 
-  :global(.dag-link.link-triggers) {
+  :global(.qom-link.link-triggers) {
     stroke: #3B82F6;
     stroke-width: 3px;
     opacity: 0.7;
   }
 
-  :global(.dag-link.link-contributes) {
+  :global(.qom-link.link-contributes) {
     stroke: #6366F1;
     stroke-width: 3px;
     opacity: 0.7;
   }
 
-  :global(.dag-link.link-refines) {
+  :global(.qom-link.link-refines) {
     stroke: #EF4444;
     stroke-width: 3px;
     opacity: 0.7;
   }
 
-  :global(.dag-link.link-merges) {
+  :global(.qom-link.link-merges) {
     stroke: #8B5CF6;
     stroke-width: 5px;
     opacity: 0.7;
@@ -720,14 +720,14 @@
 
 
 
-  :global(.dag-link.link-bypass_flow) {
+  :global(.qom-link.link-bypass_flow) {
     stroke: #FCD34D;
     stroke-width: 4px;
     stroke-dasharray: 10, 10;
     opacity: 0.6;
   }
 
-  .dag-visualizer {
+  .qom-visualizer {
     width: 100%;
     height: 100%;
     min-height: 600px;  /* Ensure minimum height */
@@ -741,7 +741,7 @@
     justify-content: center;
   }
 
-  .dag-metrics {
+  .qom-metrics {
     position: absolute;
     top: 10px;
     right: 10px;
@@ -792,23 +792,23 @@
     color: #ef4444;
   }
 
-  :global(.dag-svg) {
+  :global(.qom-svg) {
     width: 100%;
     height: 100%;
     max-width: 100%;  /* Respect container width */
     display: block;   /* Remove inline-block spacing */
   }
 
-  :global(.dag-node) {
+  :global(.qom-node) {
     cursor: pointer;
     transition: opacity 0.3s ease;
   }
 
-  :global(.dag-node-circle) {
+  :global(.qom-node-circle) {
     transition: all 0.3s ease;
   }
 
-  :global(.dag-node:hover .dag-node-circle) {
+  :global(.qom-node:hover .qom-node-circle) {
     filter: brightness(1.1);
   }
 
