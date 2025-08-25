@@ -1,0 +1,241 @@
+{
+  "sessionId": "session_20250806_143110",
+  "timestamp": "2025-08-06T15:10:00Z",
+  "analysisVersion": 2,
+  "nodes": {
+    "symptoms": [
+      {
+        "id": "sym_fatigue_non_restorative",
+        "text": "neobnovující únava",
+        "severity": 3,
+        "duration": 60,
+        "confidence": 0.95,
+        "source": "transcript",
+        "quote": "Budím se unavená a v poledne mám pocit, že sotva funguji.",
+        "characteristics": ["zhoršující se", "perzistentní"],
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Perzistentní únava s těžkou menstruací naznačuje ztrátu železa."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Neosvěžující spánek a únava jsou běžné u hypotyreózy."
+          },
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Perzistentní únava může být projevem deprese."
+          }
+        ]
+      },
+      {
+        "id": "sym_lab_ferritin_low",
+        "text": "Ferritin 8 ng/mL (nízký)",
+        "severity": 8,
+        "confidence": 0.99,
+        "source": "medical_history",
+        "documentId": "lab_results_2025_08_06",
+        "quote": "Ferritin: 8 ng/mL (Ref 15–150)",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.98,
+            "reasoning": "Nízký ferritin je vysoce specifický pro nedostatek železa."
+          }
+        ]
+      },
+      {
+        "id": "sym_lab_hb_low",
+        "text": "Hemoglobin 10,9 g/dL (nízký)",
+        "severity": 6,
+        "confidence": 0.98,
+        "source": "medical_history",
+        "documentId": "lab_results_2025_08_06",
+        "quote": "Hemoglobin: 10,9 g/dL (Ref 12,0–16,0)",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Anémie odpovídá obrazu nedostatku železa."
+          }
+        ]
+      },
+      {
+        "id": "sym_lab_mcv_low",
+        "text": "MCV 76 fL (mikrocytární)",
+        "severity": 6,
+        "confidence": 0.97,
+        "source": "medical_history",
+        "documentId": "lab_results_2025_08_06",
+        "quote": "MCV: 76 fL (Ref 80–100)",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.92,
+            "reasoning": "Mikrocytóza podporuje anémii z nedostatku železa."
+          }
+        ]
+      }
+    ],
+    "diagnoses": [
+      {
+        "id": "diag_iron_deficiency_anemia",
+        "name": "Anémie z nedostatku železa",
+        "probability": 0.97,
+        "priority": 1,
+        "icd10": "D50.9",
+        "reasoning": "Nízký ferritin s mikrocytární anémií potvrzuje anémii z nedostatku železa. Pravděpodobným zdrojem jsou silné menses; nutné došetřit.",
+        "confidence": 0.98,
+        "requiresInvestigation": false,
+        "relationships": [
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.95,
+            "reasoning": "Léčba první volby při potvrzeném nedostatku železa."
+          },
+          {
+            "nodeId": "treat_investigate_bleeding",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Nutno identifikovat příčinu ztrát železa (např. gynekologickou)."
+          }
+        ]
+      },
+      {
+        "id": "diag_hypothyroidism",
+        "name": "Primární hypotyreóza",
+        "probability": 0.7,
+        "priority": 2,
+        "icd10": "E03.9",
+        "reasoning": "Příznaky odpovídají, ale nedostatek železa nyní potvrzen a vysvětluje únavu; ponechat jako komorbiditu.",
+        "confidence": 0.78,
+        "requiresInvestigation": true
+      },
+      {
+        "id": "diag_fibroids",
+        "name": "Děložní myomy",
+        "probability": 0.5,
+        "priority": 4,
+        "icd10": "D25.9",
+        "reasoning": "Silné krvácení s potvrzeným nedostatkem železa zvyšuje podezření na strukturální příčinu.",
+        "confidence": 0.6,
+        "requiresInvestigation": true
+      }
+    ],
+    "treatments": [
+      {
+        "id": "treat_iron_supplementation",
+        "type": "medication",
+        "name": "Síran železnatý 325 mg denně",
+        "dosage": "325 mg 1× denně, nalačno s vitamínem C",
+        "priority": 1,
+        "confidence": 0.95,
+        "effectiveness": 0.9,
+        "duration": "3–6 měsíců",
+        "urgency": "routine",
+        "reasoning": "Potvrzená anémie z nedostatku železa.",
+        "requiresFollowUp": true,
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.95,
+            "reasoning": "Přímá korekce nedostatku železa."
+          }
+        ]
+      },
+      {
+        "id": "treat_investigate_bleeding",
+        "type": "investigation",
+        "name": "Vyšetření příčin silného krvácení",
+        "priority": 2,
+        "confidence": 0.85,
+        "urgency": "routine",
+        "description": "Vyšetření příčiny silného menstruačního krvácení",
+        "reasoning": "Po potvrzení IDA nutné vyšetřit etiologii (např. myomy)."
+      },
+      {
+        "id": "treat_pelvic_ultrasound",
+        "type": "investigation",
+        "name": "Transvaginální pánevní ultrazvuk",
+        "priority": 3,
+        "confidence": 0.85,
+        "urgency": "routine",
+        "description": "Zobrazení děložní struktury a detekce myomů",
+        "reasoning": "Zhodnotit strukturální příčiny silného krvácení.",
+        "relationships": [
+          {
+            "nodeId": "diag_fibroids",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Zobrazování první volby pro myomy."
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "q_iron_labs",
+        "text": "Byly nedávno vyšetřeny koncentrace železa nebo ferritinu?",
+        "category": "diagnostic_clarification",
+        "actionType": "question",
+        "priority": 1,
+        "status": "answered",
+        "answer": "Ferritin 8 ng/mL (nízký), Hb 10,9 g/dL (nízký), MCV 76 fL (mikrocytární)",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Laboratoř potvrzuje anémii z nedostatku železa."
+          }
+        ],
+        "impact": {
+          "diagnoses": {
+            "diag_iron_deficiency_anemia": 0.3,
+            "diag_hypothyroidism": -0.05
+          }
+        }
+      },
+      {
+        "id": "safety_drug_interaction",
+        "text": "Železo může snižovat vstřebávání hormonů štítné žlázy – načasování je důležité.",
+        "category": "drug_interaction",
+        "actionType": "alert",
+        "priority": 3,
+        "status": "pending",
+        "recommendation": "Užívat železo a levotyroxin s odstupem alespoň 4 hodin"
+      }
+    ]
+  },
+  "userActions": [
+    {
+      "timestamp": "2025-08-06T15:12:00Z",
+      "action": "accept",
+      "targetId": "treat_iron_supplementation",
+      "reason": "Potvrzená IDA; zahájit substituci železa",
+      "confidence": 0.95
+    }
+  ]
+}

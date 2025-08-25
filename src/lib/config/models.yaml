@@ -133,7 +133,7 @@ flows:
 # Performance settings
 performance:
   max_retries: 3
-  timeout_ms: 120000 # Increased to 2 minutes for complex medical analysis
+  timeout_ms: 180000 # Increased to 3 minutes for complex OCR operations
   concurrent_requests: 5
   rate_limit_per_minute: 100
 

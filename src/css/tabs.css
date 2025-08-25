@@ -8,15 +8,18 @@
 }
 .tab-heads > button,
 .tab-heads > a {
+  position: relative;
   flex-grow: 1;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   background-color: var(--color-white);
   border-top: 3px solid var(--color-interactivity);
+  height: var(--toolbar-height);
   transition:
     background-color 0.5s,
     color 0.5s,
     border-color 0.5s;
   margin-bottom: var(--gap);
+  
 }
 
 .tab-heads > button:first-child,
@@ -35,21 +38,31 @@
   background-color: var(--color-interactivity);
   border-color: var(--color-interactivity);
   color: var(--color-interactivity-text);
-  font-weight: 700;
+
 }
 
 .tab-heads > button.-active,
 .tab-heads > a.-active {
-  font-weight: 700;
   border-color: var(--color-highlight);
   color: var(--color-highlight);
-  background-color: var(--color-background);
+  background-color: transparent;
   margin-bottom: 0;
 }
 
+/* Legacy tab-body classes - keep for backward compatibility */
 .tab-body {
   display: none;
 }
 .tab-body.-active {
   display: block;
+}
+
+/* Enhanced tab system - tab container should be positioned */
+.tabs {
+  position: relative;
+  width: 100%;
+}
+
+.tabs.fixed-height {
+  transition: min-height 0.2s ease;
 }

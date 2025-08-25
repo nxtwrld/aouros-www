@@ -4,7 +4,7 @@
     import { throttle } from 'throttle-debounce';
     import { onDestroy, onMount } from 'svelte';
     import shortcuts from '$lib/shortcuts';
-    import { SSEClient } from '$lib/session/sse-client';
+    import { SSEClient } from '$lib/session/transport/sse-client';
     import type { PartialTranscript } from '$lib/session/manager';
     import { log } from '$lib/logging/logger';
 

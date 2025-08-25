@@ -28,8 +28,8 @@ export interface AudioControls {
   stop: () => void;
   start: () => void;
   state: AudioState;
-  onFeatures: (d: Meyda.MeydaFeaturesObject) => void;
-  onData: (d: AudioData) => void;
+  onFeatures?: (d: Meyda.MeydaFeaturesObject) => void;
+  onData?: (d: AudioData) => void;
   mediaRecorder?: MediaRecorder;
   audioContext?: AudioContext;
   source?: MediaStreamAudioSourceNode;
@@ -38,8 +38,8 @@ export interface AudioControls {
 
 export interface AudioControlsVad extends AudioControls {
   onFrameProcessed: (callback: (frame: Float32Array) => void) => void;
-  onSpeechStart: () => void;
-  onSpeechEnd: (audio: Float32Array) => void;
+  onSpeechStart?: () => void;
+  onSpeechEnd?: (audio: Float32Array) => void;
 }
 
 async function loadScript(src: string) {
@@ -106,22 +106,40 @@ export async function getAudioVAD(
     mvad.start();
   };
   controls.stop = () => {
-    //if (controls.state != AudioState.speaking) {
-    mvad.pause();
+    console.log("[VAD] Stopping VAD and MediaStream...");
+
+    // Clean up VAD and its internal MediaStream
+    if (mvad) {
+      if (typeof mvad.destroy === "function") {
+        mvad.destroy();
+        console.log("[VAD] VAD destroyed successfully");
+      } else {
+        // Manual cleanup for VAD's internal MediaStream (critical for Chrome tab indicator)
+        if (mvad.stream) {
+          mvad.stream.getTracks().forEach((track) => track.stop());
+          console.log("[VAD] VAD MediaStream tracks stopped");
+        }
+
+        // Close VAD's AudioContext if not already closed
+        if (mvad.audioContext && mvad.audioContext.state !== "closed") {
+          mvad.audioContext
+            .close()
+            .catch((err) =>
+              console.warn("[VAD] AudioContext close error:", err),
+            );
+        }
+
+        mvad.pause();
+      }
+    }
+
+    // Stop the original audio processor
     stop();
     controls.state = AudioState.stopped;
-    //} else {
-    //   mvad.pause();
-    //stop();
-    controls.state = AudioState.stopped;
-    //controls.state = AudioState.stopping;
-    //}
   };
 
   return controls as AudioControlsVad;
 }
-
-let userMedia: MediaStream | null = null;
 
 export async function getAudio(
   options: AudioOptions = {
@@ -146,9 +164,9 @@ export async function getAudio(
       // Proceed with audio processing
 
       const mediaRecorder = new MediaRecorder(stream);
-      let analyzer: Meyda.MeydaAnalyzer;
-      let audioContext: AudioContext;
-      let source: MediaStreamAudioSourceNode;
+      let analyzer: Meyda.MeydaAnalyzer | undefined;
+      let audioContext: AudioContext | undefined;
+      let source: MediaStreamAudioSourceNode | undefined;
 
       // create audio context
       if (options.audioContext || options.analyzer) {
@@ -163,18 +181,30 @@ export async function getAudio(
         stream,
         state: AudioState.ready,
         stop: () => {
-          if (analyzer) analyzer.stop();
-          mediaRecorder.stop();
+          console.log("[AudioControls] Stopping audio components...");
+
+          if (analyzer) {
+            analyzer.stop();
+          }
+
+          if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+          }
+
           controls.state = AudioState.stopped;
 
+          // Stop all MediaStream tracks
           stream.getTracks().forEach((track) => {
             track.stop();
-            stream!.removeTrack(track);
+            stream.removeTrack(track);
           });
+
+          // Clean up references
           delete controls.stream;
           delete controls.mediaRecorder;
           delete controls.audioContext;
           delete controls.source;
+          console.log("[AudioControls] Audio cleanup completed");
         },
         start: () => {
           mediaRecorder.start(options.dataSize);
@@ -212,9 +242,9 @@ export async function convertFloat32ToMp3(
   arrayBuffer: Float32Array,
   sampleRate: number = 16000,
 ): Promise<Blob> {
-  window.MPEGMode = MPEGMode;
-  window.Lame = Lame;
-  window.BitStream = BitStream;
+  (window as any).MPEGMode = MPEGMode;
+  (window as any).Lame = Lame;
+  (window as any).BitStream = BitStream;
 
   const int16Array = convertFloat32ToInt16(arrayBuffer);
   const mp3encoder = new Mp3Encoder(1, sampleRate, 128); // Mono, sample rate, 128 kbps
@@ -236,9 +266,9 @@ export async function convertFloat32ToMp3(
 }
 
 export async function convertBlobToMp3(audioBlob: Blob): Promise<Blob> {
-  window.MPEGMode = MPEGMode;
-  window.Lame = Lame;
-  window.BitStream = BitStream;
+  (window as any).MPEGMode = MPEGMode;
+  (window as any).Lame = Lame;
+  (window as any).BitStream = BitStream;
 
   // Step 1: Decode the merged Blob to obtain PCM data
   const audioContext = new (window.AudioContext ||

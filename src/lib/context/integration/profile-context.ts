@@ -14,6 +14,7 @@ import { logger } from "$lib/logging/logger";
 
 export class ProfileContextManager {
   private initializationPromises = new Map<string, Promise<void>>();
+  private initializedProfiles = new Set<string>();
 
   /**
    * Initialize context for a profile using documents with medical terms
@@ -27,6 +28,11 @@ export class ProfileContextManager {
       includePreload?: boolean;
     } = {},
   ): Promise<void> {
+    // Check if already initialized (and not forced to reinitialize)
+    if (this.initializedProfiles.has(profileId) && !options.forceReinitialize) {
+      return;
+    }
+
     // Check if already initializing
     if (
       this.initializationPromises.has(profileId) &&
@@ -40,6 +46,8 @@ export class ProfileContextManager {
 
     try {
       await initPromise;
+      // Mark as initialized after successful completion
+      this.initializedProfiles.add(profileId);
     } finally {
       this.initializationPromises.delete(profileId);
     }
@@ -142,6 +150,7 @@ export class ProfileContextManager {
    */
   cleanupContext(profileId: string): void {
     this.initializationPromises.delete(profileId);
+    this.initializedProfiles.delete(profileId);
     logger
       .namespace("ProfileContext")
       .info("Cleaned up context for profile", { profileId });

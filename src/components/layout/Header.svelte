@@ -14,6 +14,9 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
     import ProfileImage from "$components/profile/ProfileImage.svelte";
     import type { Profile } from "$lib/types.d";
     import { isOpen as chatIsOpen } from '$lib/chat/store';
+    import AudioButton from './AudioButton.svelte';
+    import { audioState, sessionState, SessionState, AudioState } from '$lib/session/stores/unified-session-store';
+    import { logger } from '$lib/logging/logger';
 
     function isActive(path: string, currentPath: string) {
         if ($uiState.overlay !== Overlay.none) return false;
@@ -32,21 +35,125 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
     }
 
 
-    let isSearchOpen: boolean = false;
+    let isSearchOpen = $state(false);
+    let activeMenu = $state(Menu.none);
+    let headerAudioContainer = $state<HTMLDivElement>();
+    let centerAudioContainer = $state<HTMLDivElement>();
+    
+    // Animation state management
+    let isAnimatingTransition = $state(false);
+    let targetPosition = $state({ x: 0, y: 0, scale: 1 });
+    let animationDirection = $state<'to-header' | 'to-center' | null>(null);
 
-    $: {
+    $effect(() => {
         if (isSearchOpen) {
             activeMenu = Menu.none;
         }
-    }
-
-    let activeMenu: Menu = Menu.none;
+    });
     function toggleMenu(menu: Menu) {
         if (activeMenu == menu) {
             activeMenu = Menu.none;
         } else {
             activeMenu = menu;
         }
+    }
+
+    // Session state reactive values
+    let currentSessionState = $derived($sessionState);
+    let audioStateValue = $derived($audioState.state);
+    
+    // Determine UI visibility based on session state
+    let showAudioButton = $derived(
+        currentSessionState === SessionState.Ready || 
+        currentSessionState === SessionState.Running || 
+        currentSessionState === SessionState.Paused
+    );
+    
+    let showAudioButtonInHeader = $derived(
+        currentSessionState === SessionState.Running || 
+        currentSessionState === SessionState.Paused
+    );
+    
+    let showNewSessionLink = $derived(
+        currentSessionState === SessionState.Off || 
+        currentSessionState === SessionState.Final
+    );
+
+    // Handle smooth transitions when audio state changes
+    $effect(() => {
+        if (typeof window === 'undefined') return;
+        
+        const shouldBeInHeader = showAudioButtonInHeader;
+        const audioButtonElement = document.querySelector('.audio-button-container');
+        
+        if (audioButtonElement && headerAudioContainer && centerAudioContainer) {
+            const currentlyInHeader = audioButtonElement.parentElement === headerAudioContainer;
+            
+            if (shouldBeInHeader && !currentlyInHeader && !isAnimatingTransition) {
+                // Start animation to header
+                animateToHeader();
+            } else if (!shouldBeInHeader && currentlyInHeader && !isAnimatingTransition) {
+                // Start animation to center
+                animateToCenter();
+            }
+        }
+    });
+
+    // Calculate target header position and start animation
+    function animateToHeader() {
+        if (!headerAudioContainer || !centerAudioContainer) return;
+        
+        logger.audio.debug('Starting animation to header');
+        isAnimatingTransition = true;
+        animationDirection = 'to-header';
+        
+        // Calculate target position
+        const headerRect = headerAudioContainer.getBoundingClientRect();
+        const centerRect = centerAudioContainer.getBoundingClientRect();
+        
+        // Calculate transform needed to move center to header position
+        const deltaX = headerRect.left + headerRect.width / 2 - (centerRect.left + centerRect.width / 2);
+        const deltaY = headerRect.top + headerRect.height / 2 - (centerRect.top + centerRect.height / 2);
+        const scale = Math.min(headerRect.width / centerRect.width, headerRect.height / centerRect.height);
+        
+        targetPosition = { x: deltaX, y: deltaY, scale };
+        
+        logger.audio.debug('Animation target calculated', { deltaX, deltaY, scale });
+    }
+
+    // Start animation back to center
+    function animateToCenter() {
+        logger.audio.debug('Starting animation to center');
+        isAnimatingTransition = true;
+        animationDirection = 'to-center';
+        
+        // Reset to center position
+        targetPosition = { x: 0, y: 0, scale: 1 };
+    }
+
+    // Handle transition end to swap containers
+    function handleTransitionEnd() {
+        if (!isAnimatingTransition) return;
+        
+        logger.audio.debug('Transition ended, swapping containers', { direction: animationDirection });
+        
+        const audioButtonElement = document.querySelector('.audio-button-container');
+        if (!audioButtonElement || !headerAudioContainer || !centerAudioContainer) return;
+        
+        if (animationDirection === 'to-header') {
+            // Move to header container and reset transform
+            headerAudioContainer.appendChild(audioButtonElement);
+            targetPosition = { x: 0, y: 0, scale: 1 };
+        } else if (animationDirection === 'to-center') {
+            // Move to center container
+            centerAudioContainer.appendChild(audioButtonElement);
+        }
+        
+        // Reset animation state
+        isAnimatingTransition = false;
+        animationDirection = null;
+        
+        logger.audio.debug('Container swap completed');
     }
 
 </script>
@@ -65,7 +172,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
         </a>
         <div class="navigation-mobile toolbar">
             <div class="spacer"></div>
-            <button class="mobile-menu" on:click|stopPropagation={() => toggleMenu(Menu.tools)}><MenuBurger open={activeMenu == Menu.tools} /></button>
+            <button class="mobile-menu" onclick={(e) => { e.stopPropagation(); toggleMenu(Menu.tools); }}><MenuBurger open={activeMenu == Menu.tools} /></button>
         </div>
         
         <div class="navigation toolbar" class:-open={activeMenu == Menu.tools}>
@@ -89,7 +196,20 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                     <a href="/med/p/{$profile.id}/documents" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/documents/', $page.url.pathname)}>{ $t('app.nav.documents') }</a>
                     <!--a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>{ $t('app.nav.history') }</a-->
                     {#if $user && 'isMedical' in $user && $user.isMedical}
-                    <a href="/med/p/{$profile.id}/session" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>{ $t('app.nav.new-session') }</a>
+                        {#if showAudioButtonInHeader}
+                            <div class="sub-item recording-indicator"
+                                 class:listening={audioStateValue === AudioState.Listening}
+                                 class:speaking={audioStateValue === AudioState.Speaking}
+                                 class:paused={currentSessionState === SessionState.Paused}>
+                                <!-- Container for audio button - bind to Svelte property -->
+                                <div bind:this={headerAudioContainer} class="audio-button-header-container"></div>
+                                <span class="recording-text">
+                                    {currentSessionState === SessionState.Paused ? 'Continue' : 'Recording...'}
+                                </span>
+                            </div>
+                        {:else if showNewSessionLink}
+                            <a href="/med/p/{$profile.id}/session-moe" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>{ $t('app.nav.new-session') }</a>
+                        {/if}
                     {/if}
                 {:else}
                     <div class="profile" class:-active={$page.url.pathname == '/med/p/addprofile/'}>{'fullName' in $profile ? $profile.fullName : 'New Profile'}</div>
@@ -102,11 +222,11 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                 {/if}
             {/if}
             <!--a href="/med/import" class:-active={$page.url.pathname == '/med/import/'}>Import</a-->
-            <button on:click={() => ui.emit('overlay.import')} class:-active={$uiState.overlay == Overlay.import}>{ $t('app.nav.import') }</button>
+            <button onclick={() => ui.emit('overlay.import')} class:-active={$uiState.overlay == Overlay.import}>{ $t('app.nav.import') }</button>
         </div>
         {#if $user}
         <div class="menu icon user-menu" class:-open={activeMenu == Menu.user}>
-            <button on:click|stopPropagation={() => toggleMenu(Menu.user)}>
+            <button onclick={(e) => { e.stopPropagation(); toggleMenu(Menu.user); }}>
               <ProfileImage profile={$user.id ? (() => {
                 try {
                   return profiles.get($user.id) as Profile;
@@ -122,23 +242,36 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
 
                     </div>
                 </li>
-                <li><button on:click={logout}>{ $t('app.nav.logout') }</button></li>
+                <li><button onclick={logout}>{ $t('app.nav.logout') }</button></li>
             </ul>
         </div>
         {/if}
         {#if $profile?.id}
-        <button on:click={() => ui.emit('chat:toggle')} class="icon" class:-active={$chatIsOpen} aria-label={$chatIsOpen ? $t('app.chat.actions.close') : $t('app.chat.actions.open')} title={$chatIsOpen ? $t('app.chat.actions.close') : $t('app.chat.actions.open')}>
+        <button onclick={() => ui.emit('chat:toggle')} class="icon" class:-active={$chatIsOpen} aria-label={$chatIsOpen ? $t('app.chat.actions.close') : $t('app.chat.actions.open')} title={$chatIsOpen ? $t('app.chat.actions.close') : $t('app.chat.actions.open')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <use href="/icons.svg#doctor"/>
             </svg>
         </button>
         {/if}
-        <button on:click={() => emit('find')} class="icon" aria-label="Search"><svg >
+        <button onclick={() => emit('find')} class="icon" aria-label="Search"><svg >
             <use href="/icons.svg#search"></use>
         </svg></button>
 
 </nav>
 </header>
+
+<!-- Global center container for AudioButton when on new session page -->
+{#if showAudioButton}
+    <div bind:this={centerAudioContainer} 
+         class="audio-button-center-container" 
+         class:visible={!showAudioButtonInHeader}
+         class:animating={isAnimatingTransition}
+         style="transform: translate({targetPosition.x}px, {targetPosition.y}px) scale({targetPosition.scale})"
+         ontransitionend={handleTransitionEnd}>
+        <AudioButton language="en" models={['GP']} useRealtime={true} />
+    </div>
+{/if}
+
 <Search bind:isSearchOpen={isSearchOpen} />
 <style>
     header {
@@ -264,6 +397,86 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
     }
     .user .h3 {
         white-space: nowrap;
+    }
+
+    /* Recording indicator styling */
+    .recording-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background-color: var(--color-white);
+        color: var(--color-black);
+        border-radius: var(--radius);
+        font-weight: var(--text-bold);
+        z-index: 1001;
+    }
+
+    /* Dynamic text colors based on audio state - light haze colors */
+    .recording-indicator.listening .recording-text {
+        color: var(--color-interactivity); /* Light blue listening color */
+        transition: color 0.3s ease;
+    }
+
+    .recording-indicator.speaking .recording-text {
+        color: var(--color-positive); /* Green speaking color */
+        transition: color 0.3s ease;
+    }
+    
+    .recording-indicator.paused .recording-text {
+        color: var(--color-gray-700); /* Gray for paused state */
+        transition: color 0.3s ease;
+    }
+
+    .recording-text {
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+
+
+    /* Container for AudioButton in header */
+    .audio-button-header-container {
+        width: 2.5rem;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Container for AudioButton in center (new session page) */
+    .audio-button-center-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 12rem;
+        height: 12rem;
+        z-index: 1001;
+        opacity: 0;
+        pointer-events: none;
+        /* Only transition opacity and visibility by default */
+        transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .audio-button-center-container.visible {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    /* When animating, transition transform and size */
+    .audio-button-center-container.animating {
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Ensure AudioButton inherits container size and animation timing */
+    .recording-indicator :global(.audio-button-container) {
+        --button-size: 2.5rem;
+        --animation-duration: 0.8s; /* Faster animation for smaller header button */
+    }
+
+    .audio-button-center-container :global(.audio-button-container) {
+        --button-size: 12rem;
+        --animation-duration: 2s; /* Standard animation for larger center button */
     }
 
 

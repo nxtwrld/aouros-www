@@ -179,7 +179,7 @@
 
 <!-- Modal for attachment preview -->
 {#if showModal}
-    <Modal on:close={closeModal} style="padding: 0;">
+    <Modal onclose={closeModal} style="padding: 0;">
         <div class="modal-content">
             <div class="modal-header">
 

@@ -1,0 +1,228 @@
+<script lang="ts">
+    import { t } from '$lib/i18n';
+    
+    interface Props {
+        showSidebar: boolean;
+        activeTab?: string;
+        activeMainView?: string; // Track which view is active in main area
+        hasQuestions?: boolean;
+        hasTranscript?: boolean;
+        pendingQuestions?: number;
+        isMobile?: boolean;
+        onToggleSidebar: () => void;
+        onTabSelect?: (tab: string) => void;
+        onMainViewSelect?: (view: string) => void;
+    }
+    
+    let {
+        showSidebar,
+        activeTab = '',
+        activeMainView = 'diagram',
+        hasQuestions = true,
+        hasTranscript = true,
+        pendingQuestions = 0,
+        isMobile = false,
+        onToggleSidebar,
+        onTabSelect,
+        onMainViewSelect
+    }: Props = $props();
+    
+    // Main area view tabs (left side)
+    const mainViewTabs = $derived([
+        { id: 'diagram', label: $t('session.diagram') },
+        { id: 'dag', label: $t('session.dag') }
+    ]);
+    
+    // Sidebar content tabs (right side)
+    const sidebarTabs = $derived([
+        ...(hasQuestions ? [{ id: 'questions', label: $t('session.tabs.questions'), hasBadge: pendingQuestions > 0, badgeCount: pendingQuestions }] : []),
+        ...(hasTranscript ? [{ id: 'transcript', label: $t('session.tabs.transcript') }] : []),
+        { id: 'details', label: $t('session.tabs.details') },
+        ...(!isMobile ? [{ id: 'legend', label: $t('session.tabs.legend') }] : [])
+    ]);
+    
+    function handleMainViewClick(viewId: string) {
+        onMainViewSelect?.(viewId);
+        // Optionally close sidebar when switching main views
+        // if (showSidebar) {
+        //     onToggleSidebar();
+        // }
+    }
+    
+    function handleSidebarTabClick(tabId: string) {
+        // If clicking the already active tab while sidebar is open, close the sidebar
+        if (showSidebar && activeTab === tabId) {
+            onToggleSidebar();
+        } 
+        // If sidebar is closed, open it and select the tab
+        else if (!showSidebar) {
+            onToggleSidebar();
+            // Delay tab selection to allow sidebar to render
+            setTimeout(() => onTabSelect?.(tabId), 50);
+        } 
+        // Sidebar is open but clicking a different tab, just switch tabs
+        else {
+            onTabSelect?.(tabId);
+        }
+    }
+</script>
+
+<div class="session-toolbar-tabs">
+    <!-- Main View Tabs (controls main area content) -->
+    <div class="tab-group-main">
+        {#each mainViewTabs as tab}
+            <button 
+                class="tab-head main-view-tab"
+                class:-active={activeMainView === tab.id}
+                onclick={() => handleMainViewClick(tab.id)}
+                title={tab.label}
+            >
+                {tab.label}
+            </button>
+        {/each}
+    </div>
+    
+    <div class="tab-spacer"></div>
+    
+    <!-- Sidebar Tabs (controls sidebar content) -->
+    <div class="tab-group-sidebar">
+        {#each sidebarTabs as tab}
+            <button 
+                class="tab-head sidebar-tab"
+                class:-active={showSidebar && activeTab === tab.id}
+                onclick={() => handleSidebarTabClick(tab.id)}
+                title={showSidebar && activeTab === tab.id ? `${$t('session.actions.hide-panel')} (${tab.label})` : tab.label}
+            >
+                {tab.label}
+                {#if tab.hasBadge && tab.badgeCount}
+                    <span class="badge">{tab.badgeCount}</span>
+                {/if}
+            </button>
+        {/each}
+    </div>
+</div>
+
+<style>
+    .session-toolbar-tabs {
+        display: flex;
+        align-items: stretch;
+        height: var(--toolbar-height, 48px);
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        z-index: 10;
+    }
+    
+    .tab-group-main {
+        display: flex;
+        align-items: stretch;
+        border-right: 2px solid var(--color-border-strong, #cbd5e1);
+    }
+    
+    .tab-spacer {
+        flex: 1;
+        min-width: 1rem;
+        background: var(--color-surface, #fff);
+    }
+    
+    .tab-group-sidebar {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+    }
+    
+    /* Visual distinction for main view tabs */
+    .main-view-tab {
+        background-color: var(--color-surface-alt, #f8fafc);
+    }
+    
+    .main-view-tab.-active {
+        background-color: var(--color-surface, #fff);
+        border-top-color: var(--color-primary, #3b82f6);
+    }
+    
+    .tab-head {
+        position: relative;
+        flex-grow: 0;
+        padding: 0.5rem 1rem;
+        background-color: var(--color-white);
+        border: none;
+        border-top: 3px solid var(--color-border);
+        border-right: 1px solid var(--color-border);
+        height: 100%;
+        color: var(--color-text-secondary);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+            background-color 0.3s,
+            color 0.3s,
+            border-color 0.3s;
+        white-space: nowrap;
+        min-width: 100px;
+    }
+    
+    .tab-head:first-child {
+        border-left: none;
+    }
+    
+    .tab-head:last-child {
+        border-right: 1px solid var(--color-border);
+    }
+    
+    .tab-head:hover {
+        background-color: var(--color-surface-hover);
+        color: var(--color-text-primary);
+    }
+    
+    .tab-head.-active {
+        font-weight: 700;
+        border-top-color: var(--color-highlight, var(--color-primary));
+        color: var(--color-highlight, var(--color-primary));
+        background-color: var(--color-surface);
+    }
+    
+    .badge {
+        position: absolute;
+        top: 0.25rem;
+        right: 0.25rem;
+        background: var(--color-error, #dc2626);
+        color: white;
+        font-size: 0.625rem;
+        font-weight: 700;
+        padding: 0.125rem 0.25rem;
+        border-radius: 10px;
+        min-width: 1rem;
+        text-align: center;
+        line-height: 1;
+    }
+    
+    
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .tab-head {
+            min-width: auto;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+        
+        .session-toolbar-tabs {
+            padding-right: 0.25rem;
+        }
+    }
+    
+    /* Very small screens - show only active tabs */
+    @media (max-width: 480px) {
+        .tab-spacer {
+            min-width: 0.5rem;
+        }
+    
+        
+        .tab-group-sidebar .tab-head:not(.-active) {
+            display: none;
+        }
+        
+        .tab-group-sidebar .tab-head.-active {
+            flex-grow: 1;
+        }
+    }
+</style>

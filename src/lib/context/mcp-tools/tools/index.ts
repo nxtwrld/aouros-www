@@ -5,6 +5,11 @@
  */
 
 import { SearchDocumentsTool } from "./search-documents";
+import { GetAssembledContextTool } from "./get-assembled-context";
+import { GetProfileDataTool } from "./get-profile-data";
+import { QueryMedicalHistoryTool } from "./query-medical-history";
+import { GetDocumentByIdTool } from "./get-document-by-id";
+import { GetPatientTimelineTool } from "./get-patient-timeline";
 import type { BaseMedicalTool, MCPTool } from "../base/base-tool";
 import type { MCPSecurityContext } from "../security-audit";
 
@@ -13,6 +18,11 @@ const toolRegistry = new Map<string, BaseMedicalTool>();
 
 // Register tools
 toolRegistry.set("searchDocuments", new SearchDocumentsTool());
+toolRegistry.set("getAssembledContext", new GetAssembledContextTool());
+toolRegistry.set("getProfileData", new GetProfileDataTool());
+toolRegistry.set("queryMedicalHistory", new QueryMedicalHistoryTool());
+toolRegistry.set("getDocumentById", new GetDocumentByIdTool());
+toolRegistry.set("getPatientTimeline", new GetPatientTimelineTool());
 
 /**
  * Get all tool definitions for MCP
@@ -60,4 +70,11 @@ export function getAvailableTools(): string[] {
 }
 
 // Export individual tools for direct access if needed
-export { SearchDocumentsTool };
+export {
+  SearchDocumentsTool,
+  GetAssembledContextTool,
+  GetProfileDataTool,
+  QueryMedicalHistoryTool,
+  GetDocumentByIdTool,
+  GetPatientTimelineTool,
+};

@@ -48,7 +48,7 @@
 </button>
 
 {#if showDialog}
-<Modal on:close={() => showDialog = false}>
+<Modal onclose={() => showDialog = false}>
 Link {type} ({object.uid}) to anything
 
 </Modal>

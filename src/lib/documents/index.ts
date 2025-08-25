@@ -64,7 +64,6 @@ function updateIndex() {
           );
           logger.documents.debug("Update profile store", {
             user_id,
-            userDocuments,
           });
           set(userDocuments);
         });

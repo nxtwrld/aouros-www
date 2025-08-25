@@ -148,7 +148,7 @@
 </div>
 
 {#if showLeavingWarning && selectedApp !== undefined}
-    <Modal on:close={abort}>
+    <Modal onclose={abort}>
         <div class="window">
         <AppGet app={selectedApp} items={cleanItems(items)} on:abort={abort} />
         </div>
@@ -156,7 +156,7 @@
 {/if}
 
 {#if showShareDialog && shared !== undefined}
-    <Modal on:close={abort}>
+    <Modal onclose={abort}>
         <div class="window">
             <Share on:share={abort} on:abort={abort}  items={cleanItems(items)} />
         </div>

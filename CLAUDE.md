@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Core Development
 
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server - never run it yourself - we are already running it
 - `npm run build` - Build production version
 - `npm run preview` - Preview production build
 - `npm run check` - Run SvelteKit sync and type checking
@@ -37,6 +37,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Audio Pipeline**: Real-time transcription with Voice Activity Detection, MP3 encoding, and multiple transcription providers
 - **Medical Data**: FHIR-compliant health records with comprehensive medical configurations
 - **Encryption**: Multi-layer security with AES/RSA encryption for sensitive health data
+
+### Document Import Architecture
+
+- **Client Processing**: Document handling and UI in `src/components/import/` with SSE progress streaming
+- **Server Analysis**: AI processing in `src/lib/import.server/` with multi-provider support
+- **LangGraph Workflow**: Advanced orchestration in `src/lib/langgraph/` with 23+ specialized nodes
+- **Import Modes**: Dual support for traditional batch and real-time SSE streaming
+- **Security Model**: Client-side AES encryption with RSA key management - server never accesses raw keys
+- **Workflow Features**: Recording/replay for development, parallel processing, selective analysis
 
 ### Key Directories
 
@@ -115,9 +124,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Component Architecture
 
 - **Feature-based organization**: Components grouped by functionality (anatomy, charts, documents, forms, etc.)
-- **Svelte 5 runes syntax**: Use `$state()`, `$props()`, `$bindable()` for reactive state management
+- **Svelte 5 runes syntax REQUIRED**: Always use `$state()`, `$props()`, `$bindable()` for reactive state management
+- **Data management**: Use Svelte stores for shared state, avoid overusing `$effect()` and `$derived()` - prefer store subscriptions
 - **Snippet-based composition**: Components use `children?: import('svelte').Snippet` for content projection
-- **Event dispatcher pattern**: Components emit custom events for parent communication
+- **Event dispatcher pattern**: Components emit custom events for parent communication using `createBubbler()`
 
 ### TypeScript Patterns
 
@@ -315,13 +325,129 @@ export const POST: RequestHandler = async ({
 - **Performance monitoring**: Built-in analytics and performance tracking
 - **Health checks**: Automated monitoring of critical endpoints
 
+## Session Development Context Command
+
+Use this command when working on session management, AI processing, or visualization features:
+
+**Command**: `@session-dev`
+
+### Session Architecture Overview
+
+**Core Session Management** (`src/lib/session/manager.ts`):
+
+- Real-time EventEmitter system with in-memory Map-based storage for active sessions
+- Medical context integration via `sessionContextService` for patient history lookup
+- SSE transport layer for streaming real-time updates to client
+- Multi-modal state tracking: `AudioState`/`SessionState` enums control recording + UI positioning
+- OpenAI thread management for persistent AI conversations with conversation history
+
+**Store Architecture** (`src/lib/session/stores/`):
+
+- **Unified Session Store**: Combines audio, analysis, UI, transport state in single reactive store
+- **Session Data Store**: Immutable data with relationship indexing + Sankey data transformations
+- **Transcript Store**: Real-time SSE integration with medical relevance detection and streaming
+- **Session Viewer Store**: UI interaction state (selections, hover, active paths, focus management)
+
+### AI Workflow Integration (AI_SESSION_WORKFLOW.md)
+
+**Phase 1: Medical Relevance Detection**
+
+- Transcript assembly with real-time medical content classification during speech-to-text
+- Client-side decision logic for triggering MoE analysis based on medical relevance metadata
+- Categories detected: symptom_mention, medication_reference, medical_history, clinical_observation, small_talk
+- Only medically relevant transcripts trigger expensive AI analysis pipeline
+
+**Phase 1.5: Context Assembly System**
+
+- Term-based medical document search without embeddings using `MedicalExpertTools.searchDocuments()`
+- Classification-based context assembly with relevance scoring and threshold filtering
+- Document filtering by type: lab-results, prescriptions, medical-records, family-history
+- Token optimization to fit within AI model limits (default 4000 tokens)
+
+**Phase 4: DAG-Based MoE Analysis (10 Expert Nodes)**
+Sequential expert processing pipeline:
+`transcript_parser` → `symptom_extractor` → `diagnosis_mapper` →
+(parallel: `treatment_recommender`, `question_generator`, `warning_annotator`) →
+`relationship_builder` → `schema_merger` → `user_feedback_applier` → `node_cleaner`
+
+Each expert node receives: New transcript chunk + Previous analysis JSON + Assembled context
+Output: Enhanced JSON with incremental improvements and version tracking
+
+**Phase 5: Unified Schema Structure**
+
+- **Node Types**: symptoms, diagnoses, treatments, actions (questions+alerts)
+- **Source Indicators**: transcript, medical_history, family_history, social_history, medication_history, suspected
+- **Priority Scale**: 1-10 consistent across all nodes (1=critical, 10=low priority)
+- **Embedded Relationships**: Each node contains relationships array with strength/confidence (0.0-1.0)
+- **Version Control**: `analysisVersion` increments with change tracking across DAG executions
+
+**Phase 6: Context-Enhanced Visualization**
+
+- Progressive DAG streaming with real-time expert node completion updates via SSE
+- Sankey diagram with D3.js integration, expert provenance tracking, version comparison
+- Interactive features: relationship tracing, node selection with details, context confidence indicators
+- Visual encoding: node size by priority + context confidence, color by urgency + context overlay
+
+### Key Components
+
+**Session Components** (`src/components/session/`):
+
+- `SankeyDiagram.svelte`: D3.js-powered medical relationship visualization with real-time store subscriptions
+- `SessionSidebar.svelte`: Tabbed interface (transcript, questions, details) with SSE integration
+- Node components: `SymptomNode.svelte`, `DiagnosisNode.svelte`, `TreatmentNode.svelte` with interactive actions
+- `types/visualization.d.ts`: Complete TypeScript definitions for medical nodes, links, relationships
+
+**Integration Patterns**:
+
+- `sessionDataActions`: Central API for modifying session state through store actions
+- `SSEClient`: Real-time server communication (`transport/sse-client.ts`) with reconnection handling
+- Relationship indexing: Efficient Map-based lookup of medical entity connections with bidirectional support
+- Medical analysis pipeline: Incremental AI analysis with confidence scoring and user feedback integration
+
+### Implementation Guidelines
+
+**Svelte 5 Store Integration**:
+
+- Use Svelte stores for all shared session data - avoid overusing `$effect()` and `$derived()`
+- Store subscriptions with reactive declarations: `$: data = $sessionStore`
+- Event bubbling with `createBubbler()` for component communication up the tree
+- Minimal `$effect()` usage - only for cleanup and external integrations (D3, SSE connections)
+
+**Data Flow Architecture**:
+
+- SSE Updates → Transcript Store → Session Data Store → Sankey Visualization Components
+- User Interactions → Session Viewer Store → Component Updates via Store Subscriptions
+- AI Analysis → Schema Merger → Progressive Streaming via SSE → Store Updates
+
+**TypeScript Integration**:
+
+- `SessionAnalysis` interface defines unified schema structure for medical analysis
+- `SankeyNode`/`SankeyLink` interfaces for visualization data transformation
+- `AnalysisState`/`PathState` interfaces for store state management
+- `TranscriptItem`/`SSEUpdate` interfaces for real-time data handling
+
+### Development Context Requirements
+
+When working on session features, always consider:
+
+- **Medical relevance detection**: Filter transcripts before triggering expensive AI processing
+- **DAG-based expert processing**: Sequential + parallel expert node execution for AI analysis
+- **Progressive streaming**: Real-time UI updates via SSE for long-running AI operations
+- **Context assembly**: Historical medical data integration with term-based search
+- **Version control**: `analysisVersion` tracking for conversational evolution
+- **Embedded relationships**: Complex medical entity connections with bidirectional support
+- **User feedback loops**: Accept/suppress actions that influence subsequent AI analysis
+- **Store-first architecture**: Use Svelte stores for state management, minimal rune usage
+
 ## Important Notes
 
 - The application handles sensitive medical data - always maintain security best practices
-- Real-time features depend on proper session state management
+- Real-time features depend on proper session state management via EventEmitter + SSE
 - Medical configurations in `src/lib/configurations/` define structured data schemas
 - Audio processing requires proper microphone permissions and VAD integration
-- All medical analysis follows structured schemas with confidence scoring
-- Use the centralized logging system (`log.namespace()`) for consistent debugging output
+- All medical analysis follows structured schemas with confidence scoring (0.0-1.0 scale)
+- Use the centralized logging system (`logger.session`, `logger.analysis`) for consistent debugging
 - Always validate AI provider responses and implement proper fallback mechanisms
 - Follow FHIR standards for all medical data structures and transformations
+- **CRITICAL**: Use Svelte 5 runes syntax throughout - `$state()`, `$props()`, `$bindable()` required
+- **Store Management**: Prefer Svelte stores over `$effect()`/`$derived()` for shared state

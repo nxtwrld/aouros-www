@@ -1,0 +1,241 @@
+{
+  "sessionId": "session_20250806_143110",
+  "timestamp": "2025-08-06T15:10:00Z",
+  "analysisVersion": 2,
+  "nodes": {
+    "symptoms": [
+      {
+        "id": "sym_fatigue_non_restorative",
+        "text": "non-restorative fatigue",
+        "severity": 3,
+        "duration": 60,
+        "confidence": 0.95,
+        "source": "transcript",
+        "quote": "I wake up tired, and by midday I feel like I can barely function.",
+        "characteristics": ["worsening", "persistent"],
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Persistent fatigue with heavy menstruation suggests iron loss."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Non-restorative sleep and fatigue are common in hypothyroidism."
+          },
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Persistent fatigue can be a manifestation of depression."
+          }
+        ]
+      },
+      {
+        "id": "sym_lab_ferritin_low",
+        "text": "Ferritin 8 ng/mL (low)",
+        "severity": 8,
+        "confidence": 0.99,
+        "source": "medical_history",
+        "documentId": "lab_results_2025_08_06",
+        "quote": "Ferritin: 8 ng/mL (Ref 15–150)",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.98,
+            "reasoning": "Low ferritin is highly specific for iron deficiency."
+          }
+        ]
+      },
+      {
+        "id": "sym_lab_hb_low",
+        "text": "Hemoglobin 10.9 g/dL (low)",
+        "severity": 6,
+        "confidence": 0.98,
+        "source": "medical_history",
+        "documentId": "lab_results_2025_08_06",
+        "quote": "Hemoglobin: 10.9 g/dL (Ref 12.0–16.0)",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Anemia consistent with iron deficiency picture."
+          }
+        ]
+      },
+      {
+        "id": "sym_lab_mcv_low",
+        "text": "MCV 76 fL (microcytic)",
+        "severity": 6,
+        "confidence": 0.97,
+        "source": "medical_history",
+        "documentId": "lab_results_2025_08_06",
+        "quote": "MCV: 76 fL (Ref 80–100)",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.92,
+            "reasoning": "Microcytosis supports iron deficiency anemia vs. anemia of chronic disease."
+          }
+        ]
+      }
+    ],
+    "diagnoses": [
+      {
+        "id": "diag_iron_deficiency_anemia",
+        "name": "Iron Deficiency Anemia",
+        "probability": 0.97,
+        "priority": 1,
+        "icd10": "D50.9",
+        "reasoning": "Low ferritin with microcytic anemia confirms iron deficiency anemia. Heavy menses likely source; still investigate bleeding causes.",
+        "confidence": 0.98,
+        "requiresInvestigation": false,
+        "relationships": [
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.95,
+            "reasoning": "First-line treatment for confirmed iron deficiency."
+          },
+          {
+            "nodeId": "treat_investigate_bleeding",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Identify source of iron loss (e.g., gynecologic)."
+          }
+        ]
+      },
+      {
+        "id": "diag_hypothyroidism",
+        "name": "Primary Hypothyroidism",
+        "probability": 0.7,
+        "priority": 2,
+        "icd10": "E03.9",
+        "reasoning": "Symptoms consistent, but iron deficiency now confirmed and explains fatigue; maintain as comorbid consideration.",
+        "confidence": 0.78,
+        "requiresInvestigation": true
+      },
+      {
+        "id": "diag_fibroids",
+        "name": "Uterine Fibroids",
+        "probability": 0.5,
+        "priority": 4,
+        "icd10": "D25.9",
+        "reasoning": "Heavy menstrual bleeding with confirmed iron deficiency increases suspicion of structural cause.",
+        "confidence": 0.6,
+        "requiresInvestigation": true
+      }
+    ],
+    "treatments": [
+      {
+        "id": "treat_iron_supplementation",
+        "type": "medication",
+        "name": "Ferrous Sulfate 325mg daily",
+        "dosage": "325mg once daily, taken on empty stomach with vitamin C",
+        "priority": 1,
+        "confidence": 0.95,
+        "effectiveness": 0.9,
+        "duration": "3-6 months",
+        "urgency": "routine",
+        "reasoning": "Confirmed iron deficiency anemia.",
+        "requiresFollowUp": true,
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.95,
+            "reasoning": "Direct correction of iron deficiency."
+          }
+        ]
+      },
+      {
+        "id": "treat_investigate_bleeding",
+        "type": "investigation",
+        "name": "Heavy Bleeding Investigation",
+        "priority": 2,
+        "confidence": 0.85,
+        "urgency": "routine",
+        "description": "Investigate underlying causes of heavy menstrual bleeding",
+        "reasoning": "Now that IDA is confirmed, identify etiology (e.g., fibroids)."
+      },
+      {
+        "id": "treat_pelvic_ultrasound",
+        "type": "investigation",
+        "name": "Transvaginal Pelvic Ultrasound",
+        "priority": 3,
+        "confidence": 0.85,
+        "urgency": "routine",
+        "description": "Imaging to evaluate uterine structure and identify fibroids",
+        "reasoning": "Evaluate structural causes of heavy bleeding.",
+        "relationships": [
+          {
+            "nodeId": "diag_fibroids",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "First-line imaging for fibroids."
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "q_iron_labs",
+        "text": "Have iron levels or ferritin been tested recently?",
+        "category": "diagnostic_clarification",
+        "actionType": "question",
+        "priority": 1,
+        "status": "answered",
+        "answer": "Ferritin 8 ng/mL (low), Hb 10.9 g/dL (low), MCV 76 fL (microcytic)",
+        "relationships": [
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Labs confirm iron deficiency anemia."
+          }
+        ],
+        "impact": {
+          "diagnoses": {
+            "diag_iron_deficiency_anemia": 0.3,
+            "diag_hypothyroidism": -0.05
+          }
+        }
+      },
+      {
+        "id": "safety_drug_interaction",
+        "text": "Iron supplements can reduce absorption of thyroid medications - timing is important.",
+        "category": "drug_interaction",
+        "actionType": "alert",
+        "priority": 3,
+        "status": "pending",
+        "recommendation": "Take iron and levothyroxine at least 4 hours apart"
+      }
+    ]
+  },
+  "userActions": [
+    {
+      "timestamp": "2025-08-06T15:12:00Z",
+      "action": "accept",
+      "targetId": "treat_iron_supplementation",
+      "reason": "Confirmed IDA; start replacement therapy",
+      "confidence": 0.95
+    }
+  ]
+}

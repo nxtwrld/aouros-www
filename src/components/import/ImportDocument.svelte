@@ -14,7 +14,8 @@
     }
 
     let { doc, removable = true, onclick, onremove }: Props = $props();
-    console.log(doc);
+    // Commented out to avoid Svelte proxy warnings - use $state.snapshot() if debugging needed
+    // console.log('ImportDocument:', $state.snapshot(doc));
 </script>
 
 <div class="report {doc.state}" onclick={() => onclick?.(doc)} transition:scale role="button" tabindex="0" onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onclick?.(doc); } }} aria-label="Open document: {doc.title}">
@@ -24,6 +25,8 @@
             {#if doc.pages[0]?.thumbnail}
                 <img src={doc.pages[0].thumbnail} alt={doc.title} class="thumbmail" />
             {/if}
+        {:else if doc.thumbnail}
+            <img src={doc.thumbnail} alt={doc.title} class="thumbmail" />
         {:else if doc.icon}
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <use href="/files.svg#{doc.icon}" />

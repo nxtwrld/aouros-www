@@ -63,3 +63,71 @@
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+.button.-small {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.button.-accept {
+  --color: var(--color-positive, #29cc97);
+  --color-hover: var(--color-positive, #29cc97);
+  --color-border: var(--color-positive, #29cc97);
+  --color-border-hover: var(--color-positive, #29cc97);
+  --color-text: var(--color-positive-text, #ffffff);
+  --color-text-hover: var(--color-positive-text, #ffffff);
+}
+
+.button.-suppress {
+  --color: var(--color-negative, #fb104a);
+  --color-hover: var(--color-negative, #fb104a);
+  --color-border: var(--color-negative, #fb104a);
+  --color-border-hover: var(--color-negative, #fb104a);
+  --color-text: var(--color-negative-text, #ffffff);
+  --color-text-hover: var(--color-negative-text, #ffffff);
+}
+
+.button.-highlight {
+  --color: var(--color-highlight, #a989ee);
+  --color-hover: var(--color-highlight, #a989ee);
+  --color-border: var(--color-highlight, #a989ee);
+  --color-border-hover: var(--color-highlight, #a989ee);
+  --color-text: var(--color-highlight-text, #ffffff);
+  --color-text-hover: var(--color-highlight-text, #ffffff);
+}
+
+.button.-yes {
+  --color: var(--color-success-bg, #dcfce7);
+  --color-hover: var(--color-success, #16a34a);
+  --color-border: var(--color-success, #16a34a);
+  --color-border-hover: var(--color-success, #16a34a);
+  --color-text: var(--color-success, #16a34a);
+  --color-text-hover: var(--color-success-text, #ffffff);
+}
+
+.button.-no {
+  --color: var(--color-error-bg, #fee2e2);
+  --color-hover: var(--color-error, #dc2626);
+  --color-border: var(--color-error, #dc2626);
+  --color-border-hover: var(--color-error, #dc2626);
+  --color-text: var(--color-error, #dc2626);
+  --color-text-hover: var(--color-error-text, #ffffff);
+}
+
+.button.-unknown {
+  --color: var(--color-surface, #fff);
+  --color-hover: var(--color-gray-100, #f3f4f6);
+  --color-border: var(--color-border, #e2e8f0);
+  --color-border-hover: var(--color-text-secondary, #6b7280);
+  --color-text: var(--color-text-primary, #1f2937);
+  --color-text-hover: var(--color-text-primary, #1f2937);
+}
+
+.button.-acknowledged {
+  --color: var(--color-success-bg, #dcfce7);
+  --color-hover: var(--color-success-bg, #dcfce7);
+  --color-border: var(--color-success, #16a34a);
+  --color-border-hover: var(--color-success, #16a34a);
+  --color-text: var(--color-success, #16a34a);
+  --color-text-hover: var(--color-success, #16a34a);
+}

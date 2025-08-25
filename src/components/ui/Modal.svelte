@@ -2,22 +2,22 @@
     import { createBubbler, stopPropagation } from 'svelte/legacy';
 
     const bubble = createBubbler();
-    import { onMount, createEventDispatcher } from 'svelte';
+    import { onMount } from 'svelte';
     import { scale, fade } from 'svelte/transition';
-    const dispatch = createEventDispatcher();
 
     export function closeModal() {
-        console.log('Modal closeModal function called, dispatching close event');
-        dispatch('close');
-        console.log('Modal close event dispatched');
+        console.log('Modal closeModal function called, calling onclose callback');
+        onclose?.();
+        console.log('Modal onclose callback called');
     }
 
     interface Props {
         style?: string | undefined;
         children?: import('svelte').Snippet;
+        onclose?: () => void;
     }
 
-    let { style = undefined, children }: Props = $props();
+    let { style = undefined, children, onclose }: Props = $props();
 
     let showShade: boolean = $state(false);
     let modalContainer: HTMLDivElement | undefined = $state();
