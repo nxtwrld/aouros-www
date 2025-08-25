@@ -78,7 +78,23 @@ export default defineConfig({
     esbuildOptions: {
       target: "esnext",
     },
-    exclude: ["onnx-runtime-web"],
+    exclude: [
+      "onnx-runtime-web",
+      "cornerstone-core",
+      "cornerstone-wado-image-loader",
+      "dicom-parser"
+    ],
+  },
+  ssr: {
+    noExternal: [
+      // These packages should be bundled for SSR
+    ],
+    external: [
+      // Force these browser-only packages to be external in SSR
+      "cornerstone-core",
+      "cornerstone-wado-image-loader",
+      "dicom-parser"
+    ]
   },
   test: {
     include: ["src/**/*.{test,spec}.{js,ts}"],
