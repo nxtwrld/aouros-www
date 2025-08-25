@@ -2,18 +2,15 @@ import { sveltekit } from "@sveltejs/kit/vite";
 //import { defineConfig } from 'vitest/config';
 import { type ViteDevServer, defineConfig, normalizePath } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
-import topLevelAwait from "vite-plugin-top-level-await";
+// Removed topLevelAwait plugin - was causing 'Server is not a constructor' error on Vercel
+// import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
 import { qomConfigPlugin } from "./vite-plugin-qom-config";
 
 export default defineConfig({
   plugins: [
-    topLevelAwait({
-      // The export name of top-level await promise for each chunk module
-      promiseExportName: "__tla",
-      // The function to generate import names of top-level await promise in each chunk module
-      promiseImportName: (i) => `__tla_${i}`,
-    }),
+    // Removed topLevelAwait plugin - was causing SSR issues on Vercel production
+    // If async imports are needed, handle them manually in components with dynamic imports
     qomConfigPlugin(),
     viteStaticCopy({
       targets: [
@@ -78,7 +75,23 @@ export default defineConfig({
     esbuildOptions: {
       target: "esnext",
     },
-    exclude: ["onnx-runtime-web"],
+    exclude: [
+      "onnx-runtime-web",
+      "cornerstone-core",
+      "cornerstone-wado-image-loader",
+      "dicom-parser"
+    ],
+  },
+  ssr: {
+    noExternal: [
+      // These packages should be bundled for SSR
+    ],
+    external: [
+      // Force these browser-only packages to be external in SSR
+      "cornerstone-core",
+      "cornerstone-wado-image-loader",
+      "dicom-parser"
+    ]
   },
   test: {
     include: ["src/**/*.{test,spec}.{js,ts}"],

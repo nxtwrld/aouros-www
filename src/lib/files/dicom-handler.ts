@@ -6,10 +6,12 @@
  * - Extracts metadata from DICOM tags
  * - Converts DICOM images to PNG format for AI processing
  * - Preserves original DICOM data for attachment storage
+ * 
+ * IMPORTANT: This module only works in browser environments due to Cornerstone.js dependencies
  */
 
 // Dynamic imports to avoid UI crashes - cornerstone has publicPath issues with static imports
-
+import { browser } from "$app/environment";
 import { resizeImage } from "$lib/images";
 import { THUMBNAIL_SIZE } from "$lib/files/CONFIG";
 
@@ -74,9 +76,15 @@ export class DicomHandler {
 
   /**
    * Initialize with currentScript fix for publicPath issue
+   * BROWSER ONLY - will throw error if called server-side
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
+
+    // Critical: Only initialize in browser environment
+    if (!browser) {
+      throw new Error("DICOM Handler can only be initialized in browser environment");
+    }
 
     try {
       // Fix for publicPath issue - ensure document.currentScript exists
@@ -89,7 +97,8 @@ export class DicomHandler {
         });
       }
 
-      // Dynamic imports
+      // Dynamic imports - only safe in browser
+      console.log("[DICOM] Loading Cornerstone modules...");
       this.cornerstone = await import("cornerstone-core");
       this.cornerstoneWADOImageLoader = await import(
         "cornerstone-wado-image-loader"
@@ -104,15 +113,22 @@ export class DicomHandler {
       console.log("✅ DICOM Handler initialized successfully");
     } catch (error) {
       console.error("❌ Failed to initialize DICOM Handler:", error);
-      throw new Error("DICOM Handler initialization failed");
+      throw new Error(`DICOM Handler initialization failed: ${error.message}`);
     }
   }
 
   /**
    * Detect if a file is a DICOM file by examining file header
    * Most DICOM files don't have extensions, so we check the magic bytes
+   * BROWSER ONLY - returns false if called server-side
    */
   async detectDicomFile(file: File): Promise<boolean> {
+    // Fail gracefully on server side
+    if (!browser) {
+      console.warn("[DICOM] detectDicomFile called server-side, returning false");
+      return false;
+    }
+
     try {
       // First check by MIME type (if available)
       if (file.type === "application/dicom") {
@@ -203,6 +219,11 @@ export class DicomHandler {
    * Main processing function - extract images and metadata from DICOM file
    */
   async processDicomFile(file: File): Promise<DicomProcessingResult> {
+    // Critical: Only process in browser environment  
+    if (!browser) {
+      throw new Error("DICOM processing can only be performed in browser environment");
+    }
+
     await this.initialize();
 
     try {
