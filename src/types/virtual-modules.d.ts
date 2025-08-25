@@ -1,7 +1,7 @@
 // Virtual Module Declarations
 
-declare module "virtual:dag-config" {
-  interface ClientSafeDAGConfig {
+declare module "virtual:qom-config" {
+  interface ClientSafeQOMConfig {
     id: string;
     description: string;
     version: string;
@@ -94,6 +94,6 @@ declare module "virtual:dag-config" {
     };
   }
 
-  const config: ClientSafeDAGConfig;
+  const config: ClientSafeQOMConfig;
   export default config;
 }

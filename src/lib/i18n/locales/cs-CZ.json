@@ -840,6 +840,7 @@
   },
   "session": {
     "diagram": "Diagram",
+    "qom": "Kvorum Řízené Modely",
     "actions": {
       "accept": "Přijmout",
       "suppress": "Potlačit",

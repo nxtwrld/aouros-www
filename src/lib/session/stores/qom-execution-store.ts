@@ -1,55 +1,55 @@
-// DAG Execution Store
-// Manages the dynamic state of the DAG execution with real-time updates
+// QOM Execution Store
+// Manages the dynamic state of the QOM execution with real-time updates
 
 import { writable, derived, get } from "svelte/store";
 import type { Writable, Readable } from "svelte/store";
 import type {
-  DAGNode,
-  DAGLink,
-  DAGExecutionState,
-  DAGEvent,
-  D3DAGNode,
-  D3DAGLink,
+  QOMNode,
+  QOMLink,
+  QOMExecutionState,
+  QOMEvent,
+  D3QOMNode,
+  D3QOMLink,
   NodeStartedEvent,
   NodeCompletedEvent,
   NodeFailedEvent,
   ExpertTriggeredEvent,
   RelationshipAddedEvent,
-} from "$components/session/types/dag";
+} from "$components/session/types/qom";
 import {
   createLayoutEngine,
   DEFAULT_LAYOUT_CONFIG,
   type DynamicLayoutEngine,
-} from "$lib/session/dag/dynamic-layout-engine";
+} from "$lib/session/qom/dynamic-layout-engine";
 import type {
   LayoutNode,
   LayoutLink,
   LayoutResult,
   NodeAdditionOptions,
-} from "$lib/session/dag/dynamic-layout-engine";
-import dagConfiguration from "virtual:dag-config";
+} from "$lib/session/qom/dynamic-layout-engine";
+import qomConfiguration from "virtual:qom-config";
 
 // Store interfaces
-interface DAGStoreState {
-  nodes: Map<string, DAGNode>;
-  links: Map<string, DAGLink>;
+interface QOMStoreState {
+  nodes: Map<string, QOMNode>;
+  links: Map<string, QOMLink>;
   nodeStates: Map<string, string>; // nodeId -> state
-  executionState: DAGExecutionState;
+  executionState: QOMExecutionState;
   lastUpdate: number;
   configuration?: any; // Dynamic configuration from /config
   layoutEngine?: DynamicLayoutEngine; // Dynamic layout engine instance
 }
 
 // Initialize store with default state
-function createInitialState(): DAGStoreState {
-  console.group("🏗️ Initializing DAG Store State");
+function createInitialState(): QOMStoreState {
+  console.group("🏗️ Initializing QOM Store State");
 
-  const nodes = new Map<string, DAGNode>();
-  const links = new Map<string, DAGLink>();
+  const nodes = new Map<string, QOMNode>();
+  const links = new Map<string, QOMLink>();
 
   // Use imported configuration
-  const configuration = dagConfiguration;
-  console.log("📋 DAG Configuration source:", {
+  const configuration = qomConfiguration;
+  console.log("📋 QOM Configuration source:", {
     id: configuration?.id || "unknown",
     hasDefaultFlow: !!configuration?.defaultFlow,
     nodeCount: configuration?.defaultFlow?.nodes?.length || 0,
@@ -71,12 +71,12 @@ function createInitialState(): DAGStoreState {
   const { nodes: layoutNodes, links: layoutLinks } =
     layoutEngine.generateLayout(configuration);
 
-  // Convert layout nodes to DAG nodes
+  // Convert layout nodes to QOM nodes
   layoutNodes.forEach((layoutNode) => {
-    const node: DAGNode = {
+    const node: QOMNode = {
       id: layoutNode.id,
       name: layoutNode.name,
-      type: layoutNode.type as DAGNode["type"],
+      type: layoutNode.type as QOMNode["type"],
       category: layoutNode.category,
       layer: layoutNode.layer,
       parent: layoutNode.parentNodes[0], // Take first parent as primary
@@ -90,13 +90,13 @@ function createInitialState(): DAGStoreState {
     nodes.set(node.id, node);
   });
 
-  // Convert layout links to DAG links
+  // Convert layout links to QOM links
   layoutLinks.forEach((layoutLink) => {
-    const link: DAGLink = {
+    const link: QOMLink = {
       id: layoutLink.id,
       source: layoutLink.source,
       target: layoutLink.target,
-      type: layoutLink.type as DAGLink["type"],
+      type: layoutLink.type as QOMLink["type"],
       direction: "forward",
       strength: 0.6,
       active: true, // Default flow links should be active to show proper arrows
@@ -112,7 +112,7 @@ function createInitialState(): DAGStoreState {
     layoutEngine,
     executionState: {
       sessionId: "",
-      dagModelId: configuration.id,
+      qomModelId: configuration.id,
       status: "idle",
       currentLayer: 0,
       activeNodes: [],
@@ -134,7 +134,7 @@ function createInitialState(): DAGStoreState {
     layoutEngine,
     executionState: {
       sessionId: "",
-      dagModelId: configuration.id,
+      qomModelId: configuration.id,
       status: "idle" as const,
       currentLayer: 0,
       activeNodes: [],
@@ -149,7 +149,7 @@ function createInitialState(): DAGStoreState {
   };
 
   console.log(
-    `✅ DAG Store initialized with ${nodes.size} nodes and ${links.size} links`,
+    `✅ QOM Store initialized with ${nodes.size} nodes and ${links.size} links`,
   );
   console.groupEnd();
 
@@ -157,22 +157,22 @@ function createInitialState(): DAGStoreState {
 }
 
 // Main store - now synchronous
-const dagStore: Writable<DAGStoreState> = writable(createInitialState());
+const qomStore: Writable<QOMStoreState> = writable(createInitialState());
 
 // Derived store for D3 data format
-export const d3DAGData: Readable<{ nodes: D3DAGNode[]; links: D3DAGLink[] }> =
-  derived(dagStore, ($dagStore) => {
+export const d3QOMData: Readable<{ nodes: D3QOMNode[]; links: D3QOMLink[] }> =
+  derived(qomStore, ($qomStore) => {
     // Handle asynchronous initialization
-    if (!$dagStore || !$dagStore.nodes) {
+    if (!$qomStore || !$qomStore.nodes) {
       return { nodes: [], links: [] };
     }
 
-    const nodes: D3DAGNode[] = [];
-    const links: D3DAGLink[] = [];
+    const nodes: D3QOMNode[] = [];
+    const links: D3QOMLink[] = [];
 
     // Convert nodes to D3 format
-    $dagStore.nodes.forEach((node) => {
-      const d3Node: D3DAGNode = {
+    $qomStore.nodes.forEach((node) => {
+      const d3Node: D3QOMNode = {
         ...node,
         x: node.x || 0,
         y: node.y || 0,
@@ -181,12 +181,12 @@ export const d3DAGData: Readable<{ nodes: D3DAGNode[]; links: D3DAGLink[] }> =
     });
 
     // Convert links to D3 format with node references
-    $dagStore.links.forEach((link) => {
+    $qomStore.links.forEach((link) => {
       const sourceNode = nodes.find((n) => n.id === link.source);
       const targetNode = nodes.find((n) => n.id === link.target);
 
       if (sourceNode && targetNode) {
-        const d3Link: D3DAGLink = {
+        const d3Link: D3QOMLink = {
           ...link,
           source: sourceNode,
           target: targetNode,
@@ -199,9 +199,9 @@ export const d3DAGData: Readable<{ nodes: D3DAGNode[]; links: D3DAGLink[] }> =
   });
 
 // Derived store for execution metrics
-export const dagMetrics = derived(dagStore, ($dagStore) => {
+export const qomMetrics = derived(qomStore, ($qomStore) => {
   // Handle asynchronous initialization
-  if (!$dagStore || !$dagStore.executionState) {
+  if (!$qomStore || !$qomStore.executionState) {
     return {
       totalNodes: 0,
       completedNodes: 0,
@@ -215,8 +215,8 @@ export const dagMetrics = derived(dagStore, ($dagStore) => {
     };
   }
 
-  const { executionState } = $dagStore;
-  const nodeCount = $dagStore.nodes.size;
+  const { executionState } = $qomStore;
+  const nodeCount = $qomStore.nodes.size;
   const completedCount = executionState.completedNodes.length;
   const failedCount = executionState.failedNodes.length;
   const activeCount = executionState.activeNodes.length;
@@ -240,7 +240,7 @@ export const dagMetrics = derived(dagStore, ($dagStore) => {
  * Update store state from layout engine result
  */
 function updateStoreFromLayoutResult(
-  state: DAGStoreState,
+  state: QOMStoreState,
   layoutResult: LayoutResult,
 ) {
   console.log(
@@ -261,11 +261,11 @@ function updateStoreFromLayoutResult(
         `⬆️ Updated existing node: ${layoutNode.id} at layer ${layoutNode.layer}`,
       );
     } else {
-      // Create new DAG node from layout node
-      const newNode: DAGNode = {
+      // Create new QOM node from layout node
+      const newNode: QOMNode = {
         id: layoutNode.id,
         name: layoutNode.name,
-        type: layoutNode.type as DAGNode["type"],
+        type: layoutNode.type as QOMNode["type"],
         category: layoutNode.category,
         layer: layoutNode.layer,
         parent: layoutNode.parentNodes[0],
@@ -297,11 +297,11 @@ function updateStoreFromLayoutResult(
 
   // Add or update links from layout result
   layoutResult.links.forEach((layoutLink: LayoutLink) => {
-    const newLink: DAGLink = {
+    const newLink: QOMLink = {
       id: layoutLink.id,
       source: layoutLink.source,
       target: layoutLink.target,
-      type: layoutLink.type as DAGLink["type"],
+      type: layoutLink.type as QOMLink["type"],
       direction: "forward",
       strength: 0.6,
       active: true,
@@ -322,7 +322,7 @@ function updateStoreFromLayoutResult(
 }
 
 function recalculateLayoutInternal(
-  state: DAGStoreState,
+  state: QOMStoreState,
   containerWidth?: number,
   containerHeight?: number,
 ) {
@@ -341,7 +341,7 @@ function recalculateLayoutInternal(
   // Convert current nodes and links to layout engine format
   const currentConfig = {
     id: state.configuration?.id || "dynamic",
-    description: "Dynamic DAG",
+    description: "Dynamic QOM",
     version: "1.0.0",
     defaultFlow: {
       description: "Dynamic flow",
@@ -370,10 +370,10 @@ function recalculateLayoutInternal(
 }
 
 // Store actions
-export const dagActions = {
-  // Initialize DAG for a session
+export const qomActions = {
+  // Initialize QOM for a session
   initialize(sessionId: string) {
-    dagStore.update((state) => {
+    qomStore.update((state) => {
       state.executionState.sessionId = sessionId;
       state.executionState.status = "initializing";
       state.lastUpdate = Date.now();
@@ -381,18 +381,18 @@ export const dagActions = {
     });
   },
 
-  // Reset DAG to initial state
+  // Reset QOM to initial state
   reset() {
-    dagStore.set(createInitialState());
+    qomStore.set(createInitialState());
   },
 
   // Update node state
   updateNodeState(
     nodeId: string,
-    newState: DAGNode["state"],
-    data?: Partial<DAGNode>,
+    newState: QOMNode["state"],
+    data?: Partial<QOMNode>,
   ) {
-    dagStore.update((state) => {
+    qomStore.update((state) => {
       const node = state.nodes.get(nodeId);
       if (node) {
         node.state = newState;
@@ -446,14 +446,14 @@ export const dagActions = {
   },
 
   // Add a new node dynamically using generic layout engine
-  addNode(node: DAGNode, options?: NodeAdditionOptions) {
-    dagStore.update((state) => {
+  addNode(node: QOMNode, options?: NodeAdditionOptions) {
+    qomStore.update((state) => {
       if (!state.layoutEngine) {
         console.error("Layout engine not available");
         return state;
       }
 
-      // Convert DAG node to layout node
+      // Convert QOM node to layout node
       const layoutNode: LayoutNode = {
         id: node.id,
         name: node.name,
@@ -480,14 +480,14 @@ export const dagActions = {
   },
 
   // Add multiple nodes dynamically
-  addNodes(nodes: DAGNode[], options?: NodeAdditionOptions) {
-    dagStore.update((state) => {
+  addNodes(nodes: QOMNode[], options?: NodeAdditionOptions) {
+    qomStore.update((state) => {
       if (!state.layoutEngine) {
         console.error("Layout engine not available");
         return state;
       }
 
-      // Convert DAG nodes to layout nodes
+      // Convert QOM nodes to layout nodes
       const layoutNodes: LayoutNode[] = nodes.map((node) => ({
         id: node.id,
         name: node.name,
@@ -518,8 +518,8 @@ export const dagActions = {
   },
 
   // Add a new link
-  addLink(link: DAGLink) {
-    dagStore.update((state) => {
+  addLink(link: QOMLink) {
+    qomStore.update((state) => {
       state.links.set(link.id, link);
 
       // Update child/parent relationships if needed
@@ -557,7 +557,7 @@ export const dagActions = {
 
   // Activate a link (when relationship becomes active)
   activateLink(linkId: string) {
-    dagStore.update((state) => {
+    qomStore.update((state) => {
       const link = state.links.get(linkId);
       if (link) {
         link.active = true;
@@ -568,8 +568,8 @@ export const dagActions = {
   },
 
   // Update link properties
-  updateLink(linkId: string, updates: Partial<DAGLink>) {
-    dagStore.update((state) => {
+  updateLink(linkId: string, updates: Partial<QOMLink>) {
+    qomStore.update((state) => {
       const link = state.links.get(linkId);
       if (link) {
         Object.assign(link, updates);
@@ -579,11 +579,11 @@ export const dagActions = {
     });
   },
 
-  // Process DAG event from SSE
-  processEvent(event: DAGEvent) {
+  // Process QOM event from SSE
+  processEvent(event: QOMEvent) {
     switch (event.type) {
-      case "dag_initialized":
-        dagStore.update((state) => {
+      case "qom_initialized":
+        qomStore.update((state) => {
           // Only clear and rebuild if event contains actual data
           // Otherwise, just update the status to running
           if (event.nodes && event.nodes.length > 0) {
@@ -600,7 +600,7 @@ export const dagActions = {
             });
           }
 
-          // Always update status to running when DAG is initialized
+          // Always update status to running when QOM is initialized
           state.executionState.status = "running";
           state.lastUpdate = Date.now();
           return state;
@@ -609,14 +609,14 @@ export const dagActions = {
 
       case "node_started":
         const startEvent = event as NodeStartedEvent;
-        dagActions.updateNodeState(startEvent.nodeId, "running", {
+        qomActions.updateNodeState(startEvent.nodeId, "running", {
           startTime: startEvent.timestamp,
         });
         break;
 
       case "node_completed":
         const completeEvent = event as NodeCompletedEvent;
-        dagActions.updateNodeState(completeEvent.nodeId, "completed", {
+        qomActions.updateNodeState(completeEvent.nodeId, "completed", {
           endTime: Date.now(),
           duration: completeEvent.duration,
           cost: completeEvent.cost,
@@ -625,7 +625,7 @@ export const dagActions = {
         });
 
         // Update total metrics
-        dagStore.update((state) => {
+        qomStore.update((state) => {
           state.executionState.totalCost += completeEvent.cost || 0;
           state.executionState.totalDuration += completeEvent.duration || 0;
           state.lastUpdate = Date.now();
@@ -635,7 +635,7 @@ export const dagActions = {
 
       case "node_failed":
         const failEvent = event as NodeFailedEvent;
-        dagActions.updateNodeState(failEvent.nodeId, "failed", {
+        qomActions.updateNodeState(failEvent.nodeId, "failed", {
           error: failEvent.error,
         });
         break;
@@ -644,12 +644,12 @@ export const dagActions = {
         const triggerEvent = event as ExpertTriggeredEvent;
 
         // Use the new generic addParallelExpert method instead of individual operations
-        dagActions.addParallelExpert(triggerEvent);
+        qomActions.addParallelExpert(triggerEvent);
         break;
 
       case "relationship_added":
         const relEvent = event as RelationshipAddedEvent;
-        const relLink: DAGLink = {
+        const relLink: QOMLink = {
           id: relEvent.linkId,
           source: relEvent.sourceId,
           target: relEvent.targetId,
@@ -658,11 +658,11 @@ export const dagActions = {
           strength: 0.5,
           active: true,
         };
-        dagActions.addLink(relLink);
+        qomActions.addLink(relLink);
         break;
 
-      case "dag_completed":
-        dagStore.update((state) => {
+      case "qom_completed":
+        qomStore.update((state) => {
           state.executionState.status = "completed";
           state.executionState.totalCost = event.totalCost;
           state.executionState.totalDuration = event.totalDuration;
@@ -677,7 +677,7 @@ export const dagActions = {
   updateNodePositions(
     positions: Map<string, { x: number; y: number; fx?: number; fy?: number }>,
   ) {
-    dagStore.update((state) => {
+    qomStore.update((state) => {
       positions.forEach((pos, nodeId) => {
         const node = state.nodes.get(nodeId);
         if (node) {
@@ -693,7 +693,7 @@ export const dagActions = {
 
   // Fix node position (pin it)
   fixNodePosition(nodeId: string, x: number, y: number) {
-    dagStore.update((state) => {
+    qomStore.update((state) => {
       const node = state.nodes.get(nodeId);
       if (node) {
         node.fx = x;
@@ -706,7 +706,7 @@ export const dagActions = {
 
   // Release node position (unpin it)
   releaseNodePosition(nodeId: string) {
-    dagStore.update((state) => {
+    qomStore.update((state) => {
       const node = state.nodes.get(nodeId);
       if (node) {
         node.fx = undefined;
@@ -719,7 +719,7 @@ export const dagActions = {
 
   // Update layout with container dimensions
   updateLayoutDimensions(containerWidth: number, containerHeight: number) {
-    dagStore.update((state) => {
+    qomStore.update((state) => {
       recalculateLayoutInternal(state, containerWidth, containerHeight);
       state.lastUpdate = Date.now();
       return state;
@@ -733,7 +733,7 @@ export const dagActions = {
     );
 
     // Create new expert node
-    const expertNode: DAGNode = {
+    const expertNode: QOMNode = {
       id: triggerEvent.expertId,
       name: triggerEvent.expertName,
       type: "specialist",
@@ -751,7 +751,7 @@ export const dagActions = {
     };
 
     // Use generic addNodes with insertBetween option
-    dagActions.addNodes([expertNode], {
+    qomActions.addNodes([expertNode], {
       insertBetween: {
         parents: [triggerEvent.parentId],
         children: ["consensus_merger"],
@@ -761,4 +761,4 @@ export const dagActions = {
 };
 
 // Export stores and actions
-export { dagStore };
+export { qomStore };

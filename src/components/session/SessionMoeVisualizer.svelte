@@ -1,16 +1,16 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import SankeyDiagram from './SankeyDiagram.svelte';
-    import DAGVisualizer from './DAGVisualizer.svelte';
+    import QOMVisualizer from './QOMVisualizer.svelte';
     import SessionSidebar from './SessionSidebar.svelte';
     import SessionToolbar from './SessionToolbar.svelte';
     import sampleTranscript from './sample.transcript.1.cz.json';
     import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
-    import type { D3DAGNode, D3DAGLink } from './types/dag';
+    import type { D3QOMNode, D3QOMLink } from './types/qom';
     import { t } from '$lib/i18n';
     import { selectedItem } from '$lib/session/stores/session-viewer-store';
-    import { dagActions } from '$lib/session/stores/dag-execution-store';
+    import { qomActions } from '$lib/session/stores/qom-execution-store';
 
 
     interface Props {
@@ -50,11 +50,11 @@
         checkViewport();
         window.addEventListener('resize', checkViewport);
         
-        // Initialize DAG for session
+        // Initialize QOM for session
         if (sessionData?.sessionId) {
-            dagActions.initialize(sessionData.sessionId);
+            qomActions.initialize(sessionData.sessionId);
             
-            // DAG initialization only - no automatic simulation
+            // QOM initialization only - no automatic simulation
         }
 
         // Setup keyboard shortcuts
@@ -104,8 +104,8 @@
         // Tab switching and sidebar opening will be handled by $effect
     }
 
-    // DAG event handlers
-    function handleDAGNodeSelect(node: D3DAGNode) {
+    // QOM event handlers
+    function handleQOMNodeSelect(node: D3QOMNode) {
         selectedNodeId = node.id;
         selectedLink = null;
         // Auto-show sidebar and switch to details tab
@@ -116,7 +116,7 @@
         selectDetailsTab();
     }
 
-    function handleDAGLinkSelect(link: D3DAGLink) {
+    function handleQOMLinkSelect(link: D3QOMLink) {
         selectedLink = {
             id: link.id,
             type: link.type,
@@ -371,13 +371,13 @@
                     onselectionClear={handleSelectionClear}
                     onfocusChange={handleFocusChange}
                 />
-            {:else if activeMainView === 'dag'}
-                <DAGVisualizer 
+            {:else if activeMainView === 'qom'}
+                <QOMVisualizer 
                     sessionId={sessionData.sessionId}
                     enableZoom={true}
                     enableInteractions={true}
-                    onnodeSelect={handleDAGNodeSelect}
-                    onlinkSelect={handleDAGLinkSelect}
+                    onnodeSelect={handleQOMNodeSelect}
+                    onlinkSelect={handleQOMLinkSelect}
                 />
             {/if}
         </div>

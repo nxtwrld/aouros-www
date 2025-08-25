@@ -1,4 +1,4 @@
-// Dynamic Layout Engine for AI-Generated DAG Visualization
+// Dynamic Layout Engine for AI-Generated QOM Visualization
 // Automatically positions nodes based on AI configuration and relationships
 
 export interface LayoutNode {
@@ -66,20 +66,20 @@ export class DynamicLayoutEngine {
   }
 
   /**
-   * Generate layout from DAG configuration
+   * Generate layout from QOM configuration
    */
-  generateLayout(dagConfig: any): LayoutResult {
-    console.group("🎯 DAG Layout Generation Starting");
-    console.log("🔍 Input DAG config:", {
-      id: dagConfig?.id || "unknown",
-      hasDefaultFlow: !!dagConfig?.defaultFlow,
-      nodeCount: dagConfig?.defaultFlow?.nodes?.length || 0,
+  generateLayout(qomConfig: any): LayoutResult {
+    console.group("🎯 QOM Layout Generation Starting");
+    console.log("🔍 Input QOM config:", {
+      id: qomConfig?.id || "unknown",
+      hasDefaultFlow: !!qomConfig?.defaultFlow,
+      nodeCount: qomConfig?.defaultFlow?.nodes?.length || 0,
     });
 
     this.resetLayout();
 
     // Create nodes from default flow
-    this.createNodesFromConfig(dagConfig.defaultFlow);
+    this.createNodesFromConfig(qomConfig.defaultFlow);
 
     console.log("✅ Nodes created:", Array.from(this.nodes.keys()));
 
@@ -316,7 +316,7 @@ export class DynamicLayoutEngine {
   }
 
   private createNodesFromConfig(defaultFlow: any) {
-    console.group("🏗️ Creating nodes from DAG config");
+    console.group("🏗️ Creating nodes from QOM config");
     console.log("📋 Default flow structure:", {
       nodeCount: defaultFlow?.nodes?.length || 0,
       connectionCount: defaultFlow?.connections?.length || 0,

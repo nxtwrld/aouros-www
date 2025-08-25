@@ -1,9 +1,9 @@
 <script lang="ts">
-  // Development-only DAG Simulation Panel
-  // Use this component in development environments to test DAG simulation
+  // Development-only QOM Simulation Panel
+  // Use this component in development environments to test QOM simulation
   
-  import { simulateRealisticMedicalDAG, SAMPLE_BASED_EXPERT_GENERATION } from '$lib/session/dag/dag-simulation';
-  import { dagActions, dagMetrics } from '$lib/session/stores/dag-execution-store';
+  import { simulateRealisticMedicalQOM, SAMPLE_BASED_EXPERT_GENERATION } from '$lib/session/qom/qom-simulation';
+  import { qomActions, qomMetrics } from '$lib/session/stores/qom-execution-store';
   
   interface Props {
     sessionId?: string;
@@ -21,7 +21,7 @@
   let showExpertDetails = $state(false);
   
   // Reactive metrics for display
-  const metrics = $derived($dagMetrics);
+  const metrics = $derived($qomMetrics);
   
   function startSimulation() {
     if (isRunning) {
@@ -29,14 +29,14 @@
       return;
     }
     
-    console.log('🏥 Starting realistic medical DAG simulation from dev panel');
+    console.log('🏥 Starting realistic medical QOM simulation from dev panel');
     
-    // Initialize DAG first
-    dagActions.initialize(sessionId);
+    // Initialize QOM first
+    qomActions.initialize(sessionId);
     
     // Start simulation with smart timing (simulationSpeed parameter ignored)
     isRunning = true;
-    currentSimulation = simulateRealisticMedicalDAG(sessionId);
+    currentSimulation = simulateRealisticMedicalQOM(sessionId);
     
     // Auto-stop when simulation completes (smart timing uses variable delays)
     setTimeout(() => {
@@ -51,13 +51,13 @@
       currentSimulation = null;
     }
     isRunning = false;
-    console.log('🛑 DAG simulation stopped');
+    console.log('🛑 QOM simulation stopped');
   }
   
-  function resetDAG() {
+  function resetQOM() {
     stopSimulation();
-    dagActions.initialize(sessionId);
-    console.log('🔄 DAG reset');
+    qomActions.initialize(sessionId);
+    console.log('🔄 QOM reset');
   }
   
   // Auto-start if requested
@@ -70,7 +70,7 @@
 
 <!-- Only show in development -->
 {#if typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname.includes('dev'))}
-  <div class="dag-simulation-panel">
+  <div class="qom-simulation-panel">
     <div class="controls-section">
       <!--div class="control-group">
         <label for="session-id">Session ID:</label>
@@ -115,7 +115,7 @@
         
         <button 
           class="btn btn-secondary"
-          onclick={resetDAG}
+          onclick={resetQOM}
           disabled={isRunning}
         >
           🔄 Reset
@@ -191,7 +191,7 @@
 {/if}
 
 <style>
-  .dag-simulation-panel {
+  .qom-simulation-panel {
     position: fixed;
     top: 50px;
     right: 20px;

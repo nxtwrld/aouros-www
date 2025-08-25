@@ -290,7 +290,7 @@ As specified in the workflow, the consensus builder implements sophisticated agg
    - Tracks reasoning paths
    - Maintains expert attribution for transparency
 
-### Refinement Policy and ID Stability (Aligned with Workflow/DAG)
+### Refinement Policy and ID Stability (Aligned with Workflow/QOM)
 
 - In-place refinement: Each new iteration receives the previous analysis as input and must refine existing nodes rather than recreate them.
 - Per-node actions: For every prior node (symptom, diagnosis, treatment, question), the expert outputs one explicit action: prove, disprove, keep, rephrase, or remove.

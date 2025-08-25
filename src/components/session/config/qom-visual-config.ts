@@ -1,13 +1,13 @@
-// DAG Visual Configuration
-// D3 Force Simulation and Visual Styling for DAG Visualization
+// QOM Visual Configuration
+// D3 Force Simulation and Visual Styling for QOM Visualization
 
 import type {
-  DAGVisualizationConfig,
-  D3DAGNode,
-  D3DAGLink,
-} from "../types/dag";
+  QOMVisualizationConfig,
+  D3QOMNode,
+  D3QOMLink,
+} from "../types/qom";
 
-export const DAG_VISUAL_CONFIG: DAGVisualizationConfig = {
+export const QOM_VISUAL_CONFIG: QOMVisualizationConfig = {
   layout: {
     type: "force",
     width: 1200,
@@ -21,7 +21,7 @@ export const DAG_VISUAL_CONFIG: DAGVisualizationConfig = {
 
   forces: {
     // Link force strength - stronger for direct triggers, weaker for contributions
-    linkStrength: (link: D3DAGLink) => {
+    linkStrength: (link: D3QOMLink) => {
       if (link.type === "triggers") return 0.8;
       if (link.type === "refines") return 0.6;
       if (link.type === "contributes") return 0.3;
@@ -32,7 +32,7 @@ export const DAG_VISUAL_CONFIG: DAGVisualizationConfig = {
     chargeStrength: -800,
 
     // Collision radius - prevent overlap
-    collisionRadius: (node: D3DAGNode) => {
+    collisionRadius: (node: D3QOMNode) => {
       return (node.radius || 40) + 10;
     },
 
@@ -166,10 +166,10 @@ export const NODE_CATEGORY_COLORS: Record<string, string> = {
 };
 
 // Get node style based on state and type
-export function getNodeStyle(node: D3DAGNode) {
+export function getNodeStyle(node: D3QOMNode) {
   const stateStyle =
-    DAG_VISUAL_CONFIG.styles.nodes[node.state] ||
-    DAG_VISUAL_CONFIG.styles.nodes.pending;
+    QOM_VISUAL_CONFIG.styles.nodes[node.state] ||
+    QOM_VISUAL_CONFIG.styles.nodes.pending;
   const categoryColor = NODE_CATEGORY_COLORS[node.category] || "#6B7280";
 
   return {
@@ -183,13 +183,13 @@ export function getNodeStyle(node: D3DAGNode) {
 }
 
 // Get link style based on type and active state
-export function getLinkStyle(link: D3DAGLink) {
+export function getLinkStyle(link: D3QOMLink) {
   if (!link.active) {
-    return DAG_VISUAL_CONFIG.styles.links.inactive;
+    return QOM_VISUAL_CONFIG.styles.links.inactive;
   }
   return (
-    DAG_VISUAL_CONFIG.styles.links[link.type] ||
-    DAG_VISUAL_CONFIG.styles.links.inactive
+    QOM_VISUAL_CONFIG.styles.links[link.type] ||
+    QOM_VISUAL_CONFIG.styles.links.inactive
   );
 }
 
@@ -216,11 +216,11 @@ function adjustColorBrightness(color: string, percent: number): string {
 
 // Fixed positioning configuration for pipeline layout
 export function calculateFixedPosition(
-  node: D3DAGNode,
+  node: D3QOMNode,
   width: number,
   height: number,
 ): { x: number; y: number } {
-  const margins = DAG_VISUAL_CONFIG.layout.margins;
+  const margins = QOM_VISUAL_CONFIG.layout.margins;
   const usableWidth = width - margins.left - margins.right;
   const usableHeight = height - margins.top - margins.bottom;
 
@@ -268,7 +268,7 @@ export function calculateFixedPosition(
 export function createForceSimulation(width: number, height: number) {
   return {
     // X force - push nodes to their layer position (processing pipeline)
-    forceX: (node: D3DAGNode) => {
+    forceX: (node: D3QOMNode) => {
       // Layer positioning for processing pipeline:
       // Layer 0: Session Input (left)
       // Layer 1: Primary Analysis + Safety (center-left)
@@ -287,7 +287,7 @@ export function createForceSimulation(width: number, height: number) {
     },
 
     // Y force - distribute nodes vertically within their layer
-    forceY: (node: D3DAGNode) => {
+    forceY: (node: D3QOMNode) => {
       // Spread nodes vertically based on category and layer
       if (node.layer === 1) {
         // Primary analysis and safety distributed vertically
@@ -396,7 +396,7 @@ export const ACTIVATION_CONFIG = {
 export const TRANSITIONS = {
   nodeEnter: {
     duration: 200,
-    delay: (d: D3DAGNode, i: number) => i * 10,
+    delay: (d: D3QOMNode, i: number) => i * 10,
     initialScale: 0,
     finalScale: 1,
   },
@@ -412,8 +412,8 @@ export const TRANSITIONS = {
   linkEnter: {
     duration: 200,
     delay: 0,
-    initialOpacity: (d: D3DAGLink) => getLinkStyle(d).opacity,
-    finalOpacity: (d: D3DAGLink) => getLinkStyle(d).opacity,
+    initialOpacity: (d: D3QOMLink) => getLinkStyle(d).opacity,
+    finalOpacity: (d: D3QOMLink) => getLinkStyle(d).opacity,
   },
   linkUpdate: {
     duration: 300,
@@ -448,7 +448,7 @@ export const TOOLTIP_CONFIG = {
 };
 
 // Export functions for D3 integration
-export function getNodeRadius(node: D3DAGNode): number {
+export function getNodeRadius(node: D3QOMNode): number {
   // Smaller radius since panels handle visual size
   // This is just for link anchor calculations
   const baseRadius = 25; // Reduced from 45
@@ -457,12 +457,12 @@ export function getNodeRadius(node: D3DAGNode): number {
   return baseRadius * stateMultiplier;
 }
 
-export function shouldAnimateLink(link: D3DAGLink): boolean {
+export function shouldAnimateLink(link: D3QOMLink): boolean {
   return link.active && (link.type === "triggers" || link.type === "refines");
 }
 
 export function getParticleDirection(
-  link: D3DAGLink,
+  link: D3QOMLink,
 ): "forward" | "reverse" | "both" {
   if (link.direction === "bidirectional") return "both";
   if (link.type === "refines") return "reverse";

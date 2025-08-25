@@ -840,6 +840,7 @@
   },
   "session": {
     "diagram": "Diagramm",
+    "qom": "Quorum Orchestrierte Modelle",
     "actions": {
       "accept": "Akzeptieren",
       "suppress": "Unterdrücken",

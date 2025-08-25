@@ -30,7 +30,7 @@
     // Main area view tabs (left side)
     const mainViewTabs = $derived([
         { id: 'diagram', label: $t('session.diagram') },
-        { id: 'dag', label: $t('session.dag') }
+        { id: 'qom', label: $t('session.qom') }
     ]);
     
     // Sidebar content tabs (right side)

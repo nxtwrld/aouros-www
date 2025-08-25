@@ -1,6 +1,6 @@
 {
-  "id": "universal_medical_dag_v1",
-  "description": "Universal Multi-Expert Medical Analysis DAG",
+  "id": "universal_medical_qom_v1",
+  "description": "Universal Multi-Expert Quorum Operated Medical Analysis Models",
   "expertTemplates": {
     "data_source": {
       "type": "input",
