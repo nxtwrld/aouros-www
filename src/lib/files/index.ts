@@ -17,9 +17,11 @@ import { type Task, TaskState } from "../import/index";
 export { type Task, TaskState };
 import { toBase64 } from "$lib/arrays";
 import { checkPassword } from "./pdf";
-import { dicomHandler } from "./dicom-handler";
+// IMPORTANT: Do not import dicomHandler at module level - causes server-side issues on Vercel
+// import { dicomHandler } from "./dicom-handler";
 import { resizeImage } from "$lib/images";
 import { THUMBNAIL_SIZE, PROCESS_SIZE } from "./CONFIG";
+import { browser } from "$app/environment";
 
 export const files: Writable<File[]> = writable([]);
 
@@ -116,7 +118,11 @@ export async function createTasks(files: File[]): Promise<Task[]> {
         `📷 IMAGE DETECTED: ${file.name} (${fileSizeMB}MB) - Will process as image document`,
       );
       groupped.images.push(file);
-    } else if (await dicomHandler.detectDicomFile(file)) {
+    } else if (browser && await (async () => {
+      // Dynamically import DICOM handler only in browser
+      const { dicomHandler } = await import("./dicom-handler");
+      return dicomHandler.detectDicomFile(file);
+    })()) {
       console.log(
         `🏥 DICOM DETECTED: ${file.name} (${fileSizeMB}MB) - Will extract medical imaging data`,
       );
@@ -148,6 +154,14 @@ export async function createTasks(files: File[]): Promise<Task[]> {
   for (const dicomFile of groupped.dicom) {
     try {
       console.log(`🏥 Processing DICOM file: ${dicomFile.name}`);
+      
+      // Only process DICOM in browser environment
+      if (!browser) {
+        throw new Error("DICOM processing requires browser environment");
+      }
+      
+      // Dynamically import DICOM handler
+      const { dicomHandler } = await import("./dicom-handler");
       const dicomResult = await dicomHandler.processDicomFile(dicomFile);
 
       // Validate that we actually extracted images
