@@ -26,6 +26,7 @@ The server-side analysis engine processes documents through multiple AI provider
 - **`gemini.ts`**: Google Gemini Vision API integration
 
 Key features:
+
 - Multi-language schema localization (Czech, German, English)
 - Document type detection (report, laboratory, dental, imaging, prescription)
 - Conditional extraction based on detected features
@@ -36,11 +37,13 @@ Key features:
 Advanced workflow management using directed acyclic graphs (DAG):
 
 #### Core Workflows
+
 - **`workflows/unified-workflow.ts`**: Main workflow orchestrator
 - **`workflows/multi-node-orchestrator.ts`**: Parallel node execution engine
 - **`workflows/document-processing.ts`**: Document-specific processing pipeline
 
 #### Processing Nodes (23+ specialized nodes)
+
 - **Input Validation**: Schema validation, format checking
 - **Feature Detection**: Medical content classification
 - **Provider Selection**: Optimal AI provider routing
@@ -50,6 +53,7 @@ Advanced workflow management using directed acyclic graphs (DAG):
 - **Cross-Validation Aggregator**: Multi-provider consensus building
 
 #### Advanced Features
+
 - **Universal Node Factory**: Dynamic node creation and configuration
 - **Workflow Recording/Replay**: Development cost reduction (95% savings)
 - **Parallel Processing**: Concurrent node execution for performance
@@ -147,39 +151,45 @@ graph LR
 - Optimal for large batches or slow connections
 
 Configuration via feature flags:
+
 ```typescript
 // src/lib/config/import-flags.ts
-IMPORT_FEATURE_FLAGS.ENABLE_SSE_IMPORT = true
+IMPORT_FEATURE_FLAGS.ENABLE_SSE_IMPORT = true;
 ```
 
 ## API Endpoints
 
 ### Document Extraction
+
 - **POST** `/v1/import/extract` - Traditional extraction
 - **POST** `/v1/import/extract/stream` - SSE streaming extraction
 
 ### Document Analysis
+
 - **POST** `/v1/import/report` - Traditional analysis
 - **POST** `/v1/import/report/stream` - SSE streaming analysis
 
 ### Attachment Management
+
 - **POST** `/v1/med/profiles/{profile_id}/attachments` - Upload encrypted attachments
 - **DELETE** `/v1/med/profiles/{profile_id}/attachments` - Remove attachments
 
 ## Configuration
 
 ### Feature Flags
+
 ```typescript
 // Enable/disable features
 IMPORT_FEATURE_FLAGS = {
-  ENABLE_SSE_IMPORT: true,           // SSE streaming mode
-  ENABLE_LANGGRAPH_WORKFLOW: true,   // LangGraph orchestration
-  ENABLE_WORKFLOW_RECORDING: true,   // Development replay
-  ENABLE_EXTERNAL_VALIDATION: false  // MCP validation (Phase 4)
-}
+  ENABLE_SSE_IMPORT: true, // SSE streaming mode
+  ENABLE_LANGGRAPH_WORKFLOW: true, // LangGraph orchestration
+  ENABLE_WORKFLOW_RECORDING: true, // Development replay
+  ENABLE_EXTERNAL_VALIDATION: false, // MCP validation (Phase 4)
+};
 ```
 
 ### Supported Document Types
+
 - Medical Reports
 - Laboratory Results
 - Imaging Studies (X-ray, MRI, CT)
@@ -189,6 +199,7 @@ IMPORT_FEATURE_FLAGS = {
 - DICOM Images
 
 ### Language Support
+
 - English (primary)
 - Czech
 - German
@@ -196,12 +207,14 @@ IMPORT_FEATURE_FLAGS = {
 ## Error Handling
 
 ### Client-Side Recovery
+
 - Automatic retry with exponential backoff
 - Partial batch processing on failure
 - User-friendly error messages
 - Progress preservation on reconnection
 
 ### Server-Side Resilience
+
 - Provider fallback chains
 - Graceful degradation
 - Detailed error logging
@@ -210,12 +223,14 @@ IMPORT_FEATURE_FLAGS = {
 ## Performance Metrics
 
 ### Current Performance
+
 - **Processing Time**: 3-8 seconds per document
 - **Token Usage**: $0.08-0.18 per document
 - **Concurrent Processing**: 10-20 documents
 - **Success Rate**: 92-95% for medical documents
 
 ### Optimization Strategies
+
 - Parallel node execution in LangGraph
 - Selective section processing
 - Provider-based cost optimization
@@ -224,12 +239,14 @@ IMPORT_FEATURE_FLAGS = {
 ## Security Considerations
 
 ### Data Protection
+
 - **End-to-end encryption**: Client encrypts before transmission
 - **Zero-knowledge architecture**: Server cannot decrypt documents
 - **Key rotation**: Regular key updates for enhanced security
 - **Audit trails**: Complete processing history
 
 ### HIPAA Compliance
+
 - Encrypted data at rest and in transit
 - Access controls and authentication
 - Audit logging for all operations
@@ -238,6 +255,7 @@ IMPORT_FEATURE_FLAGS = {
 ## Development Workflow
 
 ### Adding New Document Types
+
 1. Create schema in `src/lib/configurations/`
 2. Add processor node in `src/lib/langgraph/nodes/`
 3. Update document router logic
@@ -245,6 +263,7 @@ IMPORT_FEATURE_FLAGS = {
 5. Test with sample documents
 
 ### Debugging Tools
+
 - Workflow recording and replay
 - SSE event monitoring
 - Token usage tracking
@@ -253,12 +272,14 @@ IMPORT_FEATURE_FLAGS = {
 ## Future Enhancements
 
 ### Phase 4 (Planned)
+
 - MCP external validation integration
 - Advanced medical term linking
 - Multi-provider consensus validation
 - LangSmith monitoring integration
 
 ### Phase 5 (Proposed)
+
 - Support for additional document formats
 - Real-time collaboration features
 - Advanced duplicate detection

@@ -1,6 +1,6 @@
 /**
  * Get Assembled Context Tool
- * 
+ *
  * Assembles relevant medical context from patient documents for AI analysis
  */
 
@@ -30,8 +30,7 @@ export class GetAssembledContextTool extends BaseMedicalTool {
           },
           maxTokens: {
             type: "number",
-            description:
-              "Maximum tokens for assembled context (default: 3000)",
+            description: "Maximum tokens for assembled context (default: 3000)",
           },
           includeMedicalContext: {
             type: "boolean",
@@ -95,7 +94,10 @@ export class GetAssembledContextTool extends BaseMedicalTool {
         summary: assembledContext.summary,
         keyFindings: assembledContext.keyPoints.map((kp) => kp.text),
         relevantDocuments: assembledContext.relevantDocuments.map((doc) => ({
-          document: { id: doc.documentId, metadata: { type: doc.type, date: doc.date } },
+          document: {
+            id: doc.documentId,
+            metadata: { type: doc.type, date: doc.date },
+          },
           relevance: doc.relevance,
           matchedTerms: [],
           excerpt: doc.excerpt,

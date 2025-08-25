@@ -37,7 +37,7 @@ const config = {
       $components: "src/components",
       $data: "src/data",
       $media: "src/media",
-      $config: 'config'
+      $config: "config",
     },
     prerender: {
       entries: [

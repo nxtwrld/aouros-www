@@ -128,18 +128,61 @@
     }
   ],
   "symptoms": [
-    { "name": "Chronic fatigue", "duration": "months", "severity": "severe", "bodyParts": ["body"] },
-    { "name": "Non-restorative sleep", "duration": "months", "severity": "severe", "bodyParts": ["body"] },
-    { "name": "Brain fog", "duration": "months", "severity": "moderate", "bodyParts": ["head"] },
-    { "name": "Concentration difficulties", "duration": "months", "severity": "moderate", "bodyParts": ["head"] },
-    { "name": "Hair thinning", "duration": "months", "severity": "mild", "bodyParts": ["head"] },
-    { "name": "Dry skin", "duration": "months", "severity": "mild", "bodyParts": ["skin"] },
-    { "name": "Heavy menstrual bleeding", "duration": "months", "severity": "moderate", "bodyParts": ["reproductive"] },
-    { "name": "Prolonged menstrual periods", "duration": "months", "severity": "moderate", "bodyParts": ["reproductive"] },
-    { "name": "Emotional flatness", "duration": "months", "severity": "mild", "bodyParts": ["body"] }
+    {
+      "name": "Chronic fatigue",
+      "duration": "months",
+      "severity": "severe",
+      "bodyParts": ["body"]
+    },
+    {
+      "name": "Non-restorative sleep",
+      "duration": "months",
+      "severity": "severe",
+      "bodyParts": ["body"]
+    },
+    {
+      "name": "Brain fog",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Concentration difficulties",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Hair thinning",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["head"]
+    },
+    {
+      "name": "Dry skin",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["skin"]
+    },
+    {
+      "name": "Heavy menstrual bleeding",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["reproductive"]
+    },
+    {
+      "name": "Prolonged menstrual periods",
+      "duration": "months",
+      "severity": "moderate",
+      "bodyParts": ["reproductive"]
+    },
+    {
+      "name": "Emotional flatness",
+      "duration": "months",
+      "severity": "mild",
+      "bodyParts": ["body"]
+    }
   ],
   "complaint": "Chronic fatigue and cognitive issues following COVID infection, with associated physical symptoms including hair thinning, dry skin, and heavy menstrual periods",
   "tokenUsage": { "total": 3160 }
 }
-
-

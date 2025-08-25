@@ -29,7 +29,8 @@
     // Fixed: Convert to proper Svelte 5 reactive state
     let dialogs = $state({
         healthForm: false,
-        healthProperty: false
+        healthProperty: false,
+        healthFormData: null as any
     });
 
     // Chat state
@@ -167,6 +168,7 @@
                 logger.ui.debug('modal.healthForm event received with config:', config);
                 logger.ui.debug('Setting dialogs.healthForm to:', config === false ? false : (config || true));
                 dialogs.healthForm = config === false ? false : (config || true);
+                dialogs.healthFormData = config?.data || $profile?.health || {};
             }),
             ui.listen('overlay.import', (state: boolean = true) => {
                 logger.ui.debug('import');
@@ -250,25 +252,23 @@
     {/if}
 
     {#if dialogs.healthForm}
-        <Modal on:close={() => {
+        <Modal onclose={() => {
             logger.ui.debug('Health form modal close event fired');
             dialogs.healthForm = false;
+            dialogs.healthFormData = null;
         }}>
-            <HealthForm config={dialogs.healthForm}  on:abort={() => {
-                logger.ui.debug('Health form abort event fired');
-                dialogs.healthForm = false;
-            }}/>
+            <HealthForm 
+                config={dialogs.healthForm}
+                bind:data={dialogs.healthFormData}
+            />
         </Modal>
     {/if}
     {#if dialogs.healthProperty}
-        <Modal on:close={() => {
+        <Modal onclose={() => {
             logger.ui.debug('Health property modal close event fired');
             dialogs.healthProperty = false;
         }}>
-            <HealthProperty property={dialogs.healthProperty as any}  on:abort={() => {
-                logger.ui.debug('Health property abort event fired');
-                dialogs.healthProperty = false;
-            }}/>
+            <HealthProperty property={dialogs.healthProperty as any} />
         </Modal>
     {/if}
 

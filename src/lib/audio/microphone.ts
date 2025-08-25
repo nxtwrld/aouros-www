@@ -107,30 +107,32 @@ export async function getAudioVAD(
   };
   controls.stop = () => {
     console.log("[VAD] Stopping VAD and MediaStream...");
-    
+
     // Clean up VAD and its internal MediaStream
     if (mvad) {
-      if (typeof mvad.destroy === 'function') {
+      if (typeof mvad.destroy === "function") {
         mvad.destroy();
         console.log("[VAD] VAD destroyed successfully");
       } else {
         // Manual cleanup for VAD's internal MediaStream (critical for Chrome tab indicator)
         if (mvad.stream) {
-          mvad.stream.getTracks().forEach(track => track.stop());
+          mvad.stream.getTracks().forEach((track) => track.stop());
           console.log("[VAD] VAD MediaStream tracks stopped");
         }
-        
+
         // Close VAD's AudioContext if not already closed
-        if (mvad.audioContext && mvad.audioContext.state !== 'closed') {
-          mvad.audioContext.close().catch(err => 
-            console.warn("[VAD] AudioContext close error:", err)
-          );
+        if (mvad.audioContext && mvad.audioContext.state !== "closed") {
+          mvad.audioContext
+            .close()
+            .catch((err) =>
+              console.warn("[VAD] AudioContext close error:", err),
+            );
         }
-        
+
         mvad.pause();
       }
     }
-    
+
     // Stop the original audio processor
     stop();
     controls.state = AudioState.stopped;
@@ -138,7 +140,6 @@ export async function getAudioVAD(
 
   return controls as AudioControlsVad;
 }
-
 
 export async function getAudio(
   options: AudioOptions = {
@@ -181,23 +182,23 @@ export async function getAudio(
         state: AudioState.ready,
         stop: () => {
           console.log("[AudioControls] Stopping audio components...");
-          
+
           if (analyzer) {
             analyzer.stop();
           }
-          
-          if (mediaRecorder && mediaRecorder.state === 'recording') {
+
+          if (mediaRecorder && mediaRecorder.state === "recording") {
             mediaRecorder.stop();
           }
-          
+
           controls.state = AudioState.stopped;
 
           // Stop all MediaStream tracks
-          stream.getTracks().forEach(track => {
+          stream.getTracks().forEach((track) => {
             track.stop();
             stream.removeTrack(track);
           });
-          
+
           // Clean up references
           delete controls.stream;
           delete controls.mediaRecorder;

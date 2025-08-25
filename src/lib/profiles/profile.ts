@@ -15,7 +15,7 @@ function createChatContext(
   profileName: string,
   isOwnProfile: boolean,
   language: string,
-  currentRoute: string = '/',
+  currentRoute: string = "/",
   healthData?: any,
   healthDocumentId?: string,
 ): ChatContext {
@@ -46,9 +46,9 @@ function createChatContext(
       documents: availableDocuments,
       conditions: [],
       medications: [],
-      vitals: []
+      vitals: [],
     },
-    documentsContent: documentsContent.size > 0 ? documentsContent : undefined
+    documentsContent: documentsContent.size > 0 ? documentsContent : undefined,
   };
 
   return {
@@ -57,7 +57,7 @@ function createChatContext(
     conversationThreadId: generateId(),
     language: language,
     pageContext: pageContext,
-    isOwnProfile: isOwnProfile
+    isOwnProfile: isOwnProfile,
   };
 }
 

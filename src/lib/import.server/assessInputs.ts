@@ -17,6 +17,16 @@ type Input = {
   images: string[];
   //text?: string;
   //language?: string;
+  metadata?: {
+    isDicomExtracted?: boolean;
+    imageSource?: "dicom" | "upload";
+    dicomMetadata?: any;
+    imageContentType?:
+      | "medical_imaging"
+      | "document_scan"
+      | "mixed_content"
+      | "non_medical";
+  };
 };
 
 // Re-export types from shared types
@@ -26,7 +36,10 @@ export type {
   AssessmentPage,
 } from "$lib/import/types";
 
-export default async function assess(input: Input): Promise<Assessment> {
+export default async function assess(
+  input: Input,
+  progressCallback?: (stage: string, progress: number, message: string) => void
+): Promise<Assessment> {
   const tokenUsage: TokenUsage = {
     total: 0,
   };
@@ -48,11 +61,17 @@ export default async function assess(input: Input): Promise<Assessment> {
   //  await sleep(500);
   //    return Promise.resolve(TEST_DATA);
 
+  // Report progress before AI call
+  progressCallback?.("ai_processing", 60, `Processing ${input.images.length} images with AI...`);
+
   // get basic item info
   let data = (await fetchGptEnhanced(
     content,
     assessSchemaImage,
     tokenUsage,
+    "English", // language
+    "extraction", // flowType - use extraction flow for OCR
+    progressCallback // Pass the progress callback
   )) as Assessment;
   data.tokenUsage = tokenUsage;
 

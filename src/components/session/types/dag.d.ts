@@ -1,7 +1,12 @@
 // DAG Visualization Type Definitions
 // Based on AI_SESSION_DAG.md specification
 
-import type { SymptomNode, DiagnosisNode, TreatmentNode, ActionNode } from './visualization';
+import type {
+  SymptomNode,
+  DiagnosisNode,
+  TreatmentNode,
+  ActionNode,
+} from "./visualization";
 
 // Universal Expert Interface (from spec)
 export interface UniversalExpertNode {
@@ -12,13 +17,13 @@ export interface UniversalExpertNode {
     previousAnalysis?: MedicalAnalysisOutput;
     triggerConditions?: string[];
   };
-  
+
   // Decision Logic
-  decision: 'complete_analysis' | 'trigger_sub_experts';
-  
+  decision: "complete_analysis" | "trigger_sub_experts";
+
   // Output Interface (when complete_analysis)
   outputs?: MedicalAnalysisOutput;
-  
+
   // Sub-Expert Triggering (when trigger_sub_experts)
   triggers?: {
     subExperts: string[];
@@ -43,30 +48,40 @@ export interface MedicalAnalysisOutput {
 export interface DAGNode {
   id: string;
   name: string;
-  type: 'input' | 'detector' | 'primary' | 'specialist' | 'sub-specialist' | 'functional' | 'merger' | 'safety' | 'consensus' | 'output';
+  type:
+    | "input"
+    | "detector"
+    | "primary"
+    | "specialist"
+    | "sub-specialist"
+    | "functional"
+    | "merger"
+    | "safety"
+    | "consensus"
+    | "output";
   category: string; // e.g., 'cardiology', 'emergency', 'safety'
   layer: number; // 0=primary, 1=specialist, 2=sub-specialist, etc.
   parent?: string; // Parent expert ID
   children: string[]; // Child expert IDs
-  
+
   // Execution state
-  state: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+  state: "pending" | "running" | "completed" | "failed" | "skipped";
   progress?: number; // 0-100
-  
+
   // Model configuration
   provider: string;
   model: string;
   fallbackChain?: string[];
-  
+
   // Triggering logic
   triggerConditions?: string[];
   triggerThreshold?: number;
   triggered?: boolean;
-  
+
   // Results
   output?: MedicalAnalysisOutput;
   error?: string;
-  
+
   // Metrics
   startTime?: number;
   endTime?: number;
@@ -76,7 +91,7 @@ export interface DAGNode {
     input: number;
     output: number;
   };
-  
+
   // Visual properties (computed)
   x?: number;
   y?: number;
@@ -93,14 +108,22 @@ export interface DAGLink {
   id: string;
   source: string | DAGNode;
   target: string | DAGNode;
-  type: 'data_flow' | 'analysis_input' | 'safety_input' | 'bypass_flow' | 'triggers' | 'refines' | 'contributes' | 'merges';
-  direction: 'forward' | 'reverse' | 'bidirectional';
+  type:
+    | "data_flow"
+    | "analysis_input"
+    | "safety_input"
+    | "bypass_flow"
+    | "triggers"
+    | "refines"
+    | "contributes"
+    | "merges";
+  direction: "forward" | "reverse" | "bidirectional";
   strength: number; // 0.0-1.0
   active: boolean;
-  
+
   // Visual properties
   animated?: boolean;
-  particleDirection?: 'forward' | 'reverse' | 'both';
+  particleDirection?: "forward" | "reverse" | "both";
   color?: string;
   width?: number;
   dashArray?: string;
@@ -110,12 +133,12 @@ export interface DAGLink {
 export interface DAGExecutionState {
   sessionId: string;
   dagModelId: string;
-  status: 'idle' | 'initializing' | 'running' | 'completed' | 'failed';
+  status: "idle" | "initializing" | "running" | "completed" | "failed";
   currentLayer: number;
   activeNodes: string[];
   completedNodes: string[];
   failedNodes: string[];
-  
+
   // Metrics
   totalNodes: number;
   totalCost: number;
@@ -124,7 +147,7 @@ export interface DAGExecutionState {
 }
 
 // SSE Event Types for DAG
-export type DAGEvent = 
+export type DAGEvent =
   | DAGInitializedEvent
   | NodeStartedEvent
   | NodeProgressEvent
@@ -136,7 +159,7 @@ export type DAGEvent =
   | DAGCompletedEvent;
 
 export interface DAGInitializedEvent {
-  type: 'dag_initialized';
+  type: "dag_initialized";
   dagModelId: string;
   nodes: DAGNode[];
   links: DAGLink[];
@@ -144,7 +167,7 @@ export interface DAGInitializedEvent {
 }
 
 export interface NodeStartedEvent {
-  type: 'node_started';
+  type: "node_started";
   nodeId: string;
   nodeName: string;
   model: string;
@@ -153,14 +176,14 @@ export interface NodeStartedEvent {
 }
 
 export interface NodeProgressEvent {
-  type: 'node_progress';
+  type: "node_progress";
   nodeId: string;
   progress: number; // 0-100
   message?: string;
 }
 
 export interface NodeCompletedEvent {
-  type: 'node_completed';
+  type: "node_completed";
   nodeId: string;
   duration: number;
   cost: number;
@@ -172,7 +195,7 @@ export interface NodeCompletedEvent {
 }
 
 export interface NodeFailedEvent {
-  type: 'node_failed';
+  type: "node_failed";
   nodeId: string;
   error: string;
   willRetry: boolean;
@@ -180,7 +203,7 @@ export interface NodeFailedEvent {
 }
 
 export interface ExpertTriggeredEvent {
-  type: 'expert_triggered';
+  type: "expert_triggered";
   parentId: string;
   expertId: string;
   expertName: string;
@@ -189,16 +212,16 @@ export interface ExpertTriggeredEvent {
 }
 
 export interface RelationshipAddedEvent {
-  type: 'relationship_added';
+  type: "relationship_added";
   linkId: string;
   sourceId: string;
   targetId: string;
   relationshipType: string;
-  direction: 'forward' | 'reverse' | 'bidirectional';
+  direction: "forward" | "reverse" | "bidirectional";
 }
 
 export interface ModelSwitchedEvent {
-  type: 'model_switched';
+  type: "model_switched";
   nodeId: string;
   fromModel: string;
   toModel: string;
@@ -206,7 +229,7 @@ export interface ModelSwitchedEvent {
 }
 
 export interface DAGCompletedEvent {
-  type: 'dag_completed';
+  type: "dag_completed";
   totalDuration: number;
   totalCost: number;
   nodeCount: number;
@@ -217,8 +240,12 @@ export interface DAGCompletedEvent {
 
 // Expert Template Configuration
 export interface ExpertTemplate {
-  type: 'primary' | 'specialist' | 'functional' | 'merger';
-  execution: 'always_active' | 'trigger_based' | 'conditional' | 'after_layer_complete';
+  type: "primary" | "specialist" | "functional" | "merger";
+  execution:
+    | "always_active"
+    | "trigger_based"
+    | "conditional"
+    | "after_layer_complete";
   outputs: string[];
   decisionLogic: string;
   modelConfig: {
@@ -243,11 +270,11 @@ export interface ExpertLayer {
   id: string;
   name: string;
   experts: DAGNode[];
-  executionType: 'parallel' | 'sequential';
+  executionType: "parallel" | "sequential";
 }
 
 export interface ConsensusStrategy {
-  type: 'weighted' | 'majority' | 'unanimous';
+  type: "weighted" | "majority" | "unanimous";
   weights?: Map<string, number>;
   conflictThreshold: number;
   agreementBoost: number;
@@ -263,17 +290,20 @@ export interface ConsensusResult {
 }
 
 export interface ConsensusItem {
-  type: 'symptom' | 'diagnosis' | 'treatment' | 'question';
+  type: "symptom" | "diagnosis" | "treatment" | "question";
   item: any;
   supportingExperts: string[];
   confidence: number;
 }
 
 export interface ConflictAlert {
-  type: 'diagnosis_conflict' | 'treatment_conflict' | 'question_priority_conflict';
+  type:
+    | "diagnosis_conflict"
+    | "treatment_conflict"
+    | "question_priority_conflict";
   conflictingExperts: string[];
   conflictingItems: any[];
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   recommendedAction: string;
 }
 
@@ -297,7 +327,7 @@ export interface D3DAGLink extends DAGLink {
 // Visualization configuration
 export interface DAGVisualizationConfig {
   layout: {
-    type: 'hierarchical' | 'force' | 'radial';
+    type: "hierarchical" | "force" | "radial";
     width: number;
     height: number;
     margins: { top: number; right: number; bottom: number; left: number };

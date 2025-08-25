@@ -60,11 +60,7 @@ export const audioActions = {
       useRealtime?: boolean;
     } = {},
   ): Promise<boolean> {
-    const {
-      language = "en",
-      models = ["GP"],
-      useRealtime = true,
-    } = options;
+    const { language = "en", models = ["GP"], useRealtime = true } = options;
 
     logger.audio.info("Starting recording with pre-initialized audio...", {
       language,
@@ -77,12 +73,12 @@ export const audioActions = {
       // Store the audio processor
       audioProcessor.audio = audio;
       audioProcessor.isInitialized = true;
-      
+
       logger.audio.info("Audio processor stored globally", {
         hasStream: !!audio.stream,
         streamId: audio.stream?.id,
         trackCount: audio.stream?.getTracks().length || 0,
-        audioState: audio.state
+        audioState: audio.state,
       });
 
       // Create session if needed and realtime is enabled
@@ -90,7 +86,9 @@ export const audioActions = {
       if (useRealtime) {
         finalSessionId = await audioActions.createSession(language, models);
         if (!finalSessionId) {
-          logger.audio.warn("Failed to create session, continuing with local recording");
+          logger.audio.warn(
+            "Failed to create session, continuing with local recording",
+          );
         }
       }
 
@@ -98,7 +96,9 @@ export const audioActions = {
       if (useRealtime && finalSessionId) {
         const sseConnected = await audioActions.initializeSSE(finalSessionId);
         if (!sseConnected) {
-          logger.audio.warn("Failed to initialize SSE, falling back to non-realtime mode");
+          logger.audio.warn(
+            "Failed to initialize SSE, falling back to non-realtime mode",
+          );
         }
       }
 
@@ -201,7 +201,9 @@ export const audioActions = {
       if (useRealtime && !finalSessionId) {
         finalSessionId = await audioActions.createSession(language, models);
         if (!finalSessionId) {
-          logger.audio.warn("Failed to create session, continuing with local recording");
+          logger.audio.warn(
+            "Failed to create session, continuing with local recording",
+          );
           // Continue without realtime features
         }
       }
@@ -225,15 +227,15 @@ export const audioActions = {
       if (audio instanceof Error) {
         logger.audio.error("Failed to initialize audio - returned Error:", {
           message: audio.message,
-          stack: audio.stack
+          stack: audio.stack,
         });
         throw audio;
       }
 
-      logger.audio.info("Audio successfully initialized", { 
+      logger.audio.info("Audio successfully initialized", {
         state: audio.state,
         hasStream: !!audio.stream,
-        hasAudioContext: !!audio.audioContext
+        hasAudioContext: !!audio.audioContext,
       });
 
       // Store audio processor
@@ -331,7 +333,9 @@ export const audioActions = {
         audio: {
           ...state.audio,
           isRecording: true,
-          state: audioProcessor.audio ? mapMicrophoneAudioState(audioProcessor.audio.state) : AudioState.Listening,
+          state: audioProcessor.audio
+            ? mapMicrophoneAudioState(audioProcessor.audio.state)
+            : AudioState.Listening,
         },
         ui: {
           ...state.ui,
@@ -371,12 +375,15 @@ export const audioActions = {
     try {
       // Stop audio recording
       if (audioProcessor.audio) {
-        logger.audio.info("Stopping global audio processor - calling stop() method", {
-          hasStream: !!audioProcessor.audio.stream,
-          streamId: audioProcessor.audio.stream?.id,
-          trackCount: audioProcessor.audio.stream?.getTracks().length || 0,
-          audioState: audioProcessor.audio.state
-        });
+        logger.audio.info(
+          "Stopping global audio processor - calling stop() method",
+          {
+            hasStream: !!audioProcessor.audio.stream,
+            streamId: audioProcessor.audio.stream?.id,
+            trackCount: audioProcessor.audio.stream?.getTracks().length || 0,
+            audioState: audioProcessor.audio.state,
+          },
+        );
         audioProcessor.audio.stop();
         logger.audio.info("Global audio processor stop() method completed");
       } else {
@@ -480,7 +487,7 @@ export const audioActions = {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok,
-        url: response.url
+        url: response.url,
       });
 
       if (!response.ok) {
@@ -489,27 +496,29 @@ export const audioActions = {
           status: response.status,
           statusText: response.statusText,
           error: errorText,
-          url: response.url
+          url: response.url,
         });
         return null;
       }
 
       const result = await response.json();
       logger.session.debug("Session creation response JSON:", result);
-      
+
       if (result.sessionId) {
         logger.session.info("Session created successfully:", result.sessionId);
         ui.emit("session:created", { sessionId: result.sessionId });
         return result.sessionId;
       } else {
-        logger.session.error("Session creation response missing sessionId:", result);
+        logger.session.error(
+          "Session creation response missing sessionId:",
+          result,
+        );
         return null;
       }
-
     } catch (error) {
       logger.session.error("Session creation network/parse error:", {
         error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       });
       return null;
     }

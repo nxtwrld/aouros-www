@@ -36,6 +36,10 @@ export async function processImages(images: string[]): Promise<ProcessedFile> {
       }),
     );
 
+    // Extract first page thumbnail for task preview
+    const taskThumbnail = processed.pages[0]?.thumbnail || "";
+    processed.taskThumbnail = taskThumbnail;
+
     resolve(processed);
   });
 }

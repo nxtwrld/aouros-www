@@ -4,8 +4,6 @@ We working on our import flow for medical documents.
 
 $ARGUMENTS
 
-
-
 ## Basic architecture
 
 - **Client Processing**: Document handling and UI in `src/components/import/` with SSE progress streaming
@@ -15,15 +13,6 @@ $ARGUMENTS
 - **Security Model**: Client-side AES encryption with RSA key management - server never accesses raw keys
 - **Workflow Features**: Recording/replay for development, parallel processing, selective analysis
 
-
 ## Detail
 
 For more details se `docs/IMPORT.md`
-
-
-
-
-
-
-
-

@@ -14,9 +14,27 @@
         "quote": "Budím se unavená a v poledne mám pocit, že sotva funguji.",
         "characteristics": ["zhoršující se", "perzistentní"],
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "supports", "direction": "outgoing", "strength": 0.85, "reasoning": "Perzistentní únava s těžkou menstruací naznačuje ztrátu železa."},
-          {"nodeId": "diag_hypothyroidism", "relationship": "supports", "direction": "outgoing", "strength": 0.8, "reasoning": "Neosvěžující spánek a únava jsou běžné u hypotyreózy."},
-          {"nodeId": "diag_depression", "relationship": "supports", "direction": "outgoing", "strength": 0.7, "reasoning": "Perzistentní únava může být projevem deprese."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Perzistentní únava s těžkou menstruací naznačuje ztrátu železa."
+          },
+          {
+            "nodeId": "diag_hypothyroidism",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.8,
+            "reasoning": "Neosvěžující spánek a únava jsou běžné u hypotyreózy."
+          },
+          {
+            "nodeId": "diag_depression",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.7,
+            "reasoning": "Perzistentní únava může být projevem deprese."
+          }
         ]
       },
       {
@@ -28,7 +46,13 @@
         "documentId": "lab_results_2025_08_06",
         "quote": "Ferritin: 8 ng/mL (Ref 15–150)",
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "supports", "direction": "outgoing", "strength": 0.98, "reasoning": "Nízký ferritin je vysoce specifický pro nedostatek železa."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.98,
+            "reasoning": "Nízký ferritin je vysoce specifický pro nedostatek železa."
+          }
         ]
       },
       {
@@ -40,7 +64,13 @@
         "documentId": "lab_results_2025_08_06",
         "quote": "Hemoglobin: 10,9 g/dL (Ref 12,0–16,0)",
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "supports", "direction": "outgoing", "strength": 0.9, "reasoning": "Anémie odpovídá obrazu nedostatku železa."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Anémie odpovídá obrazu nedostatku železa."
+          }
         ]
       },
       {
@@ -52,7 +82,13 @@
         "documentId": "lab_results_2025_08_06",
         "quote": "MCV: 76 fL (Ref 80–100)",
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "supports", "direction": "outgoing", "strength": 0.92, "reasoning": "Mikrocytóza podporuje anémii z nedostatku železa."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "supports",
+            "direction": "outgoing",
+            "strength": 0.92,
+            "reasoning": "Mikrocytóza podporuje anémii z nedostatku železa."
+          }
         ]
       }
     ],
@@ -67,8 +103,20 @@
         "confidence": 0.98,
         "requiresInvestigation": false,
         "relationships": [
-          {"nodeId": "treat_iron_supplementation", "relationship": "requires", "direction": "outgoing", "strength": 0.95, "reasoning": "Léčba první volby při potvrzeném nedostatku železa."},
-          {"nodeId": "treat_investigate_bleeding", "relationship": "requires", "direction": "outgoing", "strength": 0.85, "reasoning": "Nutno identifikovat příčinu ztrát železa (např. gynekologickou)."}
+          {
+            "nodeId": "treat_iron_supplementation",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.95,
+            "reasoning": "Léčba první volby při potvrzeném nedostatku železa."
+          },
+          {
+            "nodeId": "treat_investigate_bleeding",
+            "relationship": "requires",
+            "direction": "outgoing",
+            "strength": 0.85,
+            "reasoning": "Nutno identifikovat příčinu ztrát železa (např. gynekologickou)."
+          }
         ]
       },
       {
@@ -106,7 +154,13 @@
         "reasoning": "Potvrzená anémie z nedostatku železa.",
         "requiresFollowUp": true,
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "treats", "direction": "incoming", "strength": 0.95, "reasoning": "Přímá korekce nedostatku železa."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "treats",
+            "direction": "incoming",
+            "strength": 0.95,
+            "reasoning": "Přímá korekce nedostatku železa."
+          }
         ]
       },
       {
@@ -129,7 +183,13 @@
         "description": "Zobrazení děložní struktury a detekce myomů",
         "reasoning": "Zhodnotit strukturální příčiny silného krvácení.",
         "relationships": [
-          {"nodeId": "diag_fibroids", "relationship": "investigates", "direction": "outgoing", "strength": 0.9, "reasoning": "Zobrazování první volby pro myomy."}
+          {
+            "nodeId": "diag_fibroids",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 0.9,
+            "reasoning": "Zobrazování první volby pro myomy."
+          }
         ]
       }
     ],
@@ -143,9 +203,20 @@
         "status": "answered",
         "answer": "Ferritin 8 ng/mL (nízký), Hb 10,9 g/dL (nízký), MCV 76 fL (mikrocytární)",
         "relationships": [
-          {"nodeId": "diag_iron_deficiency_anemia", "relationship": "investigates", "direction": "outgoing", "strength": 1.0, "reasoning": "Laboratoř potvrzuje anémii z nedostatku železa."}
+          {
+            "nodeId": "diag_iron_deficiency_anemia",
+            "relationship": "investigates",
+            "direction": "outgoing",
+            "strength": 1.0,
+            "reasoning": "Laboratoř potvrzuje anémii z nedostatku železa."
+          }
         ],
-        "impact": { "diagnoses": {"diag_iron_deficiency_anemia": 0.3, "diag_hypothyroidism": -0.05} }
+        "impact": {
+          "diagnoses": {
+            "diag_iron_deficiency_anemia": 0.3,
+            "diag_hypothyroidism": -0.05
+          }
+        }
       },
       {
         "id": "safety_drug_interaction",
@@ -168,5 +239,3 @@
     }
   ]
 }
-
-

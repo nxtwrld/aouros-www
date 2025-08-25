@@ -1,49 +1,60 @@
 <script lang="ts">
-    import { run } from 'svelte/legacy';
-
     import { t } from '$lib/i18n';
+    
     interface Props {
         data: any;
     }
 
     let { data = $bindable() }: Props = $props();
 
-    let inputData = $state(Object.assign({
-        fn: '',
-        n: {
-            honorificPrefix: '',
-            givenName: '',
-            additionalName: '',
-            familyName: '',
-            honorificSufix: ''
-        },
-        adr: [
-            {
-                streetAddress: '',
-                locality: '',
-                region: '',
-                postalCode: '',
-                countryName: 'CZ'
-            }
-        ],
-        tel: [
-            {
-                type: '',
-                value: ''
-            }
-        ],
-        email: [
-            {
-                type: '',
-                value: ''
-            }
-        ]
-    }, data));
+    // Default data structure factory
+    function getDefaultData() {
+        return {
+            fn: '',
+            n: {
+                honorificPrefix: '',
+                givenName: '',
+                additionalName: '',
+                familyName: '',
+                honorificSufix: ''
+            },
+            adr: [
+                {
+                    streetAddress: '',
+                    locality: '',
+                    region: '',
+                    postalCode: '',
+                    countryName: 'CZ'
+                }
+            ],
+            tel: [
+                {
+                    type: '',
+                    value: ''
+                }
+            ],
+            email: [
+                {
+                    type: '',
+                    value: ''
+                }
+            ]
+        };
+    }
 
-    run(() => {
-        data = inputData;
+    // Create a deep reactive copy of the data
+    let formData = $state(JSON.parse(JSON.stringify({ ...getDefaultData(), ...(data || {}) })));
+
+    // Debounced sync back to parent prop
+    let timeoutId: number;
+    $effect(() => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            data = JSON.parse(JSON.stringify(formData));
+        }, 100);
+        
+        return () => clearTimeout(timeoutId);
     });
-
 </script>
 
 
@@ -53,7 +64,7 @@
 
     <div class="input">
         <label for="vcard-name">{ $t('profile.vcard.fn') }</label>
-        <input type="text" id="vcard-name" bind:value={inputData.fn} />
+        <input type="text" id="vcard-name" bind:value={formData.fn} />
     </div>
 
     <!-- n object of VCard with prefixes and suffixes-->
@@ -61,27 +72,27 @@
     <div class="inputs-row">
         <div class="input">
             <label for="vcard-prefix">{ $t('profile.vcard.prefix') }</label>
-            <input type="text" id="vcard-prefix" bind:value={inputData.n.honorificPrefix} />
+            <input type="text" id="vcard-prefix" bind:value={formData.n.honorificPrefix} />
         </div>
         <div class="input -grow">
             <label for="vcard-given">{ $t('profile.vcard.given') }</label>
-            <input type="text" id="vcard-given" bind:value={inputData.n.givenName} />
+            <input type="text" id="vcard-given" bind:value={formData.n.givenName} />
         </div>
         <div class="input -grow">
             <label for="vcard-middle">{ $t('profile.vcard.middle') }</label>
-            <input type="text" id="vcard-middle" bind:value={inputData.n.additionalName} />
+            <input type="text" id="vcard-middle" bind:value={formData.n.additionalName} />
         </div>
         <div class="input -grow">
             <label for="vcard-family">{ $t('profile.vcard.family') }</label>
-            <input type="text" id="vcard-family" bind:value={inputData.n.familyName} />
+            <input type="text" id="vcard-family" bind:value={formData.n.familyName} />
         </div>
         <div class="input">
             <label for="vcard-sufix">{ $t('profile.vcard.sufix') }</label>
-            <input type="text" id="vcard-sufix" bind:value={inputData.n.honorificSufix} />
+            <input type="text" id="vcard-sufix" bind:value={formData.n.honorificSufix} />
         </div>
     </div>
 
-    {#each inputData.adr as adr, index}
+    {#each formData.adr as adr}
         <div class="address">
             <div class="input">
                 <label for="vcard-street">{ $t('profile.vcard.street') }</label>
@@ -114,14 +125,14 @@
         </div>
     {/each}
 
-    {#each inputData.tel as tel, index}
+    {#each formData.tel as tel}
         <div class="input">
             <label for="vcard-tel">{ $t('profile.vcard.tel') }</label>
             <input type="text" id="vcard-tel" bind:value={tel.value} />
         </div>
     {/each}
 
-    {#each inputData.email as email, index}
+    {#each formData.email as email}
         <div class="input">
             <label for="vcard-email">{ $t('profile.vcard.email') }</label>
             <input type="text" id="vcard-email" bind:value={email.value} />

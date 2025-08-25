@@ -11,6 +11,11 @@
     import { t } from '$lib/i18n';
     import { ConstitutionalPrinciple } from 'langchain/chains';
     import { onMount } from 'svelte';
+    import Modal from '$components/ui/Modal.svelte';
+    import ProfileEdit from './ProfileEdit.svelte';
+    
+    // Local state for ProfileEdit modal
+    let showProfileEdit = $state(false);
     
     interface Property {
         signal: string;
@@ -96,9 +101,17 @@
 
 
 
-    let isHealthSet  = $derived(Object.keys($profile?.health || {}).length > 0);
-    let isVcardSet  = $derived(Object.keys($profile?.vcard || {}).length > 0);
-    let isInsuranceSet  = $derived(Object.keys($profile?.insurance || {}).length > 0);
+    let isHealthSet = $derived(Object.keys($profile?.health || {}).length > 0);
+    let isVcardSet = $derived(
+        $profile?.vcard?.fn || 
+        $profile?.vcard?.email?.some((e: any) => e?.value) ||
+        $profile?.vcard?.tel?.some((t: any) => t?.value) ||
+        $profile?.vcard?.n?.givenName ||
+        $profile?.vcard?.n?.familyName
+    );
+    let isInsuranceSet = $derived(
+        $profile?.insurance?.provider || $profile?.insurance?.number
+    );
 
 
 
@@ -181,7 +194,7 @@
                     {#if isInsuranceSet}
                     <div>{ $t('app.profile.insurance') }: {$profile.insurance.provider} - {$profile.insurance.number}</div>
                     {:else}
-                    <button class="button">{ $t('app.profile.setup-profile') }</button>
+                    <button class="button" onclick={() => showProfileEdit = true}>{ $t('app.profile.setup-profile') }</button>
                     {/if}
                     
                     
@@ -216,7 +229,7 @@
             {/if}
         {/each}
         <div class="tile">
-            <button class="button --large" onclick={() => ui.emit('modal.healthForm')}>
+            <button class="button --large" onclick={() => ui.emit('modal.healthForm', { data: $profile?.health })}>
                 {$t('app.profile.edit-health-profile')}
             </button>
         </div>
@@ -240,6 +253,13 @@
 {/if}
 
 </div>
+
+<!-- ProfileEdit Modal -->
+{#if showProfileEdit}
+    <Modal onclose={() => showProfileEdit = false}>
+        <ProfileEdit bind:profile={$profile} />
+    </Modal>
+{/if}
 
 <style>
     .profile-header {

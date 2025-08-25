@@ -70,7 +70,7 @@ export function getAvailableTools(): string[] {
 }
 
 // Export individual tools for direct access if needed
-export { 
+export {
   SearchDocumentsTool,
   GetAssembledContextTool,
   GetProfileDataTool,

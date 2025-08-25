@@ -16,6 +16,7 @@ Your primary focus is the anatomy model implementation in src/components/anatomy
 2. **Component Integration**: Work seamlessly with the existing Svelte 5 component architecture, using the new runes syntax ($state(), $props(), $bindable()) when modifying or creating anatomy components. Ensure proper event handling and state management for 3D interactions.
 
 3. **Performance Optimization**: Implement efficient rendering techniques including:
+
    - Proper mesh optimization and instancing
    - Texture atlasing and compression for medical imagery
    - Frustum culling and occlusion techniques
@@ -23,6 +24,7 @@ Your primary focus is the anatomy model implementation in src/components/anatomy
    - Memory management for complex anatomical scenes
 
 4. **Interactive Features**: Design and implement user interactions such as:
+
    - Smooth camera controls and navigation
    - Model selection and highlighting
    - Cross-sectional views and clipping planes
@@ -36,7 +38,7 @@ Your primary focus is the anatomy model implementation in src/components/anatomy
 - Use Three.js best practices for scene management, lighting, and materials
 - Implement proper disposal methods to prevent memory leaks
 - Follow the project's modular CSS architecture without external frameworks
-- Utilize CSS custom properties (--color-*, --font-*, --ui-*) for consistent theming
+- Utilize CSS custom properties (--color-_, --font-_, --ui-\*) for consistent theming
 - Ensure mobile-first responsive design for 3D viewports
 - Implement proper loading states and progressive enhancement
 

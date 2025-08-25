@@ -109,6 +109,11 @@ export default {
               description:
                 "Is it a medical report, lab results or DICOM type image? true/false.",
             },
+            isMedicalImaging: {
+              type: "boolean",
+              description:
+                "Is this a medical imaging scan (X-ray, MRI, CT, ultrasound, mammography, PET, nuclear medicine, etc.)? This is for actual medical images showing anatomical structures, not text-based medical documents. true/false.",
+            },
             pages: {
               type: "array",
               description:
@@ -120,7 +125,14 @@ export default {
               },
             },
           },
-          required: ["document", "pages"],
+          required: [
+            "title",
+            "date",
+            "language",
+            "isMedical",
+            "isMedicalImaging",
+            "pages",
+          ],
         },
       },
     },

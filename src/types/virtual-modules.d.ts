@@ -1,6 +1,6 @@
 // Virtual Module Declarations
 
-declare module 'virtual:dag-config' {
+declare module "virtual:dag-config" {
   interface ClientSafeDAGConfig {
     id: string;
     description: string;
@@ -29,34 +29,43 @@ declare module 'virtual:dag-config' {
         type: string;
       }>;
     };
-    expertTemplates: Record<string, {
-      type: string;
-      execution: string;
-      capabilities: string[];
-      variationTypes?: Array<{
-        id: string;
-        description: string;
-        riskTolerance: string;
-      }>;
-      consensusAlgorithms?: Record<string, {
-        description: string;
-        weights?: Record<string, number>;
-        safetyWeight?: number;
-        conservativeBonus?: number;
-        evidenceScoring?: boolean;
-        requireCitations?: boolean;
-      }>;
-    }>;
-    parallelExpertExamples: Record<string, {
-      triggerConditions: string[];
-      expertVariations: Array<{
-        id: string;
-        name: string;
-        specialization: string;
-        approach: string;
-        weight: number;
-      }>;
-    }>;
+    expertTemplates: Record<
+      string,
+      {
+        type: string;
+        execution: string;
+        capabilities: string[];
+        variationTypes?: Array<{
+          id: string;
+          description: string;
+          riskTolerance: string;
+        }>;
+        consensusAlgorithms?: Record<
+          string,
+          {
+            description: string;
+            weights?: Record<string, number>;
+            safetyWeight?: number;
+            conservativeBonus?: number;
+            evidenceScoring?: boolean;
+            requireCitations?: boolean;
+          }
+        >;
+      }
+    >;
+    parallelExpertExamples: Record<
+      string,
+      {
+        triggerConditions: string[];
+        expertVariations: Array<{
+          id: string;
+          name: string;
+          specialization: string;
+          approach: string;
+          weight: number;
+        }>;
+      }
+    >;
     dynamicExpertGeneration: {
       triggerLogic: {
         complexityFactors: string[];

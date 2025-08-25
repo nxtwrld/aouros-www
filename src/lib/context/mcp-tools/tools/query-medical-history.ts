@@ -1,6 +1,6 @@
 /**
  * Query Medical History Tool
- * 
+ *
  * Queries specific types of medical information from patient history
  */
 
@@ -23,9 +23,14 @@ export class QueryMedicalHistoryTool extends BaseMedicalTool {
         properties: {
           queryType: {
             type: "string",
-            enum: ["medications", "conditions", "procedures", "allergies", "timeline"],
-            description:
-              "Type of medical information to query",
+            enum: [
+              "medications",
+              "conditions",
+              "procedures",
+              "allergies",
+              "timeline",
+            ],
+            description: "Type of medical information to query",
           },
           timeframe: {
             type: "object",
@@ -126,7 +131,7 @@ export class QueryMedicalHistoryTool extends BaseMedicalTool {
       const timeframeText = params.timeframe
         ? ` (${params.timeframe.start || "start"} to ${params.timeframe.end || "present"})`
         : "";
-      
+
       const summaryText =
         `Medical history query for ${params.queryType}${timeframeText}:\n\n` +
         `Found ${filteredResults.length} relevant documents with ${extractedData.length} extracted ${params.queryType} entries.\n\n` +
@@ -194,8 +199,10 @@ export class QueryMedicalHistoryTool extends BaseMedicalTool {
       switch (queryType) {
         case "medications":
           // Extract medication mentions
-          if (content.toLowerCase().includes("medication") || 
-              content.toLowerCase().includes("prescription")) {
+          if (
+            content.toLowerCase().includes("medication") ||
+            content.toLowerCase().includes("prescription")
+          ) {
             extractedData.push({
               date,
               content: content.substring(0, 200),
@@ -207,8 +214,10 @@ export class QueryMedicalHistoryTool extends BaseMedicalTool {
 
         case "conditions":
           // Extract condition mentions
-          if (content.toLowerCase().includes("diagnosis") || 
-              content.toLowerCase().includes("condition")) {
+          if (
+            content.toLowerCase().includes("diagnosis") ||
+            content.toLowerCase().includes("condition")
+          ) {
             extractedData.push({
               date,
               content: content.substring(0, 200),
@@ -220,8 +229,10 @@ export class QueryMedicalHistoryTool extends BaseMedicalTool {
 
         case "procedures":
           // Extract procedure mentions
-          if (content.toLowerCase().includes("procedure") || 
-              content.toLowerCase().includes("surgery")) {
+          if (
+            content.toLowerCase().includes("procedure") ||
+            content.toLowerCase().includes("surgery")
+          ) {
             extractedData.push({
               date,
               content: content.substring(0, 200),

@@ -147,7 +147,7 @@ export class ChatManager {
     healthDocumentId?: string,
   ): ChatContext {
     const navigationEvent = ui.getLatest("chat:navigation");
-    
+
     return profile.createChatContext(
       profileId,
       profileName,
@@ -155,7 +155,7 @@ export class ChatManager {
       language,
       navigationEvent?.data?.route || "/",
       healthData,
-      healthDocumentId
+      healthDocumentId,
     );
   }
 
@@ -265,7 +265,11 @@ export class ChatManager {
 
     // If switching to the same profile, no action needed
     if (state.context.currentProfileId === data.profileId) {
-      logger.namespace("Chat").debug("Already on current profile, no switch needed", { profileId: data.profileId });
+      logger
+        .namespace("Chat")
+        .debug("Already on current profile, no switch needed", {
+          profileId: data.profileId,
+        });
       return;
     }
 
@@ -286,8 +290,13 @@ export class ChatManager {
     // Get current profile data from store and update context
     const currentProfile = profile.get();
     if (currentProfile && currentProfile.id === data.profileId) {
-      logger.namespace("Chat").info("Switching chat context to profile", { profileName: data.profileName, profileId: data.profileId });
-      
+      logger
+        .namespace("Chat")
+        .info("Switching chat context to profile", {
+          profileName: data.profileName,
+          profileId: data.profileId,
+        });
+
       // Create new context for the switched profile using profile store data
       const newContext = this.createContextFromProfileData(
         currentProfile.id,
@@ -300,12 +309,15 @@ export class ChatManager {
 
       // Update chat context
       chatActions.setContext(newContext);
-      
+
       // Load conversation history for this profile if it exists
-      const existingHistory = state.conversationHistory.get(data.profileId) || [];
+      const existingHistory =
+        state.conversationHistory.get(data.profileId) || [];
       if (existingHistory.length > 0) {
         chatActions.setMessages(existingHistory);
-        console.log(`Restored ${existingHistory.length} messages for profile ${data.profileId}`);
+        console.log(
+          `Restored ${existingHistory.length} messages for profile ${data.profileId}`,
+        );
       } else {
         // Clear messages and add a greeting for the new profile
         chatActions.clearMessages();
@@ -316,7 +328,9 @@ export class ChatManager {
         }
       }
     } else {
-      console.warn(`Profile data not found or mismatched for ID: ${data.profileId}`);
+      console.warn(
+        `Profile data not found or mismatched for ID: ${data.profileId}`,
+      );
     }
   }
 
@@ -397,10 +411,12 @@ export class ChatManager {
 
     // Health context will be available through the profile context system
     if (currentProfile.health) {
-      logger.namespace("Chat").debug("Health context available for chat initialization", {
-        hasHealthData: true,
-        healthDocumentId: currentProfile.healthDocumentId,
-      });
+      logger
+        .namespace("Chat")
+        .debug("Health context available for chat initialization", {
+          hasHealthData: true,
+          healthDocumentId: currentProfile.healthDocumentId,
+        });
     }
 
     // Initialize the chat
@@ -694,8 +710,10 @@ export class ChatManager {
       // Initialize chat with new profile context
       this.initializeChat(newContext);
     } else {
-      console.warn(`Profile data not found for accepted profile context: ${profileId}`);
-      
+      console.warn(
+        `Profile data not found for accepted profile context: ${profileId}`,
+      );
+
       // Fallback to manual creation (legacy behavior)
       const newContext: ChatContext = {
         mode: state.context?.mode || "patient",

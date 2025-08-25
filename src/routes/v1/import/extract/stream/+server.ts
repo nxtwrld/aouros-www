@@ -47,6 +47,17 @@ export const POST: RequestHandler = async ({
   const stream = new ReadableStream({
     async start(controller) {
       console.log("📡 SSE extract stream started");
+      
+      // Set up keepalive interval to prevent connection drops
+      const keepaliveInterval = setInterval(() => {
+        try {
+          // Send a keepalive comment every 30 seconds
+          controller.enqueue(new TextEncoder().encode(": keepalive\n\n"));
+        } catch (err) {
+          // Connection closed, stop keepalive
+          clearInterval(keepaliveInterval);
+        }
+      }, 30000);
 
       const sendEvent = (event: ProgressEvent) => {
         const message = `data: ${JSON.stringify(event)}\n\n`;
@@ -54,6 +65,7 @@ export const POST: RequestHandler = async ({
           controller.enqueue(new TextEncoder().encode(message));
         } catch (err) {
           console.error("Error sending SSE event:", err);
+          clearInterval(keepaliveInterval);
         }
       };
 
@@ -187,8 +199,16 @@ export const POST: RequestHandler = async ({
             }
           }
         } else {
-          // Normal mode: Perform the actual assessment
-          result = await assess(data);
+          // Normal mode: Perform the actual assessment with progress callback
+          result = await assess(data, (stage, progress, message) => {
+            sendEvent({
+              type: "progress",
+              stage,
+              progress,
+              message,
+              timestamp: Date.now(),
+            });
+          });
         }
 
         // Send document splitting progress
@@ -214,6 +234,7 @@ export const POST: RequestHandler = async ({
           timestamp: Date.now(),
         });
 
+        clearInterval(keepaliveInterval);
         controller.close();
       } catch (err) {
         console.error("Extract stream error:", err);
@@ -227,6 +248,7 @@ export const POST: RequestHandler = async ({
           timestamp: Date.now(),
         });
 
+        clearInterval(keepaliveInterval);
         controller.close();
       }
     },
