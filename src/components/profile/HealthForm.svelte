@@ -2,6 +2,10 @@
     import { definitions as FORM_DEFINITION } from '$lib/health/dataTypes';
     import HealthFormField from './HealthFormField.svelte';
     import { t } from '$lib/i18n';
+    import Tabs from '$components/ui/Tabs.svelte';
+    import TabHeads from '$components/ui/TabHeads.svelte';
+    import TabHead from '$components/ui/TabHead.svelte';
+    import TabPanel from '$components/ui/TabPanel.svelte';
 
     interface Props {
         config?: {
@@ -242,20 +246,21 @@
     let inputs = $state({} as { [key: string]: any });
     
     // Initialize inputs only once when component mounts or config changes
-    let lastConfig = $state(null as typeof config | null);
-    let lastData = $state(null as typeof data | null);
+    let lastConfigSnapshot = $state(null as any);
+    let hasInitialized = $state(false);
     
     $effect(() => {
         console.log('🔍 $effect[init] - Checking if inputs need update');
-        console.log('🔍 $effect[init] - config !== lastConfig:', config !== lastConfig);
-        console.log('🔍 $effect[init] - data !== lastData && lastData === null:', data !== lastData && lastData === null);
+        const currentConfigSnapshot = $state.snapshot(config);
+        console.log('🔍 $effect[init] - config changed:', JSON.stringify(currentConfigSnapshot) !== JSON.stringify(lastConfigSnapshot));
+        console.log('🔍 $effect[init] - hasInitialized:', hasInitialized);
         
-        // Only reinitialize if config or initial data actually changed
-        if (config !== lastConfig || (data !== lastData && lastData === null)) {
+        // Only reinitialize if config changed or this is the first initialization
+        if (!hasInitialized || JSON.stringify(currentConfigSnapshot) !== JSON.stringify(lastConfigSnapshot)) {
             console.log('🔍 $effect[init] - Updating inputs');
             inputs = mapFromToInputs();
-            lastConfig = config;
-            lastData = data;
+            lastConfigSnapshot = currentConfigSnapshot;
+            hasInitialized = true;
             console.log('🔍 $effect[init] - New inputs:', $state.snapshot(inputs));
         }
     });
@@ -271,62 +276,63 @@
         }
     });
 
-    // Manage active tabs
-    let activeTab = $state(0);
-    
-    function showTab(index: number) {
-        activeTab = index;
-    }
+    // Tab management is now handled by the Tabs component
 </script>
 
 <h3 class="h3 heading -sticky">{ $t('profile.health.health-form') }</h3>
 
 <form class="form">
-    {#if TABS.length > 1}
-        <div class="tab-heads">
-        {#each TABS as tab, index}
-            <button type="button" onclick={() => showTab(index)} class:-active={index == activeTab}>
-                { $t('profile.health.tabs.' + tab.title)}
-            </button>
-        {/each}
-        </div>
-    {/if}
-    
-    {#each TABS as tab, index}
-    <div class="tab-body" class:-active={index == activeTab}>
-        {#each tab.properties as propKey}
-        {@const prop = FORM[propKey]}
-        {#if prop}
-        <div>
-            {#if prop.type === 'time-series' && prop.items && inputs[prop.key]}
-                {#each prop.items as item}
-                    {#if item.type == 'date'}
-                        <!-- Date fields are handled elsewhere -->
-                    {:else}
-                        <HealthFormField prop={item} bind:data={inputs[prop.key][item.key]} />
-                    {/if}
+    <Tabs fixedHeight={true}>
+        {#if TABS.length > 1}
+            <TabHeads>
+                {#each TABS as tab}
+                    <TabHead>
+                        { $t('profile.health.tabs.' + tab.title)}
+                    </TabHead>
                 {/each}
-            {:else if prop.type === 'array' && prop.items}
-                {#if inputs[prop.key] && inputs[prop.key].length > 0}
-                    {#each inputs[prop.key] as _, index}
+            </TabHeads>
+        {/if}
+        
+        <div class="tab-panels-wrapper">
+            <div class="tab-panels-grid">
+                {#each TABS as tab}
+                    <TabPanel>
+                {#each tab.properties as propKey}
+                {@const prop = FORM[propKey]}
+                {#if prop}
+                <div>
+                    {#if prop.type === 'time-series' && prop.items && inputs[prop.key]}
                         {#each prop.items as item}
-                            <HealthFormField prop={item} bind:data={inputs[prop.key][index][item.key]} />
+                            {#if item.type == 'date'}
+                                <!-- Date fields are handled elsewhere -->
+                            {:else}
+                                <HealthFormField prop={item} bind:data={inputs[prop.key][item.key]} />
+                            {/if}
                         {/each}
-                    {/each}
-                {/if}
-                <button type="button" class="button" onclick={() => addArrayItem(prop)}>
-                    {inputs[prop.key] && inputs[prop.key].length > 0 ? 'Add Another' : 'Add'} {prop.key}
-                </button>
-            {:else}
-                <HealthFormField {prop} bind:data={inputs[prop.key]} />
-            {/if}
-        </div>    
-        {:else }
-            ----- Unknown property: {propKey} -----
-        {/if}    
-        {/each}
-    </div>
-    {/each}
+                    {:else if prop.type === 'array' && prop.items}
+                        {#if inputs[prop.key] && inputs[prop.key].length > 0}
+                            {#each inputs[prop.key] as _, index}
+                                {#each prop.items as item}
+                                    <HealthFormField prop={item} bind:data={inputs[prop.key][index][item.key]} />
+                                {/each}
+                            {/each}
+                        {/if}
+                        <button type="button" class="button" onclick={() => addArrayItem(prop)}>
+                            {inputs[prop.key] && inputs[prop.key].length > 0 ? 'Add Another' : 'Add'} {prop.key}
+                        </button>
+                    {:else}
+                        <HealthFormField {prop} bind:data={inputs[prop.key]} />
+                    {/if}
+                </div>    
+                {:else }
+                    ----- Unknown property: {propKey} -----
+                {/if}    
+                {/each}
+            </TabPanel>
+                {/each}
+            </div>
+        </div>
+    </Tabs>
 </form>
 
 <style>

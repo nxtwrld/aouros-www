@@ -168,7 +168,7 @@
                 logger.ui.debug('modal.healthForm event received with config:', config);
                 logger.ui.debug('Setting dialogs.healthForm to:', config === false ? false : (config || true));
                 dialogs.healthForm = config === false ? false : (config || true);
-                dialogs.healthFormData = config?.data || null;
+                dialogs.healthFormData = config?.data || $profile?.health || {};
             }),
             ui.listen('overlay.import', (state: boolean = true) => {
                 logger.ui.debug('import');
@@ -259,7 +259,7 @@
         }}>
             <HealthForm 
                 config={dialogs.healthForm}
-                data={dialogs.healthFormData || $profile?.health || {}}
+                bind:data={dialogs.healthFormData}
             />
         </Modal>
     {/if}
