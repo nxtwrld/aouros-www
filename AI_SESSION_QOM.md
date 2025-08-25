@@ -1,23 +1,23 @@
-# AI Session DAG - Universal Multi-Expert Medical Analysis Framework
+# AI Session QOM - Universal Multi-Expert Medical Analysis Framework
 
-This document defines the Universal DAG (Directed Acyclic Graph) configuration framework for multi-layer medical expert analysis, with dynamic expert selection, hierarchical consensus building, and conflict-aware output generation.
+This document defines the Universal QOM (Query-Oriented Model) configuration framework for multi-layer medical expert analysis, with dynamic expert selection, hierarchical consensus building, and conflict-aware output generation.
 
 ## Overview
 
-The AI Session DAG provides a universal framework for orchestrating multiple medical AI experts in a hierarchical, dynamically expanding structure. Any expert can either provide complete medical analysis (Symptoms, Diagnosis, Treatments, Questions) or trigger additional specialized experts for deeper analysis.
+The AI Session QOM provides a universal framework for orchestrating multiple medical AI experts in a hierarchical, dynamically expanding structure. Any expert can either provide complete medical analysis (Symptoms, Diagnosis, Treatments, Questions) or trigger additional specialized experts for deeper analysis.
 
 ## Architecture Principles
 
 1. **AI-by-AI Expert Generation**: Primary Analyzer uses AI logic to dynamically create specialized expert nodes via MCP tools
 2. **Universal Statistical Output**: All nodes produce standardized statistical output for mathematical consensus building
 3. **MCP Tool Integration**: Expert creation handled through Model Context Protocol tools with custom prompts and filtered context
-4. **Dynamic DAG Structure**: Runtime DAG modification based on AI decisions, not predetermined flows
+4. **Dynamic QOM Structure**: Runtime QOM modification based on AI decisions, not predetermined flows
 5. **Statistical Consensus Building**: Mathematical aggregation of expert outputs using probability weighting and confidence scores
 6. **No Templates or Registries**: Purely AI-driven expert creation decisions based on case complexity
 
-## DAG Architecture
+## QOM Architecture
 
-### Universal Multi-Layer DAG Pattern
+### Universal Multi-Layer QOM Pattern
 
 ```mermaid
 graph TB
@@ -37,7 +37,7 @@ graph TB
     end
 ```
 
-### Enhanced Example: AI-Generated Expert Analysis DAG
+### Enhanced Example: AI-Generated Expert Analysis QOM
 
 ```mermaid
 graph TB
@@ -155,12 +155,12 @@ interface CustomExpertDefinition {
 
 ## Configuration Structure
 
-### Universal DAG Configuration (models.yaml)
+### Universal QOM Configuration (models.yaml)
 
-The universal DAG framework is configured in the `universal_dag_models` section of `models.yaml`:
+The universal QOM framework is configured in the `universal_dag_models` section of `models.yaml`:
 
 ```yaml
-# models.yaml - Universal DAG Configuration Framework
+# models.yaml - Universal QOM Configuration Framework
 universal_dag_models:
   # Define reusable expert node templates
   expert_templates:
@@ -188,7 +188,7 @@ universal_dag_models:
       outputs: ["unified_analysis", "conflict_alerts"]
       logic: "weighted_consensus_building"
 
-  # Concrete DAG Model Examples
+  # Concrete QOM Model Examples
   dag_models:
     chest_pain_assessment:
       id: "chest_pain_dag_v1"
@@ -304,15 +304,15 @@ universal_dag_models:
 ### TypeScript Runtime Interfaces
 
 ```typescript
-// Universal DAG runtime configuration
-interface UniversalDAGRuntime {
-  dagModel: DAGModel;
+// Universal QOM runtime configuration
+interface UniversalQOMRuntime {
+  dagModel: QOMModel;
   expertTemplates: Map<string, ExpertTemplate>;
   behaviorRules: BehaviorRules;
-  executionState: DAGExecutionState;
+  executionState: QOMExecutionState;
 }
 
-interface DAGModel {
+interface QOMModel {
   id: string;
   description: string;
   layers: Map<string, ExpertLayer>;
@@ -406,15 +406,15 @@ interface ConflictAlert {
   recommendedAction: string;
 }
 
-// Dynamic DAG execution engine
-export class UniversalDAGExecutor {
-  async executeDAG(
+// Dynamic QOM execution engine
+export class UniversalQOMExecutor {
+  async executeQOM(
     transcript: string,
     patientContext: PatientContext,
     dagModelId: string,
     previousAnalysis?: MedicalAnalysisOutput,
   ): Promise<ConsensusResult> {
-    const dagModel = this.loadDAGModel(dagModelId);
+    const dagModel = this.loadQOMModel(dagModelId);
     const executionPlan = this.buildExecutionPlan(dagModel);
 
     let layerResults = new Map<string, MedicalAnalysisOutput[]>();
@@ -486,24 +486,24 @@ export class UniversalDAGExecutor {
 ### LangGraph Integration
 
 ```typescript
-// dag-executor.ts - Execute DAG using LangGraph
+// dag-executor.ts - Execute QOM using LangGraph
 
 import { StateGraph } from "@langchain/langgraph";
 import { EnhancedAIProvider } from "$lib/ai/providers/enhanced-abstraction";
-import { buildDAGRuntime } from "./dag-runtime";
+import { buildQOMRuntime } from "./dag-runtime";
 
-export async function executeDAG(
+export async function executeQOM(
   sessionId: string,
   transcript: string,
   context?: any,
 ) {
-  const dag = buildDAGRuntime();
+  const dag = buildQOMRuntime();
 
   // Change gate: skip MoE when Symptoms/Answers unchanged
   if (!(await shouldAnalyze(sessionId, transcript, context))) {
     return { skipped: true, reason: "no_changes" } as any;
   }
-  const workflow = new StateGraph<DAGState>({
+  const workflow = new StateGraph<QOMState>({
     channels: createStateChannels(dag),
   });
 
@@ -533,8 +533,8 @@ export async function executeDAG(
   return result;
 }
 
-function createNodeExecutor(nodeConfig: DAGNode) {
-  return async (state: DAGState) => {
+function createNodeExecutor(nodeConfig: QOMNode) {
+  return async (state: QOMState) => {
     const startTime = Date.now();
 
     // Emit node started event
@@ -588,13 +588,13 @@ function createNodeExecutor(nodeConfig: DAGNode) {
 ```typescript
 // sse-events.ts - Minimal SSE event definitions
 
-type DAGEvent =
+type QOMEvent =
   | NodeStartedEvent
   | NodeProgressEvent
   | NodeCompletedEvent
   | NodeFailedEvent
   | ModelSwitchedEvent
-  | DAGCompletedEvent;
+  | QOMCompletedEvent;
 
 interface NodeStartedEvent {
   type: "node_started";
@@ -639,7 +639,7 @@ interface ModelSwitchedEvent {
   reason: string;
 }
 
-interface DAGCompletedEvent {
+interface QOMCompletedEvent {
   type: "dag_completed";
   totalDuration: number;
   totalCost: number;
@@ -649,7 +649,7 @@ interface DAGCompletedEvent {
 }
 
 // SSE emitter
-export function emitSSE(event: DAGEvent) {
+export function emitSSE(event: QOMEvent) {
   const sseClient = getSSEClient();
   sseClient.send(JSON.stringify(event));
 }
@@ -708,17 +708,17 @@ export function emitSSE(event: DAGEvent) {
 ### Visualization Component
 
 ```typescript
-// DAGVisualizer.svelte - D3.js visualization component
+// QOMVisualizer.svelte - D3.js visualization component
 <script lang="ts">
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
-  import { buildDAGRuntime } from './dag-runtime';
+  import { buildQOMRuntime } from './dag-runtime';
   import visualConfig from './dag-visualization.json';
 
   export let sessionId: string;
 
   let container: HTMLElement;
-  let dag = buildDAGRuntime();
+  let dag = buildQOMRuntime();
   let nodeStates = new Map<string, string>();
 
   onMount(() => {
@@ -727,7 +727,7 @@ export function emitSSE(event: DAGEvent) {
       .attr('width', visualConfig.layout.width)
       .attr('height', visualConfig.layout.height);
 
-    // Build hierarchical layout from DAG
+    // Build hierarchical layout from QOM
     const hierarchy = buildHierarchy(dag);
     const layout = d3.tree()
       .size([visualConfig.layout.width - 100, visualConfig.layout.height - 100]);
@@ -799,12 +799,12 @@ export function emitSSE(event: DAGEvent) {
 
 ## D3 Force-Directed Bidirectional Visualization
 
-The Universal DAG will be visualized using **D3 force-directed graphs** to show the bidirectional nature of expert collaboration:
+The Universal QOM will be visualized using **D3 force-directed graphs** to show the bidirectional nature of expert collaboration:
 
 - **Forward Flow**: Experts trigger sub-experts (blue solid links with animated particles)
 - **Reverse Flow**: Sub-experts refine parent analysis (red dashed links with reverse particles)
 - **Interactive Exploration**: Hover nodes to highlight bidirectional relationships and trace information flow
-- **Real-Time Updates**: Nodes pulse and change color as DAG executes, showing expert triggering and refinement cycles
+- **Real-Time Updates**: Nodes pulse and change color as QOM executes, showing expert triggering and refinement cycles
 - **Natural Clustering**: Force simulation groups experts by specialty with automatic layout adjustment as new experts spawn
 
 Example: GP Expert → triggers → Cardiology Expert → triggers → Electrophysiology Expert → refines back → Cardiology → refines back → GP → all contribute → Consensus Merger with bidirectional feedback loops.
@@ -816,7 +816,7 @@ Example: GP Expert → triggers → Cardiology Expert → triggers → Electroph
 - [x] Define Universal Expert Interface with custom expert generation
 - [x] Create CustomExpertDefinition interface
 - [x] Design AI-generated expert examples
-- [x] Update DAG visualization concept for dynamic experts
+- [x] Update QOM visualization concept for dynamic experts
 
 ### Phase 2: Dynamic Expert Creation Engine
 
@@ -828,7 +828,7 @@ Example: GP Expert → triggers → Cardiology Expert → triggers → Electroph
 ### Phase 3: Enhanced Simulation & Visualization
 
 - [ ] Update simulation to demonstrate AI-generated experts
-- [ ] Create dynamic DAG layout for emerging expert nodes
+- [ ] Create dynamic QOM layout for emerging expert nodes
 - [ ] Implement real-time expert creation visualization
 - [ ] Add expert creation reasoning display
 
@@ -852,7 +852,7 @@ Example: GP Expert → triggers → Cardiology Expert → triggers → Electroph
 
 1. **Single Source of Truth**: All configuration in models.yaml
 2. **No Duplication**: Each setting defined exactly once
-3. **Dynamic Runtime**: DAG built from configuration at execution time
+3. **Dynamic Runtime**: QOM built from configuration at execution time
 4. **Easy Maintenance**: Update models/providers in one place
 5. **Clear Separation**: YAML for config, TypeScript for logic, JSON for visuals
 6. **Extensible**: Easy to add new nodes or modify workflow
@@ -860,29 +860,29 @@ Example: GP Expert → triggers → Cardiology Expert → triggers → Electroph
 ## Usage Example: AI-Generated Expert Analysis
 
 ```typescript
-// Using the AI-Generated Expert DAG in session analysis
-import { executeDAG } from './dag-executor';
-import { DAGVisualizer } from './DAGVisualizer.svelte';
+// Using the AI-Generated Expert QOM in session analysis
+import { executeQOM } from './dag-executor';
+import { QOMVisualizer } from './QOMVisualizer.svelte';
 
 // In your session component
 async function analyzeSessionWithAIExperts(transcript: string) {
   const sessionId = generateSessionId();
 
-  // Execute DAG with AI expert generation enabled
-  const result = await executeDAG(sessionId, transcript, {
+  // Execute QOM with AI expert generation enabled
+  const result = await executeQOM(sessionId, transcript, {
     patientHistory: getPatientHistory(),
     enableAIExpertGeneration: true,
     maxCustomExperts: 5,
     language: 'en'
   });
 
-  // The DAG will dynamically create experts like:
+  // The QOM will dynamically create experts like:
   // - "Pediatric Cardiology Expert for 8-year-old with innocent murmur"
   // - "Geriatric Polypharmacy Specialist for 12-medication patient"
   // - "Pregnancy Safety Expert for cardiac medications"
 
   // Visualize real-time expert creation and analysis
-  <DAGVisualizer {sessionId} showExpertCreation={true} />
+  <QOMVisualizer {sessionId} showExpertCreation={true} />
 
   // Results include AI-generated expert contributions
   return {
@@ -942,7 +942,7 @@ The fundamental breakthrough in this architecture is **AI systems creating other
 
 Model Context Protocol (MCP) tools enable the Primary Analyzer to:
 
-- **Create Custom Expert Nodes**: Generate new DAG nodes with specialized prompts and filtered context
+- **Create Custom Expert Nodes**: Generate new QOM nodes with specialized prompts and filtered context
 - **Design Expert Interactions**: Define how new experts connect to existing analysis flow
 - **Optimize Resource Usage**: Create only the experts needed, with appropriate model selection and cost estimation
 

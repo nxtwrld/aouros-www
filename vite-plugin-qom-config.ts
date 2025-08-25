@@ -1,11 +1,11 @@
-// Vite Plugin for Processing DAG Configuration at Build Time
+// Vite Plugin for Processing QOM Configuration at Build Time
 // Extracts client-safe visualization data from full server-side configuration
 
 import type { Plugin } from "vite";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-interface ClientSafeDAGConfig {
+interface ClientSafeQOMConfig {
   id: string;
   description: string;
   version: string;
@@ -98,7 +98,7 @@ interface ClientSafeDAGConfig {
   };
 }
 
-function extractClientSafeConfig(fullConfig: any): ClientSafeDAGConfig {
+function extractClientSafeConfig(fullConfig: any): ClientSafeQOMConfig {
   // Extract safe visualization data, excluding sensitive AI configuration
   return {
     id: fullConfig.id,
@@ -192,12 +192,12 @@ function extractClientSafeConfig(fullConfig: any): ClientSafeDAGConfig {
   };
 }
 
-export function dagConfigPlugin(): Plugin {
-  const VIRTUAL_MODULE_ID = "virtual:dag-config";
+export function qomConfigPlugin(): Plugin {
+  const VIRTUAL_MODULE_ID = "virtual:qom-config";
   const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
 
   return {
-    name: "dag-config",
+    name: "qom-config",
     resolveId(id) {
       if (id === VIRTUAL_MODULE_ID) {
         return RESOLVED_VIRTUAL_MODULE_ID;
@@ -209,7 +209,7 @@ export function dagConfigPlugin(): Plugin {
           // Read the full configuration from the server-side config folder
           const configPath = resolve(
             process.cwd(),
-            "config/dag-medical-analysis.json",
+            "config/qom-medical-analysis.json",
           );
           const fullConfig = JSON.parse(readFileSync(configPath, "utf-8"));
 
@@ -219,7 +219,7 @@ export function dagConfigPlugin(): Plugin {
           // Return as ES module
           return `export default ${JSON.stringify(clientSafeConfig, null, 2)};`;
         } catch (error) {
-          console.error("Failed to load DAG configuration:", error);
+          console.error("Failed to load QOM configuration:", error);
           return "export default {};";
         }
       }

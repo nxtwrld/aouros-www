@@ -1,9 +1,9 @@
-// DAG Event Processor
-// Processes SSE events and updates DAG execution state
+// QOM Event Processor
+// Processes SSE events and updates QOM execution state
 
-import { dagActions } from "$lib/session/stores/dag-execution-store";
+import { qomActions } from "$lib/session/stores/qom-execution-store";
 import type {
-  DAGEvent,
+  QOMEvent,
   NodeStartedEvent,
   NodeProgressEvent,
   NodeCompletedEvent,
@@ -11,14 +11,14 @@ import type {
   ExpertTriggeredEvent,
   RelationshipAddedEvent,
   ModelSwitchedEvent,
-  DAGCompletedEvent,
-  DAGInitializedEvent,
-} from "$components/session/types/dag";
-import { transformDAGState } from "./dag-transformer";
+  QOMCompletedEvent,
+  QOMInitializedEvent,
+} from "$components/session/types/qom";
+import { transformQOMState } from "./qom-transformer";
 
 // Event processor class to handle incoming SSE events
-export class DAGEventProcessor {
-  private eventQueue: DAGEvent[] = [];
+export class QOMEventProcessor {
+  private eventQueue: QOMEvent[] = [];
   private processingQueue = false;
   private batchTimeout: ReturnType<typeof setTimeout> | null = null;
   private readonly BATCH_DELAY = 100; // ms to wait before processing batch
@@ -29,9 +29,9 @@ export class DAGEventProcessor {
     this.processBatch = this.processBatch.bind(this);
   }
 
-  // Main entry point for processing DAG events
-  processEvent(event: DAGEvent) {
-    console.log("📊 Processing DAG event:", event.type, event);
+  // Main entry point for processing QOM events
+  processEvent(event: QOMEvent) {
+    console.log("📊 Processing QOM event:", event.type, event);
 
     // Add to queue for batch processing
     this.eventQueue.push(event);
@@ -75,7 +75,7 @@ export class DAGEventProcessor {
         this.processExpertEventsBatch(expertEvents);
       }
     } catch (error) {
-      console.error("❌ Error processing DAG event batch:", error);
+      console.error("❌ Error processing QOM event batch:", error);
     } finally {
       this.processingQueue = false;
       this.batchTimeout = null;
@@ -138,7 +138,7 @@ export class DAGEventProcessor {
     }));
 
     // Add all experts in a single batch operation
-    dagActions.addNodes(expertNodes, {
+    qomActions.addNodes(expertNodes, {
       insertBetween: {
         parents: [parentId],
         children: ["consensus_merger"],
@@ -147,10 +147,10 @@ export class DAGEventProcessor {
   }
 
   // Process individual event
-  private processIndividualEvent(event: DAGEvent) {
+  private processIndividualEvent(event: QOMEvent) {
     switch (event.type) {
-      case "dag_initialized":
-        this.handleDAGInitialized(event as DAGInitializedEvent);
+      case "qom_initialized":
+        this.handleQOMInitialized(event as QOMInitializedEvent);
         break;
 
       case "node_started":
@@ -181,26 +181,26 @@ export class DAGEventProcessor {
         this.handleModelSwitched(event as ModelSwitchedEvent);
         break;
 
-      case "dag_completed":
-        this.handleDAGCompleted(event as DAGCompletedEvent);
+      case "qom_completed":
+        this.handleQOMCompleted(event as QOMCompletedEvent);
         break;
 
       default:
-        console.warn("🤷 Unknown DAG event type:", (event as any).type);
+        console.warn("🤷 Unknown QOM event type:", (event as any).type);
     }
   }
 
-  private handleDAGInitialized(event: DAGInitializedEvent) {
-    console.log("🚀 DAG initialized:", event.dagModelId);
+  private handleQOMInitialized(event: QOMInitializedEvent) {
+    console.log("🚀 QOM initialized:", event.qomModelId);
 
     // Process through store actions which handles the complex update logic
-    dagActions.processEvent(event);
+    qomActions.processEvent(event);
   }
 
   private handleNodeStarted(event: NodeStartedEvent) {
     console.log(`⚡ Node started: ${event.nodeName} (${event.nodeId})`);
 
-    dagActions.updateNodeState(event.nodeId, "running", {
+    qomActions.updateNodeState(event.nodeId, "running", {
       startTime: event.timestamp,
       provider: event.provider,
       model: event.model,
@@ -210,7 +210,7 @@ export class DAGEventProcessor {
   private handleNodeProgress(event: NodeProgressEvent) {
     console.log(`📈 Node progress: ${event.nodeId} - ${event.progress}%`);
 
-    dagActions.updateNodeState(event.nodeId, "running", {
+    qomActions.updateNodeState(event.nodeId, "running", {
       progress: event.progress,
     });
   }
@@ -218,7 +218,7 @@ export class DAGEventProcessor {
   private handleNodeCompleted(event: NodeCompletedEvent) {
     console.log(`✅ Node completed: ${event.nodeId} in ${event.duration}ms`);
 
-    dagActions.updateNodeState(event.nodeId, "completed", {
+    qomActions.updateNodeState(event.nodeId, "completed", {
       endTime: Date.now(),
       duration: event.duration,
       cost: event.cost,
@@ -230,14 +230,14 @@ export class DAGEventProcessor {
   private handleNodeFailed(event: NodeFailedEvent) {
     console.log(`❌ Node failed: ${event.nodeId} - ${event.error}`);
 
-    dagActions.updateNodeState(event.nodeId, "failed", {
+    qomActions.updateNodeState(event.nodeId, "failed", {
       error: event.error,
     });
 
     // If there's a fallback model and retry is planned, update the model
     if (event.willRetry && event.fallbackModel) {
       setTimeout(() => {
-        dagActions.updateNodeState(event.nodeId, "running", {
+        qomActions.updateNodeState(event.nodeId, "running", {
           model: event.fallbackModel,
           startTime: Date.now(),
         });
@@ -251,7 +251,7 @@ export class DAGEventProcessor {
     );
 
     // Use the generic addParallelExpert method
-    dagActions.addParallelExpert(event);
+    qomActions.addParallelExpert(event);
   }
 
   private handleRelationshipAdded(event: RelationshipAddedEvent) {
@@ -259,7 +259,7 @@ export class DAGEventProcessor {
       `🔗 Relationship added: ${event.sourceId} -> ${event.targetId} (${event.relationshipType})`,
     );
 
-    dagActions.processEvent(event);
+    qomActions.processEvent(event);
   }
 
   private handleModelSwitched(event: ModelSwitchedEvent) {
@@ -267,17 +267,17 @@ export class DAGEventProcessor {
       `🔄 Model switched for ${event.nodeId}: ${event.fromModel} -> ${event.toModel}`,
     );
 
-    dagActions.updateNodeState(event.nodeId, "running", {
+    qomActions.updateNodeState(event.nodeId, "running", {
       model: event.toModel,
     });
   }
 
-  private handleDAGCompleted(event: DAGCompletedEvent) {
+  private handleQOMCompleted(event: QOMCompletedEvent) {
     console.log(
-      `🏁 DAG completed: ${event.successCount}/${event.nodeCount} nodes succeeded`,
+      `🏁 QOM completed: ${event.successCount}/${event.nodeCount} nodes succeeded`,
     );
 
-    dagActions.processEvent(event);
+    qomActions.processEvent(event);
   }
 
   // Utility method to clear the event queue
@@ -301,16 +301,16 @@ export class DAGEventProcessor {
 }
 
 // Singleton instance
-export const dagEventProcessor = new DAGEventProcessor();
+export const qomEventProcessor = new QOMEventProcessor();
 
-// Helper function to validate DAG events
-export function isValidDAGEvent(event: any): event is DAGEvent {
+// Helper function to validate QOM events
+export function isValidQOMEvent(event: any): event is QOMEvent {
   if (!event || typeof event !== "object") {
     return false;
   }
 
   const validEventTypes = [
-    "dag_initialized",
+    "qom_initialized",
     "node_started",
     "node_progress",
     "node_completed",
@@ -318,7 +318,7 @@ export function isValidDAGEvent(event: any): event is DAGEvent {
     "expert_triggered",
     "relationship_added",
     "model_switched",
-    "dag_completed",
+    "qom_completed",
   ];
 
   return validEventTypes.includes(event.type);

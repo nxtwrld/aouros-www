@@ -1,5 +1,5 @@
-// DAG Visualization Type Definitions
-// Based on AI_SESSION_DAG.md specification
+// QOM Visualization Type Definitions
+// Based on AI_SESSION_QOM.md specification
 
 import type {
   SymptomNode,
@@ -44,8 +44,8 @@ export interface MedicalAnalysisOutput {
   layer: number;
 }
 
-// DAG Node for visualization
-export interface DAGNode {
+// QOM Node for visualization
+export interface QOMNode {
   id: string;
   name: string;
   type:
@@ -103,11 +103,11 @@ export interface DAGNode {
   color?: string;
 }
 
-// DAG Link for relationships
-export interface DAGLink {
+// QOM Link for relationships
+export interface QOMLink {
   id: string;
-  source: string | DAGNode;
-  target: string | DAGNode;
+  source: string | QOMNode;
+  target: string | QOMNode;
   type:
     | "data_flow"
     | "analysis_input"
@@ -129,10 +129,10 @@ export interface DAGLink {
   dashArray?: string;
 }
 
-// DAG Execution State
-export interface DAGExecutionState {
+// QOM Execution State
+export interface QOMExecutionState {
   sessionId: string;
-  dagModelId: string;
+  qomModelId: string;
   status: "idle" | "initializing" | "running" | "completed" | "failed";
   currentLayer: number;
   activeNodes: string[];
@@ -146,9 +146,9 @@ export interface DAGExecutionState {
   successRate: number;
 }
 
-// SSE Event Types for DAG
-export type DAGEvent =
-  | DAGInitializedEvent
+// SSE Event Types for QOM
+export type QOMEvent =
+  | QOMInitializedEvent
   | NodeStartedEvent
   | NodeProgressEvent
   | NodeCompletedEvent
@@ -156,13 +156,13 @@ export type DAGEvent =
   | ExpertTriggeredEvent
   | RelationshipAddedEvent
   | ModelSwitchedEvent
-  | DAGCompletedEvent;
+  | QOMCompletedEvent;
 
-export interface DAGInitializedEvent {
-  type: "dag_initialized";
-  dagModelId: string;
-  nodes: DAGNode[];
-  links: DAGLink[];
+export interface QOMInitializedEvent {
+  type: "qom_initialized";
+  qomModelId: string;
+  nodes: QOMNode[];
+  links: QOMLink[];
   timestamp: number;
 }
 
@@ -228,8 +228,8 @@ export interface ModelSwitchedEvent {
   reason: string;
 }
 
-export interface DAGCompletedEvent {
-  type: "dag_completed";
+export interface QOMCompletedEvent {
+  type: "qom_completed";
   totalDuration: number;
   totalCost: number;
   nodeCount: number;
@@ -257,8 +257,8 @@ export interface ExpertTemplate {
   };
 }
 
-// DAG Model Configuration
-export interface DAGModelConfig {
+// QOM Model Configuration
+export interface QOMModelConfig {
   id: string;
   description: string;
   layers: Map<string, ExpertLayer>;
@@ -269,7 +269,7 @@ export interface DAGModelConfig {
 export interface ExpertLayer {
   id: string;
   name: string;
-  experts: DAGNode[];
+  experts: QOMNode[];
   executionType: "parallel" | "sequential";
 }
 
@@ -308,7 +308,7 @@ export interface ConflictAlert {
 }
 
 // D3 Force Simulation types
-export interface D3DAGNode extends DAGNode {
+export interface D3QOMNode extends QOMNode {
   index?: number;
   x: number;
   y: number;
@@ -318,14 +318,14 @@ export interface D3DAGNode extends DAGNode {
   vy?: number;
 }
 
-export interface D3DAGLink extends DAGLink {
-  source: D3DAGNode;
-  target: D3DAGNode;
+export interface D3QOMLink extends QOMLink {
+  source: D3QOMNode;
+  target: D3QOMNode;
   index?: number;
 }
 
 // Visualization configuration
-export interface DAGVisualizationConfig {
+export interface QOMVisualizationConfig {
   layout: {
     type: "hierarchical" | "force" | "radial";
     width: number;
@@ -337,9 +337,9 @@ export interface DAGVisualizationConfig {
     panelHeight?: number;
   };
   forces: {
-    linkStrength: number | ((link: D3DAGLink) => number);
+    linkStrength: number | ((link: D3QOMLink) => number);
     chargeStrength: number;
-    collisionRadius: number | ((node: D3DAGNode) => number);
+    collisionRadius: number | ((node: D3QOMNode) => number);
     centerForce: number;
     layerForce: number;
   };

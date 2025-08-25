@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the complete workflow for AI-powered medical session analysis using a Universal DAG (Directed Acyclic Graph) Mixture of Experts architecture. The system processes real-time medical conversations through dynamically configured expert nodes, builds consensus through intelligent merging, and handles conflicts by presenting multiple perspectives to clinicians.
+This document describes the complete workflow for AI-powered medical session analysis using a Universal QOM (Query-Oriented Model) Mixture of Experts architecture. The system processes real-time medical conversations through dynamically configured expert nodes, builds consensus through intelligent merging, and handles conflicts by presenting multiple perspectives to clinicians.
 
 ## Real-Time Continuous Assistant Nature
 
@@ -69,7 +69,7 @@ graph TB
         L -->|Yes| N[Context-Aware Expert Analysis]
     end
 
-    subgraph "Universal Multi-Layer DAG Pattern"
+    subgraph "Universal Multi-Layer QOM Pattern"
         N --> E[Expert Node]
         E --> D{Decision Point}
         D -->|Complete Analysis| O[Output: Symptoms + Diagnosis + Treatments + Questions]
@@ -113,11 +113,11 @@ graph TB
     end
 ```
 
-## Universal DAG Architecture Principles
+## Universal QOM Architecture Principles
 
 ### Core Expert Node Behavior
 
-Every expert node in the DAG follows a universal pattern with two possible outcomes:
+Every expert node in the QOM follows a universal pattern with two possible outcomes:
 
 #### 1. Complete Analysis Output
 
@@ -351,11 +351,11 @@ The reconstructed transcript is sent to the client with the following structure:
   - No changes → Return to step 1 (wait for new transcript)
   - Changes detected → Proceed to MoE analysis
 
-### Phase 4: DAG-Based Mixture of Experts Analysis
+### Phase 4: QOM-Based Mixture of Experts Analysis
 
 14. **Sequential Expert Node Execution**
 
-    The system processes each transcript chunk through a directed acyclic graph (DAG) of specialized expert nodes. Each node receives the new transcript chunk plus the previous JSON output, enabling true conversational evolution.
+    The system processes each transcript chunk through a query-oriented model (QOM) of specialized expert nodes. Each node receives the new transcript chunk plus the previous JSON output, enabling true conversational evolution.
 
     **Input**: New transcript chunk + Previous analysis JSON + Context
     **Output**: Enhanced JSON with incremental improvements and versioning
@@ -510,7 +510,7 @@ The reconstructed transcript is sent to the client with the following structure:
     - id_allocator_deduplicator: Generates stable IDs and removes duplicates across all node types.
     - change_detector_gate: Compares current Symptoms/Answers to the previous iteration and conditionally triggers MoE.
 
-16. **DAG Execution Flow and Dependencies**
+16. **QOM Execution Flow and Dependencies**
 
     **Sequential Dependencies:**
 
@@ -557,7 +557,7 @@ The reconstructed transcript is sent to the client with the following structure:
 
     **Schema Integration:**
 
-    - Node IDs persist across DAG executions for consistent tracking
+    - Node IDs persist across QOM executions for consistent tracking
     - relationships arrays populated by relationship_builder expert node
     - analysisVersion incremented by schema_merger for version control
     - userActions array maintained by user_feedback_applier expert node
@@ -658,7 +658,7 @@ The reconstructed transcript is sent to the client with the following structure:
 
 ### Phase 6: Context-Enhanced Visualization and Delivery
 
-21. **DAG-Enhanced Sankey Diagram Generation**
+21. **QOM-Enhanced Sankey Diagram Generation**
 
     - **Column 1**: Symptom nodes (current, historical, suspected) with source indicators
     - **Column 2**: Diagnosis nodes (sized by probability + context confidence)
@@ -677,30 +677,30 @@ The reconstructed transcript is sent to the client with the following structure:
     - Action nodes: Interactive elements showing questions and safety alerts
     - Suspected symptoms: Distinctive styling with "suspected" source indicator
 
-22. **Progressive DAG Execution Streaming**
+22. **Progressive QOM Execution Streaming**
 
     - Stream individual expert node completions as they finish processing
-    - Show real-time progress through the DAG execution pipeline:
+    - Show real-time progress through the QOM execution pipeline:
       - transcript_parser → symptom_extractor → diagnosis_mapper (parallel) → relationship_builder → schema_merger → user_feedback_applier → node_cleaner
     - Update visualization incrementally as each expert contributes new nodes
     - Display loading states for pending expert nodes with estimated completion times
-    - Prioritize critical findings (priority 1-2) for immediate streaming regardless of DAG position
+    - Prioritize critical findings (priority 1-2) for immediate streaming regardless of QOM position
     - Show dependency relationships visually while nodes are processing
     - Stream version updates (analysisVersion increments) with change highlights
 
-23. **Interactive Features Enhanced with DAG Processing**
+23. **Interactive Features Enhanced with QOM Processing**
     - **Node Interaction with Expert Provenance:**
       - Click nodes to see which expert nodes contributed to their creation
       - View expert reasoning chain and confidence evolution across iterations
-      - See DAG execution timestamps for each node's creation/modification
-    - **Real-time DAG Execution Monitoring:**
+      - See QOM execution timestamps for each node's creation/modification
+    - **Real-time QOM Execution Monitoring:**
       - Visual progress indicators showing current expert node processing
       - Hover over processing indicators to see expert node dependencies
-      - Real-time updates as nodes flow through the DAG pipeline
-    - **Enhanced Accept/Suppress with DAG Awareness:**
+      - Real-time updates as nodes flow through the QOM pipeline
+    - **Enhanced Accept/Suppress with QOM Awareness:**
       - Accept: Triggers immediate re-processing through relevant expert nodes
-      - Suppress: Updates node states and triggers downstream DAG re-evaluation
-      - User actions influence subsequent DAG executions for incremental learning
+      - Suppress: Updates node states and triggers downstream QOM re-evaluation
+      - User actions influence subsequent QOM executions for incremental learning
       - Constraints: Only one diagnosis and one treatment can be accepted at a time
       - Suppression effect: visible_priority = ai_priority / coefficient (UI greys suppressed nodes and reduces size accordingly)
     - **Incremental Analysis Features:**
@@ -714,7 +714,7 @@ The reconstructed transcript is sent to the client with the following structure:
     - **Expert Node Performance Metrics:**
       - Display processing time and confidence scores for each expert
       - Show expert node contribution statistics (nodes created/modified)
-      - Performance optimization suggestions based on DAG execution patterns
+      - Performance optimization suggestions based on QOM execution patterns
 
 ## UI Design Implementation
 

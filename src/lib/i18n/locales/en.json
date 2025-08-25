@@ -796,6 +796,7 @@
   },
   "session": {
     "diagram": "Diagram",
+    "qom": "Quorum Operated Models",
     "actions": {
       "accept": "Accept",
       "suppress": "Suppress",

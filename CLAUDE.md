@@ -364,7 +364,7 @@ Use this command when working on session management, AI processing, or visualiza
 - Document filtering by type: lab-results, prescriptions, medical-records, family-history
 - Token optimization to fit within AI model limits (default 4000 tokens)
 
-**Phase 4: DAG-Based MoE Analysis (10 Expert Nodes)**
+**Phase 4: QOM-Based MoE Analysis (10 Expert Nodes)**
 Sequential expert processing pipeline:
 `transcript_parser` → `symptom_extractor` → `diagnosis_mapper` →
 (parallel: `treatment_recommender`, `question_generator`, `warning_annotator`) →
@@ -379,11 +379,11 @@ Output: Enhanced JSON with incremental improvements and version tracking
 - **Source Indicators**: transcript, medical_history, family_history, social_history, medication_history, suspected
 - **Priority Scale**: 1-10 consistent across all nodes (1=critical, 10=low priority)
 - **Embedded Relationships**: Each node contains relationships array with strength/confidence (0.0-1.0)
-- **Version Control**: `analysisVersion` increments with change tracking across DAG executions
+- **Version Control**: `analysisVersion` increments with change tracking across QOM executions
 
 **Phase 6: Context-Enhanced Visualization**
 
-- Progressive DAG streaming with real-time expert node completion updates via SSE
+- Progressive QOM streaming with real-time expert node completion updates via SSE
 - Sankey diagram with D3.js integration, expert provenance tracking, version comparison
 - Interactive features: relationship tracing, node selection with details, context confidence indicators
 - Visual encoding: node size by priority + context confidence, color by urgency + context overlay
@@ -431,7 +431,7 @@ Output: Enhanced JSON with incremental improvements and version tracking
 When working on session features, always consider:
 
 - **Medical relevance detection**: Filter transcripts before triggering expensive AI processing
-- **DAG-based expert processing**: Sequential + parallel expert node execution for AI analysis
+- **QOM-based expert processing**: Sequential + parallel expert node execution for AI analysis
 - **Progressive streaming**: Real-time UI updates via SSE for long-running AI operations
 - **Context assembly**: Historical medical data integration with term-based search
 - **Version control**: `analysisVersion` tracking for conversational evolution
