@@ -3,7 +3,11 @@
  * Utility functions for text processing, styling, and other helpers
  */
 
+import { mount, unmount } from 'svelte';
 import type { SankeyNode } from '../types/visualization';
+import SymptomNode from '../nodes/SymptomNode.svelte';
+import DiagnosisNode from '../nodes/DiagnosisNode.svelte';
+import TreatmentNode from '../nodes/TreatmentNode.svelte';
 
 /**
  * Truncate text to fit within specified length
@@ -25,140 +29,92 @@ export function getLinkStrengthClass(width: number): string {
 }
 
 /**
- * Create HTML content for node based on its type and data
+ * Create HTML content for node based on its type and data using proper Svelte components
+ * This maintains all the styling from src/css/session.css
  */
-export function createNodeComponent(node: SankeyNode): string {
-    const commonClasses = `session-node session-node-base ${node.type}`;
-    const sourceClass = node.data?.source ? `session-source-${node.data.source}` : '';
-    const fullClasses = `${commonClasses} ${sourceClass}`.trim();
+export function createNodeComponent(
+    node: SankeyNode, 
+    selectedNodeId: string | null, 
+    isMobile: boolean,
+    nodeComponents: Map<string, { component: any, container: HTMLDivElement }>
+): string {
+    const isSelected = node.id === selectedNodeId;
+    let nodeComponent;
+    const nodeContainer = document.createElement('div');
     
     switch (node.type) {
         case 'symptom':
-            return createSymptomNodeHTML(node, fullClasses);
+            nodeComponent = mount(SymptomNode, {
+                target: nodeContainer,
+                props: {
+                    node,
+                    symptom: node.data as any,
+                    isSelected,
+                    isMobile
+                }
+            });
+            break;
+            
         case 'diagnosis':
-            return createDiagnosisNodeHTML(node, fullClasses);
+            nodeComponent = mount(DiagnosisNode, {
+                target: nodeContainer,
+                props: {
+                    node,
+                    diagnosis: node.data as any,
+                    isSelected,
+                    isMobile
+                }
+            });
+            break;
+            
         case 'treatment':
-            return createTreatmentNodeHTML(node, fullClasses);
+            nodeComponent = mount(TreatmentNode, {
+                target: nodeContainer,
+                props: {
+                    node,
+                    treatment: node.data as any,
+                    isSelected,
+                    isMobile
+                }
+            });
+            break;
+            
         default:
-            return createGenericNodeHTML(node, fullClasses);
+            // Fallback for action nodes or unknown types
+            nodeContainer.innerHTML = `
+                <div class="sankey-node" style="background-color: ${node.color};">
+                    <div class="node-content">
+                        <div class="node-title">${truncateText(node.name, isMobile ? 20 : 25)}</div>
+                    </div>
+                </div>
+            `;
+            break;
     }
+    
+    // Store component reference for cleanup
+    nodeComponents.set(node.id, { component: nodeComponent, container: nodeContainer });
+    
+    return nodeContainer.innerHTML;
 }
 
-function createSymptomNodeHTML(node: SankeyNode, classes: string): string {
-    const data = node.data as any;
-    const severity = data?.severity || 5;
-    const severityBadge = `<span class="session-severity-badge severity-${severity}">${severity}</span>`;
+/**
+ * Clean up mounted Svelte components
+ */
+export function cleanupNodeComponents(nodeComponents: Map<string, { component: any, container: HTMLDivElement }>) {
+    if (!nodeComponents || typeof nodeComponents.forEach !== 'function') {
+        return;
+    }
     
-    return `
-        <div class="${classes}" data-node-id="${node.id}">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem;">
-                <div style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); flex: 1; line-height: 1.2;">
-                    ${truncateText(data?.text || node.id, 60)}
-                </div>
-                ${severityBadge}
-            </div>
-            ${data?.characteristics ? `
-                <div style="font-size: 0.75rem; color: var(--color-text-secondary); font-style: italic;">
-                    ${data.characteristics.join(', ')}
-                </div>
-            ` : ''}
-            ${data?.duration ? `
-                <div style="font-size: 0.75rem; color: var(--color-text-secondary); margin-top: 0.25rem;">
-                    Duration: ${data.duration} days
-                </div>
-            ` : ''}
-        </div>
-    `;
-}
-
-function createDiagnosisNodeHTML(node: SankeyNode, classes: string): string {
-    const data = node.data as any;
-    const probability = data?.probability ? Math.round(data.probability * 100) : 50;
-    const priority = data?.priority || 5;
-    
-    const probabilityClass = probability >= 80 ? 'value-high' : 
-                           probability >= 60 ? 'value-medium' : 
-                           probability >= 40 ? 'value-low' : 'value-very-low';
-    
-    const priorityClass = priority <= 2 ? 'priority-critical' :
-                         priority <= 4 ? 'priority-high' :
-                         priority <= 6 ? 'priority-medium' : 'priority-low';
-    
-    return `
-        <div class="${classes} ${priorityClass}" data-node-id="${node.id}">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem;">
-                <div style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); flex: 1; line-height: 1.2;">
-                    ${truncateText(data?.name || node.id, 60)}
-                </div>
-                <span class="session-probability-badge session-badge ${probabilityClass}">${probability}%</span>
-            </div>
-            ${data?.icd10 ? `
-                <div style="font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 0.25rem;">
-                    <span class="session-info-badge icd10">${data.icd10}</span>
-                </div>
-            ` : ''}
-            ${data?.requiresInvestigation ? `
-                <div style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: var(--color-warning); margin-top: 0.25rem;">
-                    <span class="session-investigation-flag">!</span>
-                    Requires investigation
-                </div>
-            ` : ''}
-        </div>
-    `;
-}
-
-function createTreatmentNodeHTML(node: SankeyNode, classes: string): string {
-    const data = node.data as any;
-    const effectiveness = data?.effectiveness ? Math.round(data.effectiveness * 100) : 70;
-    const urgency = data?.urgency || 'routine';
-    
-    const effectivenessClass = effectiveness >= 80 ? 'value-high' : 
-                              effectiveness >= 60 ? 'value-medium' : 
-                              effectiveness >= 40 ? 'value-low' : 'value-very-low';
-    
-    const treatmentTypeClass = data?.type ? `treatment-type-${data.type}` : '';
-    const urgencyClass = `urgency-${urgency}`;
-    
-    return `
-        <div class="${classes} ${treatmentTypeClass} ${urgencyClass}" data-node-id="${node.id}">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.25rem;">
-                <div style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); flex: 1; line-height: 1.2;">
-                    ${truncateText(data?.name || node.id, 60)}
-                </div>
-                <span class="session-effectiveness-badge session-badge ${effectivenessClass}">${effectiveness}%</span>
-            </div>
-            ${data?.type ? `
-                <div style="margin-bottom: 0.25rem;">
-                    <span class="treatment-type-label">${data.type.replace('_', ' ')}</span>
-                </div>
-            ` : ''}
-            ${data?.dosage ? `
-                <div style="font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 0.25rem;">
-                    <span class="session-info-badge dosage">${data.dosage}</span>
-                </div>
-            ` : ''}
-            ${data?.duration ? `
-                <div style="font-size: 0.75rem; color: var(--color-text-secondary); margin-bottom: 0.25rem;">
-                    <span class="session-info-badge duration">${data.duration}</span>
-                </div>
-            ` : ''}
-            ${data?.urgency && urgency !== 'routine' ? `
-                <div style="font-size: 0.75rem; font-weight: 600; color: var(--color-error); margin-top: 0.25rem; text-transform: uppercase;">
-                    ${urgency}
-                </div>
-            ` : ''}
-        </div>
-    `;
-}
-
-function createGenericNodeHTML(node: SankeyNode, classes: string): string {
-    return `
-        <div class="${classes}" data-node-id="${node.id}">
-            <div style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary);">
-                ${truncateText(node.id, 60)}
-            </div>
-        </div>
-    `;
+    for (const [nodeId, { component, container }] of nodeComponents) {
+        if (component) {
+            try {
+                unmount(component);
+            } catch (error) {
+                // Ignore unmount errors - component may already be unmounted
+            }
+        }
+    }
+    nodeComponents.clear();
 }
 
 /**

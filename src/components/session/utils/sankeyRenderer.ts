@@ -51,7 +51,7 @@ export function renderNodes(
     nodeSelection.exit()
         .classed('exiting', true)
         .transition()
-        .duration(300)
+        .duration(3000)
         .style('opacity', 0)
         .remove();
     
@@ -75,7 +75,7 @@ export function renderNodes(
     // Transition new nodes in
     nodeEnter
         .transition()
-        .duration(300)
+        .duration(3000)
         .style('opacity', 1);
     
     // UPDATE - Update existing nodes (positions will be handled separately)

@@ -4,6 +4,8 @@
  */
 
 import type { SankeyNode, SankeyLink } from '../types/visualization';
+import * as viewerStoreModule from '$lib/session/stores/session-viewer-store';
+import * as d3 from 'd3';
 
 export interface EventHandlers {
     onNodeClick?: (event: MouseEvent | TouchEvent, node: SankeyNode) => void;
@@ -196,4 +198,183 @@ export function calculateMedicalPath(
     }
     
     return { nodes: connectedNodeIds, links: connectedLinkIds };
+}
+
+/**
+ * Handle node click events with proper event handling and store integration
+ */
+export function handleNodeClick(
+    event: MouseEvent | TouchEvent, 
+    node: SankeyNode,
+    onnodeSelect?: (event: CustomEvent) => void
+) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Use session viewer store to select node only
+    // Store the original medical data, not the D3 Sankey wrapper
+    // Path calculation will be handled by the reactive effect in SessionMoeVisualizer
+    viewerStoreModule.sessionViewerActions.selectItem('node', node.id, node.data || node);
+    
+    // Also emit the event for backwards compatibility
+    onnodeSelect?.(new CustomEvent('nodeSelect', {
+        detail: {
+            node: node.data || node,
+            nodeId: node.id
+        }
+    }));
+}
+
+/**
+ * Handle link click events with proper event handling and store integration
+ */
+export function handleLinkClick(
+    event: MouseEvent | TouchEvent, 
+    link: SankeyLink,
+    onlinkSelect?: (event: CustomEvent) => void
+) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Use session viewer store to select link
+    viewerStoreModule.sessionViewerActions.selectItem('link', `${link.source}-${link.target}`, link);
+    
+    // Also emit the event for backwards compatibility
+    onlinkSelect?.(new CustomEvent('linkSelect', {
+        detail: {
+            link: link,
+            linkId: `${link.source}-${link.target}`
+        }
+    }));
+}
+
+/**
+ * Handle canvas click events with proper selection clearing
+ */
+export function handleCanvasClick(event: MouseEvent) {
+    // Ignore clicks that were part of a drag/zoom operation
+    if (event.defaultPrevented) return;
+    
+    // Only clear selection if clicking on the SVG itself (not nodes or links)
+    const target = event.target as SVGElement;
+    const isClickableElement = target.classList?.contains('node-html') || 
+                              target.classList?.contains('link') ||
+                              target.tagName === 'path' ||
+                              target.closest('.node-html') ||
+                              target.closest('.link');
+    
+    if (!isClickableElement) {
+        // Clear all selections using the unified store system
+        viewerStoreModule.sessionViewerActions.clearSelection();
+    }
+}
+
+/**
+ * Handle node hover events with proper highlighting
+ */
+export function handleNodeHover(
+    nodeId: string, 
+    isEntering: boolean, 
+    svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
+    allNodeArrays: any[]
+) {
+    if (!svg) return;
+    
+    // Use new unified hover system
+    if (!isEntering) {
+        viewerStoreModule.sessionViewerActions.setHoveredItem(null);
+        // Explicitly remove hover classes and reset all opacity states
+        svg.selectAll('.node-html.hovered').classed('hovered', false);
+        svg.selectAll('.link.hovered').classed('hovered', false);
+        
+        // Force reset all node states to default
+        svg.selectAll('.node-html')
+            .classed('dimmed', false)
+            .classed('highlighted', false);
+        
+        return;
+    }
+    
+    // Find the complete node object from allNodeArrays 
+    const nodeObject = allNodeArrays.find(n => n.id === nodeId);
+    if (nodeObject) {
+        viewerStoreModule.sessionViewerActions.setHoveredItem('node', nodeId, nodeObject.data || nodeObject);
+    }
+}
+
+/**
+ * Handle link hover events with tooltip display
+ */
+export function handleLinkHover(
+    link: any, 
+    isEntering: boolean,
+    svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
+    tooltipData: any,
+    container?: HTMLElement
+) {
+    // Use unified hover system
+    if (!isEntering) {
+        viewerStoreModule.sessionViewerActions.setHoveredItem(null);
+        tooltipData.visible = false;
+        // Explicitly remove hover classes and reset all states
+        if (svg) {
+            svg.selectAll('.link.hovered').classed('hovered', false);
+            svg.selectAll('.node-html.hovered').classed('hovered', false);
+            
+            // Force reset all node states to default
+            svg.selectAll('.node-html')
+                .classed('dimmed', false)
+                .classed('highlighted', false);
+        }
+        return;
+    }
+    
+    // Set hovered item for consistency
+    const linkId = `${typeof link.source === 'object' ? link.source.id : link.source}-${typeof link.target === 'object' ? link.target.id : link.target}`;
+    viewerStoreModule.sessionViewerActions.setHoveredItem('link', linkId, link);
+    
+    // Build tooltip content
+    const sourceNode = typeof link.source === 'object' ? link.source : null;
+    const targetNode = typeof link.target === 'object' ? link.target : null;
+    
+    if (sourceNode && targetNode) {
+        // Extract relationship data from link or nodes
+        const relationshipType = link.relationshipType || link.type || 'related_to';
+        const strength = link.confidence || link.value || 0.5;
+        const strengthPercent = Math.round(strength * 100);
+        
+        const relationshipLabel = relationshipType.charAt(0).toUpperCase() + relationshipType.slice(1);
+        
+        tooltipData.title = `${sourceNode.name} → ${targetNode.name}`;
+        tooltipData.subtitle = `${relationshipLabel} (${strengthPercent}% confidence)`;
+        tooltipData.description = `This relationship was identified${link.source_context ? ` from ${link.source_context}` : ''}.`;
+        
+        // Position tooltip
+        if (container) {
+            const sankeyMidX = (sourceNode.x1 + targetNode.x0) / 2;
+            const sankeyMidY = (link.y0 + link.y1) / 2;
+            
+            // Get container bounds for positioning
+            const containerRect = container.getBoundingClientRect();
+            
+            // Basic positioning (can be refined)
+            const tooltipWidth = 300;
+            const tooltipHeight = 120;
+            
+            // Clamp to container bounds
+            const clampedX = Math.max(
+                10, // Min left margin
+                Math.min(sankeyMidX - tooltipWidth / 2, containerRect.width - tooltipWidth - 10)
+            );
+            
+            const clampedY = Math.max(
+                10, // Min top margin
+                Math.min(sankeyMidY - tooltipHeight - 20, containerRect.height - tooltipHeight - 10) // 20px above link
+            );
+            
+            tooltipData.x = clampedX;
+            tooltipData.y = clampedY;
+            tooltipData.visible = true;
+        }
+    }
 }

@@ -783,8 +783,12 @@ interface HiddenCounts {
   treatments: number;
 }
 
-// Import thresholds from viewer store to avoid circular dependency
-import { thresholds } from "./session-viewer-store";
+// Thresholds store - primary data store (not derived from viewer store)
+export const thresholds: Writable<ThresholdConfig> = writable({
+  symptoms: { severityThreshold: 7, showAll: false },    // Show severity 1-7 by default
+  diagnoses: { probabilityThreshold: 0.35, showAll: false }, // Show probability > 30% by default
+  treatments: { priorityThreshold: 10, showAll: true }   // Future use
+});
 
 /**
  * Filtered Sankey data with thresholds applied
