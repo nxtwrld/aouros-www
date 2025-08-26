@@ -197,7 +197,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                     <!--a href="/med/p/{$profile.id}/history" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/history/', $page.url.pathname)}>{ $t('app.nav.history') }</a-->
                     {#if $user && 'isMedical' in $user && $user.isMedical}
                         {#if showAudioButtonInHeader}
-                            <div class="sub-item recording-indicator"
+                            <a href="/med/p/{$profile.id}/session-moe" class="sub-item recording-indicator"
                                  class:listening={audioStateValue === AudioState.Listening}
                                  class:speaking={audioStateValue === AudioState.Speaking}
                                  class:paused={currentSessionState === SessionState.Paused}>
@@ -206,7 +206,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                                 <span class="recording-text">
                                     {currentSessionState === SessionState.Paused ? 'Continue' : 'Recording...'}
                                 </span>
-                            </div>
+                            </a>
                         {:else if showNewSessionLink}
                             <a href="/med/p/{$profile.id}/session-moe" class="sub-item" class:-active={isActive('/med/p/' +$profile.id + '/session/', $page.url.pathname)}>{ $t('app.nav.new-session') }</a>
                         {/if}
@@ -410,6 +410,15 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
         border-radius: var(--radius);
         font-weight: var(--text-bold);
         z-index: 1001;
+        text-decoration: none; /* Remove underline for link */
+        cursor: pointer;
+    }
+
+    /* Hover effect for clickable recording indicator */
+    .recording-indicator:hover {
+        background-color: var(--color-gray-200);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
     }
 
     /* Dynamic text colors based on audio state - light haze colors */
