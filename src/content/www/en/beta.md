@@ -30,7 +30,7 @@ We're selectively onboarding users who are ready to transform how they manage me
 ```mermaid
 graph LR
     A[1,000+ Users] --> B[Active Beta]
-    B --> C[Q2 2024: Public Launch]
+    B --> C[Q2 2026: Public Launch]
 
     style B fill:#28a745,stroke:#1e7e34,color:#fff
 ```
