@@ -1,7 +1,45 @@
+<script module lang="ts">
+    export interface SessionTabDefinition {
+        id: string;
+        labelKey: string;
+        condition?: (context: SessionTabContext) => boolean;
+        hasBadge?: boolean;
+        getBadgeCount?: (context: SessionTabContext) => number;
+    }
+
+    export interface SessionTabContext {
+        hasTranscript: boolean;
+        isMobile: boolean;
+        questionCount: number;
+        alertCount: number;
+    }
+
+    export const SESSION_TAB_DEFINITIONS: SessionTabDefinition[] = [
+        { 
+            id: 'questions', 
+            labelKey: 'session.tabs.questions',
+            hasBadge: true,
+            getBadgeCount: (ctx) => ctx.questionCount + ctx.alertCount
+        },
+        { 
+            id: 'transcript', 
+            labelKey: 'session.tabs.transcript',
+            condition: (ctx) => ctx.hasTranscript
+        },
+        { 
+            id: 'details', 
+            labelKey: 'session.tabs.details'
+        },
+        { 
+            id: 'legend', 
+            labelKey: 'session.tabs.legend',
+            condition: (ctx) => !ctx.isMobile
+        }
+    ];
+</script>
+
 <script lang="ts">
     import Tabs from '../ui/Tabs.svelte';
-    import TabHead from '../ui/TabHead.svelte';
-    import TabHeads from '../ui/TabHeads.svelte';
     import TabPanel from '../ui/TabPanel.svelte';
     import SessionQuestionsTab from './SessionQuestionsTab.svelte';
     import SessionTranscriptTab from './SessionTranscriptTab.svelte';
@@ -9,6 +47,10 @@
     import SessionLegendTab from './SessionLegendTab.svelte';
     import type { SessionAnalysis } from './types/visualization';
     import { t } from '$lib/i18n';
+    import { 
+        activeTab, 
+        sessionViewerStore
+    } from '$lib/session/stores/session-viewer-store';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -22,7 +64,6 @@
         selectedLink: any | null;
         pendingQuestions: number;
         isMobile?: boolean;
-        tabsRef?: any;
         onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
         onrelationshipNodeClick?: (detail: { nodeId: string }) => void;
     }
@@ -34,7 +75,6 @@
         selectedLink, 
         pendingQuestions, 
         isMobile = false,
-        tabsRef = $bindable(),
         onnodeAction,
         onrelationshipNodeClick 
     }: Props = $props();
@@ -43,61 +83,63 @@
     const questions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question') || []);
     const alerts = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'alert') || []);
     const hasTranscript = $derived(transcript && transcript.length > 0);
+    
+    // Update tab context in store when derived values change
+    $effect(() => {
+        const context = {
+            hasTranscript,
+            isMobile,
+            questionCount: questions.length,
+            alertCount: alerts.length
+        };
+        // Update the store directly to avoid TypeScript issues
+        sessionViewerStore.update((state) => ({
+            ...state,
+            tabContext: context,
+        }));
+    });
+
+    // Get visible tabs based on context from store
+    const visibleTabs = $derived(() => {
+        const context = $sessionViewerStore.tabContext;
+        return SESSION_TAB_DEFINITIONS.filter(tab => 
+            !tab.condition || tab.condition(context)
+        );
+    });
+    
 </script>
 
-<Tabs bind:this={tabsRef}>
-    <div class="tab-panels">
-    <TabPanel>
-        <SessionQuestionsTab 
-            {questions}
-            {alerts}
-        />
-    </TabPanel>
-    
-    {#if hasTranscript}
-        <TabPanel>
-            <SessionTranscriptTab conversation={transcript} />
+<Tabs fixedHeight={false} selectedTabId={$activeTab}>
+    {#each visibleTabs() as tab (tab.id)}
+        <TabPanel 
+            id={tab.id}
+            containerHeight={true}
+            scrollable={true}
+            layout="flex"
+        >
+            {#if tab.id === 'questions'}
+                <SessionQuestionsTab 
+                    {questions}
+                    {alerts}
+                />
+            {:else if tab.id === 'transcript'}
+                <SessionTranscriptTab conversation={transcript} />
+            {:else if tab.id === 'details'}
+                <SessionDetailsTab 
+                    {selectedNode}
+                    {selectedLink}
+                    allNodes={sessionData.nodes}
+                    {onnodeAction}
+                    {onrelationshipNodeClick}
+                    {isMobile}
+                />
+            {:else if tab.id === 'legend'}
+                <SessionLegendTab />
+            {/if}
         </TabPanel>
-    {/if}
-    
-    <TabPanel>
-        <SessionDetailsTab 
-            {selectedNode}
-            {selectedLink}
-            allNodes={sessionData.nodes}
-            {onnodeAction}
-            {onrelationshipNodeClick}
-            {isMobile}
-        />
-    </TabPanel>
-    
-    {#if !isMobile}
-        <TabPanel>
-            <SessionLegendTab />
-        </TabPanel>
-    {/if}
-    </div>
+    {/each}
 </Tabs>
 
 <style>
-    .badge {
-        position: absolute;
-        top: 0.25rem;
-        right: 0.25rem;
-        background: var(--color-error, #dc2626);
-        color: white;
-        font-size: 0.625rem;
-        padding: 0.125rem 0.375rem;
-        border-radius: 10px;
-        min-width: 18px;
-        text-align: center;
-        font-weight: 600;
-    }
-
-    .tab-panels {
-        height: 100%;
-        overflow: auto;
-
-    }
-    
+    /* Tab panels inherit height and overflow from parent Tabs component */
 </style>

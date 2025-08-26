@@ -2,9 +2,10 @@
     import type { Writable } from 'svelte/store';
 
     export interface TabInterface {
-        registerTab: (tab: number) => void;
-        registerPanel: (panel: number) => void;
+        registerTab: (tab: number, id?: string) => void;
+        registerPanel: (panel: number, id?: string) => void;
         selectTab: (tab: number) => void;
+        selectTabById: (id: string) => void;
 		selectByIndex: (tab: number) => void;
         selectedTab?: Writable<number>;
         selectedPanel?: Writable<number>;
@@ -12,12 +13,14 @@
         registerPanelHeight?: (panel: number, height: number) => void;
         maxHeight?: Writable<number>;
         panels?: number[];
+        tabIds?: string[];
     }
 
 	export const TABS: TabInterface = {
         registerTab: function(){},
         registerPanel: function(){},
-        selectTab: function(){}
+        selectTab: function(){},
+        selectTabById: function(){}
     };
 </script>
 
@@ -27,12 +30,15 @@
 	interface Props {
 		children?: import('svelte').Snippet;
 		fixedHeight?: boolean;
+		selectedTabId?: string;
 	}
 
-	let { children, fixedHeight = true }: Props = $props();
+	let { children, fixedHeight = true, selectedTabId }: Props = $props();
 
 	const tabs: number[] = [];
 	const panels: number[] = [];
+	const tabIds: string[] = [];
+	const panelIds: string[] = [];
 	const selectedTab = writable(0);
 	const selectedPanel = writable(0);
 	
@@ -47,24 +53,36 @@
 	let tabCount = $derived(panels.length || 1);
 
 	const tabContext: TabInterface = {
-		registerTab: (tab: number) => {
+		registerTab: (tab: number, id?: string) => {
 			tabs.push(tab);
+			if (id) {
+				tabIds[tabs.length - 1] = id;
+			}
 			selectedTab.update((current: number) => current || tab);
 			
 			onDestroy(() => {
 				const i = tabs.indexOf(tab);
 				tabs.splice(i, 1);
+				if (id) {
+					tabIds.splice(i, 1);
+				}
 				selectedTab.update(current => current === tab ? (tabs[i] || tabs[tabs.length - 1]) : current);
 			});
 		},
 
-		registerPanel: (panel: number) => {
+		registerPanel: (panel: number, id?: string) => {
 			panels.push(panel);
+			if (id) {
+				panelIds[panels.length - 1] = id;
+			}
 			selectedPanel.update((current: number) => current || panel);
 			
 			onDestroy(() => {
 				const i = panels.indexOf(panel);
 				panels.splice(i, 1);
+				if (id) {
+					panelIds.splice(i, 1);
+				}
 				selectedPanel.update((current: number) => current === panel ? (panels[i] || panels[panels.length - 1]) : current);
 			});
 		},
@@ -82,12 +100,19 @@
 			activePanelIndex = index;  // Update index for transform
 		},
 
+		selectTabById: (id: string) => {
+			const index = panelIds.indexOf(id);
+			if (index !== -1) {
+				selectedTab.set(tabs[index]);
+				selectedPanel.set(panels[index]);
+				activePanelIndex = index;  // Update index for transform
+			}
+		},
+
 		registerPanelHeight: (panel: number, height: number) => {
 			if (fixedHeight && height > 0) {
-				console.log(`📊 Registering panel ${panel} height: ${height}px`);
 				panelHeights[panel] = height;
 				const newMaxHeight = Math.max(...Object.values(panelHeights), 0);
-				console.log(`📈 New max height: ${newMaxHeight}px from panels:`, panelHeights);
 				maxHeight.set(newMaxHeight);
 			}
 		},
@@ -96,10 +121,18 @@
 		selectedPanel,
 		fixedHeight,
 		maxHeight,
-		panels
+		panels,
+		tabIds
 	}
 
-	// Export selectTab function to component instance
+	// React to selectedTabId prop changes
+	$effect(() => {
+		if (selectedTabId && tabContext.selectTabById) {
+			tabContext.selectTabById(selectedTabId);
+		}
+	});
+
+	// Export selectTab function to component instance (kept for backward compatibility)
 	export function selectTab(index: number) {
 		tabContext.selectByIndex(index);
 	}
@@ -113,7 +146,15 @@
 	style:--tab-count={tabCount}
 	style:--max-panel-height={$maxHeight > 0 ? `${$maxHeight}px` : 'auto'}
 >
-	{@render children?.()}
+	{#if fixedHeight}
+		<div class="tab-panels-wrapper">
+			<div class="tab-panels-grid">
+				{@render children?.()}
+			</div>
+		</div>
+	{:else}
+		{@render children?.()}
+	{/if}
 </div>
 
 <style>

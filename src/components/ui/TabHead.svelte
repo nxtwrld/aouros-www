@@ -5,9 +5,10 @@
     import type { TabInterface } from './Tabs.svelte';
 	interface Props {
 		children?: import('svelte').Snippet;
+		id?: string;
 	}
 
-	let { children }: Props = $props();
+	let { children, id }: Props = $props();
 
 	const tab: number = crypto.getRandomValues(new Uint32Array(1))[0];
 	const tabContext = getContext(TABS) as TabInterface | undefined;
@@ -17,7 +18,7 @@
 	const selectTab = tabContext?.selectTab ?? (() => {});
 	const selectedTab = tabContext?.selectedTab ?? writable(0);
 
-	registerTab(tab);
+	registerTab(tab, id);
 </script>
 
 

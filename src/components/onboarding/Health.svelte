@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { run } from 'svelte/legacy';
 
 	
 
@@ -26,30 +25,35 @@
     let bloodType: BloodType | undefined = $state(data.health.bloodType || undefined);
     let biologicalSex: SexEnum | undefined = $state(data.health.biologicalSex || undefined);
     let birthDate: string | undefined = $state(data.health.birthDate || undefined);
-    run(() => {
-
+    
+    // Update data.health when local state changes
+    $effect(() => {
         if (birthDate && birthDate != '') {
-            data.health.birthDate = birthDate
+            data.health.birthDate = birthDate;
         } else {
             delete data.health.birthDate;
         }
-
+    });
+    
+    $effect(() => {
         if (bloodType) {
-            data.health.bloodType = bloodType
+            data.health.bloodType = bloodType;
         } else {
-            delete data.health.bloodType
+            delete data.health.bloodType;
         }
+    });
+    
+    $effect(() => {
         if (biologicalSex) {
             data.health.biologicalSex = biologicalSex;
         } else {
             delete data.health.biologicalSex;
         }
-        
-        if (data.health.biologicalSex && data.health.birthDate) {
-            ready = true;
-        } else {
-            ready = false;
-        }
+    });
+    
+    // Update ready state based on required fields
+    $effect(() => {
+        ready = !!(data.health.biologicalSex && data.health.birthDate);
     });
 </script>
 
