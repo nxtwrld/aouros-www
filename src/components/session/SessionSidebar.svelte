@@ -157,21 +157,6 @@
         }
     }
 
-    .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: .3rem .3rem .3rem 1rem;
-        height: var(--toolbar-height);
-        border-bottom: 1px solid var(--color-border, #e2e8f0);
-    }
-
-    .sidebar-header h3 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--color-text-primary, #1f2937);
-    }
 
     .mobile-sidebar-header {
         display: flex;

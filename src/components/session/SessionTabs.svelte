@@ -1,7 +1,5 @@
 <script lang="ts">
     import Tabs from '../ui/Tabs.svelte';
-    import TabHead from '../ui/TabHead.svelte';
-    import TabHeads from '../ui/TabHeads.svelte';
     import TabPanel from '../ui/TabPanel.svelte';
     import SessionQuestionsTab from './SessionQuestionsTab.svelte';
     import SessionTranscriptTab from './SessionTranscriptTab.svelte';
@@ -45,8 +43,7 @@
     const hasTranscript = $derived(transcript && transcript.length > 0);
 </script>
 
-<Tabs bind:this={tabsRef}>
-    <div class="tab-panels">
+<Tabs bind:this={tabsRef} fixedHeight={false}>
     <TabPanel>
         <SessionQuestionsTab 
             {questions}
@@ -76,28 +73,8 @@
             <SessionLegendTab />
         </TabPanel>
     {/if}
-    </div>
 </Tabs>
 
 <style>
-    .badge {
-        position: absolute;
-        top: 0.25rem;
-        right: 0.25rem;
-        background: var(--color-error, #dc2626);
-        color: white;
-        font-size: 0.625rem;
-        padding: 0.125rem 0.375rem;
-        border-radius: 10px;
-        min-width: 18px;
-        text-align: center;
-        font-weight: 600;
-    }
-
-    .tab-panels {
-        height: 100%;
-        overflow: auto;
-
-    }
-    
+    /* Tab panels inherit height and overflow from parent Tabs component */
 </style>

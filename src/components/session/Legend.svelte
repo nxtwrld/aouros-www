@@ -150,14 +150,6 @@
         width: 100%;
     }
 
-    .legend h4 {
-        margin: 0 0 1rem;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--color-text-primary, #1f2937);
-        border-bottom: 1px solid var(--color-border, #e2e8f0);
-        padding-bottom: 0.5rem;
-    }
 
     .legend-section {
         margin-bottom: 1.25rem;
@@ -260,9 +252,6 @@
             padding: 0.75rem;
         }
 
-        .legend h4 {
-            font-size: 0.9rem;
-        }
 
         .legend-section h5 {
             font-size: 0.8rem;
