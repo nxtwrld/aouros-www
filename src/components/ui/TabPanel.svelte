@@ -6,9 +6,18 @@
 	interface Props {
 		children?: import('svelte').Snippet;
 		id?: string;
+		containerHeight?: boolean;
+		scrollable?: boolean;
+		layout?: 'flex' | 'grid' | 'auto';
 	}
 
-	let { children, id }: Props = $props();
+	let { 
+		children, 
+		id, 
+		containerHeight = false,
+		scrollable = false,
+		layout = 'auto'
+	}: Props = $props();
 
 	const panel: number = crypto.getRandomValues(new Uint32Array(1))[0];
 	const tabContext = getContext(TABS) as TabInterface | undefined;
@@ -75,6 +84,10 @@
 	class="tab-panel" 
 	class:active={$selectedPanel === panel}
 	class:fixed-height-mode={fixedHeight}
+	class:tab-panel-constrained={containerHeight}
+	class:tab-panel-scrollable={scrollable}
+	class:panel-flex={layout === 'flex'}
+	class:panel-grid={layout === 'grid'}
 >
 	{@render children?.()}
 </div>
@@ -97,5 +110,53 @@
 	.tab-panel.fixed-height-mode {
 		/* Grid column placement and sizing handled by parent .tab-panels-grid */
 		display: block; /* Always visible in grid */
+	}
+
+	/* Container height constraint */
+	.tab-panel-constrained {
+		height: 100%;
+		min-height: 0; /* Allow flex/grid children to shrink */
+	}
+
+	/* Scrollable content */
+	.tab-panel-scrollable {
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	/* Layout modes */
+	.panel-flex {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.panel-grid {
+		display: grid;
+		grid-template-rows: auto 1fr auto; /* header, content, footer */
+	}
+
+	/* Utility classes for content areas */
+	:global(.panel-header) {
+		flex-shrink: 0;
+		position: sticky;
+		top: 0;
+		z-index: 1;
+	}
+
+	:global(.panel-content) {
+		flex: 1;
+		min-height: 0; /* Allow content to shrink */
+	}
+
+	:global(.panel-content.scrollable) {
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	:global(.panel-footer) {
+		flex-shrink: 0;
+		position: sticky;
+		bottom: 0;
+		z-index: 1;
 	}
 </style>

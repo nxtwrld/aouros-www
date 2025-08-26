@@ -111,7 +111,12 @@
 
 <Tabs fixedHeight={false} selectedTabId={$activeTab}>
     {#each visibleTabs() as tab (tab.id)}
-        <TabPanel id={tab.id}>
+        <TabPanel 
+            id={tab.id}
+            containerHeight={true}
+            scrollable={true}
+            layout="flex"
+        >
             {#if tab.id === 'questions'}
                 <SessionQuestionsTab 
                     {questions}
