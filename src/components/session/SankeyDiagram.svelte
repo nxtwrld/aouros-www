@@ -8,8 +8,14 @@
     import { calculateNodeSize } from './utils/sankeyDataTransformer';
     import { OPACITY, COLORS, NODE_SIZE, LINK_CONFIG, getLinkPathGenerator, calculateLinkWidth, applyParallelLinkSpacing, createEnhancedLinkGenerator } from './config/visual-config';
     import LinkTooltip from './LinkTooltip.svelte';
-    import { sessionDataActions, sankeyData } from '$lib/session/stores/session-data-store';
-    import { activePath, hoveredItem, selectedItem } from '$lib/session/stores/session-viewer-store';
+    import { sessionDataActions, sankeyDataFiltered as sankeyData, hiddenCounts } from '$lib/session/stores/session-data-store';
+    import { 
+        activePath, 
+        hoveredItem, 
+        selectedItem, 
+        thresholds,
+        sessionViewerActions
+    } from '$lib/session/stores/session-viewer-store';
     // Temporary workaround for TypeScript import issues
     import * as viewerStoreModule from '$lib/session/stores/session-viewer-store';
     import SymptomNode from './nodes/SymptomNode.svelte';
@@ -44,6 +50,50 @@
     let svg = $state<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
     let width = 800;  // Non-reactive to prevent triggering effects
     let height = 600; // Non-reactive to prevent triggering effects
+
+    /**
+     * Calculate column positions and dimensions for show-more buttons
+     * Need to use the actual D3 sankey layout results, not the original data
+     */
+    function calculateColumnPositions() {
+        if (!svg) return { symptomColumn: null, diagnosisColumn: null, treatmentColumn: null };
+
+        // Get the actual rendered nodes from D3 (these have x0, x1, y0, y1 coordinates)
+        const allNodes = svg.selectAll('.node').data();
+        
+        if (!allNodes || allNodes.length === 0) {
+            return { symptomColumn: null, diagnosisColumn: null, treatmentColumn: null };
+        }
+
+        const symptomNodes = allNodes.filter((n: any) => n.type === 'symptom');
+        const diagnosisNodes = allNodes.filter((n: any) => n.type === 'diagnosis');
+        const treatmentNodes = allNodes.filter((n: any) => n.type === 'treatment');
+
+        const calculateColumnInfo = (nodes: any[]) => {
+            if (!nodes.length) return null;
+            
+            const positions = nodes.map(n => ({
+                x: (n.x0 + n.x1) / 2, // Center X of node
+                bottom: n.y1 // Bottom Y of node
+            }));
+            
+            return {
+                centerX: positions.reduce((sum, p) => sum + p.x, 0) / positions.length,
+                bottomY: Math.max(...positions.map(p => p.bottom))
+            };
+        };
+
+        const result = {
+            symptomColumn: calculateColumnInfo(symptomNodes),
+            diagnosisColumn: calculateColumnInfo(diagnosisNodes), 
+            treatmentColumn: calculateColumnInfo(treatmentNodes)
+        };
+
+        console.log('Column positions:', result); // Debug log
+        return result;
+    }
+
+    // Column positions are now calculated on-demand in renderShowMoreButtons to ensure fresh DOM state
     // Subscribe only to the specific values we need (avoid reading the entire store)
     $effect(() => {
         const activePathData = $activePath;
@@ -116,6 +166,7 @@
             if ($sankeyData) {
                 renderSankey();
                 buildFocusableNodesList();
+                renderShowMoreButtons();
             }
         });
         
@@ -217,6 +268,7 @@
         if (currentSvg && data && dataHash !== previousDataHash && previousDataHash !== '') {
             renderSankey();
             buildFocusableNodesList();
+            renderShowMoreButtons();
             previousDataHash = dataHash;
         } else if (data && dataHash !== previousDataHash) {
             // Update hash without re-rendering (for initial mount case)
@@ -856,6 +908,89 @@ viewerStoreModule.sessionViewerActions.selectItem('link', `${link.source}-${link
         });
         
         focusableNodes = orderedNodes;
+    }
+
+    /**
+     * Render show-more buttons as SVG foreignObjects positioned under each column
+     */
+    function renderShowMoreButtons() {
+        if (!svg) return;
+        
+        // Use requestAnimationFrame to ensure DOM has updated with new nodes
+        requestAnimationFrame(() => {
+            // Recalculate positions based on current DOM state
+            const currentPositions = calculateColumnPositions();
+            if (!currentPositions) return;
+
+            const mainGroup = svg.select('.main-group');
+            
+            // Remove existing show-more buttons
+            mainGroup.selectAll('.show-more-button-group').remove();
+
+            // Create button group
+            const buttonGroup = mainGroup.append('g').attr('class', 'show-more-button-group');
+            
+            // Get button dimensions from CSS variables
+            const computedStyle = getComputedStyle(document.documentElement);
+            const buttonWidth = parseInt(computedStyle.getPropertyValue('--show-more-button-width')) || 140;
+            const buttonHeight = parseInt(computedStyle.getPropertyValue('--show-more-button-height')) || 40;
+            const buttonPadding = parseInt(computedStyle.getPropertyValue('--show-more-button-padding')) || 20;
+            const buttonOverflow = parseInt(computedStyle.getPropertyValue('--show-more-button-overflow')) || 10;
+
+            // Set up global button actions for onclick handlers
+            (window as any).sankeyButtonActions = {
+                toggleSymptoms: () => sessionViewerActions.toggleShowAllSymptoms(),
+                toggleDiagnoses: () => sessionViewerActions.toggleShowAllDiagnoses(),
+                toggleTreatments: () => sessionViewerActions.toggleShowAllTreatments()
+            };
+
+            // Add symptoms column button
+            // Show button if there are items that could be filtered (or are being shown with showAll)
+            const hasFilterableSymptoms = $hiddenCounts.symptoms > 0 || $thresholds.symptoms.showAll;
+            if (hasFilterableSymptoms && currentPositions.symptomColumn) {
+                const symptomButton = buttonGroup
+                    .append('foreignObject')
+                    .attr('x', currentPositions.symptomColumn.centerX - buttonWidth / 2)
+                    .attr('y', currentPositions.symptomColumn.bottomY + buttonPadding - buttonOverflow/2)
+                    .attr('width', buttonWidth)
+                    .attr('height', buttonHeight)
+                    .attr('class', 'show-more-foreign-object symptoms');
+
+                symptomButton
+                    .append('xhtml:div')
+                    .attr('class', 'show-more-button-container')
+                    .html(`
+                        <button class="button -small" onclick="window.sankeyButtonActions?.toggleSymptoms()">
+                            ${$thresholds.symptoms.showAll ? 'Show fewer' : `Show more (${$hiddenCounts.symptoms})`}
+                        </button>
+                    `);
+            }
+
+            // Add diagnoses column button
+            // Show button if there are items that could be filtered (or are being shown with showAll)
+            const hasFilterableDiagnoses = $hiddenCounts.diagnoses > 0 || $thresholds.diagnoses.showAll;
+            if (hasFilterableDiagnoses && currentPositions.diagnosisColumn) {
+                const diagnosisButton = buttonGroup
+                    .append('foreignObject')
+                    .attr('x', currentPositions.diagnosisColumn.centerX - buttonWidth / 2)
+                    .attr('y', currentPositions.diagnosisColumn.bottomY + buttonPadding - buttonOverflow/2)
+                    .attr('width', buttonWidth)
+                    .attr('height', buttonHeight)
+                    .attr('class', 'show-more-foreign-object diagnoses');
+
+                diagnosisButton
+                    .append('xhtml:div')
+                    .attr('class', 'show-more-button-container')
+                    .html(`
+                        <button class="button -small" onclick="window.sankeyButtonActions?.toggleDiagnoses()">
+                            ${$thresholds.diagnoses.showAll ? 'Show fewer' : `Show more (${$hiddenCounts.diagnoses})`}
+                        </button>
+                    `);
+            }
+
+            // Note: Treatment buttons are not shown since treatments are hidden based on 
+            // orphaned node logic (when connected diagnoses are hidden), not direct thresholds
+        });
     }
 
     function updateNodeFocus(targetFocusedNodeId: string | null) {
@@ -1812,6 +1947,7 @@ viewerStoreModule.sessionViewerActions.setHoveredItem('link', `${link.source}-${
             <p>{$t('session.empty-states.no-data')}</p>
         </div>
     {:else}
+
         <ZoomControls
             {isMobile}
             currentZoom={currentZoomTransform.k}
@@ -1997,5 +2133,22 @@ viewerStoreModule.sessionViewerActions.setHoveredItem('link', `${link.source}-${
        Note: Node interactive styles (hover, selected, connected-to-selected) 
        and link animations are now handled by src/css/session.css 
     */
+
+    /* Show More Buttons - SVG embedded via foreignObject */
+    :global(.show-more-foreign-object) {
+        pointer-events: auto;
+    }
+
+    :global(.show-more-foreign-object div) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    :global(.show-more-foreign-object .button) {
+        width: 100%;
+        height: 100%;
+        white-space: nowrap;
+    }
 
 </style>

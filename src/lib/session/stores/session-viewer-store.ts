@@ -45,6 +45,9 @@ interface SelectedItem {
   item: any;
 }
 
+// Import threshold types from session-data-store
+import type { ThresholdConfig, HiddenCounts } from "./session-data-store";
+
 interface ViewerState {
   // Selection state
   selectedItem: SelectedItem | null;
@@ -85,6 +88,10 @@ interface ViewerState {
 
   // Question responses (UI state, not data)
   answeredQuestions: Map<string, { answer: any; confidence: number }>;
+
+  // Threshold filtering
+  thresholds: ThresholdConfig;
+  hiddenCounts: HiddenCounts;
 }
 
 // Initial state
@@ -115,6 +122,16 @@ const initialViewerState: ViewerState = {
   isZooming: false,
   acknowledgedAlerts: new Set(),
   answeredQuestions: new Map(),
+  thresholds: {
+    symptoms: { severityThreshold: 7, showAll: false },    // Show severity 1-7 by default
+    diagnoses: { probabilityThreshold: 0.35, showAll: false }, // Show probability > 30% by default
+    treatments: { priorityThreshold: 10, showAll: true }   // Future use
+  },
+  hiddenCounts: {
+    symptoms: 0,
+    diagnoses: 0,
+    treatments: 0
+  }
 };
 
 // Store 2: Session Viewer State Store (UI state only)
@@ -387,6 +404,111 @@ export const sessionViewerActions = {
   },
 
   /**
+   * Threshold management
+   */
+  setSymptomThreshold(threshold: number): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      thresholds: {
+        ...state.thresholds,
+        symptoms: {
+          ...state.thresholds.symptoms,
+          severityThreshold: Math.max(1, Math.min(10, threshold))
+        }
+      }
+    }));
+
+    logger.session.debug("Symptom threshold updated", { threshold });
+  },
+
+  setDiagnosisThreshold(threshold: number): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      thresholds: {
+        ...state.thresholds,
+        diagnoses: {
+          ...state.thresholds.diagnoses,
+          probabilityThreshold: Math.max(0, Math.min(1, threshold))
+        }
+      }
+    }));
+
+    logger.session.debug("Diagnosis threshold updated", { threshold });
+  },
+
+  setTreatmentThreshold(threshold: number): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      thresholds: {
+        ...state.thresholds,
+        treatments: {
+          ...state.thresholds.treatments,
+          priorityThreshold: Math.max(1, Math.min(10, threshold))
+        }
+      }
+    }));
+
+    logger.session.debug("Treatment threshold updated", { threshold });
+  },
+
+  toggleShowAllSymptoms(): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      thresholds: {
+        ...state.thresholds,
+        symptoms: {
+          ...state.thresholds.symptoms,
+          showAll: !state.thresholds.symptoms.showAll
+        }
+      }
+    }));
+
+    const newState = get(sessionViewerStore);
+    logger.session.debug("Toggle show all symptoms", { showAll: newState.thresholds.symptoms.showAll });
+  },
+
+  toggleShowAllDiagnoses(): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      thresholds: {
+        ...state.thresholds,
+        diagnoses: {
+          ...state.thresholds.diagnoses,
+          showAll: !state.thresholds.diagnoses.showAll
+        }
+      }
+    }));
+
+    const newState = get(sessionViewerStore);
+    logger.session.debug("Toggle show all diagnoses", { showAll: newState.thresholds.diagnoses.showAll });
+  },
+
+  toggleShowAllTreatments(): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      thresholds: {
+        ...state.thresholds,
+        treatments: {
+          ...state.thresholds.treatments,
+          showAll: !state.thresholds.treatments.showAll
+        }
+      }
+    }));
+
+    const newState = get(sessionViewerStore);
+    logger.session.debug("Toggle show all treatments", { showAll: newState.thresholds.treatments.showAll });
+  },
+
+  setHiddenCounts(counts: HiddenCounts): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      hiddenCounts: counts
+    }));
+
+    logger.session.debug("Hidden counts updated", counts);
+  },
+
+  /**
    * Reset all viewer state
    */
   resetViewerState(): void {
@@ -562,5 +684,13 @@ export const answeredQuestions: Readable<
   Map<string, { answer: any; confidence: number }>
 > = derived(sessionViewerStore, ($store) => $store.answeredQuestions);
 
+export const thresholds: Readable<ThresholdConfig> = derived(
+  sessionViewerStore,
+  ($store) => $store.thresholds,
+);
+
+// sankeyDataFiltered and hiddenCounts now exported from session-data-store
+
 // Export main store for direct access if needed
 export { sessionViewerStore };
+export type { ThresholdConfig, HiddenCounts };

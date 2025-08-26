@@ -4,7 +4,7 @@ import type {
   SessionAnalysis,
   ActionNode,
 } from "$components/session/types/visualization";
-import { transformToSankeyData } from "$components/session/utils/sankeyDataTransformer";
+import { transformToSankeyData, applySankeyThresholds } from "$components/session/utils/sankeyDataTransformer";
 import {
   QUESTION_SCORING,
   type QuestionCategory,
@@ -769,3 +769,50 @@ export const sortedPendingQuestions: Readable<ActionNode[]> = derived(
 
 // Export the main store for direct access if needed
 export { sessionDataStore };
+
+// Threshold configuration types
+interface ThresholdConfig {
+  symptoms: { severityThreshold: number; showAll: boolean };
+  diagnoses: { probabilityThreshold: number; showAll: boolean };
+  treatments: { priorityThreshold: number; showAll: boolean };
+}
+
+interface HiddenCounts {
+  symptoms: number;
+  diagnoses: number; 
+  treatments: number;
+}
+
+// Import thresholds from viewer store to avoid circular dependency
+import { thresholds } from "./session-viewer-store";
+
+/**
+ * Filtered Sankey data with thresholds applied
+ * This provides the same interface as sankeyData but with filtering
+ */
+export const sankeyDataFiltered = derived(
+  [sankeyData, thresholds],
+  ([$sankeyData, $thresholds]) => {
+    if (!$sankeyData || !$thresholds) return $sankeyData;
+    
+    const { sankeyData: filteredData } = applySankeyThresholds($sankeyData, $thresholds);
+    return filteredData;
+  }
+);
+
+/**
+ * Hidden counts calculated reactively from threshold filtering
+ */
+export const hiddenCounts: Readable<HiddenCounts> = derived(
+  [sankeyData, thresholds],
+  ([$sankeyData, $thresholds]) => {
+    if (!$sankeyData || !$thresholds) {
+      return { symptoms: 0, diagnoses: 0, treatments: 0 } as HiddenCounts;
+    }
+    
+    const { hiddenCounts } = applySankeyThresholds($sankeyData, $thresholds);
+    return hiddenCounts;
+  }
+);
+
+export type { ThresholdConfig, HiddenCounts };
