@@ -4,7 +4,7 @@ import type {
   SessionAnalysis,
   ActionNode,
 } from "$components/session/types/visualization";
-import { transformToSankeyData } from "$components/session/utils/sankeyDataTransformer";
+import { transformToSankeyData, applySankeyThresholds } from "$components/session/utils/sankeyDataTransformer";
 import {
   QUESTION_SCORING,
   type QuestionCategory,
@@ -769,3 +769,54 @@ export const sortedPendingQuestions: Readable<ActionNode[]> = derived(
 
 // Export the main store for direct access if needed
 export { sessionDataStore };
+
+// Threshold configuration types
+interface ThresholdConfig {
+  symptoms: { severityThreshold: number; showAll: boolean };
+  diagnoses: { probabilityThreshold: number; showAll: boolean };
+  treatments: { priorityThreshold: number; showAll: boolean };
+}
+
+interface HiddenCounts {
+  symptoms: number;
+  diagnoses: number; 
+  treatments: number;
+}
+
+// Thresholds store - primary data store (not derived from viewer store)
+export const thresholds: Writable<ThresholdConfig> = writable({
+  symptoms: { severityThreshold: 7, showAll: false },    // Show severity 1-7 by default
+  diagnoses: { probabilityThreshold: 0.35, showAll: false }, // Show probability > 30% by default
+  treatments: { priorityThreshold: 10, showAll: true }   // Future use
+});
+
+/**
+ * Filtered Sankey data with thresholds applied
+ * This provides the same interface as sankeyData but with filtering
+ */
+export const sankeyDataFiltered = derived(
+  [sankeyData, thresholds],
+  ([$sankeyData, $thresholds]) => {
+    if (!$sankeyData || !$thresholds) return $sankeyData;
+    
+    const { sankeyData: filteredData } = applySankeyThresholds($sankeyData, $thresholds);
+    return filteredData;
+  }
+);
+
+/**
+ * Hidden counts calculated reactively from threshold filtering
+ */
+export const hiddenCounts: Readable<HiddenCounts> = derived(
+  [sankeyData, thresholds],
+  ([$sankeyData, $thresholds]) => {
+    if (!$sankeyData || !$thresholds) {
+      return { symptoms: 0, diagnoses: 0, treatments: 0 } as HiddenCounts;
+    }
+    
+    const { hiddenCounts } = applySankeyThresholds($sankeyData, $thresholds);
+    return hiddenCounts;
+  }
+);
+
+export type { ThresholdConfig, HiddenCounts };

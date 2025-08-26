@@ -1075,3 +1075,218 @@
     outline-offset: 2px; /* Keep consistent offset */
   }
 }
+
+/* ============================================================================
+   SHOW MORE/FEWER BUTTONS
+   ============================================================================ */
+
+/* Container for show more button groups */
+.show-more-button-group {
+  pointer-events: all;
+}
+
+/* ForeignObject container for buttons */
+.show-more-foreign-object {
+  overflow: visible; /* Allow button scale effects to overflow */
+}
+
+/* Button container within foreignObject */
+.show-more-button-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px; /* Padding for scale effects */
+}
+
+/* Button dimensions (used in JS for positioning) */
+:root {
+  --show-more-button-width: 140px;
+  --show-more-button-height: 40px;
+  --show-more-button-padding: 20px; /* Distance below nodes */
+  --show-more-button-overflow: 10px; /* Extra space for hover effects */
+}
+
+/* ============================================================================
+   SANKEY DIAGRAM COMPONENT STYLES
+   ============================================================================ */
+
+.sankey-container {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    min-width: 300px;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    touch-action: none; /* Prevent browser default touch behaviors */
+    user-select: none; /* Prevent text selection during pan */
+}
+
+.sankey-container:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline-offset: -2px;
+}
+
+.sankey-container:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.8);
+}
+
+.link-tooltip {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 8px;
+    font-size: 12px;
+    max-width: 300px;
+}
+
+.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--color-text-secondary, #6b7280);
+    font-size: 14px;
+}
+
+/* Global styles for D3 elements */
+.sankey-container .link {
+    transition: stroke-opacity 0.2s ease;
+}
+
+.sankey-container .link:hover {
+    stroke-opacity: var(--hover-link-opacity, 0.8) !important;
+}
+
+.sankey-container .node {
+    transition: opacity 0.2s ease;
+}
+
+.sankey-container .node:hover {
+    opacity: var(--hover-node-opacity, 0.9);
+}
+
+.sankey-container .node-rect {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,var(--shadow-light-opacity, 0.1)));
+    transition: filter 0.2s ease;
+}
+
+.sankey-container .node:hover .node-rect {
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,var(--shadow-medium-opacity, 0.2)));
+}
+
+.sankey-container .node-label {
+    user-select: none;
+}
+
+/* Mobile touch targets */
+@media (pointer: coarse) {
+    .sankey-container .node {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .sankey-container {
+        min-height: 300px;
+    }
+}
+
+/* Focus styles for keyboard navigation - applied via CSS classes */
+.node-html.focused .treatment-node {
+    outline: 2px dashed rgba(59, 130, 246, 0.6);
+    outline-offset: 1px;
+}
+
+.node-html.focused.selected .treatment-node {
+    outline: 2px dashed rgba(59, 130, 246, 0.8);
+}
+
+.node-html.focused .symptom-node {
+    outline: 2px dashed rgba(34, 197, 94, 0.6);
+    outline-offset: 1px;
+}
+
+.node-html.focused.selected .symptom-node {
+    outline: 2px dashed rgba(34, 197, 94, 0.8);
+}
+
+.node-html.focused .diagnosis-node {
+    outline: 2px dashed rgba(239, 68, 68, 0.6);
+    outline-offset: 1px;
+}
+
+.node-html.focused.selected .diagnosis-node {
+    outline: 2px dashed rgba(239, 68, 68, 0.8);
+}
+
+/* Fallback styles for action nodes or unknown types */
+.sankey-node {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    padding: 6px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-family: system-ui, sans-serif;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    text-align: center;
+}
+
+.sankey-node .node-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.sankey-node .node-title {
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.2;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+}
+
+/* Link animation now handled by global CSS in session.css */
+
+.node.connected-to-selected {
+    filter: none !important; /* Remove grayscale for connected nodes */
+    opacity: 1.0 !important; /* Ensure full opacity */
+}
+
+/* 
+   Note: Node interactive styles (hover, selected, connected-to-selected) 
+   and link animations are now handled by src/css/session.css 
+*/
+
+/* Show More Buttons - SVG embedded via foreignObject */
+.show-more-foreign-object {
+    pointer-events: auto;
+}
+
+.show-more-foreign-object div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.show-more-foreign-object .button {
+    width: 100%;
+    height: 100%;
+    white-space: nowrap;
+}

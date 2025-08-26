@@ -6,6 +6,19 @@ import type {
 } from "../types/visualization";
 import { getNodeColor, getLinkColor, NODE_SIZE } from "../config/visual-config";
 
+// Import threshold types from session-viewer-store
+type ThresholdConfig = {
+  symptoms: { severityThreshold: number; showAll: boolean };
+  diagnoses: { probabilityThreshold: number; showAll: boolean };
+  treatments: { priorityThreshold: number; showAll: boolean };
+};
+
+type HiddenCounts = {
+  symptoms: number;
+  diagnoses: number;
+  treatments: number;
+};
+
 /**
  * Transform MoE session analysis JSON to D3 Sankey format
  * Handles embedded relationships and creates proper node/link structures
@@ -319,6 +332,201 @@ export function transformToSankeyData(
       timestamp: sessionData.timestamp,
     },
   };
+}
+
+/**
+ * Apply threshold filtering to already-transformed SankeyData
+ * This is more efficient than re-running the complex transformation
+ */
+export function applySankeyThresholds(
+  fullSankeyData: SankeyData,
+  thresholds: ThresholdConfig,
+): { sankeyData: SankeyData; hiddenCounts: HiddenCounts } {
+  // Initialize hidden counts
+  const hiddenCounts: HiddenCounts = {
+    symptoms: 0,
+    diagnoses: 0,
+    treatments: 0,
+  };
+
+  // If all "showAll" flags are true, return full data with zero hidden counts
+  if (thresholds.symptoms.showAll && thresholds.diagnoses.showAll && thresholds.treatments.showAll) {
+    return { sankeyData: fullSankeyData, hiddenCounts };
+  }
+
+  // Separate nodes by type and apply filters
+  const visibleNodeIds = new Set<string>();
+  const filteredNodes: SankeyNode[] = [];
+
+  fullSankeyData.nodes.forEach((node) => {
+    let shouldShow = true;
+
+    switch (node.type) {
+      case 'symptom':
+        if (!thresholds.symptoms.showAll) {
+          const severity = (node.data as any)?.severity || 5;
+          shouldShow = severity < thresholds.symptoms.severityThreshold;
+        }
+        if (!shouldShow) hiddenCounts.symptoms++;
+        break;
+
+      case 'diagnosis':
+        if (!thresholds.diagnoses.showAll) {
+          const probability = (node.data as any)?.probability || 0.5;
+          shouldShow = probability > thresholds.diagnoses.probabilityThreshold;
+        }
+        if (!shouldShow) hiddenCounts.diagnoses++;
+        break;
+
+      case 'treatment':
+        if (!thresholds.treatments.showAll) {
+          const priority = (node.data as any)?.priority || 5;
+          shouldShow = priority < thresholds.treatments.priorityThreshold;
+        }
+        if (!shouldShow) hiddenCounts.treatments++;
+        break;
+
+      default:
+        // Other node types (actions, etc.) are always shown
+        shouldShow = true;
+        break;
+    }
+
+    if (shouldShow) {
+      visibleNodeIds.add(node.id);
+      filteredNodes.push(node);
+    }
+  });
+
+  // Remove orphaned nodes (nodes that lose all their connections)
+  const { finalVisibleNodes, additionalHiddenCounts } = removeOrphanedSankeyNodes(
+    filteredNodes,
+    fullSankeyData.links,
+    visibleNodeIds
+  );
+
+  // Update hidden counts with additional orphaned nodes
+  hiddenCounts.symptoms += additionalHiddenCounts.symptoms;
+  hiddenCounts.diagnoses += additionalHiddenCounts.diagnoses;
+  hiddenCounts.treatments += additionalHiddenCounts.treatments;
+
+  // Filter links to only include connections between final visible nodes
+  const finalVisibleNodeIds = new Set(finalVisibleNodes.map(n => n.id));
+  const filteredLinks = fullSankeyData.links.filter(link => {
+    const sourceId = getNodeId(link.source);
+    const targetId = getNodeId(link.target);
+    return finalVisibleNodeIds.has(sourceId) && finalVisibleNodeIds.has(targetId);
+  });
+
+  const filteredSankeyData: SankeyData = {
+    nodes: finalVisibleNodes,
+    links: filteredLinks,
+    metadata: fullSankeyData.metadata,
+  };
+
+  return { sankeyData: filteredSankeyData, hiddenCounts };
+}
+
+/**
+ * Remove orphaned nodes following medical flow logic:
+ * - Symptoms: Already filtered by threshold only
+ * - Diagnoses: Remove if no visible symptoms link to them  
+ * - Treatments: Remove if no visible diagnoses link to them
+ */
+function removeOrphanedSankeyNodes(
+  filteredNodes: SankeyNode[],
+  allLinks: SankeyLink[],
+  visibleNodeIds: Set<string>
+): {
+  finalVisibleNodes: SankeyNode[];
+  additionalHiddenCounts: HiddenCounts;
+} {
+  const additionalHiddenCounts: HiddenCounts = {
+    symptoms: 0,
+    diagnoses: 0,
+    treatments: 0,
+  };
+
+  // Create a map for quick node lookup
+  const nodeMap = new Map<string, SankeyNode>();
+  filteredNodes.forEach(node => nodeMap.set(node.id, node));
+
+  const finalVisibleNodeIds = new Set(visibleNodeIds);
+  let changed = true;
+
+  // Iteratively remove orphaned nodes until no more changes
+  while (changed) {
+    changed = false;
+
+    // Check each visible node for orphaning based on medical flow
+    for (const nodeId of finalVisibleNodeIds) {
+      const node = nodeMap.get(nodeId);
+      if (!node) continue;
+
+      let shouldRemove = false;
+
+      switch (node.type) {
+        case 'symptom':
+          // Symptoms are never removed as orphans - only by threshold
+          break;
+
+        case 'diagnosis':
+          // Remove diagnosis if no visible symptoms link TO it
+          const hasVisibleSymptoms = allLinks.some(link => {
+            const sourceId = getNodeId(link.source);
+            const targetId = getNodeId(link.target);
+            
+            // Check if any visible symptom links to this diagnosis
+            return targetId === nodeId && 
+                   finalVisibleNodeIds.has(sourceId) && 
+                   nodeMap.get(sourceId)?.type === 'symptom';
+          });
+          
+          if (!hasVisibleSymptoms) {
+            shouldRemove = true;
+            additionalHiddenCounts.diagnoses++;
+          }
+          break;
+
+        case 'treatment':
+          // Remove treatment if no visible diagnoses link TO it
+          const hasVisibleDiagnoses = allLinks.some(link => {
+            const sourceId = getNodeId(link.source);
+            const targetId = getNodeId(link.target);
+            
+            // Check if any visible diagnosis links to this treatment
+            return targetId === nodeId && 
+                   finalVisibleNodeIds.has(sourceId) && 
+                   nodeMap.get(sourceId)?.type === 'diagnosis';
+          });
+          
+          if (!hasVisibleDiagnoses) {
+            shouldRemove = true;
+            additionalHiddenCounts.treatments++;
+          }
+          break;
+
+        default:
+          // Other node types (actions, etc.) are never removed as orphans
+          break;
+      }
+
+      if (shouldRemove) {
+        finalVisibleNodeIds.delete(nodeId);
+        changed = true;
+      }
+    }
+  }
+
+  // Build final node list
+  const finalVisibleNodes: SankeyNode[] = [];
+  filteredNodes.forEach(node => {
+    if (finalVisibleNodeIds.has(node.id)) {
+      finalVisibleNodes.push(node);
+    }
+  });
+
+  return { finalVisibleNodes, additionalHiddenCounts };
 }
 
 /**

@@ -10,6 +10,10 @@ $ARGUMENTS
 
 UI components - `src/components/session`
 
+### CSS
+
+Styling for CSS properties  - `src/css/session.css`
+
 Working with 2 stores.
 
 - session data store - managing input data

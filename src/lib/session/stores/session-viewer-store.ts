@@ -6,6 +6,7 @@ import {
   relationshipIndex,
   nodeMap,
   sessionDataActions,
+  thresholds,
 } from "./session-data-store";
 import type { SessionAnalysis } from "$components/session/types/visualization";
 import type { SessionTabContext } from "$components/session/SessionTabs.svelte";
@@ -44,6 +45,9 @@ interface SelectedItem {
   id: string;
   item: any;
 }
+
+// Import threshold types from session-data-store
+import type { ThresholdConfig, HiddenCounts } from "./session-data-store";
 
 interface ViewerState {
   // Selection state
@@ -85,6 +89,9 @@ interface ViewerState {
 
   // Question responses (UI state, not data)
   answeredQuestions: Map<string, { answer: any; confidence: number }>;
+
+  // hiddenCounts moved to be computed in session-data-store
+  hiddenCounts: HiddenCounts;
 }
 
 // Initial state
@@ -115,6 +122,11 @@ const initialViewerState: ViewerState = {
   isZooming: false,
   acknowledgedAlerts: new Set(),
   answeredQuestions: new Map(),
+  hiddenCounts: {
+    symptoms: 0,
+    diagnoses: 0,
+    treatments: 0
+  }
 };
 
 // Store 2: Session Viewer State Store (UI state only)
@@ -387,6 +399,93 @@ export const sessionViewerActions = {
   },
 
   /**
+   * Threshold management
+   */
+  setSymptomThreshold(threshold: number): void {
+    thresholds.update((current) => ({
+      ...current,
+      symptoms: {
+        ...current.symptoms,
+        severityThreshold: Math.max(1, Math.min(10, threshold))
+      }
+    }));
+
+    logger.session.debug("Symptom threshold updated", { threshold });
+  },
+
+  setDiagnosisThreshold(threshold: number): void {
+    thresholds.update((current) => ({
+      ...current,
+      diagnoses: {
+        ...current.diagnoses,
+        probabilityThreshold: Math.max(0, Math.min(1, threshold))
+      }
+    }));
+
+    logger.session.debug("Diagnosis threshold updated", { threshold });
+  },
+
+  setTreatmentThreshold(threshold: number): void {
+    thresholds.update((current) => ({
+      ...current,
+      treatments: {
+        ...current.treatments,
+        priorityThreshold: Math.max(1, Math.min(10, threshold))
+      }
+    }));
+
+    logger.session.debug("Treatment threshold updated", { threshold });
+  },
+
+  toggleShowAllSymptoms(): void {
+    thresholds.update((current) => ({
+      ...current,
+      symptoms: {
+        ...current.symptoms,
+        showAll: !current.symptoms.showAll
+      }
+    }));
+
+    const currentThresholds = get(thresholds);
+    logger.session.debug("Toggle show all symptoms", { showAll: currentThresholds.symptoms.showAll });
+  },
+
+  toggleShowAllDiagnoses(): void {
+    thresholds.update((current) => ({
+      ...current,
+      diagnoses: {
+        ...current.diagnoses,
+        showAll: !current.diagnoses.showAll
+      }
+    }));
+
+    const currentThresholds = get(thresholds);
+    logger.session.debug("Toggle show all diagnoses", { showAll: currentThresholds.diagnoses.showAll });
+  },
+
+  toggleShowAllTreatments(): void {
+    thresholds.update((current) => ({
+      ...current,
+      treatments: {
+        ...current.treatments,
+        showAll: !current.treatments.showAll
+      }
+    }));
+
+    const currentThresholds = get(thresholds);
+    logger.session.debug("Toggle show all treatments", { showAll: currentThresholds.treatments.showAll });
+  },
+
+  setHiddenCounts(counts: HiddenCounts): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      hiddenCounts: counts
+    }));
+
+    logger.session.debug("Hidden counts updated", counts);
+  },
+
+  /**
    * Reset all viewer state
    */
   resetViewerState(): void {
@@ -562,5 +661,10 @@ export const answeredQuestions: Readable<
   Map<string, { answer: any; confidence: number }>
 > = derived(sessionViewerStore, ($store) => $store.answeredQuestions);
 
+// thresholds export moved to session-data-store to avoid circular dependency
+
+// sankeyDataFiltered and hiddenCounts now exported from session-data-store
+
 // Export main store for direct access if needed
 export { sessionViewerStore };
+export type { ThresholdConfig, HiddenCounts };
