@@ -65,9 +65,16 @@
             duration: 700,
             easing: d3.easeCubicInOut
         },
+        BUTTON: {
+            fadeOut: 200,
+            fadeIn: 300,
+            easing: d3.easeCubicOut
+        },
         MOBILE: {
             duration: 400, // Faster on mobile for better performance
-            easing: d3.easeCubicOut
+            easing: d3.easeCubicOut,
+            buttonFadeOut: 150,
+            buttonFadeIn: 250
         }
     };
     import SymptomNode from './nodes/SymptomNode.svelte';
@@ -342,9 +349,35 @@
         // Only process changes if data actually changed (not on initial mount, handled in onMount)
         if (currentSvg && data && dataHash !== previousDataHash && previousDataHash !== '') {
             // Processing data change - always use smooth transitions after initialization
+            
+            // First, fade out existing buttons immediately
+            const buttonConfig = isMobile ? TRANSITION_CONFIG.MOBILE : TRANSITION_CONFIG.BUTTON;
+            if (svg) {
+                svg.selectAll('.show-more-button-group')
+                    .transition()
+                    .duration(buttonConfig.fadeOut || buttonConfig.buttonFadeOut)
+                    .ease(buttonConfig.easing)
+                    .style('opacity', 0);
+            }
+            
             updateSankeyLayout();
             focusableNodes = buildFocusableNodesList($sankeyData);
-            renderShowMoreButtons();
+            
+            // Update button positions after transitions complete and fade them in
+            const transitionDuration = isMobile ? TRANSITION_CONFIG.MOBILE.duration : TRANSITION_CONFIG.POSITION.duration;
+            setTimeout(() => {
+                renderShowMoreButtons();
+                
+                // Fade in the new buttons
+                if (svg) {
+                    svg.selectAll('.show-more-button-group')
+                        .style('opacity', 0)
+                        .transition()
+                        .duration(buttonConfig.fadeIn || buttonConfig.buttonFadeIn)
+                        .ease(buttonConfig.easing)
+                        .style('opacity', 1);
+                }
+            }, transitionDuration + 50); // Add small buffer
             previousDataHash = dataHash;
         } else if (data && dataHash !== previousDataHash) {
             // Update hash without re-rendering (for initial mount case)
