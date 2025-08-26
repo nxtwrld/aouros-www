@@ -79,9 +79,7 @@
         overflow: hidden;
     }
 
-    .loading-state,
-    .error-state,
-    .empty-state {
+    .loading-state {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -89,9 +87,6 @@
         height: 100%;
         padding: 2rem;
         text-align: center;
-    }
-
-    .loading-state {
         color: var(--color-text-secondary, #6b7280);
     }
 
@@ -110,40 +105,10 @@
         100% { transform: rotate(360deg); }
     }
 
-    .loading-state p,
-    .empty-state p {
+    .loading-state p {
         margin: 0;
         font-size: 1rem;
         color: var(--color-text-secondary, #6b7280);
-    }
-
-    .error-state h2,
-    .empty-state h2 {
-        margin: 0 0 1rem;
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--color-text-primary, #1f2937);
-    }
-
-    .error-state {
-        color: var(--color-error, #dc2626);
-    }
-
-    .error-state button {
-        margin-top: 1.5rem;
-        padding: 0.75rem 1.5rem;
-        background: var(--color-primary, #3b82f6);
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-    .error-state button:hover {
-        background: var(--color-primary-dark, #2563eb);
     }
 
     /* Ensure full height on mobile */

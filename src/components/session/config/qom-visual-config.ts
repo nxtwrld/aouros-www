@@ -434,7 +434,7 @@ export const ZOOM_CONFIG = {
   ] as [[number, number], [number, number]],
   duration: 300,
   wheelDelta: -0.001,
-  touchDelta: 0.01,
+  touchDelta: 0.1, // Increased for faster touch zoom to match SankeyDiagram
 };
 
 // Tooltip configuration

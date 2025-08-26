@@ -2,6 +2,7 @@
     import SessionTabs from './SessionTabs.svelte';
     import type { SessionAnalysis } from './types/visualization';
     import { t } from '$lib/i18n';
+    import { sidebarOpen } from '$lib/session/stores/session-viewer-store';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -15,7 +16,6 @@
         selectedLink: any | null;
         pendingQuestions: number;
         isMobile: boolean;
-        showSidebar: boolean;
         sidebarWidth: number;
         tabsRef?: any;
         onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
@@ -31,7 +31,6 @@
         selectedLink,
         pendingQuestions,
         isMobile,
-        showSidebar,
         sidebarWidth,
         tabsRef = $bindable(),
         onnodeAction,
@@ -41,7 +40,7 @@
     }: Props = $props();
 </script>
 
-{#if showSidebar}
+{#if $sidebarOpen}
     {#if !isMobile}
         <!-- Desktop Sidebar -->
         <aside class="sidebar desktop" style="width: {sidebarWidth}px">
@@ -157,21 +156,6 @@
         }
     }
 
-    .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: .3rem .3rem .3rem 1rem;
-        height: var(--toolbar-height);
-        border-bottom: 1px solid var(--color-border, #e2e8f0);
-    }
-
-    .sidebar-header h3 {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--color-text-primary, #1f2937);
-    }
 
     .mobile-sidebar-header {
         display: flex;

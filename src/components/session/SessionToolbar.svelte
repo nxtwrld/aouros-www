@@ -1,27 +1,24 @@
 <script lang="ts">
     import { t } from '$lib/i18n';
+    import { 
+        sidebarOpen, 
+        activeTab, 
+        sessionViewerStore 
+    } from '$lib/session/stores/session-viewer-store';
+    import { 
+        SESSION_TAB_DEFINITIONS, 
+        type SessionTabDefinition 
+    } from './SessionTabs.svelte';
     
     interface Props {
-        showSidebar: boolean;
-        activeTab?: string;
         activeMainView?: string; // Track which view is active in main area
-        hasQuestions?: boolean;
-        hasTranscript?: boolean;
-        pendingQuestions?: number;
-        isMobile?: boolean;
         onToggleSidebar: () => void;
         onTabSelect?: (tab: string) => void;
         onMainViewSelect?: (view: string) => void;
     }
     
     let {
-        showSidebar,
-        activeTab = '',
         activeMainView = 'diagram',
-        hasQuestions = true,
-        hasTranscript = true,
-        pendingQuestions = 0,
-        isMobile = false,
         onToggleSidebar,
         onTabSelect,
         onMainViewSelect
@@ -33,13 +30,18 @@
         { id: 'qom', label: $t('session.qom') }
     ]);
     
-    // Sidebar content tabs (right side)
-    const sidebarTabs = $derived([
-        ...(hasQuestions ? [{ id: 'questions', label: $t('session.tabs.questions'), hasBadge: pendingQuestions > 0, badgeCount: pendingQuestions }] : []),
-        ...(hasTranscript ? [{ id: 'transcript', label: $t('session.tabs.transcript') }] : []),
-        { id: 'details', label: $t('session.tabs.details') },
-        ...(!isMobile ? [{ id: 'legend', label: $t('session.tabs.legend') }] : [])
-    ]);
+    // Sidebar content tabs (right side) - use shared definitions and store context
+    const sidebarTabs = $derived(() => {
+        const context = $sessionViewerStore.tabContext;
+        return SESSION_TAB_DEFINITIONS
+            .filter(tab => !tab.condition || tab.condition(context))
+            .map(tab => ({
+                id: tab.id,
+                label: $t(tab.labelKey),
+                hasBadge: tab.hasBadge || false,
+                badgeCount: tab.getBadgeCount ? tab.getBadgeCount(context) : 0
+            }));
+    });
     
     function handleMainViewClick(viewId: string) {
         onMainViewSelect?.(viewId);
@@ -51,11 +53,11 @@
     
     function handleSidebarTabClick(tabId: string) {
         // If clicking the already active tab while sidebar is open, close the sidebar
-        if (showSidebar && activeTab === tabId) {
+        if ($sidebarOpen && $activeTab === tabId) {
             onToggleSidebar();
         } 
         // If sidebar is closed, open it and select the tab
-        else if (!showSidebar) {
+        else if (!$sidebarOpen) {
             onToggleSidebar();
             // Delay tab selection to allow sidebar to render
             setTimeout(() => onTabSelect?.(tabId), 50);
@@ -86,15 +88,15 @@
     
     <!-- Sidebar Tabs (controls sidebar content) -->
     <div class="tab-group-sidebar">
-        {#each sidebarTabs as tab}
+        {#each sidebarTabs() as tab (tab.id)}
             <button 
                 class="tab-head sidebar-tab"
-                class:-active={showSidebar && activeTab === tab.id}
+                class:-active={$sidebarOpen && $activeTab === tab.id}
                 onclick={() => handleSidebarTabClick(tab.id)}
-                title={showSidebar && activeTab === tab.id ? `${$t('session.actions.hide-panel')} (${tab.label})` : tab.label}
+                title={$sidebarOpen && $activeTab === tab.id ? `${$t('session.actions.hide-panel')} (${tab.label})` : tab.label}
             >
                 {tab.label}
-                {#if tab.hasBadge && tab.badgeCount}
+                {#if tab.hasBadge && tab.badgeCount > 0}
                     <span class="badge">{tab.badgeCount}</span>
                 {/if}
             </button>

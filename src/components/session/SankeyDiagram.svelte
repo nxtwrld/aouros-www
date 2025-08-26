@@ -90,7 +90,7 @@
         scaleExtent: [0.2, 5] as [number, number],
         duration: 300,
         wheelDelta: -0.002,
-        touchDelta: 0.005
+        touchDelta: 0.1 // Increased for faster touch zoom (was 0.005)
     };
 
     // Derive focused node ID efficiently  
@@ -277,7 +277,29 @@
         // Enhanced zoom and pan for all devices
         zoomBehavior = d3.zoom<SVGSVGElement, unknown>()
             .scaleExtent(ZOOM_CONFIG.scaleExtent)
-            .wheelDelta((event) => -event.deltaY * ZOOM_CONFIG.wheelDelta)
+            .wheelDelta((event) => {
+                // Detect if this is a touchpad/trackpad
+                let isTouchpad = false;
+                
+                if (event.ctrlKey) {
+                    // Mac touchpad pinch gesture
+                    isTouchpad = true;
+                } else if (Math.abs(event.deltaY) < 50 && event.deltaY % 1 !== 0) {
+                    // Fractional deltaY values are common for touchpads
+                    isTouchpad = true;
+                } else if (event.wheelDeltaY && Math.abs(event.wheelDeltaY) % 3 === 0 && Math.abs(event.wheelDeltaY) !== 120) {
+                    // wheelDeltaY multiples of 3 (but not 120) indicate touchpad
+                    isTouchpad = true;
+                }
+                
+                if (isTouchpad) {
+                    // Use touchDelta for touchpad events (make it more sensitive)
+                    return event.deltaY * ZOOM_CONFIG.wheelDelta * (1 + ZOOM_CONFIG.touchDelta * 10);
+                } else {
+                    // Regular mouse wheel - use normal wheelDelta
+                    return event.deltaY * ZOOM_CONFIG.wheelDelta;
+                }
+            })
             .filter(zoomFilter)
             .constrain(constrainTransform)
             .on('zoom', handleZoom)
