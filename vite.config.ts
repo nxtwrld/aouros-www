@@ -1,16 +1,37 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 //import { defineConfig } from 'vitest/config';
-import { type ViteDevServer, defineConfig, normalizePath } from "vite";
+import { type ViteDevServer, defineConfig, normalizePath, type Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 // Removed topLevelAwait plugin - was causing 'Server is not a constructor' error on Vercel
 // import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
 import { qomConfigPlugin } from "./vite-plugin-qom-config";
 
+// Plugin to inject Node.js polyfills
+function nodePolyfillsPlugin(): Plugin {
+  return {
+    name: 'node-polyfills',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'script',
+          children: `
+            if (typeof global === 'undefined') {
+              window.global = window;
+            }
+          `,
+          injectTo: 'head-prepend',
+        },
+      ];
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     // Removed topLevelAwait plugin - was causing SSR issues on Vercel production
     // If async imports are needed, handle them manually in components with dynamic imports
+    nodePolyfillsPlugin(),
     qomConfigPlugin(),
     viteStaticCopy({
       targets: [
@@ -74,6 +95,9 @@ export default defineConfig({
   optimizeDeps: {
     esbuildOptions: {
       target: "esnext",
+      define: {
+        global: 'globalThis',
+      },
     },
     exclude: [
       "onnx-runtime-web",
@@ -81,6 +105,29 @@ export default defineConfig({
       "cornerstone-wado-image-loader",
       "dicom-parser"
     ],
+    include: [
+      'buffer',
+      'util',
+      'process',
+      'events',
+      'stream-browserify',
+      'crypto-browserify'
+    ],
+  },
+  resolve: {
+    alias: {
+      crypto: 'crypto-browserify',
+      buffer: 'buffer',
+      stream: 'stream-browserify',
+      events: 'events',
+      util: 'util/util.js',
+      process: 'process/browser',
+    }
+  },
+  define: {
+    global: 'globalThis',
+    Buffer: ['buffer', 'Buffer'],
+    'process.env': {},
   },
   ssr: {
     noExternal: [
