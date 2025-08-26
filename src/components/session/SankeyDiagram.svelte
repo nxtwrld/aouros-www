@@ -48,6 +48,28 @@
     } from '$lib/session/stores/session-viewer-store';
     // Temporary workaround for TypeScript import issues
     import * as viewerStoreModule from '$lib/session/stores/session-viewer-store';
+
+    // Transition configuration for smooth vertical position animations
+    // Horizontal positions change immediately to avoid confusion, only Y positions animate
+    const TRANSITION_CONFIG = {
+        POSITION: {
+            duration: 800,
+            easing: d3.easeCubicInOut,
+            stagger: 50
+        },
+        SIZE: {
+            duration: 600,
+            easing: d3.easeCubicOut
+        },
+        PATH: {
+            duration: 700,
+            easing: d3.easeCubicInOut
+        },
+        MOBILE: {
+            duration: 400, // Faster on mobile for better performance
+            easing: d3.easeCubicOut
+        }
+    };
     import SymptomNode from './nodes/SymptomNode.svelte';
     import DiagnosisNode from './nodes/DiagnosisNode.svelte';
     import TreatmentNode from './nodes/TreatmentNode.svelte';
@@ -306,6 +328,12 @@
         const data = $sankeyData;
         const currentSvg = untrack(() => svg);
         
+        console.log('$effect triggered - sankeyData changed:', {
+            hasData: !!data,
+            nodeCount: data?.nodes?.length || 0,
+            linkCount: data?.links?.length || 0
+        });
+        
         // Create a simple hash of the data to detect changes
         const dataHash = data ? JSON.stringify({
             nodeCount: data.nodes?.length || 0,
@@ -313,11 +341,57 @@
             nodeIds: data.nodes?.map(n => n.id).join(',') || ''
         }) : '';
         
+        console.log('Data hash check:', {
+            previousDataHash,
+            dataHash,
+            changed: dataHash !== previousDataHash,
+            hasSvg: !!currentSvg,
+            hasData: !!data,
+            hasPrevious: previousDataHash !== ''
+        });
+        
         // Only re-render if data actually changed (not on initial mount, handled in onMount)
         if (currentSvg && data && dataHash !== previousDataHash && previousDataHash !== '') {
-            renderSankey();
-            focusableNodes = buildFocusableNodesList($sankeyData);
-            renderShowMoreButtons();
+            console.log('Processing data change...');
+            
+            // Check if this is just a node count change (show more/less) or structural change
+            const prevHash = previousDataHash ? JSON.parse(previousDataHash) : {};
+            const currentHash = JSON.parse(dataHash);
+            
+            console.log('Hash comparison:', { prevHash, currentHash });
+            
+            // Detect "show more" scenario: all previous nodes exist, but new nodes/links added
+            const hasNodeIds = !!(prevHash.nodeIds && currentHash.nodeIds);
+            const allPrevNodesExist = hasNodeIds ? 
+                prevHash.nodeIds.split(',').every((id: any) => currentHash.nodeIds.includes(id)) : false;
+            const onlyNodesAdded = hasNodeIds && allPrevNodesExist && 
+                (currentHash.nodeCount > prevHash.nodeCount);
+            const onlyLinksAdded = currentHash.linkCount >= prevHash.linkCount;
+            
+            // Use smooth transitions if this looks like "show more" (existing nodes + new additions)
+            const isShowMoreScenario = onlyNodesAdded && onlyLinksAdded;
+            
+            console.log('Detection logic:', {
+                hasNodeIds,
+                allPrevNodesExist,
+                onlyNodesAdded,
+                onlyLinksAdded,
+                isShowMoreScenario
+            });
+                
+            if (isShowMoreScenario) {
+                console.log('🎯 Using smooth transition (updateSankeyLayout)');
+                // Smooth transition for show more/less clicks
+                updateSankeyLayout();
+                focusableNodes = buildFocusableNodesList($sankeyData);
+                renderShowMoreButtons();
+            } else {
+                console.log('🔄 Using full re-render (renderSankey)');
+                // Full re-render for structural changes (new nodes, new links, etc.)
+                renderSankey();
+                focusableNodes = buildFocusableNodesList($sankeyData);
+                renderShowMoreButtons();
+            }
             previousDataHash = dataHash;
         } else if (data && dataHash !== previousDataHash) {
             // Update hash without re-rendering (for initial mount case)
@@ -722,8 +796,12 @@
             })
             .style('opacity', 0);
 
+        // Coordinate link opacity with entrance animations
+        const linkEntranceConfig = isMobile ? TRANSITION_CONFIG.MOBILE : TRANSITION_CONFIG.PATH;
         linkEnter.transition()
-            .duration(300)
+            .duration(linkEntranceConfig.duration * 0.4) // Shorter opacity transition
+            .delay(linkEntranceConfig.duration * 0.3) // Start after nodes begin moving
+            .ease(d3.easeCubicOut)
             .style('opacity', OPACITY.LINK_DEFAULT);
 
         linkSelection.merge(linkEnter)
@@ -771,8 +849,12 @@
             .classed('interactive-element', true)
             .style('opacity', 0);
 
+        // Coordinate node opacity with entrance animations  
+        const nodeEntranceConfig = isMobile ? TRANSITION_CONFIG.MOBILE : TRANSITION_CONFIG.POSITION;
         nodeEnter.transition()
-            .duration(300)
+            .duration(nodeEntranceConfig.duration * 0.3) // Quick opacity fade-in
+            .delay(100) // Small delay to let position animation start first
+            .ease(d3.easeCubicOut)
             .style('opacity', 1);
 
         // Node HTML content using foreignObject
@@ -800,12 +882,19 @@
         // Priority indicators are now included in HTML content
 
         // Update positions and attributes for both new and existing nodes
-        nodeSelection
-            .merge(nodeEnter as any)
+        const allNodes = nodeSelection.merge(nodeEnter as any)
             .attr('id', (d: any) => `node-${d.id}`)
             .attr('data-node-id', (d: any) => d.id)
-            .attr('data-node-type', (d: any) => d.type)
-            .attr('transform', (d: any) => `translate(${d.x0}, ${d.y0})`);
+            .attr('data-node-type', (d: any) => d.type);
+
+        // Set initial positions for new nodes at correct horizontal position
+        // Only animate opacity and vertical positioning
+        allNodes.attr('transform', (d: any) => `translate(${d.x0}, ${d.y0})`);
+
+        // Update show-more buttons after nodes are positioned
+        setTimeout(() => {
+            renderShowMoreButtons();
+        }, 100);
 
         nodeSelection.exit()
             .transition()
@@ -1177,18 +1266,116 @@
         // Update existing DOM elements positions using D3 update pattern
         // This preserves all existing classes and states
         
-        // Update node positions
-        svg.select('.node-group').selectAll('.node')
-            .data(updatedResult.nodes, (d: any) => d.id)
-            .transition()
-            .duration(200)
-            .attr('transform', (d: any) => `translate(${d.x0}, ${d.y0})`);
+        // Get transition configuration based on device
+        const transitionConfig = isMobile ? TRANSITION_CONFIG.MOBILE : TRANSITION_CONFIG.POSITION;
+        const sizeConfig = isMobile ? TRANSITION_CONFIG.MOBILE : TRANSITION_CONFIG.SIZE;
+        const staggerDelay = isMobile ? 25 : TRANSITION_CONFIG.POSITION.stagger;
         
-        // Update foreignObject dimensions
+        // Handle new, existing, and removed nodes using D3's enter/update/exit pattern
+        const nodeGroup = svg.select('.node-group');
+        const nodeSelection = nodeGroup.selectAll('.node')
+            .data(updatedResult.nodes, (d: any) => d.id);
+        
+        console.log('Node selection sizes:', {
+            total: nodeSelection.size(),
+            enter: nodeSelection.enter().size(),
+            update: nodeSelection.size(),
+            exit: nodeSelection.exit().size()
+        });
+        
+        // Handle new nodes (enter)
+        const nodeEnter = nodeSelection.enter()
+            .append('g')
+            .attr('class', 'node')
+            .attr('id', (d: any) => `node-${d.id}`)
+            .attr('data-node-id', (d: any) => d.id)
+            .attr('data-node-type', (d: any) => d.type)
+            .classed('interactive-element', true)
+            .style('opacity', 0)
+            .attr('transform', (d: any) => `translate(${d.x0}, ${d.y0})`); // Set position immediately
+            
+        // Add foreignObject for new nodes
+        nodeEnter.append('foreignObject')
+            .attr('class', 'node-html')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', htmlNodeWidth)
+            .attr('height', (d: any) => d.y1! - d.y0!)
+            .classed('interactive-element', true)
+            .html((d: any) => createNodeComponent(d, selectedNodeId, isMobile, nodeComponents))
+            .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
+            .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
+            .on('mouseenter', (event: MouseEvent, d: any) => {
+                const allNodeArrays = [$sankeyData?.nodes || []].flat();
+                handleNodeHover(d.id, true, svg || null, allNodeArrays);
+            })
+            .on('mouseleave', (event: MouseEvent, d: any) => {
+                const allNodeArrays = [$sankeyData?.nodes || []].flat();
+                handleNodeHover(d.id, false, svg || null, allNodeArrays);
+            });
+        
+        // Fade in new nodes
+        nodeEnter.transition()
+            .duration(transitionConfig.duration * 0.3)
+            .delay(100)
+            .ease(d3.easeCubicOut)
+            .style('opacity', 1);
+        
+        // Update existing nodes (update) - only animate Y position changes for nodes that moved
+        nodeSelection
+            .transition()
+            .duration(transitionConfig.duration)
+            .ease(transitionConfig.easing)
+            // Remove stagger delay for synchronized transitions with links
+            .attrTween('transform', function(d: any) {
+                const node = d3.select(this);
+                const currentTransform = node.attr('transform');
+                
+                // More robust parsing of current position
+                let currentY = d.y0; // Fallback to target position
+                
+                if (currentTransform) {
+                    const match = currentTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+                    if (match && match[2]) {
+                        const parsedY = parseFloat(match[2]);
+                        if (!isNaN(parsedY)) {
+                            currentY = parsedY;
+                        }
+                    }
+                }
+                
+                // Only animate if Y position actually changed significantly
+                const yDiff = Math.abs(currentY - d.y0);
+                if (yDiff < 1) {
+                    // Position hasn't changed much, just set immediately
+                    return function(t: number) {
+                        return `translate(${d.x0}, ${d.y0})`;
+                    };
+                }
+                
+                // Create smooth Y interpolator for nodes that actually moved
+                const interpolateY = d3.interpolate(currentY, d.y0);
+                
+                return function(t: number) {
+                    // X position immediate, Y position interpolates smoothly
+                    return `translate(${d.x0}, ${interpolateY(t)})`;
+                };
+            });
+        
+        // Handle removed nodes (exit)
+        nodeSelection.exit()
+            .transition()
+            .duration(transitionConfig.duration * 0.5)
+            .style('opacity', 0)
+            .remove();
+        
+        // Update foreignObject dimensions with coordinated timing
         svg.select('.node-group').selectAll('.node-html')
             .data(updatedResult.nodes, (d: any) => d.id)
             .transition()
-            .duration(200)
+            .duration(sizeConfig.duration)
+            .ease(sizeConfig.easing)
+            // Remove stagger delay for synchronized transitions
             .attr('height', (d: any) => d.y1! - d.y0!);
         
         // Update link paths using the same generator as in renderSankey
@@ -1200,16 +1387,59 @@
             ? sankeyLinkHorizontal()
             : createEnhancedLinkGenerator(baseLinkGenerator);
         
-        svg.select('.link-group').selectAll('.link')
-            .data(updatedResult.links, (d: any) => `${d.source.id}-${d.target.id}`)
+        // Handle link transitions with enter/update/exit pattern - use same timing as nodes
+        const pathConfig = transitionConfig; // Use same config as nodes for perfect synchronization
+        const linkGroup = svg.select('.link-group');
+        const linkSelection = linkGroup.selectAll('.link')
+            .data(updatedResult.links, (d: any) => `${d.source.id}-${d.target.id}`);
+        
+        // Handle new links (enter) - appear immediately with opacity fade-in
+        const linkEnter = linkSelection.enter()
+            .append('path')
+            .attr('class', (d: any) => {
+                const relType = (d.type || 'default').toLowerCase().replace(/\s+/g, '_');
+                return `link rel-${relType}`;
+            })
+            .attr('id', (d: any) => {
+                const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
+                const targetId = typeof d.target === 'object' ? d.target.id : d.target;
+                return `link-${sourceId}-${targetId}`;
+            })
+            .attr('data-source-id', (d: any) => typeof d.source === 'object' ? d.source.id : d.source)
+            .attr('data-target-id', (d: any) => typeof d.target === 'object' ? d.target.id : d.target)
+            .attr('d', (d: any) => {
+                if (LINK_CONFIG.ALGORITHM === 'default') {
+                    return sankeyLinkHorizontal()(d);
+                }
+                return linkPathGenerator(d);
+            })
+            .style('opacity', 0);
+        
+        // Fade in new links
+        linkEnter.transition()
+            .duration(pathConfig.duration * 0.4)
+            .delay(pathConfig.duration * 0.3)
+            .ease(d3.easeCubicOut)
+            .style('opacity', 0.2);
+        
+        // Update existing links (update) - smooth path transitions
+        linkSelection
             .transition()
-            .duration(200)
+            .duration(pathConfig.duration)
+            .ease(pathConfig.easing)
             .attr('d', (d: any) => {
                 if (LINK_CONFIG.ALGORITHM === 'default') {
                     return sankeyLinkHorizontal()(d);
                 }
                 return linkPathGenerator(d);
             });
+        
+        // Remove old links (exit)
+        linkSelection.exit()
+            .transition()
+            .duration(pathConfig.duration * 0.5)
+            .style('opacity', 0)
+            .remove();
         
     }
     
