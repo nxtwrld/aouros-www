@@ -144,7 +144,7 @@
             treatmentColumn: calculateColumnInfo(treatmentNodes)
         };
 
-        console.log('Column positions:', result); // Debug log
+        // Column positions calculated
         return result;
     }
 
@@ -328,11 +328,7 @@
         const data = $sankeyData;
         const currentSvg = untrack(() => svg);
         
-        console.log('$effect triggered - sankeyData changed:', {
-            hasData: !!data,
-            nodeCount: data?.nodes?.length || 0,
-            linkCount: data?.links?.length || 0
-        });
+        // Data change detected
         
         // Create a simple hash of the data to detect changes
         const dataHash = data ? JSON.stringify({
@@ -341,57 +337,14 @@
             nodeIds: data.nodes?.map(n => n.id).join(',') || ''
         }) : '';
         
-        console.log('Data hash check:', {
-            previousDataHash,
-            dataHash,
-            changed: dataHash !== previousDataHash,
-            hasSvg: !!currentSvg,
-            hasData: !!data,
-            hasPrevious: previousDataHash !== ''
-        });
+        // Check if data hash changed
         
-        // Only re-render if data actually changed (not on initial mount, handled in onMount)
+        // Only process changes if data actually changed (not on initial mount, handled in onMount)
         if (currentSvg && data && dataHash !== previousDataHash && previousDataHash !== '') {
-            console.log('Processing data change...');
-            
-            // Check if this is just a node count change (show more/less) or structural change
-            const prevHash = previousDataHash ? JSON.parse(previousDataHash) : {};
-            const currentHash = JSON.parse(dataHash);
-            
-            console.log('Hash comparison:', { prevHash, currentHash });
-            
-            // Detect "show more" scenario: all previous nodes exist, but new nodes/links added
-            const hasNodeIds = !!(prevHash.nodeIds && currentHash.nodeIds);
-            const allPrevNodesExist = hasNodeIds ? 
-                prevHash.nodeIds.split(',').every((id: any) => currentHash.nodeIds.includes(id)) : false;
-            const onlyNodesAdded = hasNodeIds && allPrevNodesExist && 
-                (currentHash.nodeCount > prevHash.nodeCount);
-            const onlyLinksAdded = currentHash.linkCount >= prevHash.linkCount;
-            
-            // Use smooth transitions if this looks like "show more" (existing nodes + new additions)
-            const isShowMoreScenario = onlyNodesAdded && onlyLinksAdded;
-            
-            console.log('Detection logic:', {
-                hasNodeIds,
-                allPrevNodesExist,
-                onlyNodesAdded,
-                onlyLinksAdded,
-                isShowMoreScenario
-            });
-                
-            if (isShowMoreScenario) {
-                console.log('🎯 Using smooth transition (updateSankeyLayout)');
-                // Smooth transition for show more/less clicks
-                updateSankeyLayout();
-                focusableNodes = buildFocusableNodesList($sankeyData);
-                renderShowMoreButtons();
-            } else {
-                console.log('🔄 Using full re-render (renderSankey)');
-                // Full re-render for structural changes (new nodes, new links, etc.)
-                renderSankey();
-                focusableNodes = buildFocusableNodesList($sankeyData);
-                renderShowMoreButtons();
-            }
+            // Processing data change - always use smooth transitions after initialization
+            updateSankeyLayout();
+            focusableNodes = buildFocusableNodesList($sankeyData);
+            renderShowMoreButtons();
             previousDataHash = dataHash;
         } else if (data && dataHash !== previousDataHash) {
             // Update hash without re-rendering (for initial mount case)
@@ -898,7 +851,7 @@
 
         nodeSelection.exit()
             .transition()
-            .duration(3000)
+            .duration(300)
             .style('opacity', 0)
             .remove();
     }
@@ -1269,19 +1222,13 @@
         // Get transition configuration based on device
         const transitionConfig = isMobile ? TRANSITION_CONFIG.MOBILE : TRANSITION_CONFIG.POSITION;
         const sizeConfig = isMobile ? TRANSITION_CONFIG.MOBILE : TRANSITION_CONFIG.SIZE;
-        const staggerDelay = isMobile ? 25 : TRANSITION_CONFIG.POSITION.stagger;
         
         // Handle new, existing, and removed nodes using D3's enter/update/exit pattern
         const nodeGroup = svg.select('.node-group');
         const nodeSelection = nodeGroup.selectAll('.node')
             .data(updatedResult.nodes, (d: any) => d.id);
         
-        console.log('Node selection sizes:', {
-            total: nodeSelection.size(),
-            enter: nodeSelection.enter().size(),
-            update: nodeSelection.size(),
-            exit: nodeSelection.exit().size()
-        });
+        // Track node selection changes
         
         // Handle new nodes (enter)
         const nodeEnter = nodeSelection.enter()
