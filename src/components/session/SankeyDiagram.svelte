@@ -1,12 +1,8 @@
 <script lang="ts">
     import { onMount, onDestroy, untrack } from 'svelte';
-    import { mount, unmount } from 'svelte';
-    import { get } from 'svelte/store';
     import * as d3 from 'd3';
-    import type { SessionAnalysis, SankeyNode, SankeyLink, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
-    import { renderNodes, renderLinks, calculateSankeyLayout, updateNodePositions, updateLinkPaths } from './utils/sankeyRenderer';
+    import type { SankeyNode, SankeyLink, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
     import { 
-        KeyboardNavigationHandler,
         handleNodeClick,
         handleLinkClick,
         handleCanvasClick,
@@ -19,13 +15,9 @@
         focusNextNode, 
         focusPreviousNode,
         selectFocusedNode,
-        isLinkActiveInFocusMode,
-        applyFocusHighlighting,
-        resetHighlighting,
-        updateSelectionState,
-        resetToDefault
+        updateSelectionState
     } from './utils/sankeyFocus';
-    import { createNodeComponent, cleanupNodeComponents, truncateText } from './utils/sankeyHelpers';
+    import { createNodeComponent, cleanupNodeComponents } from './utils/sankeyHelpers';
     import {
         DEFAULT_ZOOM_CONFIG,
         createZoomBehavior,
@@ -37,7 +29,7 @@
         panBy
     } from './utils/zoomSankey';
     import { sankey, sankeyLinkHorizontal } from 'd3-sankey';
-    import { OPACITY, COLORS, NODE_SIZE, LINK_CONFIG, applyParallelLinkSpacing, getLinkPathGenerator, createEnhancedLinkGenerator, calculateLinkWidth } from './config/visual-config';
+    import { OPACITY, NODE_SIZE, LINK_CONFIG, applyParallelLinkSpacing, getLinkPathGenerator, createEnhancedLinkGenerator, calculateLinkWidth } from './config/visual-config';
     import LinkTooltip from './LinkTooltip.svelte';
     import { sessionDataActions, sankeyDataFiltered as sankeyData, hiddenCounts, thresholds } from '$lib/session/stores/session-data-store';
     import { 
@@ -73,13 +65,10 @@
         MOBILE: {
             duration: 400, // Faster on mobile for better performance
             easing: d3.easeCubicOut,
-            buttonFadeOut: 150,
-            buttonFadeIn: 250
+            fadeOut: 150,
+            fadeIn: 250
         }
     };
-    import SymptomNode from './nodes/SymptomNode.svelte';
-    import DiagnosisNode from './nodes/DiagnosisNode.svelte';
-    import TreatmentNode from './nodes/TreatmentNode.svelte';
     import ZoomControls from './ZoomControls.svelte';
     import { t } from '$lib/i18n';
 
@@ -96,17 +85,11 @@
         isMobile = false,
         onnodeSelect,
         onlinkSelect,
-        onselectionClear,
         onfocusChange
     }: Props = $props();
 
     // Read all data directly from stores - no transformations needed here
     const selectedNodeId = $derived($selectedItem?.type === 'node' ? $selectedItem.id : null);
-    
-    // New modular state
-    let keyboardNav: KeyboardNavigationHandler | null = $state(null);
-    let currentNodes: d3.Selection<any, any, any, any> | null = $state(null);
-    let currentLinks: d3.Selection<any, any, any, any> | null = $state(null);
 
     let container = $state<HTMLElement>();
     let svg = $state<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
@@ -173,7 +156,7 @@
         
         // Apply the highlighting: hover takes precedence, then active path
         // When hover is cleared, active path will be restored
-        updateSelectionState(activePathData, hoverHighlight);
+        updateSelectionState(activePathData, hoverHighlight, svg || null, isMobile);
     });
     let tooltipData = $state<{
         relationshipType: string;
@@ -320,6 +303,7 @@
     });
 
     onDestroy(() => {
+        // Clean up dynamically mounted node components using Svelte 5 unmount()
         if (nodeComponents) {
             cleanupNodeComponents(nodeComponents);
         }
@@ -355,7 +339,7 @@
             if (svg) {
                 svg.selectAll('.show-more-button-group')
                     .transition()
-                    .duration(buttonConfig.fadeOut || buttonConfig.buttonFadeOut)
+                    .duration(buttonConfig.fadeOut)
                     .ease(buttonConfig.easing)
                     .style('opacity', 0);
             }
@@ -373,7 +357,7 @@
                     svg.selectAll('.show-more-button-group')
                         .style('opacity', 0)
                         .transition()
-                        .duration(buttonConfig.fadeIn || buttonConfig.buttonFadeIn)
+                        .duration(buttonConfig.fadeIn)
                         .ease(buttonConfig.easing)
                         .style('opacity', 1);
                 }
@@ -388,18 +372,6 @@
     // Container resize is handled by ResizeObserver calling handleContainerResize
     // No need for a separate effect here
 
-    // React to selectedNodeId changes to apply focus highlighting
-    // NOTE: Disabled in favor of unified visual state system
-    /*$effect(() => {
-        if (svg && selectedNodeId) {
-            // Apply focus highlighting when a node is selected
-            applyFocusHighlighting(selectedNodeId);
-        } else if (svg && selectedNodeId === null) {
-            // Only reset if we had a selection and now we don't (and not hovering)
-            // This prevents interfering with the initial state
-            resetHighlighting();
-        }
-    });*/
 
     // React to focus changes with efficient DOM updates
     $effect(() => {
@@ -416,12 +388,6 @@
         width = Math.max(bounds.width, container.offsetWidth || 0);
         height = Math.max(bounds.height, container.offsetHeight || 0);
         
-        /* console.log('InitializeSankey dimensions:', {
-            boundsWidth: bounds.width,
-            offsetWidth: container.offsetWidth,
-            computedWidth: width,
-            containerStyle: window.getComputedStyle(container).width
-        }); */
 
         // Clear any existing SVG
         d3.select(container).selectAll('*').remove();
@@ -471,7 +437,7 @@
             return;
         }
         
-        // Clean up previous node components
+        // Clean up previous dynamically mounted node components using Svelte 5 unmount()
         if (nodeComponents) {
             cleanupNodeComponents(nodeComponents);
         }
@@ -487,25 +453,12 @@
             return;
         }
 
-        // Debug logging
-        /* console.log('Rendering Sankey with data:', {
-            nodes: $sankeyData.nodes.length,
-            links: $sankeyData.links.length,
-            width: width,
-            height: height,
-            containerWidth: container?.getBoundingClientRect().width,
-            nodeTypes: $sankeyData.nodes.map(n => n.type),
-            linkTypes: $sankeyData.links.map(l => l.type),
-            nodeDetails: $sankeyData.nodes.map(n => ({ id: n.id, name: n.name, type: n.type })),
-            linkDetails: $sankeyData.links.map(l => ({ source: l.source, target: l.target, value: l.value }))
-        }); */
 
         const chartWidth = width - margins.left - margins.right;
         const chartHeight = height - margins.top - margins.bottom;
 
         // Fixed HTML node dimensions (won't scale with SVG)
         const htmlNodeWidth = isMobile ? 120 : 160;
-        const htmlNodeHeight = isMobile ? 60 : 80;
         
         // Use full available width with equal spacing
         const availableWidth = chartWidth;
@@ -518,14 +471,6 @@
         
         // For D3 Sankey calculations, use a small nodeWidth since we override positioning
         const sankeyNodeWidth = 50; // Just for D3's internal calculations
-        
-        /* console.log('Layout calculations:', {
-            availableWidth,
-            columnWidth,
-            columnCenterX,
-            htmlNodeWidth,
-            htmlNodeHeight
-        }); */
         
         const sankeyGenerator = sankey<SankeyNode, SankeyLink>()
             .nodeWidth(sankeyNodeWidth)
@@ -561,23 +506,12 @@
                 value: d.value || 1
             }));
 
-            /* console.log('Input to D3 Sankey:', {
-                nodes: nodesForD3.length,
-                links: linksForD3.length,
-                firstNode: nodesForD3[0],
-                firstLink: linksForD3[0]
-            }); */
 
             sankeyResult = sankeyGenerator({
                 nodes: nodesForD3,
                 links: linksForD3
             });
 
-            /* console.log('D3 Sankey result (before override):', {
-                nodes: sankeyResult.nodes?.length,
-                links: sankeyResult.links?.length,
-                firstProcessedNode: sankeyResult.nodes?.[0]
-            }); */
 
             // Override D3's positioning to force correct column placement and height
             if (sankeyResult && sankeyResult.nodes) {
@@ -590,8 +524,6 @@
                     const centerX = columnCenterX[targetColumn];
                     node.x0 = centerX - (htmlNodeWidth / 2);
                     node.x1 = centerX + (htmlNodeWidth / 2);
-                    
-                    // console.log(`Fixed node ${node.id} (${node.type}): column ${node.column} -> ${targetColumn}, x: ${node.x0}-${node.x1}`);
                 });
 
                 // Sort nodes by type and value within each column, then position them
@@ -619,8 +551,6 @@
                         node.y0 = currentY;
                         node.y1 = currentY + nodeHeight;
                         currentY = node.y1 + (isMobile ? 8 : 12); // Add padding between nodes
-                        
-                        // console.log(`Positioned node ${node.id}: y ${node.y0}-${node.y1} (height: ${nodeHeight}, value: ${node.value}, calculated: ${calculatedHeight})`);
                     });
                 });
 
@@ -726,26 +656,11 @@
                             
                             link.y0 = sourceY + link.width / 2;
                             link.y1 = targetY + link.width / 2;
-                            
-                            // console.log(`Updated link ${sourceNode.id} -> ${targetNode.id}: y ${link.y0} -> ${link.y1}, width: ${link.width}`);
                         }
                     });
                 }
             }
 
-            /* console.log('D3 Sankey result (after override):', {
-                nodes: sankeyResult.nodes?.length,
-                links: sankeyResult.links?.length,
-                samplePositions: sankeyResult.nodes?.slice(0, 3).map((n: any) => ({
-                    id: n.id,
-                    type: n.type,
-                    x0: n.x0,
-                    x1: n.x1,
-                    y0: n.y0,
-                    y1: n.y1,
-                    value: n.value
-                }))
-            }); */
         } catch (error) {
             console.error('Error in D3 Sankey generation:', error);
             return;
@@ -812,8 +727,8 @@
             .attr('data-relationship-type', (d: any) => d.type || 'default')
             .on('click', (event: MouseEvent, d: any) => handleLinkClick(event, d, onlinkSelect))
             .on('touchstart', (event: TouchEvent, d: any) => handleLinkClick(event, d, onlinkSelect))
-            .on('mouseenter', (event: MouseEvent, d: any) => handleLinkHover(d, true, svg, tooltipData, container))
-            .on('mouseleave', (event: MouseEvent, d: any) => handleLinkHover(d, false, svg, tooltipData, container));
+            .on('mouseenter', (_, d: any) => handleLinkHover(d, true, svg || null, tooltipData, container))
+            .on('mouseleave', (_, d: any) => handleLinkHover(d, false, svg || null, tooltipData, container));
 
         linkSelection.exit()
             .transition()
@@ -856,11 +771,11 @@
             .html((d: any) => createNodeComponent(d, selectedNodeId, isMobile, nodeComponents))
             .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
             .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
-            .on('mouseenter', (event: MouseEvent, d: any) => {
+            .on('mouseenter', (_, d: any) => {
                 const allNodeArrays = [$sankeyData?.nodes || []].flat();
                 handleNodeHover(d.id, true, svg || null, allNodeArrays);
             })
-            .on('mouseleave', (event: MouseEvent, d: any) => {
+            .on('mouseleave', (_, d: any) => {
                 const allNodeArrays = [$sankeyData?.nodes || []].flat();
                 handleNodeHover(d.id, false, svg || null, allNodeArrays);
             });
@@ -945,7 +860,7 @@
                     .append('xhtml:div')
                     .attr('class', 'show-more-button-container')
                     .html(`
-                        <button class="button -small" onclick="window.sankeyButtonActions?.toggleSymptoms()">
+                        <button class="button -small" onclick="event.stopPropagation(); window.sankeyButtonActions?.toggleSymptoms()">
                             ${$thresholds.symptoms.showAll ? 'Show fewer' : `Show more (${$hiddenCounts.symptoms})`}
                         </button>
                     `);
@@ -967,7 +882,7 @@
                     .append('xhtml:div')
                     .attr('class', 'show-more-button-container')
                     .html(`
-                        <button class="button -small" onclick="window.sankeyButtonActions?.toggleDiagnoses()">
+                        <button class="button -small" onclick="event.stopPropagation(); window.sankeyButtonActions?.toggleDiagnoses()">
                             ${$thresholds.diagnoses.showAll ? 'Show fewer' : `Show more (${$hiddenCounts.diagnoses})`}
                         </button>
                     `);
@@ -995,117 +910,6 @@
         };
     }
 
-    function getConnectedLinkIds(nodeId: string): Set<string> {
-        if (!svg) return new Set();
-        
-        const connectedLinkIds = new Set<string>();
-        
-        // Find the node type
-        let focusedNodeType = '';
-        svg.selectAll('.node').each((d: any) => {
-            if (d.id === nodeId) {
-                focusedNodeType = d.type;
-            }
-        });
-        
-        // Build connection maps for directional traversal
-        const nodeMap = new Map<string, any>();
-        const forwardMap = new Map<string, Set<string>>();
-        const backwardMap = new Map<string, Set<string>>();
-        
-        svg.selectAll('.node').each((d: any) => {
-            nodeMap.set(d.id, d);
-        });
-        
-        svg.selectAll('.link').each((d: any) => {
-            const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
-            const targetId = typeof d.target === 'object' ? d.target.id : d.target;
-            
-            if (!forwardMap.has(sourceId)) forwardMap.set(sourceId, new Set());
-            if (!backwardMap.has(targetId)) backwardMap.set(targetId, new Set());
-            
-            forwardMap.get(sourceId)!.add(targetId);
-            backwardMap.get(targetId)!.add(sourceId);
-        });
-        
-        // Helper function to find forward connections
-        const findForward = (nodeId: string, allowedTypes: string[]) => {
-            const targets = forwardMap.get(nodeId) || new Set();
-            targets.forEach(targetId => {
-                const targetNode = nodeMap.get(targetId);
-                if (targetNode && allowedTypes.includes(targetNode.type)) {
-                    connectedLinkIds.add(`${nodeId}-${targetId}`);
-                    
-                    // Continue forward if we found a diagnosis and need treatments
-                    if (targetNode.type === 'diagnosis') {
-                        const treatmentTargets = forwardMap.get(targetId) || new Set();
-                        treatmentTargets.forEach(treatmentId => {
-                            const treatmentNode = nodeMap.get(treatmentId);
-                            if (treatmentNode && treatmentNode.type === 'treatment') {
-                                connectedLinkIds.add(`${targetId}-${treatmentId}`);
-                            }
-                        });
-                    }
-                }
-            });
-        };
-        
-        // Helper function to find backward connections
-        const findBackward = (nodeId: string, allowedTypes: string[]) => {
-            const sources = backwardMap.get(nodeId) || new Set();
-            sources.forEach(sourceId => {
-                const sourceNode = nodeMap.get(sourceId);
-                if (sourceNode && allowedTypes.includes(sourceNode.type)) {
-                    connectedLinkIds.add(`${sourceId}-${nodeId}`);
-                    
-                    // Continue backward if we found a diagnosis and need symptoms
-                    if (sourceNode.type === 'diagnosis') {
-                        const symptomSources = backwardMap.get(sourceId) || new Set();
-                        symptomSources.forEach(symptomId => {
-                            const symptomNode = nodeMap.get(symptomId);
-                            if (symptomNode && symptomNode.type === 'symptom') {
-                                connectedLinkIds.add(`${symptomId}-${sourceId}`);
-                            }
-                        });
-                    }
-                }
-            });
-        };
-        
-        // Apply directional logic based on node type
-        if (focusedNodeType === 'symptom') {
-            // Symptom -> Diagnoses -> Treatments
-            findForward(nodeId, ['diagnosis', 'treatment']);
-        } else if (focusedNodeType === 'diagnosis') {
-            // Diagnosis -> Treatments AND Symptoms -> Diagnosis (bidirectional)
-            findForward(nodeId, ['treatment']);
-            findBackward(nodeId, ['symptom']);
-        } else if (focusedNodeType === 'treatment') {
-            // Symptoms -> Diagnoses -> Treatment (backward only)
-            findBackward(nodeId, ['diagnosis', 'symptom']);
-        } else if (focusedNodeType === 'action') {
-            // Actions can connect to any node through relationships
-            svg.selectAll('.node').each((d: any) => {
-                if (d.relationships) {
-                    d.relationships.forEach((rel: any) => {
-                        if (rel.nodeId === nodeId) {
-                            connectedLinkIds.add(`${rel.nodeId}-${nodeId}`);
-                        }
-                    });
-                }
-            });
-            
-            // Also check if this action has relationships to other nodes
-            const focusedNode = nodeMap.get(nodeId);
-            if (focusedNode?.relationships) {
-                focusedNode.relationships.forEach((rel: any) => {
-                    connectedLinkIds.add(`${nodeId}-${rel.nodeId}`);
-                });
-            }
-        }
-        
-        return connectedLinkIds;
-    }
 
 
 
@@ -1285,11 +1089,11 @@
             .html((d: any) => createNodeComponent(d, selectedNodeId, isMobile, nodeComponents))
             .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
             .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
-            .on('mouseenter', (event: MouseEvent, d: any) => {
+            .on('mouseenter', (_, d: any) => {
                 const allNodeArrays = [$sankeyData?.nodes || []].flat();
                 handleNodeHover(d.id, true, svg || null, allNodeArrays);
             })
-            .on('mouseleave', (event: MouseEvent, d: any) => {
+            .on('mouseleave', (_, d: any) => {
                 const allNodeArrays = [$sankeyData?.nodes || []].flat();
                 handleNodeHover(d.id, false, svg || null, allNodeArrays);
             });
@@ -1328,7 +1132,7 @@
                 const yDiff = Math.abs(currentY - d.y0);
                 if (yDiff < 1) {
                     // Position hasn't changed much, just set immediately
-                    return function(t: number) {
+                    return function(_: number) {
                         return `translate(${d.x0}, ${d.y0})`;
                     };
                 }
@@ -1336,9 +1140,9 @@
                 // Create smooth Y interpolator for nodes that actually moved
                 const interpolateY = d3.interpolate(currentY, d.y0);
                 
-                return function(t: number) {
+                return function(_: number) {
                     // X position immediate, Y position interpolates smoothly
-                    return `translate(${d.x0}, ${interpolateY(t)})`;
+                    return `translate(${d.x0}, ${interpolateY(_)})`;
                 };
             });
         
