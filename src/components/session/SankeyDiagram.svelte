@@ -73,8 +73,8 @@
         MOBILE: {
             duration: 400, // Faster on mobile for better performance
             easing: d3.easeCubicOut,
-            buttonFadeOut: 150,
-            buttonFadeIn: 250
+            fadeOut: 150,
+            fadeIn: 250
         }
     };
     import SymptomNode from './nodes/SymptomNode.svelte';
@@ -173,7 +173,7 @@
         
         // Apply the highlighting: hover takes precedence, then active path
         // When hover is cleared, active path will be restored
-        updateSelectionState(activePathData, hoverHighlight);
+        updateSelectionState(activePathData, hoverHighlight, svg || null, isMobile);
     });
     let tooltipData = $state<{
         relationshipType: string;
@@ -355,7 +355,7 @@
             if (svg) {
                 svg.selectAll('.show-more-button-group')
                     .transition()
-                    .duration(buttonConfig.fadeOut || buttonConfig.buttonFadeOut)
+                    .duration(buttonConfig.fadeOut)
                     .ease(buttonConfig.easing)
                     .style('opacity', 0);
             }
@@ -368,12 +368,28 @@
             setTimeout(() => {
                 renderShowMoreButtons();
                 
+                // Restore highlighting after transitions complete
+                const currentActivePath = $activePath;
+                const currentHoveredItem = $hoveredItem;
+                
+                // Calculate hover path if needed - same logic as in the $effect
+                let hoverHighlight = null;
+                if (currentHoveredItem && currentHoveredItem.type === 'node') {
+                    const pathResult = sessionDataActions.calculatePath(currentHoveredItem.id);
+                    hoverHighlight = pathResult?.path || null;
+                }
+                
+                // Restore the highlighting state (hover takes precedence over active path)
+                if (svg) {
+                    updateSelectionState(currentActivePath, hoverHighlight, svg, isMobile);
+                }
+                
                 // Fade in the new buttons
                 if (svg) {
                     svg.selectAll('.show-more-button-group')
                         .style('opacity', 0)
                         .transition()
-                        .duration(buttonConfig.fadeIn || buttonConfig.buttonFadeIn)
+                        .duration(buttonConfig.fadeIn)
                         .ease(buttonConfig.easing)
                         .style('opacity', 1);
                 }
@@ -945,7 +961,7 @@
                     .append('xhtml:div')
                     .attr('class', 'show-more-button-container')
                     .html(`
-                        <button class="button -small" onclick="window.sankeyButtonActions?.toggleSymptoms()">
+                        <button class="button -small" onclick="event.stopPropagation(); window.sankeyButtonActions?.toggleSymptoms()">
                             ${$thresholds.symptoms.showAll ? 'Show fewer' : `Show more (${$hiddenCounts.symptoms})`}
                         </button>
                     `);
@@ -967,7 +983,7 @@
                     .append('xhtml:div')
                     .attr('class', 'show-more-button-container')
                     .html(`
-                        <button class="button -small" onclick="window.sankeyButtonActions?.toggleDiagnoses()">
+                        <button class="button -small" onclick="event.stopPropagation(); window.sankeyButtonActions?.toggleDiagnoses()">
                             ${$thresholds.diagnoses.showAll ? 'Show fewer' : `Show more (${$hiddenCounts.diagnoses})`}
                         </button>
                     `);
