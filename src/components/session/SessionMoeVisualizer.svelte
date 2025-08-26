@@ -9,7 +9,7 @@
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
     import type { D3QOMNode, D3QOMLink } from './types/qom';
     import { t } from '$lib/i18n';
-    import { selectedItem } from '$lib/session/stores/session-viewer-store';
+    import { selectedItem, sidebarOpen, activeTab, sessionViewerActions } from '$lib/session/stores/session-viewer-store';
     import { qomActions } from '$lib/session/stores/qom-execution-store';
 
 
@@ -35,12 +35,13 @@
     let selectedLink = $state<any | null>(null);
     let focusedNodeIndex = $state<number>(-1);
     let isMobile = $state(false);
-    let showSidebar = $state(true);
     let sidebarWidth = $state(400);
     let isResizing = $state(false);
     let tabsRef = $state<any>();
-    let activeTabId = $state<string>('questions');
     let activeMainView = $state<string>('diagram'); // Track main area view
+    
+    // Store values are already reactive - no need for $derived
+    // We'll use $sidebarOpen and $activeTab directly in the template
     
     // Responsive breakpoints
     const MOBILE_BREAKPOINT = 640;
@@ -82,38 +83,39 @@
             isMobile = newIsMobile;
         }
         
-        if (newShowSidebar !== showSidebar && !newIsMobile) {
-            showSidebar = newShowSidebar;
+        if (newShowSidebar !== $sidebarOpen && !newIsMobile) {
+            sessionViewerActions.setSidebarOpen(newShowSidebar);
         }
         
         // Auto-hide sidebar on mobile (only if changed to mobile)
-        if (newIsMobile && showSidebar) {
-            showSidebar = false;
+        if (newIsMobile && $sidebarOpen) {
+            sessionViewerActions.setSidebarOpen(false);
         }
     }
 
     function handleNodeSelect(event: CustomEvent<NodeSelectEvent>) {
         selectedNodeId = event.detail.nodeId;
         selectedLink = null; // Clear link selection when node is selected
-        // Note: Tab switching and sidebar opening now handled by $effect
+        
+        // Use store action to atomically open sidebar and select details tab
+        sessionViewerActions.selectDetailsTab();
     }
 
     function handleLinkSelect(event: CustomEvent<LinkSelectEvent>) {
         selectedLink = event.detail.link;
         selectedNodeId = null; // Clear node selection when link is selected
-        // Tab switching and sidebar opening will be handled by $effect
+        
+        // Use store action to atomically open sidebar and select details tab
+        sessionViewerActions.selectDetailsTab();
     }
 
     // QOM event handlers
     function handleQOMNodeSelect(node: D3QOMNode) {
         selectedNodeId = node.id;
         selectedLink = null;
-        // Auto-show sidebar and switch to details tab
-        if (!showSidebar && !isMobile) {
-            showSidebar = true;
-        }
-        activeTabId = 'details';
-        selectDetailsTab();
+        
+        // Use store action to atomically open sidebar and select details tab
+        sessionViewerActions.selectDetailsTab();
     }
 
     function handleQOMLinkSelect(link: D3QOMLink) {
@@ -125,12 +127,9 @@
             strength: link.strength
         };
         selectedNodeId = null;
-        // Auto-show sidebar and switch to details tab
-        if (!showSidebar && !isMobile) {
-            showSidebar = true;
-        }
-        activeTabId = 'details';
-        selectDetailsTab();
+        
+        // Use store action to atomically open sidebar and select details tab
+        sessionViewerActions.selectDetailsTab();
     }
 
     function handleNodeAction(detail: { action: string; targetId: string; reason?: string }) {
@@ -139,7 +138,9 @@
 
     function handleRelationshipNodeClick(detail: { nodeId: string }) {
         selectedNodeId = detail.nodeId;
-        // This will automatically trigger the $effect that handles tab switching and sidebar opening
+        
+        // Use store action to atomically open sidebar and select details tab
+        sessionViewerActions.selectDetailsTab();
     }
 
     function handleClearSelection() {
@@ -205,17 +206,12 @@
     }
 
     function toggleSidebar() {
-        showSidebar = !showSidebar;
+        sessionViewerActions.toggleSidebar();
     }
     
     function handleTabSelect(tabId: string) {
-        activeTabId = tabId;
-        if (tabsRef?.selectTab) {
-            const tabIndex = getTabIndex(tabId);
-            if (tabIndex !== -1) {
-                tabsRef.selectTab(tabIndex);
-            }
-        }
+        sessionViewerActions.setActiveTab(tabId);
+        // TabPanel components automatically react to store changes via $effect
     }
     
     function handleMainViewSelect(viewId: string) {
@@ -224,16 +220,6 @@
         // For now, we only have 'diagram'
     }
     
-    function getTabIndex(tabId: string): number {
-        const hasTranscript = transcript && transcript.length > 0;
-        const tabOrder = [
-            'questions',
-            ...(hasTranscript ? ['transcript'] : []),
-            'details',
-            ...(!isMobile ? ['legend'] : [])
-        ];
-        return tabOrder.indexOf(tabId);
-    }
 
     // Handle sidebar resize
     function startResize(event: MouseEvent) {
@@ -257,81 +243,27 @@
         document.removeEventListener('mouseup', stopResize);
     }
 
-    // Get counts for UI display
+    // Get counts for mobile header display only
     const questionCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question')?.length || 0);
     const pendingQuestions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question' && a.status === 'pending')?.length || 0);
-    const alertCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'alert')?.length || 0);
     // Get selected node from viewer store (no reactive sessionData reads!)
     const selectedNode = $derived($selectedItem?.type === 'node' ? $selectedItem.item : null);
 
-    // Handle tab selection when selectedNodeId or selectedLink changes
-    $effect(() => {
-        // Handle node selection
-        if (selectedNodeId && selectedNode) {
-            // Auto-show sidebar when node is selected
-            if (!showSidebar && !isMobile) {
-                showSidebar = true;
-            }
-            
-            // Auto-select Details tab when node is selected
-            activeTabId = 'details';
-            selectDetailsTab();
-        }
-        
-        // Handle link selection
-        if (selectedLink) {
-            // Auto-show sidebar when link is selected
-            if (!showSidebar && !isMobile) {
-                showSidebar = true;
-            }
-            
-            // Auto-select Details tab when link is selected
-            activeTabId = 'details';
-            selectDetailsTab();
-        }
-    });
+    // Note: Tab selection is now handled directly in event handlers to ensure
+    // it works even when clicking the same node/link multiple times
 
-    // Helper function to handle tab selection with proper timing
-    function selectDetailsTab() {
-        if (tabsRef?.selectTab) {
-            const hasTranscript = transcript && transcript.length > 0;
-            // Tab order: Questions (0), Transcript (1), Details (2), Legend (3 desktop only)
-            const detailsTabIndex = hasTranscript ? 2 : 1;
-            setTimeout(() => tabsRef.selectTab(detailsTabIndex), 10); // Small delay to ensure DOM is ready
-        } else if (tabsRef !== undefined) {
-            // Only warn if tabsRef is defined but doesn't have selectTab method
-            // Skip warning during initial render when tabsRef is undefined
-            console.warn('⚠️ tabsRef.selectTab not available:', { tabsRef, hasSelectTab: !!tabsRef?.selectTab });
-        }
-    }
+    // Tab selection is now handled through store actions and automatic reactivity
     
     // No reactive effects needed - path calculation is handled by the store
     
-    // Track active tab changes from the SessionTabs component
-    $effect(() => {
-        if (tabsRef?.activeTab !== undefined) {
-            const tabIds = [
-                'questions',
-                ...(transcript && transcript.length > 0 ? ['transcript'] : []),
-                'details',
-                ...(!isMobile ? ['legend'] : [])
-            ];
-            activeTabId = tabIds[tabsRef.activeTab] || 'questions';
-        }
-    });
+    // Tab state is now managed by the SessionTabs component via store reactivity
 </script>
 
 <div class="session-visualizer" class:mobile={isMobile}>
     <!-- Desktop Toolbar -->
     {#if !isMobile}
-        <SessionToolbar 
-            {showSidebar}
-            activeTab={activeTabId}
+        <SessionToolbar
             {activeMainView}
-            hasQuestions={questionCount > 0}
-            hasTranscript={transcript && transcript.length > 0}
-            {pendingQuestions}
-            {isMobile}
             onToggleSidebar={toggleSidebar}
             onTabSelect={handleTabSelect}
             onMainViewSelect={handleMainViewSelect}
@@ -354,7 +286,7 @@
             </div>
             <div class="header-actions">
                 <button class="sidebar-toggle" onclick={toggleSidebar}>
-                    {showSidebar ? $t('session.actions.hide-panel') : $t('session.actions.show-panel')}
+                    {$sidebarOpen ? $t('session.actions.hide-panel') : $t('session.actions.show-panel')}
                 </button>
             </div>
         </header>
@@ -390,7 +322,6 @@
             {selectedLink}
             {pendingQuestions}
             {isMobile}
-            {showSidebar}
             {sidebarWidth}
             bind:tabsRef
             onnodeAction={handleNodeAction}
@@ -402,7 +333,7 @@
 
 
     <!-- Mobile sidebar overlay -->
-    {#if isMobile && showSidebar}
+    {#if isMobile && $sidebarOpen}
         <div class="mobile-overlay" onclick={toggleSidebar}></div>
     {/if}
 </div>

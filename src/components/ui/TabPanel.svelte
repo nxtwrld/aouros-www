@@ -5,9 +5,10 @@
     import type { TabInterface } from './Tabs.svelte';
 	interface Props {
 		children?: import('svelte').Snippet;
+		id?: string;
 	}
 
-	let { children }: Props = $props();
+	let { children, id }: Props = $props();
 
 	const panel: number = crypto.getRandomValues(new Uint32Array(1))[0];
 	const tabContext = getContext(TABS) as TabInterface | undefined;
@@ -19,7 +20,7 @@
 	const registerPanelHeight = tabContext?.registerPanelHeight ?? (() => {});
 	const panels = tabContext?.panels ?? [];
 
-	registerPanel(panel);
+	registerPanel(panel, id);
 	
 	// Get panel index for transform calculation
 	let panelIndex = $derived(panels?.indexOf(panel) ?? 0);
@@ -31,7 +32,6 @@
 	function updateHeight() {
 		if (fixedHeight && panelElement && registerPanelHeight) {
 			const height = panelElement.scrollHeight;
-			console.log(`📏 Panel ${panel} height: ${height}px`);
 			registerPanelHeight(panel, height);
 		}
 	}

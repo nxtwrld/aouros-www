@@ -8,6 +8,7 @@ import {
   sessionDataActions,
 } from "./session-data-store";
 import type { SessionAnalysis } from "$components/session/types/visualization";
+import type { SessionTabContext } from "$components/session/SessionTabs.svelte";
 
 // Path calculation types
 interface PathCalculation {
@@ -65,6 +66,8 @@ interface ViewerState {
 
   // UI controls
   sidebarOpen: boolean;
+  activeTabId: string;
+  tabContext: SessionTabContext;
   showLegend: boolean;
   filterOptions: {
     showSymptoms: boolean;
@@ -94,6 +97,13 @@ const initialViewerState: ViewerState = {
   zoomLevel: 1,
   panOffset: { x: 0, y: 0 },
   sidebarOpen: true,
+  activeTabId: 'questions',
+  tabContext: {
+    hasTranscript: false,
+    isMobile: false,
+    questionCount: 0,
+    alertCount: 0,
+  },
   showLegend: true,
   filterOptions: {
     showSymptoms: true,
@@ -273,6 +283,41 @@ export const sessionViewerActions = {
       ...state,
       sidebarOpen: !state.sidebarOpen,
     }));
+  },
+
+  setSidebarOpen(open: boolean): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      sidebarOpen: open,
+    }));
+  },
+
+  setActiveTab(tabId: string): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      activeTabId: tabId,
+    }));
+
+    logger.session.debug("Active tab changed", { tabId });
+  },
+
+  selectDetailsTab(): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      sidebarOpen: true,
+      activeTabId: 'details',
+    }));
+
+    logger.session.debug("Details tab selected and sidebar opened");
+  },
+
+  updateTabContext(context: SessionTabContext): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      tabContext: context,
+    }));
+
+    logger.session.debug("Tab context updated", context);
   },
 
   toggleLegend(): void {
@@ -496,6 +541,11 @@ export const panOffset: Readable<{ x: number; y: number }> = derived(
 export const sidebarOpen: Readable<boolean> = derived(
   sessionViewerStore,
   ($store) => $store.sidebarOpen,
+);
+
+export const activeTab: Readable<string> = derived(
+  sessionViewerStore,
+  ($store) => $store.activeTabId,
 );
 
 export const filterOptions: Readable<ViewerState["filterOptions"]> = derived(
