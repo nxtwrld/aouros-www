@@ -34,11 +34,10 @@ export function getLinkStrengthClass(width: number): string {
  */
 export function createNodeComponent(
     node: SankeyNode, 
-    selectedNodeId: string | null, 
+    _selectedNodeId: string | null, 
     isMobile: boolean,
     nodeComponents: Map<string, { component: any, container: HTMLDivElement }>
 ): string {
-    const isSelected = node.id === selectedNodeId;
     let nodeComponent;
     const nodeContainer = document.createElement('div');
     
@@ -49,7 +48,6 @@ export function createNodeComponent(
                 props: {
                     node,
                     symptom: node.data as any,
-                    isSelected,
                     isMobile
                 }
             });
@@ -61,7 +59,6 @@ export function createNodeComponent(
                 props: {
                     node,
                     diagnosis: node.data as any,
-                    isSelected,
                     isMobile
                 }
             });
@@ -73,7 +70,6 @@ export function createNodeComponent(
                 props: {
                     node,
                     treatment: node.data as any,
-                    isSelected,
                     isMobile
                 }
             });

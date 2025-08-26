@@ -36,11 +36,11 @@ export function updateNodeFocus(
     if (!svg) return -1;
     
     // Clear all focus classes
-    svg.selectAll('.node-html').classed('focused', false);
+    svg.select('.node-group').selectAll('.node > .node-html').classed('focused', false);
     
     if (targetFocusedNodeId) {
         const focusedIndex = focusableNodes.findIndex(node => node.id === targetFocusedNodeId);
-        svg.selectAll(`.node-html[data-node-id="${targetFocusedNodeId}"]`).classed('focused', true);
+        svg.select('.node-group').selectAll(`.node > .node-html[data-node-id="${targetFocusedNodeId}"]`).classed('focused', true);
         onfocusChange?.(new CustomEvent('focusChange', { detail: { index: focusedIndex }}));
         return focusedIndex;
     }
@@ -296,7 +296,8 @@ export function updateSelectionState(
     activePath: any, 
     hoverPath: any,
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
-    isMobile: boolean
+    isMobile: boolean,
+    selectedNodeId: string | null = null
 ): void {
     if (!svg) return;
     
@@ -309,17 +310,29 @@ export function updateSelectionState(
     const highlightedNodeSet = hoverNodes.length > 0 ? new Set(hoverNodes) : new Set(activeNodes);
     const highlightedLinkSet = hoverLinks.length > 0 ? new Set(hoverLinks) : new Set(activeLinks);
     
+    
     const hasHighlighted = highlightedNodeSet.size > 0;
     const renderModeClass = isMobile ? 'render-mobile' : 'render-desktop';
     
-    // Update node states
-    svg.selectAll('.node-html')
+    // Update node states - be specific about direct children only
+    const nodeHtmlSelection = svg.select('.node-group').selectAll('.node > .node-html');
+    
+    nodeHtmlSelection
         .classed('highlighted', (d: any) => highlightedNodeSet.has(d.id))
-        .classed('dimmed', hasHighlighted ? (d: any) => !highlightedNodeSet.has(d.id) : false)
-        .classed('background-trigger', hasHighlighted ? (d: any) => !highlightedNodeSet.has(d.id) : false)
+        .classed('dimmed', (d: any) => hasHighlighted && !highlightedNodeSet.has(d.id))
+        .classed('background-trigger', (d: any) => hasHighlighted && !highlightedNodeSet.has(d.id))
         .classed(`state-active ${renderModeClass}`, hasHighlighted)
-        .classed('state-default', !hasHighlighted)
-        .each(function(d: any) {
+        .classed('state-default', !hasHighlighted);
+    
+    // Handle selected class separately and only for foreignObject elements
+    nodeHtmlSelection.classed('selected', false); // Clear all first
+    if (selectedNodeId) {
+        nodeHtmlSelection
+            .filter((d: any) => d.id === selectedNodeId)
+            .classed('selected', true);
+    }
+    
+    nodeHtmlSelection.each(function(d: any) {
             // Add type-specific classes for enhanced styling
             d3.select(this)
                 .classed(`node-${d.type}`, true)
@@ -335,18 +348,20 @@ export function updateSelectionState(
             const linkId = `${sourceId}-${targetId}`;
             return highlightedLinkSet.has(linkId);
         })
-        .classed('dimmed', hasHighlighted ? (d: any) => {
+        .classed('dimmed', (d: any) => {
+            if (!hasHighlighted) return false;
             const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
             const targetId = typeof d.target === 'object' ? d.target.id : d.target;
             const linkId = `${sourceId}-${targetId}`;
             return !highlightedLinkSet.has(linkId);
-        } : false)
-        .classed('background-trigger', hasHighlighted ? (d: any) => {
+        })
+        .classed('background-trigger', (d: any) => {
+            if (!hasHighlighted) return false;
             const sourceId = typeof d.source === 'object' ? d.source.id : d.source;
             const targetId = typeof d.target === 'object' ? d.target.id : d.target;
             const linkId = `${sourceId}-${targetId}`;
             return !highlightedLinkSet.has(linkId);
-        } : false)
+        })
         .classed(`state-active ${renderModeClass}`, hasHighlighted)
         .classed('state-default', !hasHighlighted);
 }
@@ -363,7 +378,7 @@ export function resetToDefault(
     viewerStoreModule.sessionViewerActions.clearSelection();
     
     // Reset all visual states
-    svg.selectAll('.node-html')
+    svg.select('.node-group').selectAll('.node > .node-html')
         .classed('highlighted dimmed background-trigger background-path active-path selected focused hovered connected-to-selected', false)
         .classed('state-default', true);
     

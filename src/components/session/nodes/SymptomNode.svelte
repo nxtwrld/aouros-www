@@ -6,11 +6,10 @@
     interface Props {
         node: SankeyNode;
         symptom: SymptomData;
-        isSelected: boolean;
         isMobile: boolean;
     }
     
-    let { node, symptom, isSelected, isMobile }: Props = $props();
+    let { node, symptom, isMobile }: Props = $props();
     
     function truncateText(text: string, maxLength: number): string {
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
@@ -45,7 +44,6 @@
 
 <div 
     class="session-node symptom session-source-{symptom.source}" 
-    class:selected={isSelected} 
     class:mobile={isMobile}
     style="--color-opacity: {getOpacityForSeverity(symptom.severity)};"
 >

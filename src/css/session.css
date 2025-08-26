@@ -115,6 +115,7 @@
 .node-html {
   opacity: 1;
   filter: none;
+  overflow: visible; /* Allow box-shadows and other effects to render outside foreignObject boundaries */
   transition:
     opacity 0.3s ease,
     filter 0.3s ease;
@@ -179,6 +180,7 @@
   overflow: visible;
   z-index: 100; /* Higher than hovered (50) */
   position: relative;
+  box-shadow: 0 0 2.5rem 0 rgba(0,0,0,0.5);
 }
 
 /* Connected nodes styling */
