@@ -10,6 +10,7 @@
     import type { D3QOMNode, D3QOMLink } from './types/qom';
     import { t } from '$lib/i18n';
     import { selectedItem, sidebarOpen, activeTab, sessionViewerActions } from '$lib/session/stores/session-viewer-store';
+    import { sessionDataActions } from '$lib/session/stores/session-data-store';
     import { qomActions } from '$lib/session/stores/qom-execution-store';
 
 
@@ -137,6 +138,11 @@
     }
 
     function handleRelationshipNodeClick(detail: { nodeId: string }) {
+        // Find the node data and select it properly using store actions
+        const node = sessionDataActions.findNodeById(detail.nodeId);
+        if (node) {
+            sessionViewerActions.selectItem('node', detail.nodeId, node);
+        }
         selectedNodeId = detail.nodeId;
         
         // Use store action to atomically open sidebar and select details tab

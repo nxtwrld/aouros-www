@@ -62,6 +62,7 @@
         const node = sessionDataActions.findNodeById(nodeId);
         if (node) {
             sessionViewerActions.selectItem('node', nodeId, node);
+            sessionViewerActions.selectDetailsTab();
         }
     }
 </script>

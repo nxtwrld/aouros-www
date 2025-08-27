@@ -3,6 +3,8 @@
     import SymptomNodeComponent from '../nodes/SymptomNode.svelte';
     import DiagnosisNodeComponent from '../nodes/DiagnosisNode.svelte';
     import TreatmentNodeComponent from '../nodes/TreatmentNode.svelte';
+    import { sessionDataActions } from '$lib/session/stores/session-data-store';
+    import { sessionViewerActions } from '$lib/session/stores/session-viewer-store';
 
     interface Props {
         relationships: any[];
@@ -33,13 +35,23 @@
     function getNodeTypeFromData(nodeData: any): string {
         if ('severity' in nodeData) return 'symptom';
         if ('probability' in nodeData) return 'diagnosis';
-        if ('type' in nodeData && ['medication', 'procedure', 'therapy', 'lifestyle', 'investigation', 'immediate'].includes(nodeData.type)) return 'treatment';
+        if ('type' in nodeData && ['medication', 'procedure', 'therapy', 'lifestyle', 'investigation', 'immediate', 'referral', 'supportive'].includes(nodeData.type)) return 'treatment';
         if ('actionType' in nodeData) return nodeData.actionType === 'question' ? 'question' : 'alert';
         return 'unknown';
     }
 
     function handleRelationshipNodeClick(nodeId: string) {
         onrelationshipNodeClick?.(nodeId);
+    }
+
+    // Interactive handlers for hover functionality  
+    function handleNodeHover(nodeId: string, isEntering: boolean) {
+        const node = sessionDataActions.findNodeById(nodeId);
+        if (node && isEntering) {
+            sessionViewerActions.setHoveredItem('node', nodeId, node);
+        } else if (!isEntering) {
+            sessionViewerActions.setHoveredItem(null);
+        }
     }
 </script>
 
@@ -65,8 +77,10 @@
                                 class="relationship-node-wrapper"
                                 role="button"
                                 tabindex="0"
-                                on:click={() => handleRelationshipNodeClick(rel.nodeId)}
-                                on:keydown={(e) => e.key === 'Enter' && handleRelationshipNodeClick(rel.nodeId)}
+                                onclick={() => handleRelationshipNodeClick(rel.nodeId)}
+                                onkeydown={(e) => e.key === 'Enter' && handleRelationshipNodeClick(rel.nodeId)}
+                                onmouseenter={() => handleNodeHover(rel.nodeId, true)}
+                                onmouseleave={() => handleNodeHover(rel.nodeId, false)}
                             >
                                 {#if nodeType === 'symptom'}
                                     <SymptomNodeComponent 
