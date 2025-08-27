@@ -75,10 +75,16 @@ function buildRelationshipIndex(
     { nodes: sessionData.nodes.actions || [], type: "action" },
   ];
 
+  // FIRST PASS: Register all node types
   for (const group of nodeGroups) {
     for (const node of group.nodes) {
       addNodeType(node.id, group.type);
+    }
+  }
 
+  // SECOND PASS: Process relationships (now all node types are registered)
+  for (const group of nodeGroups) {
+    for (const node of group.nodes) {
       // Process relationships if they exist
       if (node.relationships) {
         for (const rel of node.relationships) {
@@ -144,17 +150,23 @@ function buildRelationshipIndex(
   }
 
   // Build additional forward relationships from reverse relationships
+  // IMPORTANT: Don't overwrite existing forward relationships, merge them
   for (const [nodeId, relationships] of index.reverse.entries()) {
-    const updatedRels = new Set(index.forward.get(nodeId) || []);
+    // Get existing forward relationships or create new set
+    if (!index.forward.has(nodeId)) {
+      index.forward.set(nodeId, new Set());
+    }
+    const existingRels = index.forward.get(nodeId)!;
+    
+    // Add reverse relationships as forward relationships
     for (const rel of relationships) {
-      updatedRels.add({
+      existingRels.add({
         targetId: rel.sourceId,
         type: rel.type, // Keep this as rel.type since we're building it from existing relationship objects
         confidence: rel.confidence,
         targetType: index.nodeTypes.get(rel.sourceId) || "unknown",
       });
     }
-    index.forward.set(nodeId, updatedRels);
   }
 
   // Relationship index built successfully
