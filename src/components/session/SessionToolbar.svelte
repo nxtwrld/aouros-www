@@ -26,6 +26,9 @@
     
     // Main area view tabs (left side)
     const mainViewTabs = $derived([
+        { id: 'diagnosis', label: $t('session.tabs.diagnosis') },
+        { id: 'treatments', label: $t('session.tabs.treatments') },
+        { id: 'symptoms', label: $t('session.tabs.symptoms') },
         { id: 'diagram', label: $t('session.diagram') },
         { id: 'qom', label: $t('session.qom') }
     ]);

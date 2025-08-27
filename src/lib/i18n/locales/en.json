@@ -814,7 +814,10 @@
       "questions": "Questions",
       "transcript": "Transcript",
       "details": "Details",
-      "legend": "Legend"
+      "legend": "Legend",
+      "symptoms": "Symptoms",
+      "diagnosis": "Diagnosis",
+      "treatments": "Treatments"
     },
     "headers": {
       "symptoms": "Symptoms",
@@ -993,6 +996,24 @@
       "direction": "Direction",
       "strength": "Strength",
       "status": "Status"
+    },
+    "empty": {
+      "no-symptoms": "No symptoms found",
+      "no-diagnoses": "No diagnoses available",
+      "no-treatments": "No treatments available",
+      "no-questions": "No questions to display",
+      "no-alerts": "No alerts to display",
+      "no-data": "No data to visualize",
+      "select-node": "Select a node or link to view details",
+      "select-node-diagram": "Select a node or link from the diagram to view details"
+    },
+    "sources": {
+      "transcript": "Transcript",
+      "medical_history": "Medical History",
+      "family_history": "Family History",
+      "social_history": "Social History",
+      "medication_history": "Medication History",
+      "suspected": "Suspected"
     },
     "empty-states": {
       "no-questions": "No questions to display",

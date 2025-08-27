@@ -4,6 +4,9 @@
     import QOMVisualizer from './QOMVisualizer.svelte';
     import SessionSidebar from './SessionSidebar.svelte';
     import SessionToolbar from './SessionToolbar.svelte';
+    import SessionSymptomsTab from './SessionSymptomsTab.svelte';
+    import SessionDiagnosisTab from './SessionDiagnosisTab.svelte';
+    import SessionTreatmentsTab from './SessionTreatmentsTab.svelte';
     import sampleTranscript from './sample.transcript.1.cz.json';
     import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
@@ -225,6 +228,25 @@
         // Future: Handle switching between different main views
         // For now, we only have 'diagram'
     }
+
+    // Handlers for list tab selections
+    function handleSymptomSelect(symptomId: string) {
+        selectedNodeId = symptomId;
+        selectedLink = null;
+        sessionViewerActions.selectDetailsTab();
+    }
+
+    function handleDiagnosisSelect(diagnosisId: string) {
+        selectedNodeId = diagnosisId;
+        selectedLink = null;
+        sessionViewerActions.selectDetailsTab();
+    }
+
+    function handleTreatmentSelect(treatmentId: string) {
+        selectedNodeId = treatmentId;
+        selectedLink = null;
+        sessionViewerActions.selectDetailsTab();
+    }
     
 
     // Handle sidebar resize
@@ -316,6 +338,21 @@
                     enableInteractions={true}
                     onnodeSelect={handleQOMNodeSelect}
                     onlinkSelect={handleQOMLinkSelect}
+                />
+            {:else if activeMainView === 'symptoms'}
+                <SessionSymptomsTab 
+                    symptoms={sessionData.nodes.symptoms || []}
+                    onsymptomSelect={handleSymptomSelect}
+                />
+            {:else if activeMainView === 'diagnosis'}
+                <SessionDiagnosisTab 
+                    diagnoses={sessionData.nodes.diagnoses || []}
+                    ondiagnosisSelect={handleDiagnosisSelect}
+                />
+            {:else if activeMainView === 'treatments'}
+                <SessionTreatmentsTab 
+                    treatments={sessionData.nodes.treatments || []}
+                    ontreatmentSelect={handleTreatmentSelect}
                 />
             {/if}
         </div>

@@ -14,6 +14,10 @@ UI components - `src/components/session`
 
 Styling for CSS properties - `src/css/session.css`
 
+### Libraries
+
+common libraries in - `src/libs/session`
+
 Working with 2 stores.
 
 - session data store - managing input data

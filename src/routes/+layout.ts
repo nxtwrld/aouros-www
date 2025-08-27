@@ -61,18 +61,19 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
 
   // Determine and set the appropriate locale
   let userLanguage = null;
-  
+
   // If user is authenticated, try to fetch their language preference
   if (session && user) {
     try {
       // Check if we're on a route that needs user data
-      const needsUserData = url.pathname.startsWith('/med') || url.pathname.startsWith('/account');
-      
+      const needsUserData =
+        url.pathname.startsWith("/med") || url.pathname.startsWith("/account");
+
       if (needsUserData) {
         const userData = await fetch("/v1/med/user")
-          .then(r => r.json())
+          .then((r) => r.json())
           .catch(() => null);
-          
+
         if (userData?.language) {
           userLanguage = userData.language;
         }
@@ -81,7 +82,7 @@ export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
       // Fail silently, will use fallback
     }
   }
-  
+
   // Set locale based on priority: user preference > browser language > default
   if (userLanguage) {
     locale.set(userLanguage);
