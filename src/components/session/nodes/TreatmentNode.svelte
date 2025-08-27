@@ -32,6 +32,7 @@
             case 'investigation': return '🔬';
             case 'immediate': return '⚡';
             case 'referral': return '👨‍⚕️';
+            case 'supportive': return '🤝';
             default: return '📋';
         }
     }

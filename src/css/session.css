@@ -180,7 +180,7 @@
   overflow: visible;
   z-index: 100; /* Higher than hovered (50) */
   position: relative;
-  box-shadow: 0 0 2.5rem 0 rgba(0,0,0,0.5);
+  box-shadow: 0 0 2.5rem 0 rgba(0, 0, 0, 0.5);
 }
 
 /* Connected nodes styling */
@@ -480,6 +480,12 @@
   background-color: rgba(var(--base-color-rgb), var(--color-opacity));
 }
 
+/* Supportive treatments - Soft Amber */
+.treatment-node.treatment-type-supportive {
+  --base-color-rgb: 255, 249, 230; /* #FFF9E6 */
+  background-color: rgba(var(--base-color-rgb), var(--color-opacity));
+}
+
 /* Treatment type labels - use darker colors that work well with background colors */
 .treatment-node.treatment-type-medication .treatment-type-label {
   color: #0d47a1; /* Dark blue for blue background */
@@ -515,6 +521,11 @@
 .treatment-node.treatment-type-referral .treatment-type-label {
   color: #004d40; /* Dark teal for teal background */
   background: rgba(0, 77, 64, 0.15);
+}
+
+.treatment-node.treatment-type-supportive .treatment-type-label {
+  color: #f57c00; /* Dark amber for amber background */
+  background: rgba(245, 124, 0, 0.15);
 }
 
 /* ============================================================================
@@ -1115,160 +1126,164 @@
    ============================================================================ */
 
 .sankey-container {
-    width: 100%;
-    height: 100%;
-    min-height: 400px;
-    min-width: 300px;
-    position: relative;
-    overflow: hidden;
-    box-sizing: border-box;
-    touch-action: none; /* Prevent browser default touch behaviors */
-    user-select: none; /* Prevent text selection during pan */
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  min-width: 300px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  touch-action: none; /* Prevent browser default touch behaviors */
+  user-select: none; /* Prevent text selection during pan */
 }
 
 .sankey-container:focus {
-    outline: 2px solid rgba(59, 130, 246, 0.5);
-    outline-offset: -2px;
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: -2px;
 }
 
 .sankey-container:focus-visible {
-    outline: 2px solid rgba(59, 130, 246, 0.8);
+  outline: 2px solid rgba(59, 130, 246, 0.8);
 }
 
 .link-tooltip {
-    position: fixed;
-    z-index: 1000;
-    pointer-events: none;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    padding: 8px;
-    font-size: 12px;
-    max-width: 300px;
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  font-size: 12px;
+  max-width: 300px;
 }
 
 .empty-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--color-text-secondary, #6b7280);
-    font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-secondary, #6b7280);
+  font-size: 14px;
 }
 
 /* Global styles for D3 elements */
 .sankey-container .link {
-    transition: stroke-opacity 0.2s ease;
+  transition: stroke-opacity 0.2s ease;
 }
 
 .sankey-container .link:hover {
-    stroke-opacity: var(--hover-link-opacity, 0.8) !important;
+  stroke-opacity: var(--hover-link-opacity, 0.8) !important;
 }
 
 .sankey-container .node {
-    transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease;
 }
 
 .sankey-container .node:hover {
-    opacity: var(--hover-node-opacity, 0.9);
+  opacity: var(--hover-node-opacity, 0.9);
 }
 
 .sankey-container .node-rect {
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,var(--shadow-light-opacity, 0.1)));
-    transition: filter 0.2s ease;
+  filter: drop-shadow(
+    0 2px 4px rgba(0, 0, 0, var(--shadow-light-opacity, 0.1))
+  );
+  transition: filter 0.2s ease;
 }
 
 .sankey-container .node:hover .node-rect {
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,var(--shadow-medium-opacity, 0.2)));
+  filter: drop-shadow(
+    0 4px 8px rgba(0, 0, 0, var(--shadow-medium-opacity, 0.2))
+  );
 }
 
 .sankey-container .node-label {
-    user-select: none;
+  user-select: none;
 }
 
 /* Mobile touch targets */
 @media (pointer: coarse) {
-    .sankey-container .node {
-        min-width: 44px;
-        min-height: 44px;
-    }
+  .sankey-container .node {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-    .sankey-container {
-        min-height: 300px;
-    }
+  .sankey-container {
+    min-height: 300px;
+  }
 }
 
 /* Focus styles for keyboard navigation - applied via CSS classes */
 .node-html.focused .treatment-node {
-    outline: 2px dashed rgba(59, 130, 246, 0.6);
-    outline-offset: 1px;
+  outline: 2px dashed rgba(59, 130, 246, 0.6);
+  outline-offset: 1px;
 }
 
 .node-html.focused.selected .treatment-node {
-    outline: 2px dashed rgba(59, 130, 246, 0.8);
+  outline: 2px dashed rgba(59, 130, 246, 0.8);
 }
 
 .node-html.focused .symptom-node {
-    outline: 2px dashed rgba(34, 197, 94, 0.6);
-    outline-offset: 1px;
+  outline: 2px dashed rgba(34, 197, 94, 0.6);
+  outline-offset: 1px;
 }
 
 .node-html.focused.selected .symptom-node {
-    outline: 2px dashed rgba(34, 197, 94, 0.8);
+  outline: 2px dashed rgba(34, 197, 94, 0.8);
 }
 
 .node-html.focused .diagnosis-node {
-    outline: 2px dashed rgba(239, 68, 68, 0.6);
-    outline-offset: 1px;
+  outline: 2px dashed rgba(239, 68, 68, 0.6);
+  outline-offset: 1px;
 }
 
 .node-html.focused.selected .diagnosis-node {
-    outline: 2px dashed rgba(239, 68, 68, 0.8);
+  outline: 2px dashed rgba(239, 68, 68, 0.8);
 }
 
 /* Fallback styles for action nodes or unknown types */
 .sankey-node {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 6px;
-    padding: 6px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    font-family: system-ui, sans-serif;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    text-align: center;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  padding: 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-family: system-ui, sans-serif;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  text-align: center;
 }
 
 .sankey-node .node-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
 }
 
 .sankey-node .node-title {
-    font-weight: 600;
-    color: #1f2937;
-    line-height: 1.2;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 11px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
 }
 
 /* Link animation now handled by global CSS in session.css */
 
 .node.connected-to-selected {
-    filter: none !important; /* Remove grayscale for connected nodes */
-    opacity: 1.0 !important; /* Ensure full opacity */
+  filter: none !important; /* Remove grayscale for connected nodes */
+  opacity: 1 !important; /* Ensure full opacity */
 }
 
 /* 
@@ -1278,17 +1293,17 @@
 
 /* Show More Buttons - SVG embedded via foreignObject */
 .show-more-foreign-object {
-    pointer-events: auto;
+  pointer-events: auto;
 }
 
 .show-more-foreign-object div {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .show-more-foreign-object .button {
-    width: 100%;
-    height: 100%;
-    white-space: nowrap;
+  width: 100%;
+  height: 100%;
+  white-space: nowrap;
 }

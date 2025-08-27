@@ -913,7 +913,8 @@
       "lifestyle": "Lifestyle",
       "investigation": "Investigation",
       "immediate": "Immediate",
-      "referral": "Referral"
+      "referral": "Referral",
+      "supportive": "Supportive Care"
     },
     "urgency": {
       "immediate": "Immediate",

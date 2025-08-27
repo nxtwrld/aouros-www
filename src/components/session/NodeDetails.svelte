@@ -30,7 +30,7 @@
     function getNodeType(node: any): string {
         if ('severity' in node) return 'symptom';
         if ('probability' in node) return 'diagnosis';
-        if ('type' in node && ['medication', 'procedure', 'therapy', 'lifestyle', 'investigation', 'immediate', 'referral'].includes(node.type)) return 'treatment';
+        if ('type' in node && ['medication', 'procedure', 'therapy', 'lifestyle', 'investigation', 'immediate', 'referral', 'supportive'].includes(node.type)) return 'treatment';
         if ('actionType' in node) return 'action';
         return 'unknown';
     }
