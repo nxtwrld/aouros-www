@@ -137,7 +137,7 @@ export const createMedicalImagingWorkflow = (
 
   // Add medical imaging analysis node (visual analysis with context)
   workflow.addNode(
-    "medical_imaging_analysis", 
+    "medical_imaging_analysis",
     createNodeWrapper(medicalImagingAnalysisNode, { start: 50, end: 100 }),
   );
 

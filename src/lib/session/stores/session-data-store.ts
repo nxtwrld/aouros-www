@@ -4,7 +4,10 @@ import type {
   SessionAnalysis,
   ActionNode,
 } from "$components/session/types/visualization";
-import { transformToSankeyData, applySankeyThresholds } from "$components/session/utils/sankeyDataTransformer";
+import {
+  transformToSankeyData,
+  applySankeyThresholds,
+} from "$components/session/utils/sankeyDataTransformer";
 import {
   QUESTION_SCORING,
   type QuestionCategory,
@@ -157,7 +160,7 @@ function buildRelationshipIndex(
       index.forward.set(nodeId, new Set());
     }
     const existingRels = index.forward.get(nodeId)!;
-    
+
     // Add reverse relationships as forward relationships
     for (const rel of relationships) {
       existingRels.add({
@@ -791,15 +794,15 @@ interface ThresholdConfig {
 
 interface HiddenCounts {
   symptoms: number;
-  diagnoses: number; 
+  diagnoses: number;
   treatments: number;
 }
 
 // Thresholds store - primary data store (not derived from viewer store)
 export const thresholds: Writable<ThresholdConfig> = writable({
-  symptoms: { severityThreshold: 7, showAll: false },    // Show severity 1-7 by default
+  symptoms: { severityThreshold: 7, showAll: false }, // Show severity 1-7 by default
   diagnoses: { probabilityThreshold: 0.35, showAll: false }, // Show probability > 30% by default
-  treatments: { priorityThreshold: 10, showAll: true }   // Future use
+  treatments: { priorityThreshold: 10, showAll: true }, // Future use
 });
 
 /**
@@ -810,10 +813,13 @@ export const sankeyDataFiltered = derived(
   [sankeyData, thresholds],
   ([$sankeyData, $thresholds]) => {
     if (!$sankeyData || !$thresholds) return $sankeyData;
-    
-    const { sankeyData: filteredData } = applySankeyThresholds($sankeyData, $thresholds);
+
+    const { sankeyData: filteredData } = applySankeyThresholds(
+      $sankeyData,
+      $thresholds,
+    );
     return filteredData;
-  }
+  },
 );
 
 /**
@@ -825,10 +831,10 @@ export const hiddenCounts: Readable<HiddenCounts> = derived(
     if (!$sankeyData || !$thresholds) {
       return { symptoms: 0, diagnoses: 0, treatments: 0 } as HiddenCounts;
     }
-    
+
     const { hiddenCounts } = applySankeyThresholds($sankeyData, $thresholds);
     return hiddenCounts;
-  }
+  },
 );
 
 export type { ThresholdConfig, HiddenCounts };

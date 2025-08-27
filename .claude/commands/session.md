@@ -12,7 +12,7 @@ UI components - `src/components/session`
 
 ### CSS
 
-Styling for CSS properties  - `src/css/session.css`
+Styling for CSS properties - `src/css/session.css`
 
 Working with 2 stores.
 

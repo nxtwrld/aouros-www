@@ -3,7 +3,7 @@
  *
  * Combines visual analysis, body parts detection, anomaly detection, and measurement extraction
  * into a single comprehensive medical imaging analysis node for better performance and coherence.
- * 
+ *
  * Uses unified workflow pattern - returns multiple properties that get merged into state.
  */
 
@@ -23,8 +23,11 @@ function calculateAge(birthDate: string | undefined): number | undefined {
     const today = new Date();
     const age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
       return age - 1;
     }
     return age;
@@ -37,7 +40,7 @@ function calculateAge(birthDate: string | undefined): number | undefined {
  * Validate body parts array using existing core structure
  */
 function validateBodyParts(bodyParts: any[]): any[] {
-  return bodyParts.map(part => ({
+  return bodyParts.map((part) => ({
     identification: part.identification || "unknown",
     status: part.status || "normal",
     treatment: part.treatment || "",
@@ -50,7 +53,7 @@ function validateBodyParts(bodyParts: any[]): any[] {
  * Validate anomalies array with measurements
  */
 function validateAnomalies(anomalies: any[]): any[] {
-  return anomalies.map(anomaly => ({
+  return anomalies.map((anomaly) => ({
     type: anomaly.type || "other",
     description: anomaly.description || "Unspecified finding",
     location: {
@@ -76,14 +79,17 @@ function validateAnomalies(anomalies: any[]): any[] {
 function validateOverallAssessment(assessment: any): any {
   return {
     summary: assessment.summary || "Medical imaging analysis completed",
-    primaryFindings: Array.isArray(assessment.primaryFindings) 
-      ? assessment.primaryFindings 
+    primaryFindings: Array.isArray(assessment.primaryFindings)
+      ? assessment.primaryFindings
       : [],
     hasUrgentFindings: Boolean(assessment.hasUrgentFindings),
     recommendedActions: Array.isArray(assessment.recommendedActions)
       ? assessment.recommendedActions
       : [],
-    overallConfidence: Math.min(Math.max(assessment.overallConfidence || 0.5, 0), 1),
+    overallConfidence: Math.min(
+      Math.max(assessment.overallConfidence || 0.5, 0),
+      1,
+    ),
   };
 }
 
@@ -105,7 +111,9 @@ export const medicalImagingAnalysisNode = async (
   });
 
   try {
-    console.log("✅ Medical imaging analysis executing - in dedicated medical imaging workflow");
+    console.log(
+      "✅ Medical imaging analysis executing - in dedicated medical imaging workflow",
+    );
 
     // Progress tracking
     const emitProgress = (stage: string, progress: number, message: string) => {
@@ -122,12 +130,18 @@ export const medicalImagingAnalysisNode = async (
     };
 
     // Initialize progress
-    emitProgress("medical_imaging_analysis", 10, "Initializing medical imaging analysis");
+    emitProgress(
+      "medical_imaging_analysis",
+      10,
+      "Initializing medical imaging analysis",
+    );
 
     // Load schema for medical imaging analysis
     let schema: FunctionDefinition;
     try {
-      const schemaModule = await import("../../configurations/medical-imaging-analysis");
+      const schemaModule = await import(
+        "../../configurations/medical-imaging-analysis"
+      );
       schema = schemaModule.default;
       if (!schema) {
         throw new Error("Schema module does not export a default export");
@@ -138,7 +152,11 @@ export const medicalImagingAnalysisNode = async (
       throw new Error(`Failed to load schema: ${error}`);
     }
 
-    emitProgress("medical_imaging_analysis", 30, "Analyzing image for body parts, anomalies, and measurements");
+    emitProgress(
+      "medical_imaging_analysis",
+      30,
+      "Analyzing image for body parts, anomalies, and measurements",
+    );
 
     // Build content array including images and context
     const content = [];
@@ -157,35 +175,40 @@ export const medicalImagingAnalysisNode = async (
     // Add patient and technical context to AI prompt
     const patientInfo = state.patientInfo;
     const imagingMetadata = state.imagingMetadata;
-    
+
     let contextAddition = "";
-    
+
     if (patientInfo) {
       const age = calculateAge(patientInfo.birthDate);
       contextAddition += `\n\n**PATIENT CONTEXT:**`;
       contextAddition += `\n- Patient: ${patientInfo.fullName}`;
       if (age) contextAddition += `\n- Age: ${age} years`;
-      if (patientInfo.biologicalSex) contextAddition += `\n- Sex: ${patientInfo.biologicalSex}`;
+      if (patientInfo.biologicalSex)
+        contextAddition += `\n- Sex: ${patientInfo.biologicalSex}`;
     }
-    
+
     if (imagingMetadata) {
       contextAddition += `\n\n**TECHNICAL CONTEXT:**`;
-      if (imagingMetadata.modality) contextAddition += `\n- Confirmed Modality: ${imagingMetadata.modality}`;
-      if (imagingMetadata.bodyPartExamined) contextAddition += `\n- Confirmed Body Part: ${imagingMetadata.bodyPartExamined}`;
-      if (imagingMetadata.viewPosition) contextAddition += `\n- View Position: ${imagingMetadata.viewPosition}`;
-      if (imagingMetadata.studyDescription) contextAddition += `\n- Study: ${imagingMetadata.studyDescription}`;
-      
+      if (imagingMetadata.modality)
+        contextAddition += `\n- Confirmed Modality: ${imagingMetadata.modality}`;
+      if (imagingMetadata.bodyPartExamined)
+        contextAddition += `\n- Confirmed Body Part: ${imagingMetadata.bodyPartExamined}`;
+      if (imagingMetadata.viewPosition)
+        contextAddition += `\n- View Position: ${imagingMetadata.viewPosition}`;
+      if (imagingMetadata.studyDescription)
+        contextAddition += `\n- Study: ${imagingMetadata.studyDescription}`;
+
       // Technical parameters for measurements
       if (imagingMetadata.imageParameters?.pixelSpacing) {
-        contextAddition += `\n- Pixel Spacing: ${imagingMetadata.imageParameters.pixelSpacing.join(' x ')} mm (use for accurate measurements)`;
+        contextAddition += `\n- Pixel Spacing: ${imagingMetadata.imageParameters.pixelSpacing.join(" x ")} mm (use for accurate measurements)`;
       }
       if (imagingMetadata.imageParameters?.windowCenter) {
-        contextAddition += `\n- Window Center: ${imagingMetadata.imageParameters.windowCenter.join(', ')}`;
+        contextAddition += `\n- Window Center: ${imagingMetadata.imageParameters.windowCenter.join(", ")}`;
       }
       if (imagingMetadata.imageParameters?.windowWidth) {
-        contextAddition += `\n- Window Width: ${imagingMetadata.imageParameters.windowWidth.join(', ')}`;
+        contextAddition += `\n- Window Width: ${imagingMetadata.imageParameters.windowWidth.join(", ")}`;
       }
-      
+
       if (imagingMetadata.deviceInfo?.manufacturer) {
         contextAddition += `\n- Device: ${imagingMetadata.deviceInfo.manufacturer}`;
         if (imagingMetadata.deviceInfo.modelName) {
@@ -193,7 +216,7 @@ export const medicalImagingAnalysisNode = async (
         }
       }
     }
-    
+
     if (contextAddition) {
       contextAddition += `\n\nUse this context to inform your analysis, especially for age/sex-specific findings and accurate measurements.`;
       content.push({ type: "text" as const, text: contextAddition });
@@ -215,19 +238,31 @@ export const medicalImagingAnalysisNode = async (
       "extraction",
       (stage, progress, message) => {
         const nodeProgress = 60 + (progress / 100) * 30; // Map 0-100% to 60-90%
-        emitProgress(`medical_imaging_analysis_ai_${stage}`, nodeProgress, `AI: ${message}`);
+        emitProgress(
+          `medical_imaging_analysis_ai_${stage}`,
+          nodeProgress,
+          `AI: ${message}`,
+        );
       },
     );
 
-    emitProgress("medical_imaging_analysis", 90, "Completing comprehensive medical analysis");
+    emitProgress(
+      "medical_imaging_analysis",
+      90,
+      "Completing comprehensive medical analysis",
+    );
 
     // Validate and process the AI result with context from patient/performer detection
     const validatedData = {
       // Use confirmed modality from DICOM metadata if available
       modality: aiResult.modality || imagingMetadata?.modality || "Unknown",
-      // Use confirmed body part from DICOM metadata if available  
-      anatomicalRegion: aiResult.anatomicalRegion || imagingMetadata?.bodyPartExamined || "Unknown",
-      viewPosition: aiResult.viewPosition || imagingMetadata?.viewPosition || "Unknown",
+      // Use confirmed body part from DICOM metadata if available
+      anatomicalRegion:
+        aiResult.anatomicalRegion ||
+        imagingMetadata?.bodyPartExamined ||
+        "Unknown",
+      viewPosition:
+        aiResult.viewPosition || imagingMetadata?.viewPosition || "Unknown",
       imageQuality: aiResult.imageQuality || "fair",
       bodyParts: Array.isArray(aiResult.bodyParts) ? aiResult.bodyParts : [],
       anomalies: Array.isArray(aiResult.anomalies) ? aiResult.anomalies : [],
@@ -251,10 +286,13 @@ export const medicalImagingAnalysisNode = async (
       anomalies: validateAnomalies(validatedData.anomalies),
 
       // Overall assessment
-      overallAssessment: validateOverallAssessment(validatedData.overallAssessment),
+      overallAssessment: validateOverallAssessment(
+        validatedData.overallAssessment,
+      ),
 
       // Technical details
-      visualDescription: validatedData.visualDescription || "Medical image analysis",
+      visualDescription:
+        validatedData.visualDescription || "Medical image analysis",
       technicalQuality: validatedData.technicalQuality,
 
       // Processing metadata
@@ -272,51 +310,68 @@ export const medicalImagingAnalysisNode = async (
 
     // Get patient and performer data from state (set by first node)
     const performers = state.medicalPerformers || [];
-    const primaryPerformer = performers.find(p => p.isPrimary) || performers[0] || null;
+    const primaryPerformer =
+      performers.find((p) => p.isPrimary) || performers[0] || null;
 
     // Create standardized report structure matching unified workflow pattern (flat structure)
     const reportObject = {
       // Standard report fields (flat structure matching regular reports)
-      title: imagingMetadata?.studyDescription || `${analysisResult.modality} ${analysisResult.anatomicalRegion}` || "Medical Imaging Study",
-      date: imagingMetadata?.studyDate || new Date().toISOString().split("T")[0],
+      title:
+        imagingMetadata?.studyDescription ||
+        `${analysisResult.modality} ${analysisResult.anatomicalRegion}` ||
+        "Medical Imaging Study",
+      date:
+        imagingMetadata?.studyDate || new Date().toISOString().split("T")[0],
       category: "imaging",
-      summary: analysisResult.overallAssessment?.summary || "Medical imaging analysis completed",
-      
+      summary:
+        analysisResult.overallAssessment?.summary ||
+        "Medical imaging analysis completed",
+
       // Core medical components (flat at top level)
-      diagnosis: analysisResult.overallAssessment?.primaryFindings?.map((finding: string) => ({
-        name: finding,
-        confidence: analysisResult.confidence || 0.8
-      })) || [],
+      diagnosis:
+        analysisResult.overallAssessment?.primaryFindings?.map(
+          (finding: string) => ({
+            name: finding,
+            confidence: analysisResult.confidence || 0.8,
+          }),
+        ) || [],
       bodyParts: analysisResult.bodyParts || [],
-      recommendations: analysisResult.overallAssessment?.recommendedActions?.map((action: string) => ({
-        description: action,
-        urgency: analysisResult.overallAssessment?.hasUrgentFindings ? 4 : 2
-      })) || [],
-      
+      recommendations:
+        analysisResult.overallAssessment?.recommendedActions?.map(
+          (action: string) => ({
+            description: action,
+            urgency: analysisResult.overallAssessment?.hasUrgentFindings
+              ? 4
+              : 2,
+          }),
+        ) || [],
+
       // Patient and performer (flat at top level)
       patient: patientInfo || null,
       performer: primaryPerformer,
-      
+
       // Medical imaging specific data in subsection
-      imaging: [{
-        type: "medical_image_analysis",
-        modality: analysisResult.modality,
-        anatomicalRegion: analysisResult.anatomicalRegion,
-        viewPosition: analysisResult.viewPosition,
-        imageQuality: analysisResult.imageQuality,
-        visualDescription: analysisResult.visualDescription,
-        anomalies: analysisResult.anomalies || [],
-        overallAssessment: analysisResult.overallAssessment || {},
-        technicalQuality: analysisResult.technicalQuality || {},
-        confidence: analysisResult.confidence,
-      }],
-      
+      imaging: [
+        {
+          type: "medical_image_analysis",
+          modality: analysisResult.modality,
+          anatomicalRegion: analysisResult.anatomicalRegion,
+          viewPosition: analysisResult.viewPosition,
+          imageQuality: analysisResult.imageQuality,
+          visualDescription: analysisResult.visualDescription,
+          anomalies: analysisResult.anomalies || [],
+          overallAssessment: analysisResult.overallAssessment || {},
+          technicalQuality: analysisResult.technicalQuality || {},
+          confidence: analysisResult.confidence,
+        },
+      ],
+
       // Additional fields for compatibility
       content: analysisResult.visualDescription || "",
       localizedContent: analysisResult.visualDescription || "",
       isMedical: true,
       confidence: analysisResult.confidence || 0.8,
-      
+
       // Empty arrays for other medical sections (for consistency with unified pattern)
       signals: [],
       medications: [],
@@ -329,31 +384,33 @@ export const medicalImagingAnalysisNode = async (
     const unifiedResult = {
       // Standard unified workflow fields
       type: "medical_imaging",
-      fhirType: "ImagingStudy", 
+      fhirType: "ImagingStudy",
       fhir: {},
       category: "medical_imaging",
       isMedical: true,
-      
+
       // Dynamic tags based on content (following unified pattern)
       tags: [
         "medical_imaging",
         analysisResult.modality?.toLowerCase() || "unknown",
-        ...(analysisResult.overallAssessment?.hasUrgentFindings ? ["urgent"] : []),
+        ...(analysisResult.overallAssessment?.hasUrgentFindings
+          ? ["urgent"]
+          : []),
       ],
-      
+
       hasPrescription: false,
       hasImmunization: false,
       hasLabOrVitals: false,
-      
+
       content: analysisResult.visualDescription || "Medical imaging analysis",
       text: analysisResult.visualDescription || "",
-      
+
       // Structured report object (unified pattern)
       report: reportObject,
-      
+
       tokenUsage: tokenUsage || { total: 0 },
       confidence: analysisResult.confidence || 0.8,
-      
+
       // Medical imaging specific metadata
       processingComplexity: "medical_imaging",
       documentType: "medical_imaging",
@@ -372,8 +429,8 @@ export const medicalImagingAnalysisNode = async (
     recordWorkflowStep(
       "medical-imaging-analysis",
       state,
-      { 
-        ...state, 
+      {
+        ...state,
         medicalImagingAnalysis: unifiedResult,
         imageAnalysis: analysisResult,
         detectedBodyParts: analysisResult.bodyParts,
@@ -403,10 +460,10 @@ export const medicalImagingAnalysisNode = async (
         imageQuality: analysisResult.imageQuality,
         timestamp: analysisResult.processingTimestamp,
       },
-      
+
       detectedBodyParts: analysisResult.bodyParts || [],
       detectedAnomalies: analysisResult.anomalies || [],
-      
+
       // Update imaging metadata
       imagingMetadata: {
         ...state.imagingMetadata,
@@ -417,7 +474,8 @@ export const medicalImagingAnalysisNode = async (
         technicalQuality: analysisResult.technicalQuality,
       },
 
-      urgentFindings: analysisResult.overallAssessment?.hasUrgentFindings || false,
+      urgentFindings:
+        analysisResult.overallAssessment?.hasUrgentFindings || false,
       primaryAnatomicalRegion: analysisResult.anatomicalRegion,
 
       // Store unified result structure for workflow output - THIS IS THE KEY FIELD!
@@ -426,7 +484,6 @@ export const medicalImagingAnalysisNode = async (
       // Update token usage
       tokenUsage,
     };
-
   } catch (error) {
     log.analysis.error("Medical imaging analysis error:", error);
     console.error("❌ MEDICAL IMAGING ANALYSIS NODE - Error:", error);

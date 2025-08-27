@@ -104,7 +104,7 @@ const initialViewerState: ViewerState = {
   zoomLevel: 1,
   panOffset: { x: 0, y: 0 },
   sidebarOpen: true,
-  activeTabId: 'questions',
+  activeTabId: "questions",
   tabContext: {
     hasTranscript: false,
     isMobile: false,
@@ -125,8 +125,8 @@ const initialViewerState: ViewerState = {
   hiddenCounts: {
     symptoms: 0,
     diagnoses: 0,
-    treatments: 0
-  }
+    treatments: 0,
+  },
 };
 
 // Store 2: Session Viewer State Store (UI state only)
@@ -317,7 +317,7 @@ export const sessionViewerActions = {
     sessionViewerStore.update((state) => ({
       ...state,
       sidebarOpen: true,
-      activeTabId: 'details',
+      activeTabId: "details",
     }));
 
     logger.session.debug("Details tab selected and sidebar opened");
@@ -406,8 +406,8 @@ export const sessionViewerActions = {
       ...current,
       symptoms: {
         ...current.symptoms,
-        severityThreshold: Math.max(1, Math.min(10, threshold))
-      }
+        severityThreshold: Math.max(1, Math.min(10, threshold)),
+      },
     }));
 
     logger.session.debug("Symptom threshold updated", { threshold });
@@ -418,8 +418,8 @@ export const sessionViewerActions = {
       ...current,
       diagnoses: {
         ...current.diagnoses,
-        probabilityThreshold: Math.max(0, Math.min(1, threshold))
-      }
+        probabilityThreshold: Math.max(0, Math.min(1, threshold)),
+      },
     }));
 
     logger.session.debug("Diagnosis threshold updated", { threshold });
@@ -430,8 +430,8 @@ export const sessionViewerActions = {
       ...current,
       treatments: {
         ...current.treatments,
-        priorityThreshold: Math.max(1, Math.min(10, threshold))
-      }
+        priorityThreshold: Math.max(1, Math.min(10, threshold)),
+      },
     }));
 
     logger.session.debug("Treatment threshold updated", { threshold });
@@ -442,12 +442,14 @@ export const sessionViewerActions = {
       ...current,
       symptoms: {
         ...current.symptoms,
-        showAll: !current.symptoms.showAll
-      }
+        showAll: !current.symptoms.showAll,
+      },
     }));
 
     const currentThresholds = get(thresholds);
-    logger.session.debug("Toggle show all symptoms", { showAll: currentThresholds.symptoms.showAll });
+    logger.session.debug("Toggle show all symptoms", {
+      showAll: currentThresholds.symptoms.showAll,
+    });
   },
 
   toggleShowAllDiagnoses(): void {
@@ -455,12 +457,14 @@ export const sessionViewerActions = {
       ...current,
       diagnoses: {
         ...current.diagnoses,
-        showAll: !current.diagnoses.showAll
-      }
+        showAll: !current.diagnoses.showAll,
+      },
     }));
 
     const currentThresholds = get(thresholds);
-    logger.session.debug("Toggle show all diagnoses", { showAll: currentThresholds.diagnoses.showAll });
+    logger.session.debug("Toggle show all diagnoses", {
+      showAll: currentThresholds.diagnoses.showAll,
+    });
   },
 
   toggleShowAllTreatments(): void {
@@ -468,18 +472,20 @@ export const sessionViewerActions = {
       ...current,
       treatments: {
         ...current.treatments,
-        showAll: !current.treatments.showAll
-      }
+        showAll: !current.treatments.showAll,
+      },
     }));
 
     const currentThresholds = get(thresholds);
-    logger.session.debug("Toggle show all treatments", { showAll: currentThresholds.treatments.showAll });
+    logger.session.debug("Toggle show all treatments", {
+      showAll: currentThresholds.treatments.showAll,
+    });
   },
 
   setHiddenCounts(counts: HiddenCounts): void {
     sessionViewerStore.update((state) => ({
       ...state,
-      hiddenCounts: counts
+      hiddenCounts: counts,
     }));
 
     logger.session.debug("Hidden counts updated", counts);

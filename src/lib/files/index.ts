@@ -118,11 +118,14 @@ export async function createTasks(files: File[]): Promise<Task[]> {
         `📷 IMAGE DETECTED: ${file.name} (${fileSizeMB}MB) - Will process as image document`,
       );
       groupped.images.push(file);
-    } else if (browser && await (async () => {
-      // Dynamically import DICOM handler only in browser
-      const { dicomHandler } = await import("./dicom-handler");
-      return dicomHandler.detectDicomFile(file);
-    })()) {
+    } else if (
+      browser &&
+      (await (async () => {
+        // Dynamically import DICOM handler only in browser
+        const { dicomHandler } = await import("./dicom-handler");
+        return dicomHandler.detectDicomFile(file);
+      })())
+    ) {
       console.log(
         `🏥 DICOM DETECTED: ${file.name} (${fileSizeMB}MB) - Will extract medical imaging data`,
       );
@@ -154,12 +157,12 @@ export async function createTasks(files: File[]): Promise<Task[]> {
   for (const dicomFile of groupped.dicom) {
     try {
       console.log(`🏥 Processing DICOM file: ${dicomFile.name}`);
-      
+
       // Only process DICOM in browser environment
       if (!browser) {
         throw new Error("DICOM processing requires browser environment");
       }
-      
+
       // Dynamically import DICOM handler
       const { dicomHandler } = await import("./dicom-handler");
       const dicomResult = await dicomHandler.processDicomFile(dicomFile);
@@ -237,11 +240,12 @@ export async function createTasks(files: File[]): Promise<Task[]> {
         return await readAsBase64(file);
       }),
     );
-    
+
     // Generate thumbnail from first image for immediate preview
-    const taskThumbnail = imageData.length > 0 
-      ? await resizeImage(imageData[0], THUMBNAIL_SIZE)
-      : undefined;
+    const taskThumbnail =
+      imageData.length > 0
+        ? await resizeImage(imageData[0], THUMBNAIL_SIZE)
+        : undefined;
 
     tasks.push({
       title: "Images",
@@ -262,19 +266,27 @@ export async function processTask(task: Task): Promise<DocumentNew[]> {
       return (await processPDF(task.data as ArrayBuffer, task.password).then(
         (assessment) => {
           // Update task with thumbnail from PDF processing
-          if ('taskThumbnail' in assessment && assessment.taskThumbnail) {
+          if ("taskThumbnail" in assessment && assessment.taskThumbnail) {
             task.thumbnail = assessment.taskThumbnail;
           }
-          return processMultipageAssessmentToDocumnets(assessment as AssessmentClient, [], task);
+          return processMultipageAssessmentToDocumnets(
+            assessment as AssessmentClient,
+            [],
+            task,
+          );
         },
       )) as DocumentNew[];
     case "images":
       return (await processImages(task.data as string[]).then((assessment) => {
         // Update task with thumbnail from image processing
-        if ('taskThumbnail' in assessment && assessment.taskThumbnail) {
+        if ("taskThumbnail" in assessment && assessment.taskThumbnail) {
           task.thumbnail = assessment.taskThumbnail;
         }
-        return processMultipageAssessmentToDocumnets(assessment as AssessmentClient, [], task);
+        return processMultipageAssessmentToDocumnets(
+          assessment as AssessmentClient,
+          [],
+          task,
+        );
       })) as DocumentNew[];
     case "application/dicom":
       return (await processDicomImages(

@@ -6,7 +6,7 @@
  * - Extracts metadata from DICOM tags
  * - Converts DICOM images to PNG format for AI processing
  * - Preserves original DICOM data for attachment storage
- * 
+ *
  * IMPORTANT: This module only works in browser environments due to Cornerstone.js dependencies
  */
 
@@ -83,7 +83,9 @@ export class DicomHandler {
 
     // Critical: Only initialize in browser environment
     if (!browser) {
-      throw new Error("DICOM Handler can only be initialized in browser environment");
+      throw new Error(
+        "DICOM Handler can only be initialized in browser environment",
+      );
     }
 
     try {
@@ -125,7 +127,9 @@ export class DicomHandler {
   async detectDicomFile(file: File): Promise<boolean> {
     // Fail gracefully on server side
     if (!browser) {
-      console.warn("[DICOM] detectDicomFile called server-side, returning false");
+      console.warn(
+        "[DICOM] detectDicomFile called server-side, returning false",
+      );
       return false;
     }
 
@@ -219,9 +223,11 @@ export class DicomHandler {
    * Main processing function - extract images and metadata from DICOM file
    */
   async processDicomFile(file: File): Promise<DicomProcessingResult> {
-    // Critical: Only process in browser environment  
+    // Critical: Only process in browser environment
     if (!browser) {
-      throw new Error("DICOM processing can only be performed in browser environment");
+      throw new Error(
+        "DICOM processing can only be performed in browser environment",
+      );
     }
 
     await this.initialize();

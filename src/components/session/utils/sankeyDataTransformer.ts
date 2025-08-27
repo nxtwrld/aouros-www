@@ -350,7 +350,11 @@ export function applySankeyThresholds(
   };
 
   // If all "showAll" flags are true, return full data with zero hidden counts
-  if (thresholds.symptoms.showAll && thresholds.diagnoses.showAll && thresholds.treatments.showAll) {
+  if (
+    thresholds.symptoms.showAll &&
+    thresholds.diagnoses.showAll &&
+    thresholds.treatments.showAll
+  ) {
     return { sankeyData: fullSankeyData, hiddenCounts };
   }
 
@@ -362,7 +366,7 @@ export function applySankeyThresholds(
     let shouldShow = true;
 
     switch (node.type) {
-      case 'symptom':
+      case "symptom":
         if (!thresholds.symptoms.showAll) {
           const severity = (node.data as any)?.severity || 5;
           shouldShow = severity < thresholds.symptoms.severityThreshold;
@@ -370,7 +374,7 @@ export function applySankeyThresholds(
         if (!shouldShow) hiddenCounts.symptoms++;
         break;
 
-      case 'diagnosis':
+      case "diagnosis":
         if (!thresholds.diagnoses.showAll) {
           const probability = (node.data as any)?.probability || 0.5;
           shouldShow = probability > thresholds.diagnoses.probabilityThreshold;
@@ -378,7 +382,7 @@ export function applySankeyThresholds(
         if (!shouldShow) hiddenCounts.diagnoses++;
         break;
 
-      case 'treatment':
+      case "treatment":
         if (!thresholds.treatments.showAll) {
           const priority = (node.data as any)?.priority || 5;
           shouldShow = priority < thresholds.treatments.priorityThreshold;
@@ -399,11 +403,12 @@ export function applySankeyThresholds(
   });
 
   // Remove orphaned nodes (nodes that lose all their connections)
-  const { finalVisibleNodes, additionalHiddenCounts } = removeOrphanedSankeyNodes(
-    filteredNodes,
-    fullSankeyData.links,
-    visibleNodeIds
-  );
+  const { finalVisibleNodes, additionalHiddenCounts } =
+    removeOrphanedSankeyNodes(
+      filteredNodes,
+      fullSankeyData.links,
+      visibleNodeIds,
+    );
 
   // Update hidden counts with additional orphaned nodes
   hiddenCounts.symptoms += additionalHiddenCounts.symptoms;
@@ -411,11 +416,13 @@ export function applySankeyThresholds(
   hiddenCounts.treatments += additionalHiddenCounts.treatments;
 
   // Filter links to only include connections between final visible nodes
-  const finalVisibleNodeIds = new Set(finalVisibleNodes.map(n => n.id));
-  const filteredLinks = fullSankeyData.links.filter(link => {
+  const finalVisibleNodeIds = new Set(finalVisibleNodes.map((n) => n.id));
+  const filteredLinks = fullSankeyData.links.filter((link) => {
     const sourceId = getNodeId(link.source);
     const targetId = getNodeId(link.target);
-    return finalVisibleNodeIds.has(sourceId) && finalVisibleNodeIds.has(targetId);
+    return (
+      finalVisibleNodeIds.has(sourceId) && finalVisibleNodeIds.has(targetId)
+    );
   });
 
   const filteredSankeyData: SankeyData = {
@@ -430,13 +437,13 @@ export function applySankeyThresholds(
 /**
  * Remove orphaned nodes following medical flow logic:
  * - Symptoms: Already filtered by threshold only
- * - Diagnoses: Remove if no visible symptoms link to them  
+ * - Diagnoses: Remove if no visible symptoms link to them
  * - Treatments: Remove if no visible diagnoses link to them
  */
 function removeOrphanedSankeyNodes(
   filteredNodes: SankeyNode[],
   allLinks: SankeyLink[],
-  visibleNodeIds: Set<string>
+  visibleNodeIds: Set<string>,
 ): {
   finalVisibleNodes: SankeyNode[];
   additionalHiddenCounts: HiddenCounts;
@@ -449,7 +456,7 @@ function removeOrphanedSankeyNodes(
 
   // Create a map for quick node lookup
   const nodeMap = new Map<string, SankeyNode>();
-  filteredNodes.forEach(node => nodeMap.set(node.id, node));
+  filteredNodes.forEach((node) => nodeMap.set(node.id, node));
 
   const finalVisibleNodeIds = new Set(visibleNodeIds);
   let changed = true;
@@ -466,40 +473,44 @@ function removeOrphanedSankeyNodes(
       let shouldRemove = false;
 
       switch (node.type) {
-        case 'symptom':
+        case "symptom":
           // Symptoms are never removed as orphans - only by threshold
           break;
 
-        case 'diagnosis':
+        case "diagnosis":
           // Remove diagnosis if no visible symptoms link TO it
-          const hasVisibleSymptoms = allLinks.some(link => {
+          const hasVisibleSymptoms = allLinks.some((link) => {
             const sourceId = getNodeId(link.source);
             const targetId = getNodeId(link.target);
-            
+
             // Check if any visible symptom links to this diagnosis
-            return targetId === nodeId && 
-                   finalVisibleNodeIds.has(sourceId) && 
-                   nodeMap.get(sourceId)?.type === 'symptom';
+            return (
+              targetId === nodeId &&
+              finalVisibleNodeIds.has(sourceId) &&
+              nodeMap.get(sourceId)?.type === "symptom"
+            );
           });
-          
+
           if (!hasVisibleSymptoms) {
             shouldRemove = true;
             additionalHiddenCounts.diagnoses++;
           }
           break;
 
-        case 'treatment':
+        case "treatment":
           // Remove treatment if no visible diagnoses link TO it
-          const hasVisibleDiagnoses = allLinks.some(link => {
+          const hasVisibleDiagnoses = allLinks.some((link) => {
             const sourceId = getNodeId(link.source);
             const targetId = getNodeId(link.target);
-            
+
             // Check if any visible diagnosis links to this treatment
-            return targetId === nodeId && 
-                   finalVisibleNodeIds.has(sourceId) && 
-                   nodeMap.get(sourceId)?.type === 'diagnosis';
+            return (
+              targetId === nodeId &&
+              finalVisibleNodeIds.has(sourceId) &&
+              nodeMap.get(sourceId)?.type === "diagnosis"
+            );
           });
-          
+
           if (!hasVisibleDiagnoses) {
             shouldRemove = true;
             additionalHiddenCounts.treatments++;
@@ -520,7 +531,7 @@ function removeOrphanedSankeyNodes(
 
   // Build final node list
   const finalVisibleNodes: SankeyNode[] = [];
-  filteredNodes.forEach(node => {
+  filteredNodes.forEach((node) => {
     if (finalVisibleNodeIds.has(node.id)) {
       finalVisibleNodes.push(node);
     }
