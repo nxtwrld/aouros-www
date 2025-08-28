@@ -808,7 +808,12 @@
       "hide": "Hide",
       "show": "Show",
       "show-panel": "Show Panel",
-      "hide-panel": "Hide Panel"
+      "hide-panel": "Hide Panel",
+      "end": "End Session",
+      "save": "Save",
+      "discard": "Discard",
+      "cancel": "Cancel",
+      "saving": "Saving..."
     },
     "tabs": {
       "questions": "Questions",
@@ -848,7 +853,9 @@
       "answered": "Answered",
       "acknowledged": "Acknowledged",
       "skipped": "Skipped",
-      "resolved": "Resolved"
+      "resolved": "Resolved",
+      "continue": "Continue",
+      "recording": "Recording..."
     },
     "priority": {
       "critical": "Critical",
@@ -1035,6 +1042,32 @@
       "days": "days",
       "days-short": "d",
       "percent": "%"
+    },
+    "end": {
+      "title": "End Session",
+      "description": "What would you like to do with this session?"
+    },
+    "save": {
+      "error": {
+        "missing_data": "Missing required information to save session"
+      }
+    },
+    "qom": {
+      "status": "Status",
+      "nodes": "Nodes", 
+      "cost": "Cost",
+      "duration": "Duration"
+    }
+  },
+  "documents": {
+    "session": {
+      "title": "Session Analysis",
+      "date": "Date",
+      "time": "Time",
+      "duration": "Duration",
+      "performer": "Performer",
+      "version": "Version",
+      "noData": "No session data available"
     }
   },
   "report": {

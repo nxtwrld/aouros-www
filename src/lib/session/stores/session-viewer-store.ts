@@ -83,6 +83,9 @@ interface ViewerState {
   // Interaction state
   isDragging: boolean;
   isZooming: boolean;
+  
+  // Interactivity mode (false for passive/read-only mode in documents)
+  isInteractive: boolean;
 
   // Alert acknowledgments (UI state, not data)
   acknowledgedAlerts: Set<string>;
@@ -120,6 +123,7 @@ const initialViewerState: ViewerState = {
   },
   isDragging: false,
   isZooming: false,
+  isInteractive: true, // Default to interactive mode
   acknowledgedAlerts: new Set(),
   answeredQuestions: new Map(),
   hiddenCounts: {
@@ -492,6 +496,18 @@ export const sessionViewerActions = {
   },
 
   /**
+   * Set interactivity mode
+   */
+  setInteractive(isInteractive: boolean): void {
+    sessionViewerStore.update((state) => ({
+      ...state,
+      isInteractive,
+    }));
+
+    logger.session.debug("Interactivity mode updated", { isInteractive });
+  },
+
+  /**
    * Reset all viewer state
    */
   resetViewerState(): void {
@@ -666,6 +682,11 @@ export const acknowledgedAlerts: Readable<Set<string>> = derived(
 export const answeredQuestions: Readable<
   Map<string, { answer: any; confidence: number }>
 > = derived(sessionViewerStore, ($store) => $store.answeredQuestions);
+
+export const isInteractive: Readable<boolean> = derived(
+  sessionViewerStore,
+  ($store) => $store.isInteractive
+);
 
 // thresholds export moved to session-data-store to avoid circular dependency
 

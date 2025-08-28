@@ -818,6 +818,45 @@ export const unifiedSessionActions = {
   getState(): UnifiedSessionState {
     return get(unifiedSessionStore);
   },
+
+  // Session data gathering methods for document storage
+  getCurrentSessionData(): SessionAnalysis | null {
+    const state = get(unifiedSessionStore);
+    return state.analysis.currentSession;
+  },
+
+  getCurrentTranscriptData(): any[] {
+    const state = get(unifiedSessionStore);
+    return state.transcripts.items.map(item => ({
+      id: item.id,
+      text: item.text,
+      confidence: item.confidence,
+      timestamp: item.timestamp,
+      is_final: item.is_final,
+      speaker: item.speaker || 'unknown'
+    }));
+  },
+
+  getSessionMetadata(): {
+    sessionId: string | null;
+    duration: number;
+    recordingStartTime: number | null;
+    hasData: boolean;
+  } {
+    const state = get(unifiedSessionStore);
+    const duration = state.audio.recordingStartTime 
+      ? Date.now() - state.audio.recordingStartTime 
+      : 0;
+    const hasData = state.transcripts.items.length > 0 || 
+                    state.analysis.currentSession !== null;
+    
+    return {
+      sessionId: state.audio.sessionId,
+      duration,
+      recordingStartTime: state.audio.recordingStartTime,
+      hasData
+    };
+  },
 };
 
 // Initialize route tracking if in browser

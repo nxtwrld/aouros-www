@@ -14,6 +14,7 @@
     import SectionAllergies from './SectionAllergies.svelte';
     import SectionTriage from './SectionTriage.svelte';
     import SectionAnesthesia from './SectionAnesthesia.svelte';
+    import SectionSession from './SectionSession.svelte';
     
     import type { Document } from '$lib/documents/types.d';
 
@@ -26,6 +27,7 @@
     // Pure data-driven approach: render whatever sections exist in the document
     // AI feature detection populates document sections, UI simply renders them
     const availableSections = [
+
         { id: 'summary', component: SectionSummary, name: 'Summary' },
         { id: 'diagnosis', component: SectionDiagnosis, name: 'Diagnosis' },
         { id: 'bodyParts', component: SectionBody, name: 'Body Parts' },
@@ -36,6 +38,7 @@
         { id: 'triage', component: SectionTriage, name: 'Triage' },
         { id: 'anesthesia', component: SectionAnesthesia, name: 'Anesthesia' },
         { id: 'signals', component: SectionSignals, name: 'Signals & Lab Results' },
+        { id: 'sessionAnalysis', component: SectionSession, name: 'Session Analysis' },
         { id: 'text', component: SectionText, name: 'Text Content' },
                 // { id: 'imaging', component: SectionImaging, name: 'Imaging Studies' },
         // { id: 'specimens', component: SectionSpecimens, name: 'Specimens' },
@@ -65,6 +68,17 @@
         
         // Special handling for different section types
         switch(sectionId) {
+            case 'sessionAnalysis':
+                // Check if we have valid session analysis data
+                // Session analysis contains both transcript and analysis children
+                const analysisData = data.analysis || data;
+                return !!(analysisData.nodes && (
+                    analysisData.nodes.symptoms?.length > 0 ||
+                    analysisData.nodes.diagnoses?.length > 0 ||
+                    analysisData.nodes.treatments?.length > 0 ||
+                    analysisData.nodes.actions?.length > 0
+                ));
+            
             case 'medications':
                 return data.hasMedications || 
                        (data.currentMedications && data.currentMedications.length > 0) ||
@@ -142,6 +156,8 @@
     // Get data for a section from the document
     function getSectionData(sectionId: string) {
         switch(sectionId) {
+            case 'sessionAnalysis':
+                return document.content.sessionAnalysis;
             case 'summary':
                 return document.content.summary;
             case 'diagnosis':

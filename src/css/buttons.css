@@ -131,3 +131,11 @@
   --color-text: var(--color-success, #16a34a);
   --color-text-hover: var(--color-success, #16a34a);
 }
+
+/* Button row container for general use */
+.buttons-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}

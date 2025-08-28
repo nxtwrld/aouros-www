@@ -55,6 +55,14 @@
         checkViewport();
         window.addEventListener('resize', checkViewport);
         
+        // Set interactivity mode in store
+        sessionViewerActions.setInteractive(enableInteractions);
+        
+        // Load session data into store for non-real-time usage (document viewing)
+        if (sessionData && !isRealTime) {
+            sessionDataActions.loadSession(sessionData);
+        }
+        
         // Initialize QOM for session
         if (sessionData?.sessionId) {
             qomActions.initialize(sessionData.sessionId);

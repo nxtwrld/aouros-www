@@ -443,8 +443,8 @@
         }
 
         // Validate data structure
-        if (!$sankeyData.nodes || !Array.isArray($sankeyData.nodes)) {
-            console.error('Invalid nodes data:', $sankeyData.nodes);
+        if (!$sankeyData || !$sankeyData.nodes || !Array.isArray($sankeyData.nodes)) {
+            console.error('Invalid sankeyData or nodes:', $sankeyData);
             return;
         }
         
@@ -1347,7 +1347,7 @@
      role="application"
      aria-label="Interactive Sankey diagram with zoom and pan controls"
      style="--hover-link-opacity: {OPACITY.CSS_HOVER_LINK}; --hover-node-opacity: {OPACITY.CSS_HOVER_NODE}; --shadow-light-opacity: {OPACITY.SHADOW_LIGHT}; --shadow-medium-opacity: {OPACITY.SHADOW_MEDIUM}">
-    {#if !$sankeyData.nodes.length}
+    {#if !$sankeyData?.nodes?.length}
         <div class="empty-state">
             <p>{$t('session.empty-states.no-data')}</p>
         </div>
