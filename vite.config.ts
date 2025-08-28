@@ -1,6 +1,11 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 //import { defineConfig } from 'vitest/config';
-import { type ViteDevServer, defineConfig, normalizePath, type Plugin } from "vite";
+import {
+  type ViteDevServer,
+  defineConfig,
+  normalizePath,
+  type Plugin,
+} from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 // Removed topLevelAwait plugin - was causing 'Server is not a constructor' error on Vercel
 // import topLevelAwait from "vite-plugin-top-level-await";
@@ -10,17 +15,17 @@ import { qomConfigPlugin } from "./vite-plugin-qom-config";
 // Plugin to inject Node.js polyfills
 function nodePolyfillsPlugin(): Plugin {
   return {
-    name: 'node-polyfills',
+    name: "node-polyfills",
     transformIndexHtml() {
       return [
         {
-          tag: 'script',
+          tag: "script",
           children: `
             if (typeof global === 'undefined') {
               window.global = window;
             }
           `,
-          injectTo: 'head-prepend',
+          injectTo: "head-prepend",
         },
       ];
     },
@@ -96,38 +101,38 @@ export default defineConfig({
     esbuildOptions: {
       target: "esnext",
       define: {
-        global: 'globalThis',
+        global: "globalThis",
       },
     },
     exclude: [
       "onnx-runtime-web",
       "cornerstone-core",
       "cornerstone-wado-image-loader",
-      "dicom-parser"
+      "dicom-parser",
     ],
     include: [
-      'buffer',
-      'util',
-      'process',
-      'events',
-      'stream-browserify',
-      'crypto-browserify'
+      "buffer",
+      "util",
+      "process",
+      "events",
+      "stream-browserify",
+      "crypto-browserify",
     ],
   },
   resolve: {
     alias: {
-      crypto: 'crypto-browserify',
-      buffer: 'buffer',
-      stream: 'stream-browserify',
-      events: 'events',
-      util: 'util/util.js',
-      process: 'process/browser',
-    }
+      crypto: "crypto-browserify",
+      buffer: "buffer",
+      stream: "stream-browserify",
+      events: "events",
+      util: "util/util.js",
+      process: "process/browser",
+    },
   },
   define: {
-    global: 'globalThis',
-    Buffer: ['buffer', 'Buffer'],
-    'process.env': {},
+    global: "globalThis",
+    Buffer: ["buffer", "Buffer"],
+    "process.env": {},
   },
   ssr: {
     noExternal: [
@@ -137,8 +142,8 @@ export default defineConfig({
       // Force these browser-only packages to be external in SSR
       "cornerstone-core",
       "cornerstone-wado-image-loader",
-      "dicom-parser"
-    ]
+      "dicom-parser",
+    ],
   },
   test: {
     include: ["src/**/*.{test,spec}.{js,ts}"],

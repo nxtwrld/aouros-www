@@ -290,12 +290,10 @@ export class ChatManager {
     // Get current profile data from store and update context
     const currentProfile = profile.get();
     if (currentProfile && currentProfile.id === data.profileId) {
-      logger
-        .namespace("Chat")
-        .info("Switching chat context to profile", {
-          profileName: data.profileName,
-          profileId: data.profileId,
-        });
+      logger.namespace("Chat").info("Switching chat context to profile", {
+        profileName: data.profileName,
+        profileId: data.profileId,
+      });
 
       // Create new context for the switched profile using profile store data
       const newContext = this.createContextFromProfileData(

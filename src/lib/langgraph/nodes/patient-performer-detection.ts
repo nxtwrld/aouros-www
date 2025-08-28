@@ -1,9 +1,9 @@
 /**
  * Patient and Performer Detection Node
- * 
+ *
  * Processes DICOM metadata to extract patient information, medical performers,
  * and technical imaging parameters. Runs on metadata only (no image data needed).
- * 
+ *
  * Uses unified workflow pattern - returns multiple properties that get merged into state.
  */
 
@@ -35,15 +35,17 @@ function validatePatient(patient: any): any {
 
   return {
     fullName: patient.fullName || patient.name || "Unknown Patient",
-    biologicalSex: ["male", "female"].includes(patient.biologicalSex) 
-      ? patient.biologicalSex 
+    biologicalSex: ["male", "female"].includes(patient.biologicalSex)
+      ? patient.biologicalSex
       : undefined,
     identifier: patient.identifier || patient.patientId || "unknown",
     birthDate: patient.birthDate || patient.dateOfBirth || undefined,
-    insurance: patient.insurance ? {
-      provider: patient.insurance.provider || undefined,
-      number: patient.insurance.number || undefined,
-    } : undefined,
+    insurance: patient.insurance
+      ? {
+          provider: patient.insurance.provider || undefined,
+          number: patient.insurance.number || undefined,
+        }
+      : undefined,
   };
 }
 
@@ -51,19 +53,21 @@ function validatePatient(patient: any): any {
  * Validate performers array using core.performer structure
  */
 function validatePerformers(performers: any[]): any[] {
-  return performers.map(performer => ({
+  return performers.map((performer) => ({
     role: performer.role || "other_specialist",
     name: performer.name || "Unknown",
     title: performer.title || undefined,
     specialty: performer.specialty || undefined,
     licenseNumber: performer.licenseNumber || undefined,
-    institution: performer.institution ? {
-      name: performer.institution.name || undefined,
-      department: performer.institution.department || undefined,
-      address: performer.institution.address || undefined,
-      phone: performer.institution.phone || undefined,
-      email: performer.institution.email || undefined,
-    } : undefined,
+    institution: performer.institution
+      ? {
+          name: performer.institution.name || undefined,
+          department: performer.institution.department || undefined,
+          address: performer.institution.address || undefined,
+          phone: performer.institution.phone || undefined,
+          email: performer.institution.email || undefined,
+        }
+      : undefined,
     signature: performer.signature || undefined,
     datePerformed: performer.datePerformed || undefined,
     isPrimary: Boolean(performer.isPrimary),
@@ -89,8 +93,8 @@ function validateTechnical(technical: any): any {
       institutionName: technical.device?.institutionName || undefined,
     },
     imageParameters: {
-      pixelSpacing: Array.isArray(technical.imageParameters?.pixelSpacing) 
-        ? technical.imageParameters.pixelSpacing 
+      pixelSpacing: Array.isArray(technical.imageParameters?.pixelSpacing)
+        ? technical.imageParameters.pixelSpacing
         : undefined,
       windowCenter: Array.isArray(technical.imageParameters?.windowCenter)
         ? technical.imageParameters.windowCenter
@@ -117,16 +121,26 @@ export const patientPerformerDetectionNode = async (
     imageCount: state.images?.length || 0,
     hasMetadata: !!state.metadata,
     hasDicomMetadata: !!state.metadata?.dicomMetadata,
-    dicomKeys: state.metadata?.dicomMetadata ? Object.keys(state.metadata.dicomMetadata) : [],
+    dicomKeys: state.metadata?.dicomMetadata
+      ? Object.keys(state.metadata.dicomMetadata)
+      : [],
   });
 
   // Debug: Log the complete state metadata structure
-  console.log("🔍 COMPLETE STATE METADATA:", JSON.stringify(state.metadata, null, 2));
+  console.log(
+    "🔍 COMPLETE STATE METADATA:",
+    JSON.stringify(state.metadata, null, 2),
+  );
   console.log("🔍 COMPLETE STATE KEYS:", Object.keys(state));
-  console.log("🔍 IMAGING METADATA:", JSON.stringify(state.imagingMetadata, null, 2));
+  console.log(
+    "🔍 IMAGING METADATA:",
+    JSON.stringify(state.imagingMetadata, null, 2),
+  );
 
   try {
-    console.log("✅ Patient/performer detection executing - in dedicated medical imaging workflow");
+    console.log(
+      "✅ Patient/performer detection executing - in dedicated medical imaging workflow",
+    );
 
     // Progress tracking
     const emitProgress = (stage: string, progress: number, message: string) => {
@@ -143,12 +157,18 @@ export const patientPerformerDetectionNode = async (
     };
 
     // Initialize progress
-    emitProgress("patient_performer_detection", 10, "Initializing metadata extraction");
+    emitProgress(
+      "patient_performer_detection",
+      10,
+      "Initializing metadata extraction",
+    );
 
     // Load schema for patient/performer detection
     let schema: FunctionDefinition;
     try {
-      const schemaModule = await import("../../configurations/patient-performer-detection");
+      const schemaModule = await import(
+        "../../configurations/patient-performer-detection"
+      );
       schema = schemaModule.default;
       if (!schema) {
         throw new Error("Schema module does not export a default export");
@@ -159,24 +179,31 @@ export const patientPerformerDetectionNode = async (
       throw new Error(`Failed to load schema: ${error}`);
     }
 
-    emitProgress("patient_performer_detection", 30, "Extracting patient information");
+    emitProgress(
+      "patient_performer_detection",
+      30,
+      "Extracting patient information",
+    );
 
     // Build content for AI processing (metadata only - no images needed)
     const content = [];
     if (state.text) {
       content.push({ type: "text" as const, text: state.text });
     }
-    
-    // Add DICOM metadata context with clear instructions  
+
+    // Add DICOM metadata context with clear instructions
     // Check both possible locations for DICOM metadata - prefer the full metadata
     const dicomData = state.metadata?.dicomMetadata || state.imagingMetadata;
     console.log("🔍 DICOM DATA CHECK:", {
       hasMetadataDicom: !!state.metadata?.dicomMetadata,
       hasImagingMetadata: !!state.imagingMetadata,
-      selectedData: dicomData === state.metadata?.dicomMetadata ? 'metadata.dicomMetadata' : 'imagingMetadata',
-      keyCount: dicomData ? Object.keys(dicomData).length : 0
+      selectedData:
+        dicomData === state.metadata?.dicomMetadata
+          ? "metadata.dicomMetadata"
+          : "imagingMetadata",
+      keyCount: dicomData ? Object.keys(dicomData).length : 0,
     });
-    
+
     if (dicomData && Object.keys(dicomData).length > 0) {
       let metadataText = `Please extract patient information, medical performers, and technical parameters from this DICOM metadata:
 
@@ -189,26 +216,26 @@ MEDICAL PERFORMERS:
 - Common DICOM tags: ReferringPhysicianName, PerformingPhysicianName, OperatorName
 
 TECHNICAL STUDY INFORMATION:
-- Modality: ${dicomData.modality || 'Unknown'}
-- Body Part: ${dicomData.bodyPartExamined || 'Unknown'}  
-- Study Description: ${dicomData.studyDescription || 'Not specified'}
-- Study Date: ${dicomData.studyDate || 'Unknown'}
+- Modality: ${dicomData.modality || "Unknown"}
+- Body Part: ${dicomData.bodyPartExamined || "Unknown"}  
+- Study Description: ${dicomData.studyDescription || "Not specified"}
+- Study Date: ${dicomData.studyDate || "Unknown"}
 
 DEVICE INFORMATION:
-- Manufacturer: ${(dicomData as any).manufacturer || 'Unknown'}
-- Model: ${(dicomData as any).modelName || 'Unknown'}
-- Station: ${(dicomData as any).stationName || 'Unknown'}
-- Institution: ${(dicomData as any).institutionName || 'Unknown'}
+- Manufacturer: ${(dicomData as any).manufacturer || "Unknown"}
+- Model: ${(dicomData as any).modelName || "Unknown"}
+- Station: ${(dicomData as any).stationName || "Unknown"}
+- Institution: ${(dicomData as any).institutionName || "Unknown"}
 
 MEDICAL PERSONNEL:
-- Referring Physician: ${(dicomData as any).referringPhysician || 'Unknown'}
-- Performing Physician: ${(dicomData as any).performingPhysician || 'Unknown'}
+- Referring Physician: ${(dicomData as any).referringPhysician || "Unknown"}
+- Performing Physician: ${(dicomData as any).performingPhysician || "Unknown"}
 
 PATIENT DETAILS:  
-- Patient Name: ${(dicomData as any).patientName || 'Unknown'}
-- Patient ID: ${(dicomData as any).patientId || 'Unknown'}
-- Birth Date: ${(dicomData as any).patientBirthDate || 'Unknown'}
-- Sex: ${(dicomData as any).patientSex || 'Unknown'}
+- Patient Name: ${(dicomData as any).patientName || "Unknown"}
+- Patient ID: ${(dicomData as any).patientId || "Unknown"}
+- Birth Date: ${(dicomData as any).patientBirthDate || "Unknown"}
+- Sex: ${(dicomData as any).patientSex || "Unknown"}
 
 RAW DICOM METADATA:
 ${JSON.stringify(dicomData, null, 2)}`;
@@ -234,8 +261,9 @@ ${JSON.stringify(dicomData, null, 2)}`;
 
     console.log("🤖 PATIENT/PERFORMER DETECTION - Sending to AI:", {
       contentLength: finalContent.length,
-      hasText: finalContent.some(c => c.type === "text"),
-      firstTextLength: finalContent.find(c => c.type === "text")?.text?.length || 0,
+      hasText: finalContent.some((c) => c.type === "text"),
+      firstTextLength:
+        finalContent.find((c) => c.type === "text")?.text?.length || 0,
     });
 
     // Log complete input data being sent to AI
@@ -245,8 +273,11 @@ ${JSON.stringify(dicomData, null, 2)}`;
         const text = content.text;
         if (text.length > 2000) {
           // For long text, show first 1000 chars, indication of truncation, and last 500 chars
-          console.log(`📝 Content[${index}] (truncated ${text.length} chars):`, 
-            text.substring(0, 1000) + "\n... [TRUNCATED] ...\n" + text.substring(text.length - 500)
+          console.log(
+            `📝 Content[${index}] (truncated ${text.length} chars):`,
+            text.substring(0, 1000) +
+              "\n... [TRUNCATED] ...\n" +
+              text.substring(text.length - 500),
           );
         } else {
           console.log(`📝 Content[${index}]:`, text);
@@ -265,11 +296,19 @@ ${JSON.stringify(dicomData, null, 2)}`;
       "extraction",
       (stage, progress, message) => {
         const nodeProgress = 50 + (progress / 100) * 40; // Map 0-100% to 50-90%
-        emitProgress(`patient_performer_detection_ai_${stage}`, nodeProgress, `AI: ${message}`);
+        emitProgress(
+          `patient_performer_detection_ai_${stage}`,
+          nodeProgress,
+          `AI: ${message}`,
+        );
       },
     );
 
-    emitProgress("patient_performer_detection", 90, "Validating and enhancing results");
+    emitProgress(
+      "patient_performer_detection",
+      90,
+      "Validating and enhancing results",
+    );
 
     console.log("🤖 PATIENT/PERFORMER DETECTION - AI Result:", {
       hasResult: !!aiResult,
@@ -286,7 +325,10 @@ ${JSON.stringify(dicomData, null, 2)}`;
       try {
         const aiResultJson = JSON.stringify(aiResult, null, 2);
         if (aiResultJson.length > 3000) {
-          console.log("📦 AI Result (truncated):", aiResultJson.substring(0, 3000) + "\n... [TRUNCATED]");
+          console.log(
+            "📦 AI Result (truncated):",
+            aiResultJson.substring(0, 3000) + "\n... [TRUNCATED]",
+          );
         } else {
           console.log("📦 AI Result:", aiResultJson);
         }
@@ -299,31 +341,49 @@ ${JSON.stringify(dicomData, null, 2)}`;
 
     // Validate and process the AI result
     const validatedData = validateDetectionData(aiResult);
-    
+
     console.log("🔄 VALIDATION PROCESS:");
-    console.log("📥 Raw AI patient data:", JSON.stringify(aiResult?.patient || {}, null, 2));
-    console.log("📥 Raw AI performers data:", JSON.stringify(aiResult?.performers || [], null, 2));
-    console.log("📥 Raw AI technical data:", JSON.stringify(aiResult?.technical || {}, null, 2));
-    
+    console.log(
+      "📥 Raw AI patient data:",
+      JSON.stringify(aiResult?.patient || {}, null, 2),
+    );
+    console.log(
+      "📥 Raw AI performers data:",
+      JSON.stringify(aiResult?.performers || [], null, 2),
+    );
+    console.log(
+      "📥 Raw AI technical data:",
+      JSON.stringify(aiResult?.technical || {}, null, 2),
+    );
+
     // Create detection result
     const patientResult = validatePatient(validatedData.patient);
     const performersResult = validatePerformers(validatedData.performers || []);
     const technicalResult = validateTechnical(validatedData.technical || {});
-    
-    console.log("📤 Validated patient data:", JSON.stringify(patientResult, null, 2));
-    console.log("📤 Validated performers data:", JSON.stringify(performersResult, null, 2));
-    console.log("📤 Validated technical data:", JSON.stringify(technicalResult, null, 2));
-    
+
+    console.log(
+      "📤 Validated patient data:",
+      JSON.stringify(patientResult, null, 2),
+    );
+    console.log(
+      "📤 Validated performers data:",
+      JSON.stringify(performersResult, null, 2),
+    );
+    console.log(
+      "📤 Validated technical data:",
+      JSON.stringify(technicalResult, null, 2),
+    );
+
     const detectionResult = {
       // Patient information (using core.patient structure)
       patient: patientResult,
-      
-      // Performers information (using core.performer structure)  
+
+      // Performers information (using core.performer structure)
       performers: performersResult,
-      
+
       // Technical metadata
       technical: technicalResult,
-      
+
       // Processing metadata
       confidence: validatedData.confidence || 0.7,
       extractedAt: new Date().toISOString(),
@@ -342,11 +402,11 @@ ${JSON.stringify(dicomData, null, 2)}`;
     recordWorkflowStep(
       "patient-performer-detection",
       state,
-      { 
-        ...state, 
+      {
+        ...state,
         patientInfo: detectionResult.patient,
         medicalPerformers: detectionResult.performers,
-        patientPerformerDetection: detectionResult 
+        patientPerformerDetection: detectionResult,
       },
       stepDuration,
       [],
@@ -362,10 +422,10 @@ ${JSON.stringify(dicomData, null, 2)}`;
     return {
       // Update patient information
       patientInfo: detectionResult.patient,
-      
+
       // Update performers
       medicalPerformers: detectionResult.performers || [],
-      
+
       // Enhance imaging metadata with technical parameters
       imagingMetadata: {
         ...state.imagingMetadata,
@@ -373,14 +433,13 @@ ${JSON.stringify(dicomData, null, 2)}`;
         deviceInfo: detectionResult.technical.device,
         imageParameters: detectionResult.technical.imageParameters,
       },
-      
+
       // Store comprehensive detection result
       patientPerformerDetection: detectionResult,
-      
+
       // Update token usage
       tokenUsage,
     };
-
   } catch (error) {
     log.analysis.error("Patient/performer detection error:", error);
     console.error("❌ PATIENT/PERFORMER DETECTION NODE - Error:", error);

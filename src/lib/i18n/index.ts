@@ -1,4 +1,3 @@
-import { browser } from "$app/environment";
 import { init, register, _, t, locale } from "svelte-i18n";
 import { get } from "svelte/store";
 
@@ -16,7 +15,8 @@ register("de", () => import("./locales/de-DE.json"));
 
 init({
   fallbackLocale: defaultLocale,
-  initialLocale: browser ? window.navigator.language : defaultLocale,
+  // Don't set initial locale here - it will be set in the layout based on user preference
+  // This prevents the flicker from default to user language
 });
 
 function getLocale() {

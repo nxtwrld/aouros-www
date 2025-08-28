@@ -10,5 +10,22 @@
   border: 1px solid var(--color-border);
   padding: 2rem;
   max-height: 90vh;
+  min-width: 40vw;
   overflow: auto;
+}
+
+/* Modal action buttons container */
+.modal-action {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  background-color: var(--color-gray-500);
+  margin: 0 -.5rem;
+  padding: 1rem;
+  border-radius: var(--radius-16);
+}
+
+/* Spacer for modal actions to push buttons apart */
+.modal-action .spacer {
+  flex-grow: 1;
 }

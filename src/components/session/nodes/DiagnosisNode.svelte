@@ -5,11 +5,10 @@
     interface Props {
         node: SankeyNode;
         diagnosis: DiagnosisData;
-        isSelected: boolean;
         isMobile: boolean;
     }
     
-    let { node, diagnosis, isSelected, isMobile }: Props = $props();
+    let { node, diagnosis, isMobile }: Props = $props();
     
     function truncateText(text: string, maxLength: number): string {
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
@@ -46,7 +45,6 @@
 
 <div 
     class="diagnosis-node priority-{getPrioritylevel(diagnosis.priority)}" 
-    class:selected={isSelected} 
     class:mobile={isMobile}
     style="--color-opacity: {getOpacityForPriority(diagnosis.priority)};"
 >

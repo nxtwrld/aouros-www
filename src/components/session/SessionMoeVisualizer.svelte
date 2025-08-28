@@ -4,12 +4,16 @@
     import QOMVisualizer from './QOMVisualizer.svelte';
     import SessionSidebar from './SessionSidebar.svelte';
     import SessionToolbar from './SessionToolbar.svelte';
+    import SessionSymptomsTab from './SessionSymptomsTab.svelte';
+    import SessionDiagnosisTab from './SessionDiagnosisTab.svelte';
+    import SessionTreatmentsTab from './SessionTreatmentsTab.svelte';
     import sampleTranscript from './sample.transcript.1.cz.json';
     import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
     import type { D3QOMNode, D3QOMLink } from './types/qom';
     import { t } from '$lib/i18n';
     import { selectedItem, sidebarOpen, activeTab, sessionViewerActions } from '$lib/session/stores/session-viewer-store';
+    import { sessionDataActions } from '$lib/session/stores/session-data-store';
     import { qomActions } from '$lib/session/stores/qom-execution-store';
 
 
@@ -50,6 +54,14 @@
     onMount(() => {
         checkViewport();
         window.addEventListener('resize', checkViewport);
+        
+        // Set interactivity mode in store
+        sessionViewerActions.setInteractive(enableInteractions);
+        
+        // Load session data into store for non-real-time usage (document viewing)
+        if (sessionData && !isRealTime) {
+            sessionDataActions.loadSession(sessionData);
+        }
         
         // Initialize QOM for session
         if (sessionData?.sessionId) {
@@ -137,6 +149,11 @@
     }
 
     function handleRelationshipNodeClick(detail: { nodeId: string }) {
+        // Find the node data and select it properly using store actions
+        const node = sessionDataActions.findNodeById(detail.nodeId);
+        if (node) {
+            sessionViewerActions.selectItem('node', detail.nodeId, node);
+        }
         selectedNodeId = detail.nodeId;
         
         // Use store action to atomically open sidebar and select details tab
@@ -218,6 +235,25 @@
         activeMainView = viewId;
         // Future: Handle switching between different main views
         // For now, we only have 'diagram'
+    }
+
+    // Handlers for list tab selections
+    function handleSymptomSelect(symptomId: string) {
+        selectedNodeId = symptomId;
+        selectedLink = null;
+        sessionViewerActions.selectDetailsTab();
+    }
+
+    function handleDiagnosisSelect(diagnosisId: string) {
+        selectedNodeId = diagnosisId;
+        selectedLink = null;
+        sessionViewerActions.selectDetailsTab();
+    }
+
+    function handleTreatmentSelect(treatmentId: string) {
+        selectedNodeId = treatmentId;
+        selectedLink = null;
+        sessionViewerActions.selectDetailsTab();
     }
     
 
@@ -310,6 +346,21 @@
                     enableInteractions={true}
                     onnodeSelect={handleQOMNodeSelect}
                     onlinkSelect={handleQOMLinkSelect}
+                />
+            {:else if activeMainView === 'symptoms'}
+                <SessionSymptomsTab 
+                    symptoms={sessionData.nodes.symptoms || []}
+                    onsymptomSelect={handleSymptomSelect}
+                />
+            {:else if activeMainView === 'diagnosis'}
+                <SessionDiagnosisTab 
+                    diagnoses={sessionData.nodes.diagnoses || []}
+                    ondiagnosisSelect={handleDiagnosisSelect}
+                />
+            {:else if activeMainView === 'treatments'}
+                <SessionTreatmentsTab 
+                    treatments={sessionData.nodes.treatments || []}
+                    ontreatmentSelect={handleTreatmentSelect}
                 />
             {/if}
         </div>

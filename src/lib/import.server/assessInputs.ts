@@ -38,7 +38,7 @@ export type {
 
 export default async function assess(
   input: Input,
-  progressCallback?: (stage: string, progress: number, message: string) => void
+  progressCallback?: (stage: string, progress: number, message: string) => void,
 ): Promise<Assessment> {
   const tokenUsage: TokenUsage = {
     total: 0,
@@ -62,7 +62,11 @@ export default async function assess(
   //    return Promise.resolve(TEST_DATA);
 
   // Report progress before AI call
-  progressCallback?.("ai_processing", 60, `Processing ${input.images.length} images with AI...`);
+  progressCallback?.(
+    "ai_processing",
+    60,
+    `Processing ${input.images.length} images with AI...`,
+  );
 
   // get basic item info
   let data = (await fetchGptEnhanced(
@@ -71,7 +75,7 @@ export default async function assess(
     tokenUsage,
     "English", // language
     "extraction", // flowType - use extraction flow for OCR
-    progressCallback // Pass the progress callback
+    progressCallback, // Pass the progress callback
   )) as Assessment;
   data.tokenUsage = tokenUsage;
 

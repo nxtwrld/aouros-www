@@ -156,7 +156,7 @@
         
         // Apply the highlighting: hover takes precedence, then active path
         // When hover is cleared, active path will be restored
-        updateSelectionState(activePathData, hoverHighlight, svg || null, isMobile);
+        updateSelectionState(activePathData, hoverHighlight, svg || null, isMobile, selectedNodeId);
     });
     let tooltipData = $state<{
         relationshipType: string;
@@ -443,8 +443,8 @@
         }
 
         // Validate data structure
-        if (!$sankeyData.nodes || !Array.isArray($sankeyData.nodes)) {
-            console.error('Invalid nodes data:', $sankeyData.nodes);
+        if (!$sankeyData || !$sankeyData.nodes || !Array.isArray($sankeyData.nodes)) {
+            console.error('Invalid sankeyData or nodes:', $sankeyData);
             return;
         }
         
@@ -767,6 +767,7 @@
             .attr('y', 0)
             .attr('width', htmlNodeWidth)
             .attr('height', (d: any) => d.y1! - d.y0!)
+            .attr('data-node-id', (d: any) => d.id)
             .classed('interactive-element', true)
             .html((d: any) => createNodeComponent(d, selectedNodeId, isMobile, nodeComponents))
             .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
@@ -1085,6 +1086,7 @@
             .attr('y', 0)
             .attr('width', htmlNodeWidth)
             .attr('height', (d: any) => d.y1! - d.y0!)
+            .attr('data-node-id', (d: any) => d.id)
             .classed('interactive-element', true)
             .html((d: any) => createNodeComponent(d, selectedNodeId, isMobile, nodeComponents))
             .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
@@ -1156,6 +1158,7 @@
         // Update foreignObject dimensions with coordinated timing
         svg.select('.node-group').selectAll('.node-html')
             .data(updatedResult.nodes, (d: any) => d.id)
+            .attr('data-node-id', (d: any) => d.id)
             .transition()
             .duration(sizeConfig.duration)
             .ease(sizeConfig.easing)
@@ -1344,7 +1347,7 @@
      role="application"
      aria-label="Interactive Sankey diagram with zoom and pan controls"
      style="--hover-link-opacity: {OPACITY.CSS_HOVER_LINK}; --hover-node-opacity: {OPACITY.CSS_HOVER_NODE}; --shadow-light-opacity: {OPACITY.SHADOW_LIGHT}; --shadow-medium-opacity: {OPACITY.SHADOW_MEDIUM}">
-    {#if !$sankeyData.nodes.length}
+    {#if !$sankeyData?.nodes?.length}
         <div class="empty-state">
             <p>{$t('session.empty-states.no-data')}</p>
         </div>

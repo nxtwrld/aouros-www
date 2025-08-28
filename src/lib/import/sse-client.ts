@@ -51,14 +51,16 @@ class DicomTaskProcessor implements TaskProcessor {
         hasResult: !!result,
         resultKeys: result ? Object.keys(result) : [],
         hasReport: !!(result as any)?.report,
-        reportKeys: (result as any)?.report ? Object.keys((result as any).report) : [],
-      }
+        reportKeys: (result as any)?.report
+          ? Object.keys((result as any).report)
+          : [],
+      },
     );
 
     // Return SSE result directly as Assessment (consistent with DocumentTaskProcessor)
     const firstImage = images[0] || "";
     const medicalResult = result as any; // Type assertion for medical imaging result
-    
+
     // Debug logging for medical result structure
     console.log(`🔍 DICOM: Medical result structure (returning directly):`, {
       hasReport: !!medicalResult.report,
@@ -68,17 +70,19 @@ class DicomTaskProcessor implements TaskProcessor {
       hasSummary: !!medicalResult.report?.summary,
       hasDiagnosis: !!medicalResult.report?.diagnosis,
     });
-    
+
     // Ensure pages have correct image references (replace server placeholders with actual client images)
     if (medicalResult.pages) {
-      medicalResult.pages = medicalResult.pages.map((page: any, index: number) => ({
-        ...page,
-        // Always use original client-side images, never the references from server
-        image: images[index] || firstImage,
-        thumbnail: images[index] || firstImage,
-      }));
+      medicalResult.pages = medicalResult.pages.map(
+        (page: any, index: number) => ({
+          ...page,
+          // Always use original client-side images, never the references from server
+          image: images[index] || firstImage,
+          thumbnail: images[index] || firstImage,
+        }),
+      );
     }
-    
+
     // Add fallback pages if none exist
     if (!medicalResult.pages || medicalResult.pages.length === 0) {
       medicalResult.pages = [
@@ -92,7 +96,7 @@ class DicomTaskProcessor implements TaskProcessor {
         },
       ];
     }
-    
+
     // Add fallback documents if none exist
     if (!medicalResult.documents || medicalResult.documents.length === 0) {
       medicalResult.documents = [
@@ -506,31 +510,32 @@ export class SSEImportClient {
       // Stage 2: Analyze extracted documents
       options.onStageChange?.("analyze");
       const analyses: ReportAnalysis[] = [];
-      
-      console.log('🚀 SSE: Starting document analysis', {
+
+      console.log("🚀 SSE: Starting document analysis", {
         assessmentsCount: assessments.length,
-        totalDocuments: assessments.reduce((sum, a) => sum + a.documents.length, 0)
+        totalDocuments: assessments.reduce(
+          (sum, a) => sum + a.documents.length,
+          0,
+        ),
       });
 
       for (const assessment of assessments) {
         // Check if the assessment already contains analysis data (e.g., from DICOM processor)
-        const hasDirectAnalysis = !!(assessment as any).report || !!(assessment as any).type;
-        
+        const hasDirectAnalysis =
+          !!(assessment as any).report || !!(assessment as any).type;
+
         if (hasDirectAnalysis) {
-          console.log(
-            `✅ Using pre-analyzed data (e.g., DICOM)`,
-            {
-              hasReport: !!(assessment as any).report,
-              hasType: !!(assessment as any).type,
-              analysisType: (assessment as any).type
-            }
-          );
+          console.log(`✅ Using pre-analyzed data (e.g., DICOM)`, {
+            hasReport: !!(assessment as any).report,
+            hasType: !!(assessment as any).type,
+            analysisType: (assessment as any).type,
+          });
           // The assessment itself IS the analysis result - add it directly
           analyses.push(assessment as any);
         } else {
           // Regular documents need separate analysis
           console.log(`📄 Analyzing extracted documents from assessment`);
-          
+
           for (const document of assessment.documents) {
             const documentText = assessment.pages
               .filter((page) => document.pages.includes(page.page))
@@ -542,15 +547,12 @@ export class SSEImportClient {
               language: options.language || "English",
             };
 
-            console.log(
-              `🔬 Analyzing document "${document.title}":`,
-              {
-                documentTitle: document.title,
-                textLength: documentText.length,
-                pages: document.pages,
-                hasText: !!documentText,
-              },
-            );
+            console.log(`🔬 Analyzing document "${document.title}":`, {
+              documentTitle: document.title,
+              textLength: documentText.length,
+              pages: document.pages,
+              hasText: !!documentText,
+            });
 
             const fileId = `doc-${document.title}-${Date.now()}`;
             const result = await this.analyzeSingleDocument(

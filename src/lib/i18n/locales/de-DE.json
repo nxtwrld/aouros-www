@@ -951,7 +951,8 @@
       "lifestyle": "Lebensstil",
       "investigation": "Untersuchung",
       "immediate": "Sofortig",
-      "referral": "Überweisung"
+      "referral": "Überweisung",
+      "supportive": "Unterstützende Pflege"
     },
     "urgency": {
       "immediate": "Sofortig",

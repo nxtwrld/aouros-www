@@ -21,15 +21,7 @@ mixpanel.init(PUBLIC_MIXPANEL_TOKEN, { debug: false });
 
 export const trailingSlash = "always";
 
-export const load: LayoutLoad = async ({ data, depends, fetch }) => {
-  // setting up locale
-  if (!import.meta.env.SSR) {
-    //await setDefaultLocale(window.navigator.language)
-    locale.set(window.navigator.language);
-  } else {
-    locale.set("en-US");
-  }
-
+export const load: LayoutLoad = async ({ data, depends, fetch, url }) => {
   /**
    * Declare a dependency so the layout can be invalidated, for example, on
    * session refresh.
@@ -66,6 +58,39 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
    */
   const session = data?.session || null;
   const user = data?.user || null;
+
+  // Determine and set the appropriate locale
+  let userLanguage = null;
+
+  // If user is authenticated, try to fetch their language preference
+  if (session && user) {
+    try {
+      // Check if we're on a route that needs user data
+      const needsUserData =
+        url.pathname.startsWith("/med") || url.pathname.startsWith("/account");
+
+      if (needsUserData) {
+        const userData = await fetch("/v1/med/user")
+          .then((r) => r.json())
+          .catch(() => null);
+
+        if (userData?.language) {
+          userLanguage = userData.language;
+        }
+      }
+    } catch (e) {
+      // Fail silently, will use fallback
+    }
+  }
+
+  // Set locale based on priority: user preference > browser language > default
+  if (userLanguage) {
+    locale.set(userLanguage);
+  } else if (!import.meta.env.SSR) {
+    locale.set(window.navigator.language);
+  } else {
+    locale.set("en");
+  }
 
   await waitLocale();
 

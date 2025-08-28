@@ -808,13 +808,21 @@
       "hide": "Hide",
       "show": "Show",
       "show-panel": "Show Panel",
-      "hide-panel": "Hide Panel"
+      "hide-panel": "Hide Panel",
+      "end": "End Session",
+      "save": "Save",
+      "discard": "Discard",
+      "cancel": "Cancel",
+      "saving": "Saving..."
     },
     "tabs": {
       "questions": "Questions",
       "transcript": "Transcript",
       "details": "Details",
-      "legend": "Legend"
+      "legend": "Legend",
+      "symptoms": "Symptoms",
+      "diagnosis": "Diagnosis",
+      "treatments": "Treatments"
     },
     "headers": {
       "symptoms": "Symptoms",
@@ -845,7 +853,9 @@
       "answered": "Answered",
       "acknowledged": "Acknowledged",
       "skipped": "Skipped",
-      "resolved": "Resolved"
+      "resolved": "Resolved",
+      "continue": "Continue",
+      "recording": "Recording..."
     },
     "priority": {
       "critical": "Critical",
@@ -913,7 +923,8 @@
       "lifestyle": "Lifestyle",
       "investigation": "Investigation",
       "immediate": "Immediate",
-      "referral": "Referral"
+      "referral": "Referral",
+      "supportive": "Supportive Care"
     },
     "urgency": {
       "immediate": "Immediate",
@@ -993,6 +1004,24 @@
       "strength": "Strength",
       "status": "Status"
     },
+    "empty": {
+      "no-symptoms": "No symptoms found",
+      "no-diagnoses": "No diagnoses available",
+      "no-treatments": "No treatments available",
+      "no-questions": "No questions to display",
+      "no-alerts": "No alerts to display",
+      "no-data": "No data to visualize",
+      "select-node": "Select a node or link to view details",
+      "select-node-diagram": "Select a node or link from the diagram to view details"
+    },
+    "sources": {
+      "transcript": "Transcript",
+      "medical_history": "Medical History",
+      "family_history": "Family History",
+      "social_history": "Social History",
+      "medication_history": "Medication History",
+      "suspected": "Suspected"
+    },
     "empty-states": {
       "no-questions": "No questions to display",
       "no-alerts": "No alerts to display",
@@ -1013,6 +1042,32 @@
       "days": "days",
       "days-short": "d",
       "percent": "%"
+    },
+    "end": {
+      "title": "End Session",
+      "description": "What would you like to do with this session?"
+    },
+    "save": {
+      "error": {
+        "missing_data": "Missing required information to save session"
+      }
+    },
+    "qom": {
+      "status": "Status",
+      "nodes": "Nodes", 
+      "cost": "Cost",
+      "duration": "Duration"
+    }
+  },
+  "documents": {
+    "session": {
+      "title": "Session Analysis",
+      "date": "Date",
+      "time": "Time",
+      "duration": "Duration",
+      "performer": "Performer",
+      "version": "Version",
+      "noData": "No session data available"
     }
   },
   "report": {

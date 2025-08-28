@@ -840,7 +840,7 @@
   },
   "session": {
     "diagram": "Diagram",
-    "qom": "Kvorum Řízené Modely",
+    "qom": "QOM Analyzér",
     "actions": {
       "accept": "Přijmout",
       "suppress": "Potlačit",
@@ -951,7 +951,8 @@
       "lifestyle": "Životní styl",
       "investigation": "Vyšetření",
       "immediate": "Okamžité",
-      "referral": "Posouzení"
+      "referral": "Posouzení",
+      "supportive": "Podpůrná péče"
     },
     "urgency": {
       "immediate": "Okamžité",

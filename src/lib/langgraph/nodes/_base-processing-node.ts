@@ -219,25 +219,32 @@ export abstract class BaseProcessingNode {
   protected shouldExecute(state: DocumentProcessingState): boolean {
     const featureResults = state.featureDetectionResults;
     if (!featureResults) {
-      console.log(`⚠️ ${this.config.nodeName} - No featureDetectionResults found in state`);
+      console.log(
+        `⚠️ ${this.config.nodeName} - No featureDetectionResults found in state`,
+      );
       return false;
     }
 
     console.log(`🔍 ${this.config.nodeName} - Checking feature detection:`, {
       triggers: this.config.featureDetectionTriggers,
       featureResults: featureResults,
-      matches: this.config.featureDetectionTriggers.map(trigger => ({
+      matches: this.config.featureDetectionTriggers.map((trigger) => ({
         trigger,
         value: (featureResults as any)[trigger],
         matches: (featureResults as any)[trigger] === true,
-      }))
+      })),
     });
 
-    const shouldExecute = this.config.featureDetectionTriggers.some((trigger) => {
-      return (featureResults as any)[trigger] === true;
-    });
+    const shouldExecute = this.config.featureDetectionTriggers.some(
+      (trigger) => {
+        return (featureResults as any)[trigger] === true;
+      },
+    );
 
-    console.log(`${shouldExecute ? '✅' : '❌'} ${this.config.nodeName} - Should execute:`, shouldExecute);
+    console.log(
+      `${shouldExecute ? "✅" : "❌"} ${this.config.nodeName} - Should execute:`,
+      shouldExecute,
+    );
     return shouldExecute;
   }
 

@@ -66,6 +66,7 @@ export interface Document {
   content: {
     title: string;
     tags: string[];
+    sessionAnalysis?: any; // Session analysis data from medical consultations
     [key: string]: any;
   };
   attachments: Attachment[];
@@ -86,6 +87,7 @@ export interface DocumentNew {
   content: {
     title: string;
     tags: string[];
+    sessionAnalysis?: any; // Session analysis data from medical consultations
     [key: string]: any;
   };
   attachments?: Attachment[];

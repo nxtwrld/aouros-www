@@ -19,7 +19,6 @@
     color 0.5s,
     border-color 0.5s;
   margin-bottom: var(--gap);
-  
 }
 
 .tab-heads > button:first-child,
@@ -38,7 +37,6 @@
   background-color: var(--color-interactivity);
   border-color: var(--color-interactivity);
   color: var(--color-interactivity-text);
-
 }
 
 .tab-heads > button.-active,

@@ -114,13 +114,14 @@ export const POST: RequestHandler = async ({
           content: [
             {
               type: "text" as const,
-              text: isDicomExtracted && dicomMetadata
-                ? `DICOM Context:
+              text:
+                isDicomExtracted && dicomMetadata
+                  ? `DICOM Context:
 - Modality: ${dicomMetadata.modality || "Unknown"}
 - Body Part: ${dicomMetadata.bodyPartExamined || "Unknown"}
 - Study: ${dicomMetadata.studyDescription || "Not specified"}
 - View Position: ${dicomMetadata.viewPosition || "Unknown"}`
-                : "Medical imaging analysis",
+                  : "Medical imaging analysis",
             },
           ],
           // Initialize medical imaging specific fields
@@ -157,7 +158,7 @@ export const POST: RequestHandler = async ({
             progress: event.progress,
             message: event.message,
           });
-          
+
           // Forward workflow progress to SSE stream
           sendEvent({
             type: event.type,
@@ -180,21 +181,28 @@ export const POST: RequestHandler = async ({
 
         console.log("🚀 SSE: About to call processMedicalImaging...");
         const workflowStartTime = Date.now();
-        
-        const workflowResult = await processMedicalImaging(imagingState, undefined, workflowProgressCallback);
-        
+
+        const workflowResult = await processMedicalImaging(
+          imagingState,
+          undefined,
+          workflowProgressCallback,
+        );
+
         const workflowDuration = Date.now() - workflowStartTime;
         console.log(`⏱️ SSE: Workflow completed in ${workflowDuration}ms`);
 
-        console.log("🔬 SSE: Medical imaging workflow completed, result structure:", {
-          resultKeys: Object.keys(workflowResult),
-          hasMedicalImagingAnalysis: !!workflowResult.medicalImagingAnalysis,
-          hasImageAnalysis: !!workflowResult.imageAnalysis,
-          hasPatientInfo: !!workflowResult.patientInfo,
-          performersCount: workflowResult.medicalPerformers?.length || 0,
-          hasDetectedBodyParts: !!workflowResult.detectedBodyParts?.length,
-          hasDetectedAnomalies: !!workflowResult.detectedAnomalies?.length,
-        });
+        console.log(
+          "🔬 SSE: Medical imaging workflow completed, result structure:",
+          {
+            resultKeys: Object.keys(workflowResult),
+            hasMedicalImagingAnalysis: !!workflowResult.medicalImagingAnalysis,
+            hasImageAnalysis: !!workflowResult.imageAnalysis,
+            hasPatientInfo: !!workflowResult.patientInfo,
+            performersCount: workflowResult.medicalPerformers?.length || 0,
+            hasDetectedBodyParts: !!workflowResult.detectedBodyParts?.length,
+            hasDetectedAnomalies: !!workflowResult.detectedAnomalies?.length,
+          },
+        );
 
         // Update subscription
         subscription.scans -= 1;
@@ -204,26 +212,30 @@ export const POST: RequestHandler = async ({
 
         // Use the unified result structure from the workflow
         const unifiedResult = workflowResult.medicalImagingAnalysis;
-        
+
         console.log("🔬 SSE: Unified result from workflow:", {
           hasUnifiedResult: !!unifiedResult,
           unifiedResultKeys: unifiedResult ? Object.keys(unifiedResult) : [],
           unifiedResultType: typeof unifiedResult,
         });
-        
+
         if (!unifiedResult) {
-          console.warn("⚠️ No unified result structure found in workflow result");
-          throw new Error("Medical imaging analysis failed to produce unified result");
+          console.warn(
+            "⚠️ No unified result structure found in workflow result",
+          );
+          throw new Error(
+            "Medical imaging analysis failed to produce unified result",
+          );
         }
 
         // Format result using unified structure (matching unified workflow pattern)
         const result = {
           // Use unified result as base (contains all standard fields)
           ...unifiedResult,
-          
+
           // Add medical imaging specific flags
           isMedicalImaging: true,
-          
+
           // Include standard document structure fields (without base64 data to avoid URL length issues)
           pages: data.images.map((_: string, index: number) => ({
             page: index + 1,

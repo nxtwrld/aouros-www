@@ -47,7 +47,7 @@ export const POST: RequestHandler = async ({
   const stream = new ReadableStream({
     async start(controller) {
       console.log("📡 SSE extract stream started");
-      
+
       // Set up keepalive interval to prevent connection drops
       const keepaliveInterval = setInterval(() => {
         try {

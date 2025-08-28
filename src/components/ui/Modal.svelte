@@ -128,10 +128,4 @@
         height: 1.5rem;
         width: 1.5rem;
     }
-    .modal-content :global(.modal-action) {
-        background-color: var(--color-gray-500);
-        margin: 0 -.5rem;
-        padding: 1rem;
-        border-radius: var(--radius-16);
-    }
 </style>

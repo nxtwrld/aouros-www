@@ -3,7 +3,10 @@ export function typedArrayToBuffer(array: Uint8Array): ArrayBuffer {
   // Handle both ArrayBuffer and SharedArrayBuffer
   const buffer = array.buffer;
   // Check if SharedArrayBuffer exists and if buffer is an instance of it
-  if (typeof SharedArrayBuffer !== 'undefined' && buffer instanceof SharedArrayBuffer) {
+  if (
+    typeof SharedArrayBuffer !== "undefined" &&
+    buffer instanceof SharedArrayBuffer
+  ) {
     // Convert SharedArrayBuffer to ArrayBuffer
     const arrayBuffer = new ArrayBuffer(array.byteLength);
     new Uint8Array(arrayBuffer).set(array);

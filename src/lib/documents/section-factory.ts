@@ -15,6 +15,7 @@ import SectionText from "$components/documents/SectionText.svelte";
 import SectionPerformer from "$components/documents/SectionPerformer.svelte";
 import SectionLinks from "$components/documents/SectionLinks.svelte";
 import SectionAttachments from "$components/documents/SectionAttachments.svelte";
+import SectionSession from "$components/documents/SectionSession.svelte";
 import Tags from "$components/documents/Tags.svelte";
 
 // Specialized section imports (future expansion)
@@ -47,6 +48,16 @@ const STANDARD_SECTIONS = {
     priority: 100,
     condition: (doc: Document) => !!doc.content.tags?.length,
     propsMapper: (doc: Document) => ({ tags: doc.content.tags }),
+  },
+  sessionAnalysis: {
+    component: SectionSession,
+    priority: 95,
+    condition: (doc: Document) => !!doc.content.sessionAnalysis,
+    propsMapper: (doc: Document) => ({ 
+      data: doc.content.sessionAnalysis, 
+      document: doc,
+      key: doc.key
+    }),
   },
   summary: {
     component: SectionSummary,

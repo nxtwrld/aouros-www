@@ -8,6 +8,7 @@
     import SymptomNodeComponent from '../nodes/SymptomNode.svelte';
     import type { DiagnosisNode, ActionNode } from '../types/visualization';
     import { questionsForNode, alertsForNode, sessionDataActions } from '$lib/session/stores/session-data-store';
+    import { sessionViewerActions } from '$lib/session/stores/session-viewer-store';
 
     interface Props {
         diagnosis: DiagnosisNode;
@@ -59,6 +60,16 @@
 
     function handleSupportingSymptomClick(symptomId: string) {
         onrelationshipNodeClick?.(symptomId);
+    }
+
+    // Interactive handlers for hover functionality
+    function handleNodeHover(nodeId: string, isEntering: boolean) {
+        const node = sessionDataActions.findNodeById(nodeId);
+        if (node && isEntering) {
+            sessionViewerActions.setHoveredItem('node', nodeId, node);
+        } else if (!isEntering) {
+            sessionViewerActions.setHoveredItem(null);
+        }
     }
 
 
@@ -141,8 +152,10 @@
                             class="supporting-symptom-wrapper session-relationship-wrapper"
                             role="button"
                             tabindex="0"
-                            on:click={() => handleSupportingSymptomClick(symptom.id)}
-                            on:keydown={(e) => e.key === 'Enter' && handleSupportingSymptomClick(symptom.id)}
+                            onclick={() => handleSupportingSymptomClick(symptom.id)}
+                            onkeydown={(e) => e.key === 'Enter' && handleSupportingSymptomClick(symptom.id)}
+                            onmouseenter={() => handleNodeHover(symptom.id, true)}
+                            onmouseleave={() => handleNodeHover(symptom.id, false)}
                         >
                             <SymptomNodeComponent 
                                 node={{ id: symptom.id, x0: 0, x1: 120, y0: 0, y1: 50 }}
