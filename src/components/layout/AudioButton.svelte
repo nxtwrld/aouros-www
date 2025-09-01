@@ -5,7 +5,8 @@
         audioState, 
         sessionState,
         AudioState,
-        SessionState
+        SessionState,
+        unifiedSessionActions
     } from '$lib/session/stores/unified-session-store';
     import { audioActions } from '$lib/session/stores/audio-actions';
     import shortcuts from '$lib/shortcuts';
@@ -34,21 +35,64 @@
     let currentSessionState = $derived($sessionState);
     let audioState_value = $derived(currentAudioState.state);
 
-
-
+    // Baseline listening animation management
+    let baselineAnimationInterval: ReturnType<typeof setInterval> | null = null;
+    
+    // Animation element tracking
+    let activeAnimationCount = $state(0);
+    const MAX_ANIMATIONS = 25;
+    
+    // Animation throttling
+    let lastTickTime = 0;
+    const TICK_THROTTLE_MS = 150; // ~8 animations per second max
 
     // Visual feedback for microphone activity
     function createMicTick(energy: number) {
         if (!animationContainer) return;
         
+        // Skip creating new animation if we're at the limit
+        if (activeAnimationCount >= MAX_ANIMATIONS) return;
+        
+        // Throttle animation creation to spread them out over time
+        const now = Date.now();
+        if (now - lastTickTime < TICK_THROTTLE_MS) return;
+        lastTickTime = now;
+        
         const tickElement = document.createElement('div');
         tickElement.addEventListener('animationend', () => {
             tickElement.remove();
+            activeAnimationCount--;
         });
         
-        tickElement.style.opacity = `${Math.min(Math.max(energy, 0.1), 0.8)}`;
+        // Better energy scaling: multiply small values to make them more visible
+        // Remove the Math.max(energy, 0.1) that flattens all low energy
+        const scaledOpacity = Math.min(energy * 3, 0.7);
+        tickElement.style.opacity = `${scaledOpacity}`;
+        
+        // Set CSS custom property for the animation to use
+        tickElement.style.setProperty('--start-opacity', `${scaledOpacity}`);
+        
         tickElement.classList.add(audioState_value, 'animate');
         animationContainer.appendChild(tickElement);
+        activeAnimationCount++;
+    }
+
+    // Start baseline listening animation
+    function startBaselineAnimation() {
+        stopBaselineAnimation(); // Prevent duplicates
+        baselineAnimationInterval = setInterval(() => {
+                createMicTick(0.2); // Very low energy = subtle baseline animation
+        }, 2000); // Every 2.5s
+        logger.audio.debug('Started baseline listening animation');
+    }
+
+    // Stop baseline listening animation
+    function stopBaselineAnimation() {
+        if (baselineAnimationInterval) {
+            clearInterval(baselineAnimationInterval);
+            baselineAnimationInterval = null;
+            logger.audio.debug('Stopped baseline listening animation');
+        }
     }
 
     // Handle audio features for visual feedback
@@ -61,16 +105,35 @@
         }
     }
 
-    // Local audio instance to ensure microphone is accessed in user interaction
-    let localAudioProcessor: any = null;
+    // State-based animation management
+    $effect(() => {
+        // Start baseline animation when entering listening state
+        if (audioState_value === AudioState.Listening) {
+            startBaselineAnimation();
+        } else {
+            // Stop baseline animation when leaving listening state
+            stopBaselineAnimation();
+        }
+    });
 
-    // Toggle recording state
-    async function toggleRecording(event: Event) {
+    // COMMENTED OUT: Toggle recording state - moved to unified-session-store
+    // TODO: Remove after new architecture is fully tested
+    /* async function toggleRecording(event: Event) {
         event.stopPropagation();
         
         logger.audio.info('AudioButton: Toggle recording clicked', {
-            currentState: audioState_value,
-            sessionState: currentSessionState
+            audioState_value,
+            currentSessionState,
+            audioState_exact: JSON.stringify(audioState_value),
+            sessionState_exact: JSON.stringify(currentSessionState),
+            AudioState_Ready: AudioState.Ready,
+            AudioState_Listening: AudioState.Listening,
+            AudioState_Speaking: AudioState.Speaking,
+            AudioState_Stopping: AudioState.Stopping,
+            SessionState_Running: SessionState.Running,
+            isRunningCheck: currentSessionState === SessionState.Running,
+            isListeningCheck: audioState_value === AudioState.Listening,
+            isSpeakingCheck: audioState_value === AudioState.Speaking
         });
 
         if (audioState_value === AudioState.Stopping) {
@@ -79,31 +142,18 @@
         }
 
         // Handle stopping (if currently running)
+        logger.audio.info('Checking stop condition:', {
+            condition: 'currentSessionState === SessionState.Running',
+            result: currentSessionState === SessionState.Running,
+            currentSessionState,
+            SessionState_Running: SessionState.Running
+        });
+        
         if (currentSessionState === SessionState.Running) {
-            // Stop local audio processor first
-            if (localAudioProcessor) {
-                logger.audio.debug('Stopping local audio processor', {
-                    hasStream: !!localAudioProcessor.stream,
-                    streamId: localAudioProcessor.stream?.id,
-                    trackCount: localAudioProcessor.stream?.getTracks().length || 0,
-                    audioState: localAudioProcessor.state
-                });
-                localAudioProcessor.stop();
-                
-                // Defensive cleanup: Force stop any remaining MediaStreams
-                setTimeout(() => {
-                    navigator.mediaDevices.enumerateDevices().then(() => {
-                        // Check if Chrome tab indicator is still visible after a brief delay
-                        logger.audio.debug('Defensive MediaStream check completed after stop');
-                    }).catch(err => {
-                        logger.audio.warn('Could not enumerate devices for defensive cleanup', err);
-                    });
-                }, 100);
-                
-                localAudioProcessor = null;
-                logger.audio.info('Local audio processor stopped and cleaned up');
-            }
+            logger.audio.info('STOPPING: Session is running, initiating stop sequence');
             
+            // Stop the complete session including audio cleanup
+            await unifiedSessionActions.stopSessionComplete();
             await audioActions.stopRecording();
             return;
         }
@@ -121,41 +171,35 @@
                 throw audio;
             }
             
-            localAudioProcessor = audio;
             logger.audio.info('Microphone access granted in click handler', {
                 hasStream: !!audio.stream,
                 streamId: audio.stream?.id,
                 trackCount: audio.stream?.getTracks().length || 0
             });
             
-            // NOW do the optimistic UI update after we have microphone access
-            unifiedSessionStore.update(state => ({
-                ...state,
-                audio: {
-                    ...state.audio,
-                    state: AudioState.Listening,
-                    recordingStartTime: Date.now()
-                },
-                ui: {
-                    ...state.ui,
-                    audioButtonPosition: state.ui.isOnNewSessionPage ? 'header' : state.ui.audioButtonPosition,
-                    isAnimating: true
-                }
-            }));
+            // Use proper session lifecycle method to handle state transitions
+            const sessionStarted = await unifiedSessionActions.startSessionWithAudio(audio, {
+                language,
+                models,
+                useRealtime
+            });
 
-            // Continue with session setup and recording start
-            const success = await audioActions.startRecordingWithAudio(localAudioProcessor, {
+            if (!sessionStarted) {
+                // Clean up audio on failure
+                audio.stop();
+                throw new Error('Failed to start session');
+            }
+
+            // Continue with audio recording start - pass audio to global store
+            const success = await audioActions.startRecordingWithAudio(audio, {
                 language,
                 models,
                 useRealtime
             });
 
             if (!success) {
-                // Rollback on failure
-                if (localAudioProcessor) {
-                    localAudioProcessor.stop();
-                    localAudioProcessor = null;
-                }
+                // Audio cleanup will be handled by audioActions
+                // since it now owns the audio processor
                 
                 unifiedSessionStore.update(state => ({
                     ...state,
@@ -174,13 +218,7 @@
         } catch (error) {
             logger.audio.error('Error accessing microphone or starting recording:', error);
             
-            // Rollback optimistic update on error - properly stop audio processor
-            if (localAudioProcessor) {
-                logger.audio.debug('Stopping local audio processor due to error');
-                localAudioProcessor.stop();
-                localAudioProcessor = null;
-                logger.audio.info('Local audio processor stopped due to error');
-            }
+            // Audio cleanup handled by audioActions if it was passed there
             
             unifiedSessionStore.update(state => ({
                 ...state,
@@ -196,7 +234,7 @@
                 error: `Microphone access failed: ${error instanceof Error ? error.message : String(error)}`
             }));
         }
-    }
+    } */
 
     // Route changes are handled by unified-session-store automatically
 
@@ -207,14 +245,13 @@
         // Listen for UI events
         ui.on('audio:features', handleAudioFeatures);
         
-        // Listen for keyboard shortcut (Space)
-        const unsubscribeShortcut = shortcuts.listen('Space', () => {
-            // Always available for keyboard shortcut
-            toggleRecording(new Event('click'));
-        });
+        // COMMENTED OUT: Keyboard shortcuts - handled by parent components now
+        // const unsubscribeShortcut = shortcuts.listen('Space', () => {
+        //     toggleRecording(new Event('click'));
+        // });
 
         return () => {
-            unsubscribeShortcut();
+            // unsubscribeShortcut();
         };
     });
 
@@ -224,14 +261,10 @@
         // Clean up event listeners
         ui.off('audio:features', handleAudioFeatures);
         
-        // Defensive cleanup - stop local audio processor if exists
-        if (localAudioProcessor) {
-            logger.audio.warn('AudioButton destroying with active localAudioProcessor - cleaning up');
-            localAudioProcessor.stop();
-            localAudioProcessor = null;
-        }
+        // Stop baseline animation
+        stopBaselineAnimation();
         
-        // Stop recording if active
+        // Stop recording if active - global audio processor cleanup handled by audioActions
         if (currentSessionState === SessionState.Running) {
             logger.audio.debug('AudioButton destroying while recording - stopping...');
             audioActions.stopRecording();
@@ -242,14 +275,14 @@
 <!-- Simple AudioButton that inherits parent positioning -->
 <div class="audio-button-container" bind:this={buttonContainer}>
         <div bind:this={animationContainer} class="animation-container">
-            <button
+            <!-- CHANGED: Button to div - no click handler, display-only -->
+            <div
                 class="audio-button {audioState_value}"
                 class:is-recording={currentSessionState === SessionState.Running}
                 class:is-running={currentSessionState === SessionState.Running}
                 class:is-paused={currentSessionState === SessionState.Paused}
-                onclick={toggleRecording}
-                aria-label={currentSessionState === SessionState.Running ? 'Stop recording' : 'Start recording'}
-                title={currentSessionState === SessionState.Running ? 'Stop recording' : 'Start recording'}
+                aria-label={currentSessionState === SessionState.Running ? 'Recording active' : 'Recording inactive'}
+                title={currentSessionState === SessionState.Running ? 'Recording active' : 'Recording inactive'}
             >
             {#if audioState_value === AudioState.Stopping}
                 <div class="loading-dots">
@@ -266,7 +299,7 @@
                     <use href="/icons.svg#mic"></use>
                 </svg>
             {/if}
-            </button>
+            </div>
         </div>
 </div>
 
@@ -442,7 +475,7 @@
     @keyframes mic-pulse {
         0% {
             transform: translate(-50%, -50%) scale(1);
-            opacity: 0.6;
+            opacity: var(--start-opacity, 0.7);
         }
         100% {
             transform: translate(-50%, -50%) scale(3);

@@ -7,7 +7,6 @@
     import SessionSymptomsTab from './SessionSymptomsTab.svelte';
     import SessionDiagnosisTab from './SessionDiagnosisTab.svelte';
     import SessionTreatmentsTab from './SessionTreatmentsTab.svelte';
-    import sampleTranscript from './sample.transcript.1.cz.json';
     import shortcuts from '$lib/shortcuts';
     import type { SessionAnalysis, NodeSelectEvent, LinkSelectEvent } from './types/visualization';
     import type { D3QOMNode, D3QOMLink } from './types/qom';
@@ -31,7 +30,7 @@
         isRealTime = true, 
         showLegend = true, 
         enableInteractions = true,
-        transcript = sampleTranscript.conversation,
+        transcript = [],
         onnodeAction
     }: Props = $props();
 

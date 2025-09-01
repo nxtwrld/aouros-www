@@ -4,6 +4,8 @@ import { browser } from "$app/environment";
 import { page } from "$app/stores";
 import { logger } from "$lib/logging/logger";
 import ui from "$lib/ui";
+import { AudioState } from "$lib/audio/microphone";
+import { audioActions } from "./audio-actions";
 import type {
   SessionAnalysis,
   MoEAnalysisOutput,
@@ -32,23 +34,14 @@ interface PathState {
 import { SSEClient } from "../transport/sse-client";
 import type { PartialTranscript } from "../transport/sse-client";
 
-// Audio recording state enum - unified across all modules
-export enum AudioState {
-  Ready = "ready",
-  Listening = "listening",
-  Speaking = "speaking",
-  Stopping = "stopping",
-  Stopped = "stopped",
-  Error = "error",
-}
+// Re-export AudioState from microphone.ts as single source of truth
+export { AudioState } from "$lib/audio/microphone";
 
 // Session state enum - controls AudioButton behavior and visibility
 export enum SessionState {
-  Off = "off", // Button is hidden (no session context)
-  Ready = "ready", // Button is centered (new session, no data)
-  Running = "running", // Button is in header, actively recording
-  Paused = "paused", // Button is in header, session has data but not recording
-  Final = "final", // Session complete, button hidden, show "New Session" button
+  Ready = "ready", // Default state - button centered, clean slate, ready to record
+  Running = "running", // Recording active - button in header, collecting data
+  Paused = "paused", // Recording stopped - button in header, has data (future feature)
 }
 
 // UI positioning types
@@ -153,9 +146,9 @@ const initialState: UnifiedSessionState = {
     isAnalyzing: false,
   },
   ui: {
-    audioButtonVisible: false,
-    audioButtonPosition: "hidden",
-    sessionState: SessionState.Off,
+    audioButtonVisible: true,
+    audioButtonPosition: "center",
+    sessionState: SessionState.Ready,
     currentRoute: "",
     isOnNewSessionPage: false,
     isAnimating: false,
@@ -222,7 +215,7 @@ export const sessionState: Readable<SessionState> = derived(
 // Legacy - keep for backward compatibility but prefer showAudioButtonFromState
 export const shouldShowAudioButton: Readable<boolean> = derived(
   sessionState,
-  ($state) => $state !== SessionState.Off && $state !== SessionState.Final,
+  ($state) => true, // Button always visible in simplified state model
 );
 
 // Derive properties FROM session state (not the other way around)
@@ -233,48 +226,32 @@ export const isRecordingFromState: Readable<boolean> = derived(
 
 export const hasSessionDataFromState: Readable<boolean> = derived(
   sessionState,
-  ($state) => $state === SessionState.Paused || $state === SessionState.Final,
+  ($state) => $state === SessionState.Paused,
 );
 
 export const buttonPositionFromState: Readable<AudioButtonPosition> = derived(
   sessionState,
   ($state) => {
     switch ($state) {
-      case SessionState.Off:
-      case SessionState.Final:
-        return "hidden";
       case SessionState.Ready:
         return "center";
       case SessionState.Running:
       case SessionState.Paused:
         return "header";
       default:
-        return "hidden";
+        return "center";
     }
   },
 );
 
 export const showAudioButtonFromState: Readable<boolean> = derived(
   sessionState,
-  ($state) => $state !== SessionState.Off && $state !== SessionState.Final,
+  ($state) => true, // Button always visible in simplified state model
 );
 
 // Actions for managing unified session state
 export const unifiedSessionActions = {
   // Session State Transitions
-  initializeSession(): void {
-    logger.session.info("Initializing session - transitioning to Ready state");
-    unifiedSessionStore.update((state) => ({
-      ...state,
-      ui: {
-        ...state.ui,
-        sessionState: SessionState.Ready,
-        audioButtonVisible: true,
-        audioButtonPosition: "center",
-      },
-      lastUpdated: Date.now(),
-    }));
-  },
 
   transitionToRunning(): void {
     logger.session.info("Transitioning to Running state");
@@ -293,14 +270,14 @@ export const unifiedSessionActions = {
       lastUpdated: Date.now(),
     }));
   },
-
-  transitionToPaused(): void {
+  async transitionToPaused(): Promise<void> {
     logger.session.info("Transitioning to Paused state");
     unifiedSessionStore.update((state) => ({
       ...state,
       ui: {
         ...state.ui,
         sessionState: SessionState.Paused,
+        audioButtonVisible: true,
         audioButtonPosition: "header",
       },
       audio: {
@@ -310,40 +287,20 @@ export const unifiedSessionActions = {
       },
       lastUpdated: Date.now(),
     }));
+    
+    // Allow UI time to react to state change
+    await new Promise(resolve => setTimeout(resolve, 100));
+  },
+  async stopSessionAndReset(): Promise<void> {
+    logger.session.info("Stopping session and resetting to Ready state");
+    
+    // Stop audio recording first to ensure proper VAD cleanup
+    audioActions.stopRecording();
+    
+    // Reset to clean Ready state
+    await this.resetSession();
   },
 
-  transitionToFinal(): void {
-    logger.session.info("Transitioning to Final state");
-    unifiedSessionStore.update((state) => ({
-      ...state,
-      ui: {
-        ...state.ui,
-        sessionState: SessionState.Final,
-        audioButtonVisible: false,
-        audioButtonPosition: "hidden",
-      },
-      audio: {
-        ...state.audio,
-        isRecording: false,
-        state: AudioState.Stopped,
-      },
-      lastUpdated: Date.now(),
-    }));
-  },
-
-  transitionToOff(): void {
-    logger.session.info("Transitioning to Off state");
-    unifiedSessionStore.update((state) => ({
-      ...state,
-      ui: {
-        ...state.ui,
-        sessionState: SessionState.Off,
-        audioButtonVisible: false,
-        audioButtonPosition: "hidden",
-      },
-      lastUpdated: Date.now(),
-    }));
-  },
 
   // Load existing session data (for mock data or resuming)
   loadSessionWithData(sessionData: any): void {
@@ -365,7 +322,138 @@ export const unifiedSessionActions = {
       lastUpdated: Date.now(),
     }));
   },
-  // Audio Recording Actions
+  // Complete Session Lifecycle Methods
+  async startRecordingSession(
+    options: {
+      language?: string;
+      models?: string[];
+      useRealtime?: boolean;
+    } = {}
+  ): Promise<boolean> {
+    const { language = "en", models = ["GP"], useRealtime = true } = options;
+    
+    logger.session.info("Starting recording session", { language, models, useRealtime });
+
+    const currentState = get(unifiedSessionStore);
+    const { sessionState } = currentState.ui;
+
+    // Only allow starting from Ready or Paused states
+    if (sessionState !== SessionState.Ready && sessionState !== SessionState.Paused) {
+      logger.session.warn("Cannot start recording session from current state", { sessionState });
+      return false;
+    }
+
+    try {
+      // Request microphone access in user interaction context
+      logger.audio.debug('Requesting microphone for recording session...');
+      
+      const { getAudioVAD } = await import('$lib/audio/microphone');
+      const audio = await getAudioVAD({ analyzer: true });
+      
+      if (audio instanceof Error) {
+        throw audio;
+      }
+      
+      logger.audio.info('Microphone access granted for session', {
+        hasStream: !!audio.stream,
+        streamId: audio.stream?.id,
+        trackCount: audio.stream?.getTracks().length || 0
+      });
+      
+      // Transition to Running state first
+      unifiedSessionActions.transitionToRunning();
+      
+      // Start recording with the audio instance
+      const success = await audioActions.startRecordingWithAudio(audio, {
+        language,
+        models,
+        useRealtime
+      });
+      
+      if (!success) {
+        // Rollback on failure
+        audio.stop();
+        await unifiedSessionActions.resetSession();
+        logger.session.error('Failed to start audio recording');
+        return false;
+      }
+      
+      logger.session.info('Recording session started successfully');
+      return true;
+      
+    } catch (error) {
+      logger.session.error('Error starting recording session:', error);
+      
+      // Reset to Ready state on error
+      await unifiedSessionActions.resetSession();
+      
+      unifiedSessionStore.update(state => ({
+        ...state,
+        error: `Failed to start recording: ${error instanceof Error ? error.message : String(error)}`,
+        lastUpdated: Date.now()
+      }));
+      
+      return false;
+    }
+  },
+
+  // Legacy method - kept for compatibility but simplified
+  async startSessionWithAudio(
+    audioInstance: any,
+    options: {
+      language?: string;
+      models?: string[];
+      useRealtime?: boolean;
+    } = {}
+  ): Promise<boolean> {
+    // Delegate to new method
+    return await unifiedSessionActions.startRecordingSession(options);
+  },
+
+  async stopSessionComplete(): Promise<void> {
+    logger.session.info("Stopping complete session");
+    
+    const currentState = get(unifiedSessionStore);
+    const { sessionState } = currentState.ui;
+
+    // Only allow stopping from Running state
+    if (sessionState !== SessionState.Running) {
+      logger.session.warn("Cannot stop session - not in Running state", { sessionState });
+      return;
+    }
+
+    // Check if we have data to determine next state
+    const hasData =
+      currentState.transcripts.items.length > 0 ||
+      currentState.analysis.currentSession !== null ||
+      currentState.audio.speechChunks.length > 0;
+
+    // Transition to appropriate state based on data presence
+    if (hasData) {
+      unifiedSessionActions.transitionToPaused();
+    } else {
+      // No data collected, go back to Ready
+      unifiedSessionStore.update(state => ({
+        ...state,
+        ui: {
+          ...state.ui,
+          sessionState: SessionState.Ready,
+          audioButtonPosition: "center",
+        },
+        audio: {
+          ...state.audio,
+          isRecording: false,
+          state: AudioState.Ready,
+        },
+      }));
+    }
+
+    logger.session.info("Complete session stopped successfully", {
+      nextState: hasData ? "Paused" : "Ready"
+    });
+  },
+
+  // Legacy Audio Recording Actions (keep for compatibility)
   async startRecording(useRealtime: boolean = true): Promise<boolean> {
     logger.session.info("Starting audio recording", { useRealtime });
 
@@ -613,18 +701,8 @@ export const unifiedSessionActions = {
     const currentState = get(unifiedSessionStore);
     const { sessionState } = currentState.ui;
 
-    // Determine session state based on route change
-    if (isNewSessionPage) {
-      // Only initialize session if currently Off
-      if (sessionState === SessionState.Off) {
-        unifiedSessionActions.initializeSession();
-      }
-    } else {
-      // Leaving session page - transition to Off if not recording or paused
-      if (sessionState === SessionState.Ready) {
-        unifiedSessionActions.transitionToOff();
-      }
-    }
+    // No route-based state changes needed - session is always Ready by default
+    // Page navigation doesn't affect session state in simplified model
 
     // Update route tracking
     unifiedSessionStore.update((state) => ({
@@ -809,9 +887,12 @@ export const unifiedSessionActions = {
     }));
   },
 
-  resetSession(): void {
+  async resetSession(): Promise<void> {
     logger.session.info("Resetting unified session store");
     unifiedSessionStore.set(initialState);
+    
+    // Allow store reset to propagate
+    await new Promise(resolve => setTimeout(resolve, 50));
   },
 
   // Get current state snapshot

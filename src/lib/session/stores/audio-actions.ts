@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import {
-  AudioState as MicrophoneAudioState,
+  AudioState,
   getAudioVAD,
   type AudioControlsVad,
 } from "$lib/audio/microphone";
@@ -10,7 +10,6 @@ import { logger } from "$lib/logging/logger";
 import ui from "$lib/ui";
 import {
   unifiedSessionStore,
-  AudioState,
   type AudioButtonPosition,
 } from "./unified-session-store";
 
@@ -21,23 +20,6 @@ interface AudioProcessor {
   isInitialized: boolean;
 }
 
-// Helper function to map microphone AudioState to unified AudioState
-function mapMicrophoneAudioState(micState: MicrophoneAudioState): AudioState {
-  switch (micState) {
-    case MicrophoneAudioState.ready:
-      return AudioState.Ready;
-    case MicrophoneAudioState.listening:
-      return AudioState.Listening;
-    case MicrophoneAudioState.speaking:
-      return AudioState.Speaking;
-    case MicrophoneAudioState.stopping:
-      return AudioState.Stopping;
-    case MicrophoneAudioState.stopped:
-      return AudioState.Stopped;
-    default:
-      return AudioState.Error;
-  }
-}
 
 // Global audio processor instance
 let audioProcessor: AudioProcessor = {
@@ -115,7 +97,7 @@ export const audioActions = {
           ...state,
           audio: {
             ...state.audio,
-            state: mapMicrophoneAudioState(audio.state),
+            state: audio.state,
           },
         }));
         ui.emit("audio:speech-start");
@@ -132,7 +114,7 @@ export const audioActions = {
           ...state,
           audio: {
             ...state.audio,
-            state: mapMicrophoneAudioState(audio.state),
+            state: audio.state,
           },
         }));
 
@@ -256,7 +238,7 @@ export const audioActions = {
           ...state,
           audio: {
             ...state.audio,
-            state: mapMicrophoneAudioState(audio.state),
+            state: audio.state,
           },
         }));
         ui.emit("audio:speech-start");
@@ -273,7 +255,7 @@ export const audioActions = {
           ...state,
           audio: {
             ...state.audio,
-            state: mapMicrophoneAudioState(audio.state),
+            state: audio.state,
           },
         }));
 
@@ -334,7 +316,7 @@ export const audioActions = {
           ...state.audio,
           isRecording: true,
           state: audioProcessor.audio
-            ? mapMicrophoneAudioState(audioProcessor.audio.state)
+            ? audioProcessor.audio.state
             : AudioState.Listening,
         },
         ui: {
@@ -396,7 +378,8 @@ export const audioActions = {
         audioProcessor.sseClient = null;
       }
 
-      // Clean up audio processor
+      // Clean up audio processor completely
+      audioProcessor.audio = null;
       audioProcessor.isInitialized = false;
 
       // Update final state

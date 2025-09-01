@@ -642,5 +642,5 @@ export const transcriptActions = {
   },
 };
 
-// Export main store and actions
-export { transcriptStore as default, transcriptActions };
+// Export main store as default
+export { transcriptStore as default };

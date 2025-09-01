@@ -10,11 +10,12 @@ import type { AudioData } from "assemblyai";
 const CHUNK_SIZE = 1024;
 
 export enum AudioState {
-  listening = "listening",
-  speaking = "speaking",
-  stopping = "stopping",
-  stopped = "stopped",
-  ready = "ready",
+  Ready = "ready",
+  Listening = "listening",
+  Speaking = "speaking", 
+  Stopping = "stopping",
+  Stopped = "stopped",
+  Error = "error",
 }
 
 export type AudioOptions = {
@@ -82,19 +83,19 @@ export async function getAudioVAD(
     stream: controls.stream,
     onSpeechStart: () => {
       //console.log("Speech start detected")
-      controls.state = AudioState.speaking;
+      controls.state = AudioState.Speaking;
       if (controls.onSpeechStart) controls.onSpeechStart();
     },
     onSpeechEnd: (audio: Float32Array) => {
       // do something with `audio` (Float32Array of audio samples at sample rate 16000)...
       //console.log("Speech end detected", audio)
 
-      if (controls.state == AudioState.stopping) {
+      if (controls.state == AudioState.Stopping) {
         mvad.pause();
         stop();
-        controls.state = AudioState.stopped;
+        controls.state = AudioState.Stopped;
       } else {
-        controls.state = AudioState.listening;
+        controls.state = AudioState.Listening;
       }
       if (controls.onSpeechEnd) controls.onSpeechEnd(audio);
     },
@@ -135,7 +136,7 @@ export async function getAudioVAD(
 
     // Stop the original audio processor
     stop();
-    controls.state = AudioState.stopped;
+    controls.state = AudioState.Stopped;
   };
 
   return controls as AudioControlsVad;
@@ -179,7 +180,7 @@ export async function getAudio(
         audioContext,
         source,
         stream,
-        state: AudioState.ready,
+        state: AudioState.Ready,
         stop: () => {
           console.log("[AudioControls] Stopping audio components...");
 
@@ -191,7 +192,7 @@ export async function getAudio(
             mediaRecorder.stop();
           }
 
-          controls.state = AudioState.stopped;
+          controls.state = AudioState.Stopped;
 
           // Stop all MediaStream tracks
           stream.getTracks().forEach((track) => {
@@ -209,7 +210,7 @@ export async function getAudio(
         start: () => {
           mediaRecorder.start(options.dataSize);
           if (analyzer) analyzer.start();
-          controls.state = AudioState.listening;
+          controls.state = AudioState.Listening;
         },
       };
 

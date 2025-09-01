@@ -27,7 +27,7 @@
     let { 
         hasResults = false,
         speechChunks = $bindable([]),
-        state = $bindable(AudioState.ready),
+        state = $bindable(AudioState.Ready),
         sessionId = $bindable(),
         useRealtime = false,
         language = 'en',
@@ -45,7 +45,7 @@
 
     let micAnimationContainer: HTMLDivElement;
 
-    let isRunning = $derived(state === AudioState.listening || state === AudioState.speaking);
+    let isRunning = $derived(state === AudioState.Listening || state === AudioState.Speaking);
     let isRealtimeReady = $derived(useRealtime && sessionId && sseClient && (sseClient as SSEClient).isConnected);
 
     // Add comprehensive logging
@@ -191,7 +191,7 @@
         audio = await getAudioVAD({
             analyzer: true
         });
-        state = AudioState.listening;
+        state = AudioState.Listening;
 
         if (audio instanceof Error) {
             log.audio.error('Audio initialization failed:', audio);
@@ -275,10 +275,10 @@
     function toggleSession() {
         log.audio.debug('Toggling session...', { currentState: state });
         
-        if (state === AudioState.stopping) {
+        if (state === AudioState.Stopping) {
             log.audio.debug('Session is stopping, ignoring toggle');
             return;
-        } else if (state === AudioState.listening || state === AudioState.speaking) {  
+        } else if (state === AudioState.Listening || state === AudioState.Speaking) {  
             log.audio.info('Stopping audio session');
             stopSession();
         } else {
@@ -305,9 +305,9 @@
 
 <div class="record-audio {state}" class:-has-results={hasResults} bind:this={micAnimationContainer}>
     <button class="control {state}" class:-running={isRunning} onclick={(e: Event) => { e.stopPropagation(); toggleSession(); }}>
-        {#if state == AudioState.stopping}
+        {#if state == AudioState.Stopping}
         ....
-        {:else if state === AudioState.listening ||  state === AudioState.speaking}
+        {:else if state === AudioState.Listening ||  state === AudioState.Speaking}
             <svg>
                 <use href="/icons.svg#mic-off"></use>
             </svg>

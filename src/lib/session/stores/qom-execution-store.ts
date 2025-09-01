@@ -42,7 +42,7 @@ interface QOMStoreState {
 
 // Initialize store with default state
 function createInitialState(): QOMStoreState {
-  console.group("🏗️ Initializing QOM Store State");
+  console.log("🏗️ Initializing QOM Store State");
 
   const nodes = new Map<string, QOMNode>();
   const links = new Map<string, QOMLink>();
