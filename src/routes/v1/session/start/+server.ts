@@ -19,11 +19,17 @@ export const POST: RequestHandler = async ({
   }
 
   const data = await request.json();
-  const { language = "en", models = ["GP"] } = data;
+  const { language, models = ["GP"] } = data;
+  
+  // Use provided language, or fallback to 'en' if not provided
+  // The client should now pass the correct locale from getLocale()
+  const sessionLanguage = language || "en";
 
+  console.log("🔍 DEBUG: Received language from client:", language);
+  console.log("🔍 DEBUG: Final sessionLanguage:", sessionLanguage);
   console.log("🚀 Creating new session...", {
     userId: user.id,
-    language,
+    language: sessionLanguage,
     models,
   });
 
@@ -72,7 +78,7 @@ Please analyze each new statement incrementally and provide updated medical insi
     // Initialize session with ChatGPT thread context
     await createSession(sessionId, {
       userId: user.id,
-      language,
+      language: sessionLanguage,
       models,
       startTime: new Date().toISOString(),
       status: "active",

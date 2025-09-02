@@ -5,6 +5,7 @@ import type { PartialTranscript } from "../transport/sse-client";
 import { SSEClient } from "../transport/sse-client";
 import { logger } from "$lib/logging/logger";
 import ui from "$lib/ui";
+import { getLocale } from "$lib/i18n";
 import {
   unifiedSessionStore,
   type AudioButtonPosition,
@@ -26,7 +27,7 @@ export const audioActions = {
       useRealtime?: boolean;
     } = {},
   ): Promise<boolean> {
-    const { language = "en", models = ["GP"], useRealtime = true } = options;
+    const { language = getLocale() || "en", models = ["GP"], useRealtime = true } = options;
 
     logger.audio.info("Starting recording with AudioManager (legacy wrapper)...", {
       language,
@@ -49,7 +50,7 @@ export const audioActions = {
     } = {},
   ): Promise<boolean> {
     const {
-      language = "en",
+      language = getLocale() || "en",
       models = ["GP"],
       useRealtime = true,
       sessionId,
@@ -284,7 +285,7 @@ export const audioActions = {
    * Create a new session for recording
    */
   async createSession(
-    language: string = "en",
+    language: string = getLocale() || "en",
     models: string[] = ["GP"],
   ): Promise<string | null> {
     logger.session.info("Creating new session...", { language, models });

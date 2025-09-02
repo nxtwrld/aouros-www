@@ -99,7 +99,7 @@
         <!-- Container for audio button in header (only rendered when session has data) -->
         <!-- Note: hidden class is removed by animation logic in session-moe page -->
         <div bind:this={headerAudioContainer} id="header-audio-button" class="audio-button-header-container hidden">
-            <AudioButton language="en" models={['GP']} useRealtime={true} />
+            <AudioButton />
         </div>
     {/if}
     <!-- Conditional sprite mode - only for recording states -->

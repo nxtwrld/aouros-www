@@ -12,18 +12,6 @@
     import { logger } from '$lib/logging/logger';
     import ui from '$lib/ui';
 
-    // Props for customization
-    interface Props {
-        language?: string;
-        models?: string[];
-        useRealtime?: boolean;
-    }
-
-    let { 
-        language = 'en',
-        models = ['GP'],
-        useRealtime = true 
-    }: Props = $props();
 
     // Component state
     let animationContainer = $state<HTMLDivElement>();

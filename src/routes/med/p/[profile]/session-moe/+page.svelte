@@ -8,6 +8,7 @@
     import { transcriptStore } from '$lib/session/stores/transcript-store';
     import { sessionState, SessionState, unifiedSessionActions } from '$lib/session/stores/unified-session-store';
     import { logger } from '$lib/logging/logger';
+    import { getLocale } from '$lib/i18n';
 
     const profileId = $page.params.profile;
     
@@ -223,7 +224,7 @@
         try {
             // Session should already be in Ready state - no initialization needed
             const success = await unifiedSessionActions.startRecordingSession({
-                language: 'en',
+                language: getLocale() || 'en',
                 models: ['GP'],
                 useRealtime: true
             });
@@ -281,7 +282,7 @@
                             ontransitionend={handleAnimationEnd}
                         >
                             <!-- AudioButton inside for visual display only -->
-                            <AudioButton language="en" models={['GP']} useRealtime={true} />
+                            <AudioButton />
                         </button>
                     </div>
                 {:else}
@@ -302,7 +303,7 @@
                             ontransitionend={handleAnimationEnd}
                         >
                             <!-- AudioButton inside for visual display only -->
-                            <AudioButton language="en" models={['GP']} useRealtime={true} />
+                            <AudioButton />
                         </button>
                     </div>
                     

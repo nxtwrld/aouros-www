@@ -7,6 +7,8 @@ import ui from "$lib/ui";
 import { AudioState, convertFloat32ToMp3 } from "$lib/audio/microphone";
 import { audioManager } from "$lib/audio/AudioManager";
 import { audioActions } from "./audio-actions";
+import { getLocale } from "$lib/i18n";
+import { locale } from "svelte-i18n";
 import type {
   SessionAnalysis,
   MoEAnalysisOutput,
@@ -329,9 +331,15 @@ export const unifiedSessionActions = {
       useRealtime?: boolean;
     } = {}
   ): Promise<boolean> {
-    const { language = "en", models = ["GP"], useRealtime = true } = options;
+    const currentLocale = getLocale();
+    const localeStore = get(locale);
+    console.log("🔍 DEBUG: getLocale() returned:", currentLocale);
+    console.log("🔍 DEBUG: locale store value:", localeStore);
+    console.log("🔍 DEBUG: options.language passed:", options.language);
+    const { language = currentLocale || "en", models = ["GP"], useRealtime = true } = options;
     
-    logger.session.info("Starting recording session", { language, models, useRealtime });
+    console.log("🔍 DEBUG: Final language for session:", language);
+    logger.session.info("Starting recording session", { language, models, useRealtime, currentLocale });
 
     const currentState = get(unifiedSessionStore);
     const { sessionState } = currentState.ui;
@@ -379,15 +387,11 @@ export const unifiedSessionActions = {
       audioManager.on('audio-chunk', handleAudioChunk);
       audioManager.on('state-change', handleStateChange);
       
-      // Generate session ID and create server session
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-      
-      // Create session on server
+      // Create session on server (server will generate the session ID)
       const createSessionResponse = await fetch('/v1/session/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sessionId,
           language,
           models,
           userId: 'current-user' // TODO: Get from auth
@@ -397,6 +401,10 @@ export const unifiedSessionActions = {
       if (!createSessionResponse.ok) {
         throw new Error('Failed to create session on server');
       }
+      
+      // Get the actual session ID from server response
+      const sessionData = await createSessionResponse.json();
+      const sessionId = sessionData.sessionId;
       
       console.log("🔗 SESSION: Created server session:", sessionId);
       

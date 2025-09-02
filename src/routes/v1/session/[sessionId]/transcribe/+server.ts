@@ -1,5 +1,6 @@
 import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { transcriptionProvider } from "$lib/ai/providers/transcription-abstraction";
+import { getSession } from "$lib/session/manager";
 
 export const POST: RequestHandler = async ({
   params,
@@ -15,11 +16,20 @@ export const POST: RequestHandler = async ({
   const sessionId = params.sessionId!;
   console.log("🎯 TRANSCRIBE: Audio chunk received for session:", sessionId);
 
+  // Retrieve session data to get language and other settings
+  const sessionData = getSession(sessionId);
+  if (!sessionData) {
+    console.error("❌ TRANSCRIBE: Session not found:", sessionId);
+    error(404, { message: "Session not found" });
+  }
+
   try {
-    // Default transcription settings
+    // Use session language for transcription with fallback to English
+    console.log("🔍 DEBUG: sessionData.language:", sessionData.language);
     let instructions = {
-      lang: "en",
+      lang: sessionData.language || "en",
     };
+    console.log("🔍 DEBUG: transcription instructions.lang:", instructions.lang);
 
     const formData = await request.formData();
     const uploadedFile = formData.get("audio") as File;
@@ -58,6 +68,7 @@ export const POST: RequestHandler = async ({
       sessionId,
       chunkId,
       sequenceNumber,
+      language: instructions.lang,
       fileSize: `${uploadedFile.size} bytes`,
       fileType: uploadedFile.type,
     });
@@ -91,6 +102,7 @@ export const POST: RequestHandler = async ({
     console.log("✅ TRANSCRIBE: Transcription completed:", {
       sessionId,
       chunkId,
+      language: instructions.lang,
       textLength: response.transcription.text.length,
       confidence: response.transcription.confidence,
       text: response.transcription.text.substring(0, 50) + (response.transcription.text.length > 50 ? "..." : ""),

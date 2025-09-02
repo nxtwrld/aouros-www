@@ -1,6 +1,7 @@
 import { EventEmitter } from 'eventemitter3';
 import { AudioState, getAudioVAD, type AudioControlsVad } from './microphone';
 import { logger } from '$lib/logging/logger';
+import { float32Flatten } from '$lib/array';
 import ui from '$lib/ui';
 
 /**
@@ -14,6 +15,12 @@ export class AudioManager extends EventEmitter {
   private isInitialized = false;
   private isRecording = false;
   private currentState: AudioState = AudioState.Ready;
+  
+  // Audio chunk buffering for optimization
+  private chunkBuffer: Float32Array[] = [];
+  private bufferTimer: number | null = null;
+  private readonly MIN_CHUNK_DURATION_MS = 10000; // 10 seconds
+  private readonly MIN_SAMPLES = 160000; // 10 seconds at 16kHz sample rate
 
   private constructor() {
     super();
@@ -39,6 +46,123 @@ export class AudioManager extends EventEmitter {
       throw new Error('AudioManager instance already exists. Only one instance allowed per application.');
     }
     return AudioManager.getInstance();
+  }
+
+  /**
+   * Check if buffer has enough samples to send for transcription
+   */
+  private shouldSendBuffer(): boolean {
+    const totalSamples = this.chunkBuffer.reduce((acc, chunk) => acc + chunk.length, 0);
+    return totalSamples >= this.MIN_SAMPLES;
+  }
+
+  /**
+   * Merge buffered chunks and send for transcription processing
+   * This combines multiple small audio chunks into larger, more efficient chunks
+   */
+  private mergeAndSendBuffer(forceFlush = false) {
+    if (this.chunkBuffer.length === 0) {
+      logger.audio.debug('No chunks in buffer to send');
+      return;
+    }
+
+    const totalSamples = this.chunkBuffer.reduce((acc, chunk) => acc + chunk.length, 0);
+    const durationMs = Math.round((totalSamples / 16000) * 1000);
+    const chunkCount = this.chunkBuffer.length;
+    const meetsThreshold = totalSamples >= this.MIN_SAMPLES;
+
+    logger.audio.info('🔄 Sending buffered audio for transcription', {
+      chunkCount,
+      totalSamples,
+      durationMs: `${durationMs}ms`,
+      targetDurationMs: `${this.MIN_CHUNK_DURATION_MS}ms`,
+      meetsThreshold,
+      forceFlush,
+      reason: forceFlush ? 'Timeout or manual flush' : 'Buffer size threshold reached',
+    });
+
+    // Merge all buffered chunks into one optimized chunk
+    const mergedChunk = float32Flatten(this.chunkBuffer);
+    
+    // Clear buffer and timer
+    this.chunkBuffer = [];
+    if (this.bufferTimer) {
+      clearTimeout(this.bufferTimer);
+      this.bufferTimer = null;
+    }
+
+    // Send the merged chunk for transcription processing
+    this.emit('audio-chunk', mergedChunk);
+    
+    logger.audio.debug('✅ Merged chunk sent for processing', {
+      finalSamples: mergedChunk.length,
+      compressionRatio: `${chunkCount}:1`,
+    });
+  }
+
+  /**
+   * Add chunk to buffer and check if ready to send
+   */
+  private addToBuffer(audioData: Float32Array) {
+    this.chunkBuffer.push(audioData);
+    
+    const totalSamples = this.chunkBuffer.reduce((acc, chunk) => acc + chunk.length, 0);
+    const currentDurationMs = Math.round((totalSamples / 16000) * 1000);
+
+    logger.audio.debug('📦 Added chunk to buffer', {
+      chunkSamples: audioData.length,
+      totalSamples,
+      currentDurationMs: `${currentDurationMs}ms`,
+      bufferLength: this.chunkBuffer.length,
+      readyToSend: this.shouldSendBuffer(),
+    });
+
+    // Check if we have enough samples to send
+    if (this.shouldSendBuffer()) {
+      this.mergeAndSendBuffer();
+      return;
+    }
+
+    // Set timeout to force send after 10 seconds if no new chunks
+    if (this.bufferTimer) {
+      clearTimeout(this.bufferTimer);
+    }
+    
+    this.bufferTimer = window.setTimeout(() => {
+      logger.audio.info('⏰ Buffer timeout reached - forcing send of smaller chunk');
+      this.mergeAndSendBuffer(true);
+    }, this.MIN_CHUNK_DURATION_MS);
+  }
+
+  /**
+   * Clear the audio buffer and ensure remaining chunks are sent for processing
+   * Called when stopping recording to prevent data loss
+   */
+  private clearBuffer() {
+    // Clear any pending timeout
+    if (this.bufferTimer) {
+      clearTimeout(this.bufferTimer);
+      this.bufferTimer = null;
+      logger.audio.debug('🕰️ Cleared pending buffer timeout');
+    }
+    
+    // Send any remaining chunks for processing before clearing
+    if (this.chunkBuffer.length > 0) {
+      const totalSamples = this.chunkBuffer.reduce((acc, chunk) => acc + chunk.length, 0);
+      const durationMs = Math.round((totalSamples / 16000) * 1000);
+      
+      logger.audio.info('🧹 Flushing remaining buffer chunks for processing', {
+        chunkCount: this.chunkBuffer.length,
+        totalSamples,
+        durationMs: `${durationMs}ms`,
+        reason: 'Recording stopped - ensuring no audio data is lost',
+      });
+      
+      // Force send remaining buffered chunks for processing
+      this.mergeAndSendBuffer(true);
+    } else {
+      logger.audio.debug('✅ Buffer already empty - no chunks to flush');
+    }
   }
 
   /**
@@ -144,9 +268,11 @@ export class AudioManager extends EventEmitter {
 
       this.currentState = AudioState.Listening;
       
-      // Emit the audio chunk for processing by session store
+      // Add chunk to buffer for optimization (instead of immediate sending)
+      this.addToBuffer(audioData);
+      
+      // Emit other events but not audio-chunk (that's handled by buffer)
       this.emit('speech-end', audioData);
-      this.emit('audio-chunk', audioData);
       this.emit('state-change', this.currentState);
       ui.emit('audio:speech-end', audioData);
 
@@ -210,6 +336,9 @@ export class AudioManager extends EventEmitter {
           streamId: this.audio.stream?.id,
           trackCount: this.audio.stream?.getTracks().length || 0,
         });
+
+        // Clear any remaining buffered chunks before stopping
+        this.clearBuffer();
 
         // Stop the audio processor (handles VAD and MediaStream cleanup)
         this.audio.stop();
