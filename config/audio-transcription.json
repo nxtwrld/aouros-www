@@ -73,7 +73,8 @@
     "includeTimestamps": false,
     "medicalContext": {
       "enabled": true,
-      "prompt": "The transcript is a part of a doctor patient session conversation. The doctor is asking the patient about their symptoms and the patient is responding. A nurse or multiple doctors may be part of the conversation.",
+      "prompt": "This is a medical consultation recording. Please transcribe the conversation exactly as spoken in its original language - do NOT translate it. The conversation typically involves a doctor asking about symptoms and the patient responding. Multiple speakers (doctors, nurses, patients) may be present. Preserve all medical terminology in the original language.",
+      "translatePrompt": "This is a medical consultation recording. Please transcribe AND translate the conversation to English. Maintain medical accuracy and use appropriate English medical terminology.",
       "medicalTermsBoost": true,
       "speakerIdentification": false
     }

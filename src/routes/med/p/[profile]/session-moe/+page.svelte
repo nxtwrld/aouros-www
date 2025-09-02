@@ -226,7 +226,8 @@
             const success = await unifiedSessionActions.startRecordingSession({
                 language: getLocale() || 'en',
                 models: ['GP'],
-                useRealtime: true
+                useRealtime: true,
+                translate: false  // Default to preserving original language
             });
             
             if (success) {

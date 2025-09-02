@@ -19,18 +19,16 @@ export const POST: RequestHandler = async ({
   }
 
   const data = await request.json();
-  const { language, models = ["GP"] } = data;
+  const { language, models = ["GP"], translate = false } = data;
   
   // Use provided language, or fallback to 'en' if not provided
   // The client should now pass the correct locale from getLocale()
   const sessionLanguage = language || "en";
 
-  console.log("🔍 DEBUG: Received language from client:", language);
-  console.log("🔍 DEBUG: Final sessionLanguage:", sessionLanguage);
-  console.log("🚀 Creating new session...", {
-    userId: user.id,
+  console.log("🚀 Creating session:", {
     language: sessionLanguage,
-    models,
+    models: models.join(","),
+    translate: translate ? "enabled" : "disabled",
   });
 
   try {
@@ -80,6 +78,7 @@ Please analyze each new statement incrementally and provide updated medical insi
       userId: user.id,
       language: sessionLanguage,
       models,
+      translate,
       startTime: new Date().toISOString(),
       status: "active",
       openaiThreadId,

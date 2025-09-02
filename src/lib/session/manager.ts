@@ -9,6 +9,7 @@ export interface SessionData {
   userId: string;
   language: string;
   models: string[];
+  translate?: boolean; // Whether to translate transcriptions to English
   startTime: string;
   status: "active" | "paused" | "completed";
   profileId?: string; // Add profile ID for context assembly

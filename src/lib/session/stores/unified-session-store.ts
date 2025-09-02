@@ -329,17 +329,13 @@ export const unifiedSessionActions = {
       language?: string;
       models?: string[];
       useRealtime?: boolean;
+      translate?: boolean;
     } = {}
   ): Promise<boolean> {
     const currentLocale = getLocale();
-    const localeStore = get(locale);
-    console.log("🔍 DEBUG: getLocale() returned:", currentLocale);
-    console.log("🔍 DEBUG: locale store value:", localeStore);
-    console.log("🔍 DEBUG: options.language passed:", options.language);
-    const { language = currentLocale || "en", models = ["GP"], useRealtime = true } = options;
+    const { language = currentLocale || "en", models = ["GP"], useRealtime = true, translate = false } = options;
     
-    console.log("🔍 DEBUG: Final language for session:", language);
-    logger.session.info("Starting recording session", { language, models, useRealtime, currentLocale });
+    logger.session.info("Starting recording session", { language, models, useRealtime, translate });
 
     const currentState = get(unifiedSessionStore);
     const { sessionState } = currentState.ui;
@@ -394,6 +390,7 @@ export const unifiedSessionActions = {
         body: JSON.stringify({
           language,
           models,
+          translate,
           userId: 'current-user' // TODO: Get from auth
         })
       });

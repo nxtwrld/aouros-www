@@ -25,11 +25,10 @@ export const POST: RequestHandler = async ({
 
   try {
     // Use session language for transcription with fallback to English
-    console.log("🔍 DEBUG: sessionData.language:", sessionData.language);
     let instructions = {
       lang: sessionData.language || "en",
+      translate: sessionData.translate || false,
     };
-    console.log("🔍 DEBUG: transcription instructions.lang:", instructions.lang);
 
     const formData = await request.formData();
     const uploadedFile = formData.get("audio") as File;
@@ -64,13 +63,12 @@ export const POST: RequestHandler = async ({
       error(400, { message: "Missing chunkId" });
     }
 
-    console.log("🔄 TRANSCRIBE: Processing audio chunk:", {
-      sessionId,
-      chunkId,
-      sequenceNumber,
+    console.log("🔄 TRANSCRIBE: Processing", {
+      sessionId: sessionId.substring(0, 8) + "...",
+      chunkId: chunkId.substring(0, 8) + "...",
       language: instructions.lang,
-      fileSize: `${uploadedFile.size} bytes`,
-      fileType: uploadedFile.type,
+      translate: instructions.translate,
+      size: `${Math.round(uploadedFile.size / 1024)}KB`,
     });
 
     // Initialize transcription provider and transcribe
@@ -99,13 +97,11 @@ export const POST: RequestHandler = async ({
       },
     };
 
-    console.log("✅ TRANSCRIBE: Transcription completed:", {
-      sessionId,
-      chunkId,
-      language: instructions.lang,
-      textLength: response.transcription.text.length,
-      confidence: response.transcription.confidence,
-      text: response.transcription.text.substring(0, 50) + (response.transcription.text.length > 50 ? "..." : ""),
+    console.log("✅ TRANSCRIBE: Completed", {
+      sessionId: sessionId.substring(0, 8) + "...",
+      chunkId: chunkId.substring(0, 8) + "...",
+      chars: response.transcription.text.length,
+      preview: response.transcription.text.substring(0, 30) + (response.transcription.text.length > 30 ? "..." : ""),
     });
 
     return json(response);
