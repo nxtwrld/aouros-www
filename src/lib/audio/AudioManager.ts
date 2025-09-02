@@ -114,8 +114,32 @@ export class AudioManager extends EventEmitter {
 
     // Handle speech end and process audio chunks
     this.audio.onSpeechEnd = (audioData: Float32Array) => {
-      logger.audio.info('Speech ended - AudioManager', {
+      // Calculate peak amplitude without spreading large array
+      let peakAmplitude = 0;
+      let sumSquares = 0;
+      
+      for (let i = 0; i < audioData.length; i++) {
+        const absValue = Math.abs(audioData[i]);
+        if (absValue > peakAmplitude) {
+          peakAmplitude = absValue;
+        }
+        sumSquares += audioData[i] * audioData[i];
+      }
+      
+      const chunkMetrics = {
+        sampleCount: audioData.length,
+        durationMs: Math.round((audioData.length / 16000) * 1000), // Assuming 16kHz sample rate
+        peakAmplitude,
+        rmsLevel: Math.sqrt(sumSquares / audioData.length),
+        timestamp: Date.now(),
+      };
+
+      logger.audio.info('🎤 Speech ended - AudioManager', {
         chunkSize: audioData.length,
+        duration: `${chunkMetrics.durationMs}ms`,
+        peakAmplitude: chunkMetrics.peakAmplitude.toFixed(4),
+        rmsLevel: chunkMetrics.rmsLevel.toFixed(4),
+        dataRange: `[${audioData[0].toFixed(4)}...${audioData[audioData.length - 1].toFixed(4)}]`,
       });
 
       this.currentState = AudioState.Listening;
@@ -125,6 +149,13 @@ export class AudioManager extends EventEmitter {
       this.emit('audio-chunk', audioData);
       this.emit('state-change', this.currentState);
       ui.emit('audio:speech-end', audioData);
+
+      // Log chunk emission timing
+      logger.audio.debug('📤 Audio chunk events emitted', {
+        chunkId: `chunk_${chunkMetrics.timestamp}`,
+        eventTypes: ['speech-end', 'audio-chunk', 'state-change'],
+        totalSamples: audioData.length,
+      });
     };
   }
 

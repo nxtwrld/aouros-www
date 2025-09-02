@@ -19,6 +19,12 @@ const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
+// DEPRECATED ENDPOINT: This endpoint mixes transcription and analysis
+// Use instead:
+// - POST /v1/session/{sessionId}/transcribe - For audio transcription
+// - GET /v1/session/{sessionId}/analyze - For medical analysis
+// This endpoint is kept for backward compatibility but will be removed
+
 export const POST: RequestHandler = async ({
   params,
   request,
@@ -31,7 +37,7 @@ export const POST: RequestHandler = async ({
   }
 
   const sessionId = params.sessionId!;
-  console.log("📡 Processing audio chunk for session:", sessionId);
+  console.log("⚠️ DEPRECATED: Audio endpoint used, use /transcribe instead for session:", sessionId);
 
   try {
     const sessionData = getSession(sessionId);
@@ -49,17 +55,16 @@ export const POST: RequestHandler = async ({
     const formData = await request.formData();
     const audioFile = formData.get("audio") as File;
     const timestamp = formData.get("timestamp") as string;
+    const chunkId = formData.get("chunkId") as string;
 
     if (!audioFile) {
       error(400, { message: "No audio file provided" });
     }
 
-    console.log("📡 Processing audio file:", {
-      name: audioFile.name,
-      size: audioFile.size,
-      type: audioFile.type,
-      timestamp,
-      hasOpenAIThread: !!sessionData.openaiThreadId,
+    console.log("🔄 SERVER: Processing audio file:", {
+      chunkId: chunkId || "no-id",
+      size: `${audioFile.size} bytes`,
+      sessionId,
     });
 
     // Process transcription
@@ -91,26 +96,17 @@ export const POST: RequestHandler = async ({
       addTranscript(sessionId, partialTranscript);
       response.transcript = partialTranscript;
 
-      console.log("📝 Transcript added:", {
-        id: partialTranscript.id,
-        text: partialTranscript.text.substring(0, 100) + "...",
+      console.log("✅ SERVER: Transcript generated:", {
+        chunkId: chunkId || "no-id",
+        text: partialTranscript.text.substring(0, 50) + (partialTranscript.text.length > 50 ? "..." : ""),
         confidence: partialTranscript.confidence,
       });
 
-      // Trigger incremental analysis if we have enough content
-      if (partialTranscript.is_final && shouldTriggerAnalysis(sessionData)) {
-        console.log("🔬 Triggering incremental analysis...");
-        response.analysisTriggered = true;
-
-        // Don't await - let analysis run in background and stream via SSE
-        triggerIncrementalAnalysis(sessionId, partialTranscript.text).catch(
-          (error) => {
-            console.error("❌ Analysis error:", error);
-          },
-        );
-      }
+      // Analysis is now handled by separate /analyze endpoint
+      // This endpoint only handles transcription for backward compatibility
+      response.analysisTriggered = false;
     } else {
-      console.log("⚠️ No transcript generated from audio chunk");
+      console.log("⚠️ SERVER: No transcript generated from audio chunk:", chunkId || "no-id");
     }
 
     return json(response);
@@ -120,18 +116,16 @@ export const POST: RequestHandler = async ({
   }
 };
 
+// DEPRECATED: This endpoint is being phased out in favor of separate transcription and analysis endpoints
+// New architecture: 
+// - POST /v1/session/{sessionId}/transcribe - For audio transcription only
+// - GET /v1/session/{sessionId}/analyze - For medical analysis (SSE)
+
 // Determine if we should trigger analysis using hybrid approach
 function shouldTriggerAnalysis(sessionData: any): boolean {
-  if (!sessionData.transcripts || sessionData.transcripts.length === 0) {
-    console.log("🚫 No transcripts to analyze");
-    return false;
-  }
-
-  // Don't trigger if analysis is already in progress
-  if (sessionData.analysisState?.analysisInProgress) {
-    console.log("⏳ Analysis already in progress, skipping...");
-    return false;
-  }
+  // DEPRECATED: This analysis logic is moved to separate analyze endpoint
+  console.log("⚠️ DEPRECATED: Analysis logic moved to /analyze endpoint");
+  return false;
 
   // Get unprocessed content since last analysis
   const lastProcessedIndex =

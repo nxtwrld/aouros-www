@@ -4,7 +4,7 @@ import { browser } from "$app/environment";
 import { page } from "$app/stores";
 import { logger } from "$lib/logging/logger";
 import ui from "$lib/ui";
-import { AudioState } from "$lib/audio/microphone";
+import { AudioState, convertFloat32ToMp3 } from "$lib/audio/microphone";
 import { audioManager } from "$lib/audio/AudioManager";
 import { audioActions } from "./audio-actions";
 import type {
@@ -56,6 +56,8 @@ export interface TranscriptItem {
   timestamp: number;
   is_final: boolean;
   speaker?: string;
+  sequenceNumber?: number;
+  status?: 'pending' | 'processing' | 'completed';
 }
 
 // Main unified session state interface
@@ -377,8 +379,42 @@ export const unifiedSessionActions = {
       audioManager.on('audio-chunk', handleAudioChunk);
       audioManager.on('state-change', handleStateChange);
       
+      // Generate session ID and create server session
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+      
+      // Create session on server
+      const createSessionResponse = await fetch('/v1/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          language,
+          models,
+          userId: 'current-user' // TODO: Get from auth
+        })
+      });
+      
+      if (!createSessionResponse.ok) {
+        throw new Error('Failed to create session on server');
+      }
+      
+      console.log("🔗 SESSION: Created server session:", sessionId);
+      
+      // NOTE: We don't connect SSE here anymore - only for transcription
+      // SSE will be connected later when we need to stream analysis results
+      console.log("📡 SESSION: Ready for transcription (SSE will connect when needed):", sessionId);
+      
       // Transition to Running state first
       unifiedSessionActions.transitionToRunning();
+      
+      // Update session ID in state
+      unifiedSessionStore.update(state => ({
+        ...state,
+        audio: {
+          ...state.audio,
+          sessionId: sessionId,
+        }
+      }));
       
       // Start recording with AudioManager (this is also async)
       const success = await audioManager.start();
@@ -583,33 +619,85 @@ export const unifiedSessionActions = {
   },
 
   // Transcript Management
-  addTranscript(transcript: PartialTranscript): void {
-    const transcriptItem: TranscriptItem = {
-      id: transcript.id,
-      text: transcript.text,
-      confidence: transcript.confidence,
-      timestamp: transcript.timestamp,
-      is_final: transcript.is_final,
-      speaker: transcript.speaker,
+  
+  // Create placeholder for audio chunk being processed
+  addTranscriptPlaceholder(chunkId: string, sequenceNumber: number): void {
+    const placeholderItem: TranscriptItem = {
+      id: chunkId,
+      text: "🎙️ Processing...",
+      confidence: 0,
+      timestamp: Date.now(),
+      is_final: false,
+      sequenceNumber,
+      status: 'processing',
     };
 
     unifiedSessionStore.update((state) => ({
       ...state,
       transcripts: {
         ...state.transcripts,
-        items: [...state.transcripts.items, transcriptItem],
-        currentSegment: transcript.is_final ? "" : transcript.text,
-        buffer: transcript.is_final
-          ? state.transcripts.buffer + " " + transcript.text
-          : state.transcripts.buffer,
+        items: [...state.transcripts.items, placeholderItem].sort((a, b) => 
+          (a.sequenceNumber || 0) - (b.sequenceNumber || 0)
+        ),
       },
       lastUpdated: Date.now(),
     }));
 
-    logger.session.debug("Transcript added", {
+    console.log("📝 PLACEHOLDER: Created for chunk", { chunkId, sequenceNumber });
+  },
+
+  // Update transcript with actual transcription result (fill placeholder)
+  addTranscript(transcript: PartialTranscript): void {
+    unifiedSessionStore.update((state) => {
+      const existingIndex = state.transcripts.items.findIndex(item => item.id === transcript.id);
+      
+      const transcriptItem: TranscriptItem = {
+        id: transcript.id,
+        text: transcript.text,
+        confidence: transcript.confidence,
+        timestamp: transcript.timestamp,
+        is_final: transcript.is_final,
+        speaker: transcript.speaker,
+        sequenceNumber: transcript.sequenceNumber,
+        status: 'completed',
+      };
+
+      let updatedItems;
+      if (existingIndex >= 0) {
+        // Replace placeholder with actual transcript
+        updatedItems = [...state.transcripts.items];
+        updatedItems[existingIndex] = transcriptItem;
+        console.log("📝 FILLED: Placeholder replaced", { id: transcript.id, sequenceNumber: transcript.sequenceNumber });
+      } else {
+        // Add new transcript and sort by sequence
+        updatedItems = [...state.transcripts.items, transcriptItem];
+        console.log("📝 ADDED: New transcript", { id: transcript.id, sequenceNumber: transcript.sequenceNumber });
+      }
+
+      // Sort items by sequence number to maintain order
+      updatedItems.sort((a, b) => (a.sequenceNumber || 0) - (b.sequenceNumber || 0));
+
+      // Update buffer with final transcripts only
+      const finalTranscripts = updatedItems.filter(item => item.is_final && item.status === 'completed');
+      const newBuffer = finalTranscripts.map(item => item.text).join(" ");
+
+      return {
+        ...state,
+        transcripts: {
+          ...state.transcripts,
+          items: updatedItems,
+          currentSegment: transcript.is_final ? "" : transcript.text,
+          buffer: newBuffer,
+        },
+        lastUpdated: Date.now(),
+      };
+    });
+
+    logger.session.debug("Transcript processed", {
       id: transcript.id,
       text: transcript.text.substring(0, 50) + "...",
       is_final: transcript.is_final,
+      sequenceNumber: transcript.sequenceNumber,
     });
   },
 
@@ -749,6 +837,11 @@ export const unifiedSessionActions = {
         },
       });
 
+      // Listen for placeholder creation events
+      sseClient.on("create_placeholder", ({ chunkId, sequenceNumber }) => {
+        unifiedSessionActions.addTranscriptPlaceholder(chunkId, sequenceNumber);
+      });
+
       const connected = await sseClient.connect();
 
       if (connected) {
@@ -812,19 +905,65 @@ export const unifiedSessionActions = {
     }));
   },
 
-  // Audio Chunk Processing
+  // Audio Chunk Processing - Direct transcription without SSE
   async sendAudioChunk(audioData: Float32Array): Promise<boolean> {
     const currentState = get(unifiedSessionStore);
 
-    if (!currentState.audio.isRecording || !currentState.transport.sseClient) {
+    console.log("🔍 STORE: sendAudioChunk called", {
+      samples: audioData.length,
+      isRecording: currentState.audio.isRecording,
+      sessionId: currentState.audio.sessionId,
+    });
+
+    if (!currentState.audio.isRecording || !currentState.audio.sessionId) {
+      console.log("🚫 STORE: sendAudioChunk blocked", {
+        isRecording: currentState.audio.isRecording,
+        hasSessionId: !!currentState.audio.sessionId,
+      });
       return false;
     }
 
     try {
-      const success =
-        currentState.transport.sseClient.sendAudioChunk(audioData);
+      // Direct transcription - no SSE needed for audio chunks
+      const chunkId = `chunk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const sequenceNumber = Date.now(); // Use timestamp as sequence for simplicity
+      
+      // Create placeholder
+      unifiedSessionActions.addTranscriptPlaceholder(chunkId, sequenceNumber);
+      
+      // Convert and send to transcription endpoint
+      const mp3Blob = await convertFloat32ToMp3(audioData, 16000);
+      
+      const formData = new FormData();
+      formData.append("audio", mp3Blob, "chunk.mp3");
+      formData.append("chunkId", chunkId);
+      formData.append("sequenceNumber", sequenceNumber.toString());
+      formData.append("timestamp", Date.now().toString());
 
-      if (success) {
+      const response = await fetch(`/v1/session/${currentState.audio.sessionId}/transcribe`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("✅ TRANSCRIBE RESPONSE:", {
+          chunkId,
+          text: result.transcription?.text?.substring(0, 50) || "no text",
+        });
+        
+        // Update transcript with result
+        unifiedSessionActions.addTranscript({
+          id: chunkId,
+          text: result.transcription?.text || "",
+          confidence: result.transcription?.confidence || 0.8,
+          timestamp: result.timestamp,
+          is_final: true,
+          sequenceNumber,
+          sessionId: currentState.audio.sessionId,
+        });
+        
+        // Update speech chunks for tracking
         unifiedSessionStore.update((state) => ({
           ...state,
           audio: {
@@ -832,9 +971,12 @@ export const unifiedSessionActions = {
             speechChunks: [...state.audio.speechChunks, audioData],
           },
         }));
+        
+        return true;
+      } else {
+        console.error("❌ TRANSCRIBE FAILED:", response.status);
+        return false;
       }
-
-      return success;
     } catch (error) {
       logger.session.error("Failed to send audio chunk", { error });
       return false;

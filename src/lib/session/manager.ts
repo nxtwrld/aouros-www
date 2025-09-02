@@ -61,6 +61,8 @@ export interface PartialTranscript {
   timestamp: number;
   is_final: boolean;
   speaker?: string;
+  sequenceNumber?: number;
+  sessionId?: string;
 }
 
 // SSE update types

@@ -1,5 +1,6 @@
 import EventEmitter from "eventemitter3";
 import type { PartialTranscript } from "./manager";
+import { convertFloat32ToMp3 } from "$lib/audio/microphone";
 
 export interface SSEOptions {
   sessionId: string;
@@ -159,44 +160,70 @@ export class SSEClient extends EventEmitter {
     }, this.reconnectDelay);
   }
 
+  private sequenceCounter = 0;
+
   async sendAudioChunk(audioData: Float32Array): Promise<boolean> {
-    console.log("📡 SSE sendAudioChunk called", {
-      connectionState: this.connectionState,
-      dataLength: audioData.length,
+    const chunkId = `chunk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const sequenceNumber = ++this.sequenceCounter;
+    const timestamp = Date.now();
+    
+    console.log("📡 TRANSCRIBE SUBMIT:", {
+      chunkId,
+      sequenceNumber,
+      samples: audioData.length,
       sessionId: this.sessionId,
     });
 
-    // For SSE, we send audio via HTTP POST, not through the SSE connection
+    // Create placeholder in store before sending
+    this.emit("create_placeholder", {
+      chunkId,
+      sequenceNumber,
+    });
+
     try {
-      const { convertFloat32ToMp3 } = await import("$lib/audio/microphone");
       const mp3Blob = await convertFloat32ToMp3(audioData, 16000);
 
       const formData = new FormData();
       formData.append("audio", mp3Blob, "chunk.mp3");
-      formData.append("timestamp", Date.now().toString());
+      formData.append("chunkId", chunkId);
+      formData.append("sequenceNumber", sequenceNumber.toString());
+      formData.append("timestamp", timestamp.toString());
 
-      console.log("📡 Sending audio chunk via HTTP to SSE session...");
-
-      const response = await fetch(`/v1/session/${this.sessionId}/audio`, {
+      const response = await fetch(`/v1/session/${this.sessionId}/transcribe`, {
         method: "POST",
         body: formData,
       });
 
       if (response.ok) {
         const result = await response.json();
-        console.log(
-          "✅ Audio chunk sent successfully via HTTP to SSE session:",
-          result,
-        );
+        console.log("✅ TRANSCRIBE RESPONSE:", {
+          chunkId,
+          sequenceNumber,
+          hasTranscription: !!result.transcription,
+          text: result.transcription?.text?.substring(0, 50) || "no text",
+          confidence: result.transcription?.confidence,
+        });
+        
+        // Emit transcript event for the unified store to handle
+        this.emit("partial_transcript", {
+          id: chunkId,
+          text: result.transcription?.text || "",
+          confidence: result.transcription?.confidence || 0.8,
+          timestamp: result.timestamp,
+          is_final: true,
+          sequenceNumber: result.sequenceNumber,
+          sessionId: result.sessionId,
+        });
+        
         return true;
       } else {
-        console.error("❌ Audio chunk upload failed:", response.status);
-        this.emit("error", { message: "Audio upload failed" });
+        console.error("❌ TRANSCRIBE FAILED:", chunkId, response.status);
+        this.emit("error", { message: "Transcription failed" });
         return false;
       }
     } catch (error) {
-      console.error("❌ Audio chunk upload error:", error);
-      this.emit("error", { message: "Audio upload error" });
+      console.error("❌ TRANSCRIBE ERROR:", chunkId, error);
+      this.emit("error", { message: "Transcription error" });
       return false;
     }
   }
