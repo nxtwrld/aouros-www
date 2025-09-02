@@ -59,9 +59,8 @@
 
             logger.session.info('Session saved successfully', { documentId });
 
-            // Transition to final state and clean up
-            unifiedSessionActions.transitionToFinal();
-            unifiedSessionActions.resetSession();
+            // Stop recording and reset session to Ready state
+            await unifiedSessionActions.stopSessionAndReset();
 
             // Close modal
             onclose?.();
@@ -74,10 +73,9 @@
         }
     }
 
-    function handleDiscard() {
-        // Just reset the session without saving
-        unifiedSessionActions.transitionToFinal();
-        unifiedSessionActions.resetSession();
+    async function handleDiscard() {
+        // Stop recording and reset session to Ready state without saving
+        await unifiedSessionActions.stopSessionAndReset();
         onclose?.();
     }
 

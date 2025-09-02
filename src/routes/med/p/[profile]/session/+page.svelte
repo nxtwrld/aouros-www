@@ -64,7 +64,7 @@
     }
 
     let texts: string[] = [];
-    let audioState: AudioState = $state(AudioState.ready);
+    let audioState: AudioState = $state(AudioState.Ready);
 
     // Real-time session management
     let sessionId: string | null = $state(null);

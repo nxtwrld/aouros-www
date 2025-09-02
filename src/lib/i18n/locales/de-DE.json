@@ -854,6 +854,12 @@
       "show-panel": "Panel anzeigen",
       "hide-panel": "Panel verbergen"
     },
+    "status": {
+      "listening": "Hört zu...",
+      "recording": "Aufnahme läuft...",
+      "paused": "Sitzung pausiert",
+      "continue": "Sitzung fortsetzen"
+    },
     "tabs": {
       "questions": "Fragen",
       "transcript": "Transkript",

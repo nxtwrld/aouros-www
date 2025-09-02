@@ -19,12 +19,16 @@ export const POST: RequestHandler = async ({
   }
 
   const data = await request.json();
-  const { language = "en", models = ["GP"] } = data;
+  const { language, models = ["GP"], translate = false } = data;
+  
+  // Use provided language, or fallback to 'en' if not provided
+  // The client should now pass the correct locale from getLocale()
+  const sessionLanguage = language || "en";
 
-  console.log("🚀 Creating new session...", {
-    userId: user.id,
-    language,
-    models,
+  console.log("🚀 Creating session:", {
+    language: sessionLanguage,
+    models: models.join(","),
+    translate: translate ? "enabled" : "disabled",
   });
 
   try {
@@ -72,8 +76,9 @@ Please analyze each new statement incrementally and provide updated medical insi
     // Initialize session with ChatGPT thread context
     await createSession(sessionId, {
       userId: user.id,
-      language,
+      language: sessionLanguage,
       models,
+      translate,
       startTime: new Date().toISOString(),
       status: "active",
       openaiThreadId,

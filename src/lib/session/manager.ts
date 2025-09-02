@@ -9,6 +9,7 @@ export interface SessionData {
   userId: string;
   language: string;
   models: string[];
+  translate?: boolean; // Whether to translate transcriptions to English
   startTime: string;
   status: "active" | "paused" | "completed";
   profileId?: string; // Add profile ID for context assembly
@@ -61,6 +62,8 @@ export interface PartialTranscript {
   timestamp: number;
   is_final: boolean;
   speaker?: string;
+  sequenceNumber?: number;
+  sessionId?: string;
 }
 
 // SSE update types

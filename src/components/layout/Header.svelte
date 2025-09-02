@@ -95,6 +95,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
                             patientId={$profile.id}
                             performerId={$user.id}
                             performerName={$user.fullName || $user.email}
+                            isActive={isActive('/med/p/' + $profile.id + '/session-moe', $page.url.pathname)}
                         />
                     {/if}
                 {:else}

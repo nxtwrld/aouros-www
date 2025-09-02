@@ -854,6 +854,12 @@
       "show-panel": "Zobrazit panel",
       "hide-panel": "Skrýt panel"
     },
+    "status": {
+      "listening": "Poslouchá...",
+      "recording": "Nahrává...",
+      "paused": "Relace pozastavena",
+      "continue": "Pokračovat v relaci"
+    },
     "tabs": {
       "questions": "Otázky",
       "transcript": "Přepis",

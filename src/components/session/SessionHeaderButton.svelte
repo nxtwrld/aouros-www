@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { page } from '$app/stores';
     import { audioState, sessionState, SessionState, AudioState, unifiedSessionActions } from '$lib/session/stores/unified-session-store';
     import { t } from '$lib/i18n';
     import { logger } from '$lib/logging/logger';
@@ -11,136 +12,70 @@
         patientId?: string;
         performerId?: string;
         performerName?: string;
+        isActive?: boolean;
     }
     
-    let { profileId, patientId, performerId, performerName }: Props = $props();
+    let { profileId, patientId, performerId, performerName, isActive = false }: Props = $props();
     
-    // Container references for animation
+    // Container reference for header button
     let headerAudioContainer = $state<HTMLDivElement>();
-    let centerAudioContainer = $state<HTMLDivElement>();
-    
-    // Animation state management
-    let isAnimatingTransition = $state(false);
-    let targetPosition = $state({ x: 0, y: 0, scale: 1 });
-    let animationDirection = $state<'to-header' | 'to-center' | null>(null);
     
     // Session state reactive values
     let currentSessionState = $derived($sessionState);
     let audioStateValue = $derived($audioState.state);
     let showEndSessionModal = $state(false);
     
-    // Determine UI visibility based on session state
-    let showAudioButton = $derived(
-        currentSessionState === SessionState.Ready || 
+    // Detect if user is currently on session page
+    let isOnSessionPage = $derived($page.url.pathname.includes('/session-moe'));
+    
+    // Check if session has data (transcript or analysis)
+    let sessionHasData = $derived(
         currentSessionState === SessionState.Running || 
         currentSessionState === SessionState.Paused
     );
     
-    let showAudioButtonInHeader = $derived(
-        currentSessionState === SessionState.Running || 
-        currentSessionState === SessionState.Paused
+    // Determine which text state to show
+    let currentTextState = $derived(
+        !sessionHasData ? 'new-session' :
+        !isOnSessionPage ? 'continue' :
+        currentSessionState === SessionState.Paused ? 'paused' :
+        audioStateValue === AudioState.Listening ? 'listening' :
+        audioStateValue === AudioState.Speaking ? 'recording' :
+        'recording'
     );
     
-    let showNewSessionLink = $derived(
-        currentSessionState === SessionState.Off || 
-        currentSessionState === SessionState.Final
+    // Check if we're in recording mode (states that auto-swap)
+    let isRecordingMode = $derived(
+        currentSessionState === SessionState.Running &&
+        (audioStateValue === AudioState.Listening || 
+         audioStateValue === AudioState.Speaking)
     );
     
-    let showEndSessionButton = $derived(
-        currentSessionState === SessionState.Running || 
-        currentSessionState === SessionState.Paused
+    // For sprite mode, determine which recording state to show (0 = listening, 1 = speaking/recording)
+    let recordingSpriteIndex = $derived(
+        audioStateValue === AudioState.Speaking ? 1 : 0
     );
+    
+    // Compute the transform string properly - move by 50% since we're moving the parent of 2 children
+    let sliderTransform = $derived(`translateY(${-recordingSpriteIndex * 50}%)`);
+    
+    // Debug logging
+    $effect(() => {
+        if (isRecordingMode) {
+            console.log('Recording mode - Audio state:', audioStateValue, 'Sprite index:', recordingSpriteIndex, 'Transform:', sliderTransform);
+        }
+    });
+    
+    // Audio button visibility - only show in header when session has data
+    let showAudioButtonInHeader = $derived(sessionHasData);
+    
+    // Show End Session button only when session has data
+    let showEndSessionButton = $derived(sessionHasData);
 
     onMount(() => {
-        // Mount center container to document body for global positioning
-        if (centerAudioContainer) {
-            document.body.appendChild(centerAudioContainer);
-        }
-        
-        // Cleanup function to remove center container when component unmounts
-        return () => {
-            if (centerAudioContainer && centerAudioContainer.parentNode) {
-                centerAudioContainer.parentNode.removeChild(centerAudioContainer);
-            }
-        };
+        // Component mounted
+        logger.audio.debug('SessionHeaderButton mounted');
     });
-
-    // Handle smooth transitions when session state changes
-    $effect(() => {
-        if (typeof window === 'undefined') return;
-        
-        const audioButtonElement = document.querySelector('.audio-button-container');
-        
-        if (audioButtonElement && headerAudioContainer && centerAudioContainer) {
-            const currentlyInHeader = audioButtonElement.parentElement === headerAudioContainer;
-            const shouldBeInHeader = showAudioButtonInHeader;
-            
-            if (shouldBeInHeader && !currentlyInHeader && !isAnimatingTransition) {
-                // Start animation to header
-                animateToHeader();
-            } else if (!shouldBeInHeader && currentlyInHeader && !isAnimatingTransition) {
-                // Start animation to center
-                animateToCenter();
-            }
-        }
-    });
-
-    // Calculate target header position and start animation
-    function animateToHeader() {
-        if (!headerAudioContainer || !centerAudioContainer) return;
-        
-        logger.audio.debug('Starting animation to header');
-        isAnimatingTransition = true;
-        animationDirection = 'to-header';
-        
-        // Calculate target position
-        const headerRect = headerAudioContainer.getBoundingClientRect();
-        const centerRect = centerAudioContainer.getBoundingClientRect();
-        
-        // Calculate transform needed to move center to header position
-        const deltaX = headerRect.left + headerRect.width / 2 - (centerRect.left + centerRect.width / 2);
-        const deltaY = headerRect.top + headerRect.height / 2 - (centerRect.top + centerRect.height / 2);
-        const scale = Math.min(headerRect.width / centerRect.width, headerRect.height / centerRect.height);
-        
-        targetPosition = { x: deltaX, y: deltaY, scale };
-        
-        logger.audio.debug('Animation target calculated', { deltaX, deltaY, scale });
-    }
-
-    // Start animation back to center
-    function animateToCenter() {
-        logger.audio.debug('Starting animation to center');
-        isAnimatingTransition = true;
-        animationDirection = 'to-center';
-        
-        // Reset to center position
-        targetPosition = { x: 0, y: 0, scale: 1 };
-    }
-
-    // Handle transition end to swap containers
-    function handleTransitionEnd() {
-        if (!isAnimatingTransition) return;
-        
-        logger.audio.debug('Transition ended, swapping containers', { direction: animationDirection });
-        
-        const audioButtonElement = document.querySelector('.audio-button-container');
-        if (!audioButtonElement || !headerAudioContainer || !centerAudioContainer) return;
-        
-        if (animationDirection === 'to-header') {
-            // Move to header container and reset transform
-            headerAudioContainer.appendChild(audioButtonElement);
-            targetPosition = { x: 0, y: 0, scale: 1 };
-        } else if (animationDirection === 'to-center') {
-            // Move to center container
-            centerAudioContainer.appendChild(audioButtonElement);
-        }
-        
-        // Reset animation state
-        isAnimatingTransition = false;
-        animationDirection = null;
-        
-        logger.audio.debug('Container swap completed');
-    }
     
     function handleEndSession() {
         logger.session.info('End session button clicked');
@@ -152,48 +87,62 @@
     }
 </script>
 
-<!-- Show session buttons when recording/paused -->
-{#if showAudioButtonInHeader}
-    <!-- Session status button -->
-    <a href="/med/p/{profileId}/session-moe" class="sub-item session-status-btn"
-         class:listening={audioStateValue === AudioState.Listening}
-         class:speaking={audioStateValue === AudioState.Speaking}
-         class:paused={currentSessionState === SessionState.Paused}>
-        <!-- Container for audio button - bind to Svelte property -->
-        <div bind:this={headerAudioContainer} class="audio-button-header-container"></div>
-        <span class="recording-text">
-            {currentSessionState === SessionState.Paused ? $t('session.status.continue') : $t('session.status.recording')}
-        </span>
-    </a>
-    
-    <!-- End Session button when there's active session data -->
-    {#if showEndSessionButton}
-        <button 
-            type="button" 
-            class="sub-item end-session-btn"
-            onclick={handleEndSession}
-            title={$t('session.actions.end')}
-        >
-            {$t('session.actions.end')}
-        </button>
+<!-- Single multi-state button (always present) -->
+<a href="/med/p/{profileId}/session-moe" 
+   class="sub-item session-status-btn"
+   class:-active={isActive}
+   class:listening={showAudioButtonInHeader && audioStateValue === AudioState.Listening}
+   class:speaking={showAudioButtonInHeader && audioStateValue === AudioState.Speaking}
+   class:paused={showAudioButtonInHeader && currentSessionState === SessionState.Paused}
+   class:has-audio={showAudioButtonInHeader}>
+    {#if sessionHasData}
+        <!-- Container for audio button in header (only rendered when session has data) -->
+        <!-- Note: hidden class is removed by animation logic in session-moe page -->
+        <div bind:this={headerAudioContainer} id="header-audio-button" class="audio-button-header-container hidden">
+            <AudioButton />
+        </div>
     {/if}
-{:else if showNewSessionLink}
-    <a href="/med/p/{profileId}/session-moe" class="sub-item">
-        {$t('app.nav.new-session')}
-    </a>
+    <!-- Conditional sprite mode - only for recording states -->
+    {#if isRecordingMode}
+        <!-- Sprite container for listening/recording (prevents jumping) -->
+        <span class="button-text-container sprite-mode">
+            <span class="button-text-slider" style="transform: {sliderTransform}">
+                <span class="button-text sprite-text">
+                    {$t('session.status.listening')}
+                </span>
+                <span class="button-text sprite-text">
+                    {$t('session.status.recording')}
+                </span>
+            </span>
+        </span>
+    {:else}
+        <!-- Normal single text (natural sizing) -->
+        <span class="button-text">
+            {#if currentTextState === 'new-session'}
+                {$t('app.nav.new-session')}
+            {:else if currentTextState === 'continue'}
+                {$t('session.status.continue')}
+            {:else if currentTextState === 'paused'}
+                {$t('session.status.paused')}
+            {:else}
+                {$t('session.status.recording')}
+            {/if}
+        </span>
+    {/if}
+</a>
+
+<!-- End Session button (only when session has data) -->
+{#if showEndSessionButton}
+    <button 
+        type="button" 
+        class="sub-item end-session-btn"
+        onclick={handleEndSession}
+        title={$t('session.actions.end')}
+    >
+        {$t('session.actions.end')}
+    </button>
 {/if}
 
-<!-- Global center container for AudioButton when on new session page -->
-{#if showAudioButton}
-    <div bind:this={centerAudioContainer} 
-         class="audio-button-center-container" 
-         class:visible={!showAudioButtonInHeader}
-         class:animating={isAnimatingTransition}
-         style="transform: translate({targetPosition.x}px, {targetPosition.y}px) scale({targetPosition.scale})"
-         ontransitionend={handleTransitionEnd}>
-        <AudioButton language="en" models={['GP']} useRealtime={true} />
-    </div>
-{/if}
 
 {#if showEndSessionModal}
     <EndSessionModal 
@@ -203,6 +152,7 @@
         {performerName}
     />
 {/if}
+
 
 <style>
     .session-status-btn {
@@ -226,24 +176,54 @@
         transition: all 0.2s ease;
     }
 
-    .session-status-btn.listening .recording-text {
+    .session-status-btn.listening .button-text {
         color: var(--color-interactivity);
         transition: color 0.3s ease;
     }
 
-    .session-status-btn.speaking .recording-text {
+    .session-status-btn.speaking .button-text {
         color: var(--color-positive);
         transition: color 0.3s ease;
     }
     
-    .session-status-btn.paused .recording-text {
+    .session-status-btn.paused .button-text {
         color: var(--color-gray-700);
         transition: color 0.3s ease;
     }
 
-    .recording-text {
+    /* Sprite mode - only for recording states */
+    .button-text-container.sprite-mode {
+        position: relative;
+        display: inline-block;
+        overflow: hidden;
+        height: 1.2em; /* Fixed height for single line */
+        line-height: 1.2em; /* Match height for proper alignment */
+        vertical-align: middle;
+    }
+    
+    .button-text-slider {
+        position: relative; /* Required for transform to work */
+        display: block;
+        /* No transition - instant jump between states */
+        will-change: transform;
+        transform-origin: top left;
+    }
+    
+    .button-text.sprite-text {
+        display: block;
+        height: 1.2em;
+        line-height: 1.2em;
+    }
+    
+    /* Normal text mode - natural sizing */
+    .button-text {
         font-size: 0.9rem;
         white-space: nowrap;
+    }
+    
+    /* When button has audio, adjust layout */
+    .session-status-btn.has-audio {
+        padding-left: 0.5rem;
     }
 
     .audio-button-header-container {
@@ -252,6 +232,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .audio-button-header-container.hidden {
+        opacity: 0;
+        visibility: hidden;
     }
 
     .end-session-btn {
@@ -280,39 +266,9 @@
         transform: translateY(0);
     }
 
-    /* Container for AudioButton in center (new session page) */
-    .audio-button-center-container {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 12rem;
-        height: 12rem;
-        z-index: 1001;
-        opacity: 0;
-        pointer-events: none;
-        /* Only transition opacity and visibility by default */
-        transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .audio-button-center-container.visible {
-        opacity: 1;
-        pointer-events: all;
-    }
-
-    /* When animating, transition transform and size */
-    .audio-button-center-container.animating {
-        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
     /* Ensure AudioButton inherits container size and animation timing */
     .session-status-btn :global(.audio-button-container) {
         --button-size: 2.5rem;
         --animation-duration: 0.8s; /* Faster animation for smaller header button */
-    }
-
-    .audio-button-center-container :global(.audio-button-container) {
-        --button-size: 12rem;
-        --animation-duration: 2s; /* Standard animation for larger center button */
     }
 </style>

@@ -1043,6 +1043,12 @@
       "days-short": "d",
       "percent": "%"
     },
+    "status": {
+      "listening": "Listening...",
+      "recording": "Recording...",
+      "paused": "Session Paused",
+      "continue": "Continue Session"
+    },
     "end": {
       "title": "End Session",
       "description": "What would you like to do with this session?"

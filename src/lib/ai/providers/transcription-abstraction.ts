@@ -45,6 +45,7 @@ export interface TranscriptionSettings {
   medicalContext: {
     enabled: boolean;
     prompt: string;
+    translatePrompt: string;
     medicalTermsBoost: boolean;
     speakerIdentification: boolean;
   };
@@ -89,6 +90,7 @@ export interface TranscriptionOptions {
   prompt?: string;
   provider?: string;
   model?: string;
+  translate?: boolean;
 }
 
 export interface TranscriptionResult {
@@ -306,7 +308,13 @@ export class TranscriptionProviderAbstraction {
     // Use medical context prompt if enabled and no custom prompt provided
     let prompt = options.prompt;
     if (!prompt && this.config!.transcriptionSettings.medicalContext.enabled) {
-      prompt = this.config!.transcriptionSettings.medicalContext.prompt;
+      if (options.translate) {
+        // Use translation prompt from config
+        prompt = this.config!.transcriptionSettings.medicalContext.translatePrompt;
+      } else {
+        // Use standard preservation prompt from config
+        prompt = this.config!.transcriptionSettings.medicalContext.prompt;
+      }
     }
 
     const transcriptionParams: any = {
@@ -329,10 +337,18 @@ export class TranscriptionProviderAbstraction {
       }
     }
 
+    // Log key transcription parameters (keep minimal for troubleshooting)
+    console.log("🎯 TRANSCRIBE: Using", {
+      language: transcriptionParams.language,
+      translate: options.translate ? 'enabled' : 'disabled',
+      fileSize: `${Math.round((transcriptionParams.file?.size || 0) / 1024)}KB`
+    });
+
     const transcription =
       await openaiProvider.client.audio.transcriptions.create(
         transcriptionParams,
       );
+
 
     // Handle different response formats
     if (typeof transcription === "string") {
@@ -474,7 +490,9 @@ export class TranscriptionProviderAbstraction {
         medicalContext: {
           enabled: true,
           prompt:
-            "The transcript is a part of a doctor patient session conversation. The doctor is asking the patient about their symptoms and the patient is responding. A nurse or multiple doctors may be part of the conversation.",
+            "This is a medical consultation recording. The audio is most likely in Czech language. Please transcribe the conversation exactly as spoken in its original language - do NOT translate it. The conversation typically involves a doctor asking about symptoms and the patient responding. Multiple speakers (doctors, nurses, patients) may be present. Preserve all medical terminology in the original language.",
+          translatePrompt:
+            "This is a medical consultation recording. Please transcribe AND translate the conversation to English. Maintain medical accuracy and use appropriate English medical terminology.",
           medicalTermsBoost: true,
           speakerIdentification: false,
         },
@@ -535,10 +553,11 @@ export class TranscriptionProviderAbstraction {
    */
   async transcribeAudioCompatible(
     audioData: File,
-    instructions: { lang: string } = { lang: "en" },
+    instructions: { lang: string; translate?: boolean } = { lang: "en" },
   ): Promise<{ text: string }> {
     const result = await this.transcribeAudio(audioData, {
       language: instructions.lang,
+      translate: instructions.translate,
     });
 
     return {
