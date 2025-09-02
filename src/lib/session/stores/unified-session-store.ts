@@ -5,6 +5,7 @@ import { page } from "$app/stores";
 import { logger } from "$lib/logging/logger";
 import ui from "$lib/ui";
 import { AudioState } from "$lib/audio/microphone";
+import { audioManager } from "$lib/audio/AudioManager";
 import { audioActions } from "./audio-actions";
 import type {
   SessionAnalysis,
@@ -67,8 +68,6 @@ export interface UnifiedSessionState {
     useRealtime: boolean;
     speechChunks: Float32Array[];
     recordingStartTime: number | null;
-    audioContext: AudioContext | null;
-    mediaStream: MediaStream | null;
     vadEnabled: boolean;
   };
 
@@ -123,8 +122,6 @@ const initialState: UnifiedSessionState = {
     useRealtime: true,
     speechChunks: [],
     recordingStartTime: null,
-    audioContext: null,
-    mediaStream: null,
     vadEnabled: true,
   },
   transcripts: {
@@ -294,8 +291,8 @@ export const unifiedSessionActions = {
   async stopSessionAndReset(): Promise<void> {
     logger.session.info("Stopping session and resetting to Ready state");
     
-    // Stop audio recording first to ensure proper VAD cleanup
-    audioActions.stopRecording();
+    // Stop AudioManager first to ensure proper cleanup
+    await audioManager.stop();
     
     // Reset to clean Ready state
     await this.resetSession();
@@ -344,41 +341,58 @@ export const unifiedSessionActions = {
     }
 
     try {
-      // Request microphone access in user interaction context
-      logger.audio.debug('Requesting microphone for recording session...');
-      
-      const { getAudioVAD } = await import('$lib/audio/microphone');
-      const audio = await getAudioVAD({ analyzer: true });
-      
-      if (audio instanceof Error) {
-        throw audio;
+      // Initialize AudioManager if needed (this must be done in user interaction context)
+      if (!audioManager.getIsInitialized()) {
+        logger.audio.debug('Initializing AudioManager for recording session...');
+        const initialized = await audioManager.initialize();
+        
+        if (!initialized) {
+          throw new Error('Failed to initialize AudioManager');
+        }
       }
       
-      logger.audio.info('Microphone access granted for session', {
-        hasStream: !!audio.stream,
-        streamId: audio.stream?.id,
-        trackCount: audio.stream?.getTracks().length || 0
+      logger.audio.info('AudioManager ready for session', {
+        hasStream: !!audioManager.getAudioStream(),
+        streamId: audioManager.getAudioStream()?.id,
+        trackCount: audioManager.getAudioStream()?.getTracks().length || 0
       });
+      
+      // Set up AudioManager event handlers for this session
+      const handleAudioChunk = (audioData: Float32Array) => {
+        unifiedSessionActions.sendAudioChunk(audioData);
+      };
+      
+      const handleStateChange = (state: AudioState) => {
+        unifiedSessionStore.update((storeState) => ({
+          ...storeState,
+          audio: {
+            ...storeState.audio,
+            state: state,
+          },
+          lastUpdated: Date.now(),
+        }));
+      };
+      
+      // Subscribe to AudioManager events
+      audioManager.on('audio-chunk', handleAudioChunk);
+      audioManager.on('state-change', handleStateChange);
       
       // Transition to Running state first
       unifiedSessionActions.transitionToRunning();
       
-      // Start recording with the audio instance
-      const success = await audioActions.startRecordingWithAudio(audio, {
-        language,
-        models,
-        useRealtime
-      });
+      // Start recording with AudioManager (this is also async)
+      const success = await audioManager.start();
       
       if (!success) {
-        // Rollback on failure
-        audio.stop();
+        // Clean up event listeners and rollback on failure
+        audioManager.off('audio-chunk', handleAudioChunk);
+        audioManager.off('state-change', handleStateChange);
         await unifiedSessionActions.resetSession();
-        logger.session.error('Failed to start audio recording');
+        logger.session.error('Failed to start AudioManager recording');
         return false;
       }
       
-      logger.session.info('Recording session started successfully');
+      logger.session.info('Recording session started successfully with AudioManager');
       return true;
       
     } catch (error) {
@@ -472,54 +486,10 @@ export const unifiedSessionActions = {
     }
 
     try {
-      // Request microphone permissions
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 16000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
+      // Use the new session recording method for consistency
+      return await unifiedSessionActions.startRecordingSession({
+        useRealtime
       });
-
-      // Create audio context
-      const audioContext = new AudioContext({ sampleRate: 16000 });
-
-      // Generate new session ID
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-
-      // Transition to Running state
-      unifiedSessionActions.transitionToRunning();
-
-      // Update audio-specific data
-      unifiedSessionStore.update((state) => ({
-        ...state,
-        audio: {
-          ...state.audio,
-          sessionId,
-          useRealtime,
-          recordingStartTime: Date.now(),
-          audioContext,
-          mediaStream: stream,
-        },
-        lastUpdated: Date.now(),
-      }));
-
-      // Start SSE connection if using realtime
-      if (useRealtime) {
-        await unifiedSessionActions.connectSSE(sessionId);
-      }
-
-      // Initialize audio processing (microphone setup will be done in AudioButton component)
-      logger.session.info("Audio recording started successfully", {
-        sessionId,
-      });
-
-      // Trigger UI events
-      ui.emit("audio:recording-started", { sessionId });
-
-      return true;
     } catch (error) {
       logger.session.error("Failed to start recording", { error });
       unifiedSessionStore.update((state) => ({
@@ -558,17 +528,8 @@ export const unifiedSessionActions = {
       },
     }));
 
-    // Stop media stream
-    if (currentState.audio.mediaStream) {
-      currentState.audio.mediaStream
-        .getTracks()
-        .forEach((track) => track.stop());
-    }
-
-    // Close audio context
-    if (currentState.audio.audioContext) {
-      await currentState.audio.audioContext.close();
-    }
+    // Stop AudioManager
+    await audioManager.stop();
 
     // Disconnect SSE
     await unifiedSessionActions.disconnectSSE();
@@ -600,15 +561,16 @@ export const unifiedSessionActions = {
       }));
     }
 
-    // Clean up audio resources
+    // Clean up audio resources - AudioManager handles MediaStream and AudioContext cleanup
     unifiedSessionStore.update((state) => ({
       ...state,
       audio: {
         ...state.audio,
+        isRecording: false,
+        state: hasData ? AudioState.Ready : AudioState.Ready,
         sessionId: null,
         recordingStartTime: null,
-        audioContext: null,
-        mediaStream: null,
+        speechChunks: [], // Clear speech chunks
       },
       lastUpdated: Date.now(),
     }));

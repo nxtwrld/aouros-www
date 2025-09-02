@@ -8,7 +8,6 @@
         SessionState,
         unifiedSessionActions
     } from '$lib/session/stores/unified-session-store';
-    import { audioActions } from '$lib/session/stores/audio-actions';
     import shortcuts from '$lib/shortcuts';
     import { logger } from '$lib/logging/logger';
     import ui from '$lib/ui';
@@ -154,7 +153,6 @@
             
             // Stop the complete session including audio cleanup
             await unifiedSessionActions.stopSessionComplete();
-            await audioActions.stopRecording();
             return;
         }
 
@@ -190,16 +188,8 @@
                 throw new Error('Failed to start session');
             }
 
-            // Continue with audio recording start - pass audio to global store
-            const success = await audioActions.startRecordingWithAudio(audio, {
-                language,
-                models,
-                useRealtime
-            });
-
-            if (!success) {
-                // Audio cleanup will be handled by audioActions
-                // since it now owns the audio processor
+            // Audio recording is now handled by unified session store
+            if (!sessionStarted) {
                 
                 unifiedSessionStore.update(state => ({
                     ...state,
@@ -218,7 +208,7 @@
         } catch (error) {
             logger.audio.error('Error accessing microphone or starting recording:', error);
             
-            // Audio cleanup handled by audioActions if it was passed there
+            // Audio cleanup handled by unified session store
             
             unifiedSessionStore.update(state => ({
                 ...state,
@@ -264,10 +254,9 @@
         // Stop baseline animation
         stopBaselineAnimation();
         
-        // Stop recording if active - global audio processor cleanup handled by audioActions
+        // AudioButton is now visual-only - recording cleanup handled by unified session store
         if (currentSessionState === SessionState.Running) {
-            logger.audio.debug('AudioButton destroying while recording - stopping...');
-            audioActions.stopRecording();
+            logger.audio.debug('AudioButton destroying while recording - cleanup handled by session store');
         }
     });
 </script>

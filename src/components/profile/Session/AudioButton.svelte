@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { AudioState, getAudio, getAudioVAD, convertBlobToMp3, convertFloat32ToMp3, type AudioControlsVad} from '$lib/audio/microphone';
+    import { AudioState } from '$lib/audio/microphone';
+    import { audioManager } from '$lib/audio/AudioManager';
     // @ts-ignore - throttle-debounce has type issues but works fine
     import { throttle } from 'throttle-debounce';
     import { onDestroy, onMount } from 'svelte';
     import shortcuts from '$lib/shortcuts';
-    import { SSEClient } from '$lib/session/transport/sse-client';
     import type { PartialTranscript } from '$lib/session/manager';
     import { log } from '$lib/logging/logger';
 
@@ -27,7 +27,7 @@
     let { 
         hasResults = false,
         speechChunks = $bindable([]),
-        state = $bindable(AudioState.Ready),
+        state: initialState = AudioState.Ready,
         sessionId = $bindable(),
         useRealtime = false,
         language = 'en',
@@ -40,13 +40,13 @@
         onsessioncreated
     }: Props = $props();
 
-    let audio: AudioControlsVad | Error;
-    let sseClient: SSEClient | null = null;
+    // Local state for visual feedback (not bindable to parent)
+    let state = $state(initialState);
 
     let micAnimationContainer: HTMLDivElement;
 
     let isRunning = $derived(state === AudioState.Listening || state === AudioState.Speaking);
-    let isRealtimeReady = $derived(useRealtime && sessionId && sseClient && (sseClient as SSEClient).isConnected);
+    let isRealtimeReady = $derived(useRealtime && sessionId); // Simplified - SSE handled by session store
 
     // Add comprehensive logging
     $effect(() => {
@@ -54,9 +54,8 @@
             state,
             useRealtime,
             sessionId,
-            hasSSEClient: sseClient !== null,
-            sseConnected: sseClient ? sseClient.isConnected : false,
-            isRealtimeReady
+            isRealtimeReady,
+            audioManagerInitialized: audioManager.getIsInitialized()
         });
     });
 
@@ -72,231 +71,64 @@
         
     });
 
-    async function createSession(): Promise<string | null> {
-        log.session.info('Creating new session...', { language, models });
-        
-        try {
-            const response = await fetch('/v1/session/start', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    language,
-                    models: models.filter(model => model && model.trim())
-                })
-            });
-            
-            log.session.debug('Session creation response status:', response.status);
-            
-            if (!response.ok) {
-                log.session.error('Session creation failed with status:', response.status);
-                const errorText = await response.text();
-                log.session.error('Error response:', errorText);
-                throw new Error(`Session creation failed: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            log.session.debug('Session creation response data:', result);
-            
-            if (result.sessionId) {
-                log.session.info('Session created successfully:', result.sessionId);
-                return result.sessionId;
-            } else {
-                log.session.error('No sessionId in response:', result);
-                return null;
-            }
-        } catch (error) {
-            log.session.error('Session creation error:', error);
-            return null;
+    // Visual feedback for AudioManager events
+    function handleAudioFeatures(features: any) {
+        const data = features.detail || features;
+        const { energy } = data;
+        if (energy && energy > 0.001) {
+            micTick(energy);
         }
+        onfeatures?.(data);
     }
 
-    async function initializeSSEClient(): Promise<boolean> {
-        log.audio.debug('Initializing SSE client...', { useRealtime, sessionId, sseClient });
-        
-        if (useRealtime && sessionId && !sseClient) {
-            log.audio.debug('Creating new SSEClient...');
-            sseClient = new SSEClient({
-                sessionId,
-                onTranscript: (transcript) => {
-                    log.audio.info('SSE transcript received:', transcript);
-                    ontranscript?.(transcript);
-                },
-                onAnalysis: (analysis) => {
-                    log.audio.info('SSE analysis received:', analysis);
-                    onanalysis?.(analysis);
-                },
-                onError: (error) => {
-                    log.audio.error('SSE client error:', error);
-                },
-                onStatus: (status) => {
-                    log.audio.debug('SSE session status:', status);
-                }
-            });
-
-            try {
-                log.audio.debug('Starting SSE connection...');
-                const connected = await sseClient.connect();
-                log.audio.debug('SSE connection result:', connected);
-                if (connected) {
-                    log.audio.info('SSE connected successfully');
-                    return true;
-                } else {
-                    log.audio.error('Failed to connect SSE');
-                    sseClient = null;
-                    return false;
-                }
-            } catch (error) {
-                log.audio.error('SSE connection failed:', error);
-                sseClient = null;
-                return false;
-            }
-        } else {
-            log.audio.debug('Skipping SSE initialization:', {
-                useRealtime,
-                sessionId,
-                alreadyHasClient: sseClient !== null
-            });
-            return false;
-        }
+    function handleSpeechStart() {
+        log.audio.info('Speech started - visual feedback');
+        // State updates handled by handleStateChange from AudioManager
+        onspeechstart?.();
     }
 
-    async function startSession() {
-        log.audio.info('Starting audio session...', { useRealtime, sessionId });
+    function handleSpeechEnd(audioData: Float32Array) {
+        log.audio.info('Speech ended - visual feedback');
+        // State updates handled by handleStateChange from AudioManager
         
-        // Create session if we don't have one and real-time is enabled
-        if (useRealtime && !sessionId) {
-            log.audio.info('Creating session before starting recording...');
-            const newSessionId = await createSession();
-            if (newSessionId) {
-                sessionId = newSessionId;
-                onsessioncreated?.(sessionId);
-                log.audio.info('Session created and stored:', sessionId);
-            } else {
-                log.audio.error('Failed to create session, falling back to traditional processing');
-                useRealtime = false;
-            }
-        }
-        
-        // Initialize SSE client for real-time processing if enabled
-        if (useRealtime && sessionId) {
-            const sseInitialized = await initializeSSEClient();
-            if (!sseInitialized) {
-                log.audio.error('Failed to initialize SSE client, falling back to traditional processing');
-                useRealtime = false;
-            }
-        }
-
-        audio = await getAudioVAD({
-            analyzer: true
+        // For backward compatibility with parent components
+        speechChunks.push(audioData);
+        onspeechend?.({
+            speechChunks
         });
-        state = AudioState.Listening;
-
-        if (audio instanceof Error) {
-            log.audio.error('Audio initialization failed:', audio);
-            return;
-        }
-
-        log.audio.info('Audio initialized successfully');
-
-        audio.onFeatures = (d) => {
-            if (d.energy > 0.001) micTick(d.energy);
-            onfeatures?.(d);
-        }
-
-        audio.onSpeechStart = () => {
-            log.audio.info('Speech started');
-            if (!(audio instanceof Error)) {
-                state = audio.state;
-            }
-            onspeechstart?.();
-        }   
-
-        audio.onSpeechEnd = (data: Float32Array) => {
-            log.audio.info('Speech ended, processing audio chunk...', {
-                chunkSize: data.length,
-                useRealtime,
-                sseConnected: sseClient ? sseClient.isConnected : false
-            });
-
-           if (!(audio instanceof Error)) {
-                state = audio.state;
-           }
-
-           // Handle real-time processing vs traditional batch
-           if (useRealtime && sseClient && sseClient.isConnected) {
-               log.audio.debug('Sending audio chunk to SSE client...', data.length);
-               sseClient.sendAudioChunk(data);
-           } else {
-               log.audio.debug('Using traditional batch processing...', {
-                   useRealtime,
-                   hasSSEClient: sseClient !== null,
-                   sseConnected: sseClient ? sseClient.isConnected : false
-               });
-               // Use traditional batch processing
-               speechChunks.push(data);
-               onspeechend?.({
-                   speechChunks
-               });
-           }
-        }
-
-        audio.start();
-        state = audio.state;
-        log.audio.info('Audio recording started');
     }
 
-    async function stopSession() {
-        log.audio.info('Stopping audio session...');
-        
-        if (audio && !(audio instanceof Error)) {
-            audio.stop();
-            state = audio.state;
-        }
-
-        // Clean up SSE client
-        if (sseClient) {
-            log.audio.debug('Disconnecting SSE client...');
-            sseClient.disconnect();
-            sseClient = null;
-        }
-
-        // Send final speech chunks for traditional processing
-        if (!useRealtime) {
-            onspeechend?.({
-                speechChunks
-            });
-        }
-        
-        log.audio.info('Audio session stopped');
-    }
-
-    function toggleSession() {
-        log.audio.debug('Toggling session...', { currentState: state });
-        
-        if (state === AudioState.Stopping) {
-            log.audio.debug('Session is stopping, ignoring toggle');
-            return;
-        } else if (state === AudioState.Listening || state === AudioState.Speaking) {  
-            log.audio.info('Stopping audio session');
-            stopSession();
-        } else {
-            log.audio.info('Starting audio session');
-            startSession();            
-        }
+    function handleStateChange(audioState: AudioState) {
+        log.audio.debug('AudioButton state change:', { from: state, to: audioState });
+        state = audioState;
     }
 
     onMount(() => {
-        log.audio.debug('AudioButton mounted');
-        return shortcuts.listen('Space', () => {
-            toggleSession();
-        });
+        log.audio.debug('AudioButton mounted - subscribing to AudioManager events');
+        
+        // Subscribe to AudioManager events for visual feedback
+        audioManager.on('features', handleAudioFeatures);
+        audioManager.on('speech-start', handleSpeechStart);  
+        audioManager.on('speech-end', handleSpeechEnd);
+        audioManager.on('state-change', handleStateChange);
+        
+        // TODO: Remove shortcuts - now handled by parent components
+        // return shortcuts.listen('Space', () => {
+        //     // Audio control handled by unified session store
+        // });
+        
+        return () => {
+            // Cleanup event listeners
+            audioManager.off('features', handleAudioFeatures);
+            audioManager.off('speech-start', handleSpeechStart);
+            audioManager.off('speech-end', handleSpeechEnd);
+            audioManager.off('state-change', handleStateChange);
+        };
     });
 
     onDestroy(() => {
-        log.audio.debug('AudioButton destroying...');
-        stopSession();
+        log.audio.debug('AudioButton destroying - visual component only');
+        // AudioManager cleanup handled by session store
     })
 
 </script>
@@ -304,7 +136,8 @@
 
 
 <div class="record-audio {state}" class:-has-results={hasResults} bind:this={micAnimationContainer}>
-    <button class="control {state}" class:-running={isRunning} onclick={(e: Event) => { e.stopPropagation(); toggleSession(); }}>
+    <!-- Visual-only button - audio control handled by parent components -->
+    <div class="control {state}" class:-running={isRunning}>
         {#if state == AudioState.Stopping}
         ....
         {:else if state === AudioState.Listening ||  state === AudioState.Speaking}
@@ -316,7 +149,7 @@
                 <use href="/icons.svg#mic"></use>
             </svg>
         {/if}
-    </button>
+    </div>
     {#if true || (!isRunning && hasResults)}
         <!--button class="finalize" >
             Finalize Report

@@ -1,9 +1,6 @@
 import { get } from "svelte/store";
-import {
-  AudioState,
-  getAudioVAD,
-  type AudioControlsVad,
-} from "$lib/audio/microphone";
+import { AudioState } from "$lib/audio/microphone";
+import { audioManager } from "$lib/audio/AudioManager";
 import type { PartialTranscript } from "../transport/sse-client";
 import { SSEClient } from "../transport/sse-client";
 import { logger } from "$lib/logging/logger";
@@ -13,29 +10,16 @@ import {
   type AudioButtonPosition,
 } from "./unified-session-store";
 
-// Audio processing interface
-interface AudioProcessor {
-  audio: AudioControlsVad | null;
-  sseClient: SSEClient | null;
-  isInitialized: boolean;
-}
-
-
-// Global audio processor instance
-let audioProcessor: AudioProcessor = {
-  audio: null,
-  sseClient: null,
-  isInitialized: false,
-};
+// SSE client instance (managed separately from AudioManager)
+let sseClient: SSEClient | null = null;
 
 export const audioActions = {
   /**
-   * Start recording with pre-initialized audio (for browser security)
-   * This method accepts an already-initialized audio processor to satisfy
-   * browser requirements that getUserMedia be called in direct user interaction
+   * Start recording with AudioManager (legacy method for backward compatibility)
+   * This method is now a wrapper around the AudioManager singleton
    */
   async startRecordingWithAudio(
-    audio: AudioControlsVad,
+    _audio: any, // Ignored - AudioManager handles initialization
     options: {
       language?: string;
       models?: string[];
@@ -44,116 +28,17 @@ export const audioActions = {
   ): Promise<boolean> {
     const { language = "en", models = ["GP"], useRealtime = true } = options;
 
-    logger.audio.info("Starting recording with pre-initialized audio...", {
+    logger.audio.info("Starting recording with AudioManager (legacy wrapper)...", {
       language,
       models,
       useRealtime,
-      audioState: audio.state,
     });
 
-    try {
-      // Store the audio processor
-      audioProcessor.audio = audio;
-      audioProcessor.isInitialized = true;
-
-      logger.audio.info("Audio processor stored globally", {
-        hasStream: !!audio.stream,
-        streamId: audio.stream?.id,
-        trackCount: audio.stream?.getTracks().length || 0,
-        audioState: audio.state,
-      });
-
-      // Create session if needed and realtime is enabled
-      let finalSessionId: string | null = null;
-      if (useRealtime) {
-        finalSessionId = await audioActions.createSession(language, models);
-        if (!finalSessionId) {
-          logger.audio.warn(
-            "Failed to create session, continuing with local recording",
-          );
-        }
-      }
-
-      // Initialize SSE client for real-time processing if enabled
-      if (useRealtime && finalSessionId) {
-        const sseConnected = await audioActions.initializeSSE(finalSessionId);
-        if (!sseConnected) {
-          logger.audio.warn(
-            "Failed to initialize SSE, falling back to non-realtime mode",
-          );
-        }
-      }
-
-      // Set up audio event handlers
-      audio.onFeatures = (features) => {
-        if (features.energy > 0.001) {
-          ui.emit("audio:features", features);
-        }
-      };
-
-      audio.onSpeechStart = () => {
-        logger.audio.info("Speech started");
-        unifiedSessionStore.update((state) => ({
-          ...state,
-          audio: {
-            ...state.audio,
-            state: audio.state,
-          },
-        }));
-        ui.emit("audio:speech-start");
-      };
-
-      audio.onSpeechEnd = (audioData: Float32Array) => {
-        logger.audio.info("Speech ended, processing audio chunk...", {
-          chunkSize: audioData.length,
-          useRealtime,
-          hasSSE: audioProcessor.sseClient !== null,
-        });
-
-        unifiedSessionStore.update((state) => ({
-          ...state,
-          audio: {
-            ...state.audio,
-            state: audio.state,
-          },
-        }));
-
-        audioActions.processAudioChunk(audioData, useRealtime);
-      };
-
-      // Start the audio recording
-      audio.start();
-
-      // Update store with successful initialization
-      unifiedSessionStore.update((state) => ({
-        ...state,
-        audio: {
-          ...state.audio,
-          isRecording: true,
-          state: AudioState.Listening,
-          sessionId: finalSessionId,
-          useRealtime,
-          recordingStartTime: Date.now(),
-          vadEnabled: true,
-        },
-        transport: {
-          ...state.transport,
-          realtimeEnabled: useRealtime && audioProcessor.sseClient !== null,
-        },
-        lastUpdated: Date.now(),
-      }));
-
-      ui.emit("audio:recording-started");
-      return true;
-    } catch (error) {
-      logger.audio.error("Failed to start recording with audio:", error);
-      audioProcessor.audio = null;
-      audioProcessor.isInitialized = false;
-      return false;
-    }
+    // Delegate to the unified session store's method which uses AudioManager
+    return await audioActions.initializeAudio({ language, models, useRealtime });
   },
   /**
-   * Initialize audio recording with microphone and VAD
+   * Initialize audio recording using AudioManager
    */
   async initializeAudio(
     options: {
@@ -170,7 +55,7 @@ export const audioActions = {
       sessionId,
     } = options;
 
-    logger.audio.info("Initializing audio recording...", {
+    logger.audio.info("Initializing audio recording with AudioManager...", {
       language,
       models,
       useRealtime,
@@ -186,7 +71,6 @@ export const audioActions = {
           logger.audio.warn(
             "Failed to create session, continuing with local recording",
           );
-          // Continue without realtime features
         }
       }
 
@@ -200,75 +84,45 @@ export const audioActions = {
         }
       }
 
-      // Initialize audio with VAD
-      logger.audio.debug("Requesting microphone access...");
-      const audio = await getAudioVAD({
-        analyzer: true,
-      });
-
-      if (audio instanceof Error) {
-        logger.audio.error("Failed to initialize audio - returned Error:", {
-          message: audio.message,
-          stack: audio.stack,
-        });
-        throw audio;
+      // Initialize AudioManager
+      if (!audioManager.getIsInitialized()) {
+        logger.audio.debug("Initializing AudioManager...");
+        const initialized = await audioManager.initialize();
+        
+        if (!initialized) {
+          throw new Error("Failed to initialize AudioManager");
+        }
       }
 
-      logger.audio.info("Audio successfully initialized", {
-        state: audio.state,
-        hasStream: !!audio.stream,
-        hasAudioContext: !!audio.audioContext,
+      logger.audio.info("AudioManager successfully initialized", {
+        hasStream: !!audioManager.getAudioStream(),
       });
 
-      // Store audio processor
-      audioProcessor.audio = audio;
-      audioProcessor.isInitialized = true;
-
-      // Set up audio event handlers
-      audio.onFeatures = (features) => {
-        // Handle audio features (energy levels for visualization)
-        if (features.energy > 0.001) {
-          ui.emit("audio:features", features);
-        }
-      };
-
-      audio.onSpeechStart = () => {
-        logger.audio.info("Speech started");
-        unifiedSessionStore.update((state) => ({
-          ...state,
-          audio: {
-            ...state.audio,
-            state: audio.state,
-          },
-        }));
-        ui.emit("audio:speech-start");
-      };
-
-      audio.onSpeechEnd = (audioData: Float32Array) => {
-        logger.audio.info("Speech ended, processing audio chunk...", {
-          chunkSize: audioData.length,
-          useRealtime,
-          hasSSE: audioProcessor.sseClient !== null,
-        });
-
-        unifiedSessionStore.update((state) => ({
-          ...state,
-          audio: {
-            ...state.audio,
-            state: audio.state,
-          },
-        }));
-
-        // Handle audio chunk processing
+      // Set up event handlers for audio processing
+      const handleAudioChunk = (audioData: Float32Array) => {
         audioActions.processAudioChunk(audioData, useRealtime);
       };
+
+      const handleStateChange = (state: AudioState) => {
+        unifiedSessionStore.update((storeState) => ({
+          ...storeState,
+          audio: {
+            ...storeState.audio,
+            state: state,
+          },
+        }));
+      };
+
+      // Subscribe to AudioManager events
+      audioManager.on('audio-chunk', handleAudioChunk);
+      audioManager.on('state-change', handleStateChange);
 
       // Update store with successful initialization
       unifiedSessionStore.update((state) => ({
         ...state,
         audio: {
           ...state.audio,
-          state: AudioState.Listening,
+          state: AudioState.Ready,
           sessionId: finalSessionId || null,
           useRealtime,
           recordingStartTime: Date.now(),
@@ -276,7 +130,7 @@ export const audioActions = {
         },
         transport: {
           ...state.transport,
-          realtimeEnabled: useRealtime && audioProcessor.sseClient !== null,
+          realtimeEnabled: useRealtime && sseClient !== null,
         },
         lastUpdated: Date.now(),
       }));
@@ -297,40 +151,41 @@ export const audioActions = {
   },
 
   /**
-   * Start audio recording
+   * Start audio recording using AudioManager
    */
   async startRecording(): Promise<boolean> {
-    logger.audio.info("Starting audio recording...");
+    logger.audio.info("Starting audio recording with AudioManager...");
 
-    if (!audioProcessor.audio) {
-      logger.audio.error("Audio not initialized");
+    if (!audioManager.getIsInitialized()) {
+      logger.audio.error("AudioManager not initialized");
       return false;
     }
 
     try {
-      audioProcessor.audio.start();
+      const success = await audioManager.start();
 
-      unifiedSessionStore.update((state) => ({
-        ...state,
-        audio: {
-          ...state.audio,
-          isRecording: true,
-          state: audioProcessor.audio
-            ? audioProcessor.audio.state
-            : AudioState.Listening,
-        },
-        ui: {
-          ...state.ui,
-          audioButtonPosition: state.ui.isOnNewSessionPage
-            ? "header"
-            : state.ui.audioButtonPosition,
-          isAnimating: true,
-        },
-        lastUpdated: Date.now(),
-      }));
+      if (success) {
+        unifiedSessionStore.update((state) => ({
+          ...state,
+          audio: {
+            ...state.audio,
+            isRecording: true,
+            state: audioManager.getState(),
+          },
+          ui: {
+            ...state.ui,
+            audioButtonPosition: state.ui.isOnNewSessionPage
+              ? "header"
+              : state.ui.audioButtonPosition,
+            isAnimating: true,
+          },
+          lastUpdated: Date.now(),
+        }));
 
-      ui.emit("audio:recording-started");
-      return true;
+        ui.emit("audio:recording-started");
+      }
+
+      return success;
     } catch (error) {
       logger.audio.error("Failed to start recording:", error);
       return false;
@@ -338,12 +193,10 @@ export const audioActions = {
   },
 
   /**
-   * Stop audio recording
+   * Stop audio recording using AudioManager
    */
   async stopRecording(): Promise<void> {
-    logger.audio.info("Stopping audio recording...");
-
-    const currentState = get(unifiedSessionStore);
+    logger.audio.info("Stopping audio recording with AudioManager...");
 
     unifiedSessionStore.update((state) => ({
       ...state,
@@ -355,32 +208,15 @@ export const audioActions = {
     }));
 
     try {
-      // Stop audio recording
-      if (audioProcessor.audio) {
-        logger.audio.info(
-          "Stopping global audio processor - calling stop() method",
-          {
-            hasStream: !!audioProcessor.audio.stream,
-            streamId: audioProcessor.audio.stream?.id,
-            trackCount: audioProcessor.audio.stream?.getTracks().length || 0,
-            audioState: audioProcessor.audio.state,
-          },
-        );
-        audioProcessor.audio.stop();
-        logger.audio.info("Global audio processor stop() method completed");
-      } else {
-        logger.audio.warn("No global audio processor to stop");
-      }
+      // Stop AudioManager
+      await audioManager.stop();
+      logger.audio.info("AudioManager stopped successfully");
 
       // Disconnect SSE
-      if (audioProcessor.sseClient) {
-        audioProcessor.sseClient.disconnect();
-        audioProcessor.sseClient = null;
+      if (sseClient) {
+        sseClient.disconnect();
+        sseClient = null;
       }
-
-      // Clean up audio processor completely
-      audioProcessor.audio = null;
-      audioProcessor.isInitialized = false;
 
       // Update final state
       unifiedSessionStore.update((state) => ({
@@ -513,13 +349,13 @@ export const audioActions = {
   async initializeSSE(sessionId: string): Promise<boolean> {
     logger.audio.debug("Initializing SSE client...", { sessionId });
 
-    if (audioProcessor.sseClient) {
+    if (sseClient) {
       logger.audio.warn("SSE client already exists");
       return true;
     }
 
     try {
-      const sseClient = new SSEClient({
+      sseClient = new SSEClient({
         sessionId,
         onTranscript: (transcript: PartialTranscript) => {
           logger.audio.info("SSE transcript received:", transcript);
@@ -540,8 +376,6 @@ export const audioActions = {
 
       const connected = await sseClient.connect();
       if (connected) {
-        audioProcessor.sseClient = sseClient;
-
         unifiedSessionStore.update((state) => ({
           ...state,
           transport: {
@@ -556,10 +390,12 @@ export const audioActions = {
         return true;
       } else {
         logger.audio.error("Failed to connect SSE");
+        sseClient = null;
         return false;
       }
     } catch (error) {
       logger.audio.error("SSE connection failed:", error);
+      sseClient = null;
       return false;
     }
   },
@@ -568,11 +404,11 @@ export const audioActions = {
    * Process audio chunk (real-time or batch)
    */
   processAudioChunk(audioData: Float32Array, useRealtime: boolean): void {
-    if (useRealtime && audioProcessor.sseClient) {
+    if (useRealtime && sseClient) {
       logger.audio.debug("Sending audio chunk via SSE...", {
         size: audioData.length,
       });
-      audioProcessor.sseClient.sendAudioChunk(audioData);
+      sseClient.sendAudioChunk(audioData);
     } else {
       logger.audio.debug("Using batch audio processing...", {
         size: audioData.length,
@@ -660,26 +496,28 @@ export const audioActions = {
   },
 
   /**
-   * Get current audio processor state
+   * Get current audio processor state (legacy compatibility)
    */
-  getAudioProcessor(): AudioProcessor {
-    return audioProcessor;
+  getAudioProcessor(): { audio: any; sseClient: any; isInitialized: boolean } {
+    return {
+      audio: audioManager.getIsInitialized() ? audioManager : null,
+      sseClient: sseClient,
+      isInitialized: audioManager.getIsInitialized(),
+    };
   },
 
   /**
    * Check if audio is currently recording
    */
   isRecording(): boolean {
-    const state = get(unifiedSessionStore);
-    return state.audio.isRecording;
+    return audioManager.getIsRecording();
   },
 
   /**
    * Get current audio state
    */
   getAudioState(): AudioState {
-    const state = get(unifiedSessionStore);
-    return state.audio.state;
+    return audioManager.getState();
   },
 };
 
