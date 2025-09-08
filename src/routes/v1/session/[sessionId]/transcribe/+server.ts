@@ -1,6 +1,19 @@
 import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { transcriptionProvider } from "$lib/ai/providers/transcription-abstraction";
 import { getSession } from "$lib/session/manager";
+import { type AudioChunkMetadata, type TranscriptionSegment } from "$lib/audio/overlap-processor";
+import fs from "fs";
+import path from "path";
+
+// Load audio transcription config
+const configPath = path.join(process.cwd(), "config", "audio-transcription.json");
+let audioTranscriptionConfig: any = {};
+try {
+  const configData = fs.readFileSync(configPath, "utf-8");
+  audioTranscriptionConfig = JSON.parse(configData);
+} catch (e) {
+  console.warn("Could not load audio transcription config, using defaults");
+}
 
 export const POST: RequestHandler = async ({
   params,
@@ -36,6 +49,18 @@ export const POST: RequestHandler = async ({
     const sequenceNumber = formData.get("sequenceNumber") as string;
     const timestamp = formData.get("timestamp") as string;
     const instructionsExtend = formData.get("instructions") as string;
+    
+    // Extract overlap processing metadata if available
+    const chunkMetadata = formData.get("metadata") as string;
+    let audioMetadata: AudioChunkMetadata | undefined;
+    
+    if (chunkMetadata) {
+      try {
+        audioMetadata = JSON.parse(chunkMetadata) as AudioChunkMetadata;
+      } catch (e) {
+        console.warn("Failed to parse audio chunk metadata:", e);
+      }
+    }
 
     // Parse custom instructions if provided
     if (instructionsExtend) {
@@ -69,6 +94,10 @@ export const POST: RequestHandler = async ({
       language: instructions.lang,
       translate: instructions.translate,
       size: `${Math.round(uploadedFile.size / 1024)}KB`,
+      hasMetadata: !!audioMetadata,
+      sequenceNumber: audioMetadata?.sequenceNumber,
+      isTimeoutForced: audioMetadata?.isTimeoutForced,
+      overlapDuration: audioMetadata?.overlapDurationMs,
     });
 
     // Initialize transcription provider and transcribe
@@ -77,8 +106,45 @@ export const POST: RequestHandler = async ({
       uploadedFile,
       instructions,
     );
+    
+    // Create transcription segment for overlap processing
+    const transcriptionSegment: TranscriptionSegment = {
+      text: transcriptionResult.text || "",
+      confidence: (transcriptionResult as any).confidence || 0.8,
+      timestamp: audioMetadata?.timestamp || parseInt(timestamp, 10) || Date.now(),
+      chunkMetadata: audioMetadata || {
+        sequenceNumber: parseInt(sequenceNumber, 10) || 0,
+        timestamp: parseInt(timestamp, 10) || Date.now(),
+        isTimeoutForced: false,
+        overlapDurationMs: 0,
+        energyLevel: 0,
+      },
+      processed: false,
+    };
+    
+    // Process overlaps if enabled and multiple segments available
+    let processedTranscription = transcriptionSegment;
+    const overlapConfig = audioTranscriptionConfig.transcriptionSettings?.overlapProcessing;
+    
+    if (overlapConfig?.enabled && audioMetadata?.sequenceNumber && audioMetadata.sequenceNumber > 1) {
+      // In a real implementation, you would maintain a session-based segment buffer
+      // For now, we'll just log that overlap processing is available
+      console.log("🔄 OVERLAP: Overlap processing enabled for sequence", audioMetadata.sequenceNumber);
+      
+      // Here you would:
+      // 1. Retrieve previous segments for this session
+      // 2. Add current segment to the buffer
+      // 3. Run overlap detection and merging
+      // 4. Update the session's transcript buffer
+      // 
+      // Example:
+      // const sessionSegments = getSessionSegments(sessionId);
+      // sessionSegments.push(transcriptionSegment);
+      // const mergedResult = overlapProcessor.mergeSegments(sessionSegments);
+      // updateSessionTranscript(sessionId, mergedResult);
+    }
 
-    // Enhanced response format for session-based transcription
+    // Enhanced response format for session-based transcription with overlap metadata
     const response = {
       success: true,
       sessionId,
@@ -86,14 +152,24 @@ export const POST: RequestHandler = async ({
       sequenceNumber: sequenceNumber ? parseInt(sequenceNumber, 10) : undefined,
       timestamp: timestamp ? parseInt(timestamp, 10) : Date.now(),
       transcription: {
-        text: transcriptionResult.text || "",
-        confidence: transcriptionResult.confidence || 0.8,
+        text: processedTranscription.text,
+        confidence: processedTranscription.confidence,
         language: instructions.lang,
-        duration: transcriptionResult.duration,
+        duration: (transcriptionResult as any).duration || 0,
+        processed: processedTranscription.processed,
+      },
+      chunkMetadata: audioMetadata,
+      overlapProcessing: {
+        enabled: overlapConfig?.enabled || false,
+        canProcess: !!audioMetadata && audioMetadata.sequenceNumber > 1,
+        sequenceNumber: audioMetadata?.sequenceNumber,
+        isTimeoutChunk: audioMetadata?.isTimeoutForced || false,
       },
       processing: {
         provider: "whisper", // transcriptionProvider info
         processingTime: Date.now() - (timestamp ? parseInt(timestamp, 10) : Date.now()),
+        energyLevel: audioMetadata?.energyLevel,
+        overlapDuration: audioMetadata?.overlapDurationMs,
       },
     };
 
@@ -102,6 +178,10 @@ export const POST: RequestHandler = async ({
       chunkId: chunkId.substring(0, 8) + "...",
       chars: response.transcription.text.length,
       preview: response.transcription.text.substring(0, 30) + (response.transcription.text.length > 30 ? "..." : ""),
+      sequenceNumber: audioMetadata?.sequenceNumber,
+      isTimeoutForced: audioMetadata?.isTimeoutForced,
+      overlapEnabled: overlapConfig?.enabled,
+      confidence: response.transcription.confidence,
     });
 
     return json(response);

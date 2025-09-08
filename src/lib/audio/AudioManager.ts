@@ -21,10 +21,42 @@ export class AudioManager extends EventEmitter {
   private bufferTimer: number | null = null;
   private readonly MIN_CHUNK_DURATION_MS = 10000; // 10 seconds
   private readonly MIN_SAMPLES = 160000; // 10 seconds at 16kHz sample rate
+  
+  // VAD timeout system for stuck speech events
+  private vadTimeoutTimer: number | null = null;
+  private lastSpeechStartTime: number | null = null;
+  private maxSpeechDurationMs = 30000; // 30 seconds default
+  private overlappingBuffer: Float32Array[] = [];
+  private overlapDurationMs = 5000; // 5 seconds overlap
+  private chunkSequenceNumber = 0;
+  
+  // Energy-based pause detection
+  private energyHistory: number[] = [];
+  private readonly ENERGY_HISTORY_SIZE = 50; // frames to keep for analysis
+  private lastEnergyCalculation = 0;
 
   private constructor() {
     super();
     logger.audio.debug('AudioManager singleton created');
+    
+    // Load configuration from audio-transcription.json if available
+    this.loadConfiguration();
+  }
+  
+  /**
+   * Load configuration from audio-transcription.json
+   */
+  private loadConfiguration() {
+    // Set defaults that can be overridden by configuration
+    this.maxSpeechDurationMs = 30000; // 30 seconds
+    this.overlapDurationMs = 5000; // 5 seconds
+    
+    // In a browser environment, configuration would be loaded via API
+    // For now, we use reasonable defaults that can be overridden later
+    logger.audio.debug('AudioManager configuration loaded with defaults', {
+      maxSpeechDuration: `${this.maxSpeechDurationMs}ms`,
+      overlapDuration: `${this.overlapDurationMs}ms`,
+    });
   }
 
   /**
@@ -57,6 +89,90 @@ export class AudioManager extends EventEmitter {
   }
 
   /**
+   * Set VAD timeout to prevent infinite speech detection
+   */
+  private setVadTimeout() {
+    // Clear any existing timeout
+    this.clearVadTimeout();
+    
+    this.vadTimeoutTimer = window.setTimeout(() => {
+      logger.audio.warn('⚠️ VAD timeout triggered - forcing speech end after 30s', {
+        maxDurationMs: this.maxSpeechDurationMs,
+        lastSpeechStart: this.lastSpeechStartTime,
+        shouldTriggerSmartTimeout: this.shouldTriggerSmartTimeout(),
+        energyHistorySize: this.energyHistory.length,
+      });
+      
+      // Force speech end with current audio context
+      this.handleVadTimeout();
+    }, this.maxSpeechDurationMs);
+  }
+  
+  /**
+   * Clear VAD timeout
+   */
+  private clearVadTimeout() {
+    if (this.vadTimeoutTimer) {
+      clearTimeout(this.vadTimeoutTimer);
+      this.vadTimeoutTimer = null;
+    }
+  }
+  
+  /**
+   * Handle VAD timeout by forcing speech end
+   */
+  private handleVadTimeout() {
+    if (!this.audio || this.currentState !== AudioState.Speaking) {
+      logger.audio.debug('VAD timeout called but not in speaking state');
+      return;
+    }
+    
+    // Create synthetic audio chunk from recent energy data if available
+    const syntheticAudioData = new Float32Array(1600); // 100ms of silence at 16kHz
+    syntheticAudioData.fill(0.001); // Very low amplitude
+    
+    logger.audio.info('🔧 VAD timeout recovery - creating synthetic speech end', {
+      currentState: this.currentState,
+      speechDuration: this.lastSpeechStartTime ? Date.now() - this.lastSpeechStartTime : 0,
+      syntheticDataLength: syntheticAudioData.length,
+      energyPattern: this.shouldTriggerSmartTimeout() ? 'anomalous' : 'normal',
+    });
+    
+    // Force state transition to Listening
+    this.currentState = AudioState.Listening;
+    this.lastSpeechStartTime = null;
+    
+    // Process the synthetic chunk through normal pipeline with timeout flag
+    this.processTimeoutChunk(syntheticAudioData);
+    
+    // Emit events to notify listeners of forced speech end
+    this.emit('speech-end-timeout', syntheticAudioData);
+    this.emit('state-change', this.currentState);
+    ui.emit('audio:speech-end-timeout', syntheticAudioData);
+  }
+  
+  /**
+   * Process timeout-forced audio chunk with special handling
+   */
+  private processTimeoutChunk(audioData: Float32Array) {
+    // Create overlapping chunk with timeout metadata
+    const overlappingChunk = this.createOverlappingChunk(audioData, true);
+    
+    logger.audio.info('⏰ Processing timeout-forced chunk with overlap', {
+      sequenceNumber: overlappingChunk.metadata.sequenceNumber,
+      overlapDuration: `${overlappingChunk.metadata.overlapDurationMs}ms`,
+      finalLength: overlappingChunk.audio.length,
+      energyLevel: overlappingChunk.metadata.energyLevel.toFixed(6),
+    });
+    
+    // Add to buffer with special timeout handling
+    this.chunkBuffer.push(overlappingChunk.audio);
+    
+    // Force immediate sending for timeout chunks to prevent data loss
+    this.mergeAndSendBuffer(true);
+  }
+  
+  /**
    * Merge buffered chunks and send for transcription processing
    * This combines multiple small audio chunks into larger, more efficient chunks
    */
@@ -79,10 +195,14 @@ export class AudioManager extends EventEmitter {
       meetsThreshold,
       forceFlush,
       reason: forceFlush ? 'Timeout or manual flush' : 'Buffer size threshold reached',
+      hasOverlap: this.overlappingBuffer.length > 0,
     });
 
     // Merge all buffered chunks into one optimized chunk
     const mergedChunk = float32Flatten(this.chunkBuffer);
+    
+    // Create overlapping chunk with metadata for transcription
+    const overlappingChunk = this.createOverlappingChunk(mergedChunk, forceFlush);
     
     // Clear buffer and timer
     this.chunkBuffer = [];
@@ -91,19 +211,129 @@ export class AudioManager extends EventEmitter {
       this.bufferTimer = null;
     }
 
-    // Send the merged chunk for transcription processing
-    this.emit('audio-chunk', mergedChunk);
+    // Send the overlapping chunk with metadata for transcription processing
+    this.emit('audio-chunk', overlappingChunk.audio, overlappingChunk.metadata);
     
-    logger.audio.debug('✅ Merged chunk sent for processing', {
-      finalSamples: mergedChunk.length,
+    logger.audio.debug('✅ Merged overlapping chunk sent for processing', {
+      finalSamples: overlappingChunk.audio.length,
       compressionRatio: `${chunkCount}:1`,
+      sequenceNumber: overlappingChunk.metadata.sequenceNumber,
+      overlapDuration: `${overlappingChunk.metadata.overlapDurationMs}ms`,
     });
   }
 
   /**
+   * Calculate energy from audio data for VAD timeout detection
+   */
+  private calculateEnergy(audioData: Float32Array): number {
+    let energy = 0;
+    for (let i = 0; i < audioData.length; i++) {
+      energy += audioData[i] * audioData[i];
+    }
+    return energy / audioData.length;
+  }
+  
+  /**
+   * Update energy history for smart timeout detection
+   */
+  private updateEnergyHistory(audioData: Float32Array) {
+    const energy = this.calculateEnergy(audioData);
+    this.energyHistory.push(energy);
+    
+    // Keep history limited
+    if (this.energyHistory.length > this.ENERGY_HISTORY_SIZE) {
+      this.energyHistory.shift();
+    }
+    
+    this.lastEnergyCalculation = Date.now();
+  }
+  
+  /**
+   * Detect if we should trigger timeout based on energy patterns
+   */
+  private shouldTriggerSmartTimeout(): boolean {
+    if (this.energyHistory.length < 10) return false;
+    
+    // Calculate average energy over recent history
+    const recentFrames = this.energyHistory.slice(-10);
+    const avgRecentEnergy = recentFrames.reduce((a, b) => a + b, 0) / recentFrames.length;
+    
+    // Check for sustained low energy (possible stuck VAD)
+    const energyThreshold = 0.001; // Very low threshold for background noise
+    const isLowEnergy = avgRecentEnergy < energyThreshold;
+    
+    // Check for consistent energy patterns (possible continuous noise)
+    const energyVariance = recentFrames.reduce((acc, energy) => {
+      return acc + Math.pow(energy - avgRecentEnergy, 2);
+    }, 0) / recentFrames.length;
+    
+    const isConsistentNoise = energyVariance < 0.0001 && avgRecentEnergy > 0.0005;
+    
+    return isLowEnergy || isConsistentNoise;
+  }
+  
+  /**
+   * Create overlapping audio chunk with metadata
+   */
+  private createOverlappingChunk(audioData: Float32Array, isTimeoutForced = false): {
+    audio: Float32Array;
+    metadata: {
+      sequenceNumber: number;
+      timestamp: number;
+      isTimeoutForced: boolean;
+      overlapDurationMs: number;
+      energyLevel: number;
+    };
+  } {
+    // Calculate overlap samples
+    const overlapSamples = Math.floor((this.overlapDurationMs / 1000) * 16000);
+    
+    // Combine with previous overlap if available
+    let finalAudio: Float32Array;
+    if (this.overlappingBuffer.length > 0) {
+      const previousOverlap = this.overlappingBuffer[this.overlappingBuffer.length - 1];
+      const combinedLength = previousOverlap.length + audioData.length;
+      const combined = new Float32Array(combinedLength);
+      combined.set(previousOverlap, 0);
+      combined.set(audioData, previousOverlap.length);
+      finalAudio = combined;
+    } else {
+      finalAudio = audioData;
+    }
+    
+    // Store overlap for next chunk
+    if (audioData.length > overlapSamples) {
+      const overlapStart = audioData.length - overlapSamples;
+      this.overlappingBuffer = [audioData.slice(overlapStart)];
+      
+      // Keep only recent overlaps to prevent memory issues
+      if (this.overlappingBuffer.length > 3) {
+        this.overlappingBuffer.shift();
+      }
+    }
+    
+    const energy = this.calculateEnergy(audioData);
+    this.chunkSequenceNumber++;
+    
+    return {
+      audio: finalAudio,
+      metadata: {
+        sequenceNumber: this.chunkSequenceNumber,
+        timestamp: Date.now(),
+        isTimeoutForced,
+        overlapDurationMs: this.overlapDurationMs,
+        energyLevel: energy,
+      },
+    };
+  }
+  
+  /**
    * Add chunk to buffer and check if ready to send
    */
   private addToBuffer(audioData: Float32Array) {
+    // Update energy history for smart timeout detection
+    this.updateEnergyHistory(audioData);
+    
     this.chunkBuffer.push(audioData);
     
     const totalSamples = this.chunkBuffer.reduce((acc, chunk) => acc + chunk.length, 0);
@@ -115,6 +345,7 @@ export class AudioManager extends EventEmitter {
       currentDurationMs: `${currentDurationMs}ms`,
       bufferLength: this.chunkBuffer.length,
       readyToSend: this.shouldSendBuffer(),
+      energyLevel: this.calculateEnergy(audioData).toFixed(6),
     });
 
     // Check if we have enough samples to send
@@ -139,12 +370,14 @@ export class AudioManager extends EventEmitter {
    * Called when stopping recording to prevent data loss
    */
   private clearBuffer() {
-    // Clear any pending timeout
+    // Clear any pending timeouts
     if (this.bufferTimer) {
       clearTimeout(this.bufferTimer);
       this.bufferTimer = null;
       logger.audio.debug('🕰️ Cleared pending buffer timeout');
     }
+    
+    this.clearVadTimeout();
     
     // Send any remaining chunks for processing before clearing
     if (this.chunkBuffer.length > 0) {
@@ -156,6 +389,7 @@ export class AudioManager extends EventEmitter {
         totalSamples,
         durationMs: `${durationMs}ms`,
         reason: 'Recording stopped - ensuring no audio data is lost',
+        hasOverlap: this.overlappingBuffer.length > 0,
       });
       
       // Force send remaining buffered chunks for processing
@@ -163,6 +397,11 @@ export class AudioManager extends EventEmitter {
     } else {
       logger.audio.debug('✅ Buffer already empty - no chunks to flush');
     }
+    
+    // Clear overlapping buffer
+    this.overlappingBuffer = [];
+    this.energyHistory = [];
+    this.chunkSequenceNumber = 0;
   }
 
   /**
@@ -231,6 +470,11 @@ export class AudioManager extends EventEmitter {
     this.audio.onSpeechStart = () => {
       logger.audio.info('Speech started - AudioManager');
       this.currentState = AudioState.Speaking;
+      this.lastSpeechStartTime = Date.now();
+      
+      // Set VAD timeout to prevent infinite speech detection
+      this.setVadTimeout();
+      
       this.emit('speech-start');
       this.emit('state-change', this.currentState);
       ui.emit('audio:speech-start');
@@ -238,6 +482,9 @@ export class AudioManager extends EventEmitter {
 
     // Handle speech end and process audio chunks
     this.audio.onSpeechEnd = (audioData: Float32Array) => {
+      // Clear VAD timeout since speech ended naturally
+      this.clearVadTimeout();
+      
       // Calculate peak amplitude without spreading large array
       let peakAmplitude = 0;
       let sumSquares = 0;
@@ -264,9 +511,11 @@ export class AudioManager extends EventEmitter {
         peakAmplitude: chunkMetrics.peakAmplitude.toFixed(4),
         rmsLevel: chunkMetrics.rmsLevel.toFixed(4),
         dataRange: `[${audioData[0].toFixed(4)}...${audioData[audioData.length - 1].toFixed(4)}]`,
+        speechDuration: this.lastSpeechStartTime ? Date.now() - this.lastSpeechStartTime : 0,
       });
 
       this.currentState = AudioState.Listening;
+      this.lastSpeechStartTime = null;
       
       // Add chunk to buffer for optimization (instead of immediate sending)
       this.addToBuffer(audioData);
@@ -353,6 +602,7 @@ export class AudioManager extends EventEmitter {
     this.isInitialized = false;
     this.isRecording = false;
     this.currentState = AudioState.Ready;
+    this.lastSpeechStartTime = null;
 
     this.emit('recording-stopped');
     this.emit('state-change', this.currentState);
