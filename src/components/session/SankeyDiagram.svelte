@@ -38,8 +38,7 @@
         selectedItem, 
         sessionViewerActions
     } from '$lib/session/stores/session-viewer-store';
-    // Temporary workaround for TypeScript import issues
-    import * as viewerStoreModule from '$lib/session/stores/session-viewer-store';
+    import type { DocumentStoreInstance } from '$lib/session/stores/session-store-manager';
 
     // Transition configuration for smooth vertical position animations
     // Horizontal positions change immediately to avoid confusion, only Y positions animate
@@ -74,6 +73,7 @@
 
     interface Props {
         isMobile?: boolean;
+        storeInstance?: DocumentStoreInstance; // Optional isolated store instance for document viewing
         // All data now comes from stores, no reactive props
         onnodeSelect?: (event: CustomEvent<NodeSelectEvent>) => void;
         onlinkSelect?: (event: CustomEvent<LinkSelectEvent>) => void;
@@ -83,13 +83,33 @@
 
     let { 
         isMobile = false,
+        storeInstance = undefined,
         onnodeSelect,
         onlinkSelect,
         onfocusChange
     }: Props = $props();
 
-    // Read all data directly from stores - no transformations needed here
-    const selectedNodeId = $derived($selectedItem?.type === 'node' ? $selectedItem.id : null);
+    // Helper functions to get actions (isolated or global)
+    const getDataActions = () => storeInstance ? storeInstance.dataStore.actions : sessionDataActions;
+    const getViewerActions = () => storeInstance ? storeInstance.viewerStore.actions : sessionViewerActions;
+
+    // Use isolated stores when provided, otherwise fall back to global stores
+    const sankeyDataStore = storeInstance ? storeInstance.dataStore.sankeyDataFiltered : sankeyData;
+    const hiddenCountsStore = storeInstance ? storeInstance.dataStore.hiddenCounts : hiddenCounts;
+    const thresholdsStore = storeInstance ? storeInstance.dataStore.thresholds : thresholds;
+    const activePathStore = storeInstance ? storeInstance.viewerStore.activePath : activePath;
+    const hoveredItemStore = storeInstance ? storeInstance.viewerStore.hoveredItem : hoveredItem;
+    const selectedItemStore = storeInstance ? storeInstance.viewerStore.selectedItem : selectedItem;
+    
+    const currentSankeyData = $derived($sankeyDataStore);
+    const currentHiddenCounts = $derived($hiddenCountsStore);
+    const currentThresholds = $derived($thresholdsStore);
+    const currentActivePath = $derived($activePathStore);
+    const currentHoveredItem = $derived($hoveredItemStore);
+    const currentSelectedItem = $derived($selectedItemStore);
+    
+    // Update selectedNodeId to use conditional stores
+    const selectedNodeId = $derived(currentSelectedItem?.type === 'node' ? currentSelectedItem.id : null);
 
     let container = $state<HTMLElement>();
     let svg = $state<d3.Selection<SVGSVGElement, unknown, null, undefined>>();
@@ -141,15 +161,15 @@
     // Column positions are now calculated on-demand in renderShowMoreButtons to ensure fresh DOM state
     // Subscribe only to the specific values we need (avoid reading the entire store)
     $effect(() => {
-        const activePathData = $activePath;
-        const hoveredItemData = $hoveredItem;
+        const activePathData = currentActivePath;
+        const hoveredItemData = currentHoveredItem;
         
         
         // Calculate hover path if needed - hover takes precedence over active selection
         let hoverHighlight = null;
         if (hoveredItemData && hoveredItemData.type === 'node') {
             // Use the same path calculation method as selection for consistency
-            const pathResult = sessionDataActions.calculatePath(hoveredItemData.id);
+            const pathResult = getDataActions().calculatePath(hoveredItemData.id);
             hoverHighlight = pathResult?.path || null;
             
         }
@@ -206,9 +226,9 @@
         requestAnimationFrame(() => {
             initializeSankey();
             // Initial render after SVG is created
-            if ($sankeyData) {
+            if (currentSankeyData) {
                 renderSankey();
-                focusableNodes = buildFocusableNodesList($sankeyData);
+                focusableNodes = buildFocusableNodesList(currentSankeyData);
                 renderShowMoreButtons();
             }
         });
@@ -316,7 +336,7 @@
     let previousDataHash = '';
     
     $effect(() => {
-        const data = $sankeyData;
+        const data = currentSankeyData;
         const currentSvg = untrack(() => svg);
         
         // Data change detected
@@ -345,7 +365,7 @@
             }
             
             updateSankeyLayout();
-            focusableNodes = buildFocusableNodesList($sankeyData);
+            focusableNodes = buildFocusableNodesList(currentSankeyData);
             
             // Update button positions after transitions complete and fade them in
             const transitionDuration = isMobile ? TRANSITION_CONFIG.MOBILE.duration : TRANSITION_CONFIG.POSITION.duration;
@@ -403,7 +423,7 @@
 
         // Create constrain function with current parameters
         const constrainFn = (transform: d3.ZoomTransform) => 
-            constrainTransform(transform, width, height, margins, $sankeyData, isMobile);
+            constrainTransform(transform, width, height, margins, currentSankeyData, isMobile);
 
         // Enhanced zoom and pan for all devices
         zoom = createZoomBehavior(
@@ -432,8 +452,8 @@
 
     function renderSankey() {
         
-        if (!svg || !$sankeyData) {
-            console.warn('Missing svg or $sankeyData:', { svg: !!svg, $sankeyData: !!$sankeyData });
+        if (!svg || !currentSankeyData) {
+            console.warn('Missing svg or currentSankeyData:', { svg: !!svg, currentSankeyData: !!currentSankeyData });
             return;
         }
         
@@ -443,13 +463,13 @@
         }
 
         // Validate data structure
-        if (!$sankeyData || !$sankeyData.nodes || !Array.isArray($sankeyData.nodes)) {
-            console.error('Invalid sankeyData or nodes:', $sankeyData);
+        if (!currentSankeyData || !currentSankeyData.nodes || !Array.isArray(currentSankeyData.nodes)) {
+            console.error('Invalid sankeyData or nodes:', currentSankeyData);
             return;
         }
         
-        if (!$sankeyData.links || !Array.isArray($sankeyData.links)) {
-            console.error('Invalid links data:', $sankeyData.links);
+        if (!currentSankeyData.links || !Array.isArray(currentSankeyData.links)) {
+            console.error('Invalid links data:', currentSankeyData.links);
             return;
         }
 
@@ -489,7 +509,7 @@
         // Transform data for D3 with error handling
         let sankeyResult: any;
         try {
-            const nodesForD3 = $sankeyData.nodes.map(d => ({ 
+            const nodesForD3 = currentSankeyData.nodes.map(d => ({ 
                 ...d,
                 // Ensure all required properties exist
                 sourceLinks: [],
@@ -498,7 +518,7 @@
                 value: d.value || 50
             }));
             
-            const linksForD3 = $sankeyData.links.map(d => ({ 
+            const linksForD3 = currentSankeyData.links.map(d => ({ 
                 ...d,
                 // Ensure source and target are properly set
                 source: d.source,
@@ -773,11 +793,11 @@
             .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
             .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
             .on('mouseenter', (_, d: any) => {
-                const allNodeArrays = [$sankeyData?.nodes || []].flat();
+                const allNodeArrays = [currentSankeyData?.nodes || []].flat();
                 handleNodeHover(d.id, true, svg || null, allNodeArrays);
             })
             .on('mouseleave', (_, d: any) => {
-                const allNodeArrays = [$sankeyData?.nodes || []].flat();
+                const allNodeArrays = [currentSankeyData?.nodes || []].flat();
                 handleNodeHover(d.id, false, svg || null, allNodeArrays);
             });
 
@@ -840,14 +860,14 @@
 
             // Set up global button actions for onclick handlers
             (window as any).sankeyButtonActions = {
-                toggleSymptoms: () => sessionViewerActions.toggleShowAllSymptoms(),
-                toggleDiagnoses: () => sessionViewerActions.toggleShowAllDiagnoses(),
-                toggleTreatments: () => sessionViewerActions.toggleShowAllTreatments()
+                toggleSymptoms: () => getViewerActions().toggleShowAllSymptoms(),
+                toggleDiagnoses: () => getViewerActions().toggleShowAllDiagnoses(),
+                toggleTreatments: () => getViewerActions().toggleShowAllTreatments()
             };
 
             // Add symptoms column button
             // Show button if there are items that could be filtered (or are being shown with showAll)
-            const hasFilterableSymptoms = $hiddenCounts.symptoms > 0 || $thresholds.symptoms.showAll;
+            const hasFilterableSymptoms = currentHiddenCounts.symptoms > 0 || currentThresholds.symptoms.showAll;
             if (hasFilterableSymptoms && currentPositions.symptomColumn) {
                 const symptomButton = buttonGroup
                     .append('foreignObject')
@@ -862,14 +882,14 @@
                     .attr('class', 'show-more-button-container')
                     .html(`
                         <button class="button -small" onclick="event.stopPropagation(); window.sankeyButtonActions?.toggleSymptoms()">
-                            ${$thresholds.symptoms.showAll ? 'Show fewer' : `Show more (${$hiddenCounts.symptoms})`}
+                            ${currentThresholds.symptoms.showAll ? 'Show fewer' : `Show more (${currentHiddenCounts.symptoms})`}
                         </button>
                     `);
             }
 
             // Add diagnoses column button
             // Show button if there are items that could be filtered (or are being shown with showAll)
-            const hasFilterableDiagnoses = $hiddenCounts.diagnoses > 0 || $thresholds.diagnoses.showAll;
+            const hasFilterableDiagnoses = currentHiddenCounts.diagnoses > 0 || currentThresholds.diagnoses.showAll;
             if (hasFilterableDiagnoses && currentPositions.diagnosisColumn) {
                 const diagnosisButton = buttonGroup
                     .append('foreignObject')
@@ -884,7 +904,7 @@
                     .attr('class', 'show-more-button-container')
                     .html(`
                         <button class="button -small" onclick="event.stopPropagation(); window.sankeyButtonActions?.toggleDiagnoses()">
-                            ${$thresholds.diagnoses.showAll ? 'Show fewer' : `Show more (${$hiddenCounts.diagnoses})`}
+                            ${currentThresholds.diagnoses.showAll ? 'Show fewer' : `Show more (${currentHiddenCounts.diagnoses})`}
                         </button>
                     `);
             }
@@ -906,7 +926,7 @@
             selectFocused: selectFocusedNode,
             clearSelection: () => {
                 // Clear the unified visual state system
-        viewerStoreModule.sessionViewerActions.clearSelection();
+        getViewerActions().clearSelection();
             }
         };
     }
@@ -927,8 +947,8 @@
      * Used when container size changes to preserve selection state
      */
     function updateSankeyLayout() {
-        if (!svg || !$sankeyData || !container) {
-            console.warn('Cannot update layout: missing svg, $sankeyData, or container');
+        if (!svg || !currentSankeyData || !container) {
+            console.warn('Cannot update layout: missing svg, currentSankeyData, or container');
             return;
         }
         
@@ -975,14 +995,14 @@
         // Recalculate positions using existing node data
         let updatedResult: any;
         try {
-            const nodesForD3 = $sankeyData.nodes.map(d => ({ 
+            const nodesForD3 = currentSankeyData.nodes.map(d => ({ 
                 ...d,
                 sourceLinks: [],
                 targetLinks: [],
                 value: d.value || 50
             }));
             
-            const linksForD3 = $sankeyData.links.map(d => ({ 
+            const linksForD3 = currentSankeyData.links.map(d => ({ 
                 ...d,
                 source: d.source,
                 target: d.target,
@@ -1092,11 +1112,11 @@
             .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
             .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
             .on('mouseenter', (_, d: any) => {
-                const allNodeArrays = [$sankeyData?.nodes || []].flat();
+                const allNodeArrays = [currentSankeyData?.nodes || []].flat();
                 handleNodeHover(d.id, true, svg || null, allNodeArrays);
             })
             .on('mouseleave', (_, d: any) => {
-                const allNodeArrays = [$sankeyData?.nodes || []].flat();
+                const allNodeArrays = [currentSankeyData?.nodes || []].flat();
                 handleNodeHover(d.id, false, svg || null, allNodeArrays);
             });
         
@@ -1252,7 +1272,7 @@
                 svg.attr('viewBox', `0 0 ${width} ${height}`);
                 
                 // Update layout positions without re-rendering nodes
-                if ($sankeyData) {
+                if (currentSankeyData) {
                     updateSankeyLayout();
                 }
             }
@@ -1322,7 +1342,7 @@
 
     function handleZoomToFit() {
         if (zoom && svg) {
-            zoomToFit(svg, zoom, ZOOM_CONFIG, width, height, $sankeyData, isMobile);
+            zoomToFit(svg, zoom, ZOOM_CONFIG, width, height, currentSankeyData, isMobile);
         }
     }
 
@@ -1347,7 +1367,7 @@
      role="application"
      aria-label="Interactive Sankey diagram with zoom and pan controls"
      style="--hover-link-opacity: {OPACITY.CSS_HOVER_LINK}; --hover-node-opacity: {OPACITY.CSS_HOVER_NODE}; --shadow-light-opacity: {OPACITY.SHADOW_LIGHT}; --shadow-medium-opacity: {OPACITY.SHADOW_MEDIUM}">
-    {#if !$sankeyData?.nodes?.length}
+    {#if !currentSankeyData?.nodes?.length}
         <div class="empty-state">
             <p>{$t('session.empty-states.no-data')}</p>
         </div>

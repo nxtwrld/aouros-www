@@ -1073,7 +1073,8 @@
       "duration": "Duration",
       "performer": "Performer",
       "version": "Version",
-      "noData": "No session data available"
+      "noData": "No session data available",
+      "loadingAnalysis": "Loading analysis..."
     }
   },
   "report": {

@@ -2,5 +2,10 @@
   "permissions": {
     "allow": ["Bash(grep:*)", "Bash(npm run build:*)"],
     "deny": []
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bunx claude-code-tamagotchi statusline",
+    "padding": 0
   }
 }

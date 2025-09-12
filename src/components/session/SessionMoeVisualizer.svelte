@@ -14,6 +14,7 @@
     import { selectedItem, sidebarOpen, activeTab, sessionViewerActions } from '$lib/session/stores/session-viewer-store';
     import { sessionDataActions } from '$lib/session/stores/session-data-store';
     import { qomActions } from '$lib/session/stores/qom-execution-store';
+    import type { DocumentStoreInstance } from '$lib/session/stores/session-store-manager';
 
 
     interface Props {
@@ -22,6 +23,7 @@
         showLegend?: boolean;
         enableInteractions?: boolean;
         transcript?: any[];
+        storeInstance?: DocumentStoreInstance; // Optional isolated store instance for document viewing
         onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
     }
 
@@ -31,6 +33,7 @@
         showLegend = true, 
         enableInteractions = true,
         transcript = [],
+        storeInstance = undefined,
         onnodeAction
     }: Props = $props();
 
@@ -49,18 +52,23 @@
     // Responsive breakpoints
     const MOBILE_BREAKPOINT = 640;
     const TABLET_BREAKPOINT = 1024;
+    
+    // Helper function to get viewer actions (isolated or global)
+    const getViewerActions = () => storeInstance?.viewerStore.actions || sessionViewerActions;
+    
+    // Helper function to get data actions (isolated or global)
+    const getDataActions = () => storeInstance?.dataStore.actions || sessionDataActions;
 
     onMount(() => {
         checkViewport();
         window.addEventListener('resize', checkViewport);
         
         // Set interactivity mode in store
-        sessionViewerActions.setInteractive(enableInteractions);
+        getViewerActions().setInteractive(enableInteractions);
         
-        // Load session data into store for non-real-time usage (document viewing)
-        if (sessionData && !isRealTime) {
-            sessionDataActions.loadSession(sessionData);
-        }
+        // Data loading is handled by store manager when storeInstance is created
+        // No additional loading needed here since isolated stores are pre-populated
+        console.log("📊 SessionMoeVisualizer - using store:", storeInstance ? "isolated" : "global");
         
         // Initialize QOM for session
         if (sessionData?.sessionId) {
@@ -94,13 +102,13 @@
             isMobile = newIsMobile;
         }
         
-        if (newShowSidebar !== $sidebarOpen && !newIsMobile) {
-            sessionViewerActions.setSidebarOpen(newShowSidebar);
+        if (newShowSidebar !== currentSidebarOpen && !newIsMobile) {
+            getViewerActions().setSidebarOpen(newShowSidebar);
         }
         
         // Auto-hide sidebar on mobile (only if changed to mobile)
-        if (newIsMobile && $sidebarOpen) {
-            sessionViewerActions.setSidebarOpen(false);
+        if (newIsMobile && currentSidebarOpen) {
+            getViewerActions().setSidebarOpen(false);
         }
     }
 
@@ -109,7 +117,7 @@
         selectedLink = null; // Clear link selection when node is selected
         
         // Use store action to atomically open sidebar and select details tab
-        sessionViewerActions.selectDetailsTab();
+        getViewerActions().selectDetailsTab();
     }
 
     function handleLinkSelect(event: CustomEvent<LinkSelectEvent>) {
@@ -117,7 +125,7 @@
         selectedNodeId = null; // Clear node selection when link is selected
         
         // Use store action to atomically open sidebar and select details tab
-        sessionViewerActions.selectDetailsTab();
+        getViewerActions().selectDetailsTab();
     }
 
     // QOM event handlers
@@ -126,7 +134,7 @@
         selectedLink = null;
         
         // Use store action to atomically open sidebar and select details tab
-        sessionViewerActions.selectDetailsTab();
+        getViewerActions().selectDetailsTab();
     }
 
     function handleQOMLinkSelect(link: D3QOMLink) {
@@ -140,7 +148,7 @@
         selectedNodeId = null;
         
         // Use store action to atomically open sidebar and select details tab
-        sessionViewerActions.selectDetailsTab();
+        getViewerActions().selectDetailsTab();
     }
 
     function handleNodeAction(detail: { action: string; targetId: string; reason?: string }) {
@@ -149,14 +157,14 @@
 
     function handleRelationshipNodeClick(detail: { nodeId: string }) {
         // Find the node data and select it properly using store actions
-        const node = sessionDataActions.findNodeById(detail.nodeId);
+        const node = getDataActions().findNodeById(detail.nodeId);
         if (node) {
-            sessionViewerActions.selectItem('node', detail.nodeId, node);
+            getViewerActions().selectItem('node', detail.nodeId, node);
         }
         selectedNodeId = detail.nodeId;
         
         // Use store action to atomically open sidebar and select details tab
-        sessionViewerActions.selectDetailsTab();
+        getViewerActions().selectDetailsTab();
     }
 
     function handleClearSelection() {
@@ -222,11 +230,11 @@
     }
 
     function toggleSidebar() {
-        sessionViewerActions.toggleSidebar();
+        getViewerActions().toggleSidebar();
     }
     
     function handleTabSelect(tabId: string) {
-        sessionViewerActions.setActiveTab(tabId);
+        getViewerActions().setActiveTab(tabId);
         // TabPanel components automatically react to store changes via $effect
     }
     
@@ -240,19 +248,19 @@
     function handleSymptomSelect(symptomId: string) {
         selectedNodeId = symptomId;
         selectedLink = null;
-        sessionViewerActions.selectDetailsTab();
+        getViewerActions().selectDetailsTab();
     }
 
     function handleDiagnosisSelect(diagnosisId: string) {
         selectedNodeId = diagnosisId;
         selectedLink = null;
-        sessionViewerActions.selectDetailsTab();
+        getViewerActions().selectDetailsTab();
     }
 
     function handleTreatmentSelect(treatmentId: string) {
         selectedNodeId = treatmentId;
         selectedLink = null;
-        sessionViewerActions.selectDetailsTab();
+        getViewerActions().selectDetailsTab();
     }
     
 
@@ -281,8 +289,13 @@
     // Get counts for mobile header display only
     const questionCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question')?.length || 0);
     const pendingQuestions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question' && a.status === 'pending')?.length || 0);
+    // For now, let's use the global stores and rely on the action isolation
+    // TODO: Implement proper isolated store reactivity in a future iteration
+    const currentSidebarOpen = $derived($sidebarOpen);
+    const currentSelectedItem = $derived($selectedItem);
+    
     // Get selected node from viewer store (no reactive sessionData reads!)
-    const selectedNode = $derived($selectedItem?.type === 'node' ? $selectedItem.item : null);
+    const selectedNode = $derived(currentSelectedItem?.type === 'node' ? currentSelectedItem.item : null);
 
     // Note: Tab selection is now handled directly in event handlers to ensure
     // it works even when clicking the same node/link multiple times
@@ -299,6 +312,7 @@
     {#if !isMobile}
         <SessionToolbar
             {activeMainView}
+            {storeInstance}
             onToggleSidebar={toggleSidebar}
             onTabSelect={handleTabSelect}
             onMainViewSelect={handleMainViewSelect}
@@ -321,7 +335,7 @@
             </div>
             <div class="header-actions">
                 <button class="sidebar-toggle" onclick={toggleSidebar}>
-                    {$sidebarOpen ? $t('session.actions.hide-panel') : $t('session.actions.show-panel')}
+                    {currentSidebarOpen ? $t('session.actions.hide-panel') : $t('session.actions.show-panel')}
                 </button>
             </div>
         </header>
@@ -333,6 +347,7 @@
             {#if activeMainView === 'diagram'}
                 <SankeyDiagram 
                     {isMobile}
+                    {storeInstance}
                     onnodeSelect={handleNodeSelect}
                     onlinkSelect={handleLinkSelect}
                     onselectionClear={handleSelectionClear}
@@ -370,9 +385,9 @@
             {transcript}
             {selectedNode}
             {selectedLink}
-            {pendingQuestions}
             {isMobile}
             {sidebarWidth}
+            {storeInstance}
             bind:tabsRef
             onnodeAction={handleNodeAction}
             onrelationshipNodeClick={handleRelationshipNodeClick}
@@ -383,7 +398,7 @@
 
 
     <!-- Mobile sidebar overlay -->
-    {#if isMobile && $sidebarOpen}
+    {#if isMobile && currentSidebarOpen}
         <div class="mobile-overlay" onclick={toggleSidebar}></div>
     {/if}
 </div>
