@@ -4,7 +4,6 @@
  */
 
 import type { SankeyNode, SankeyLink } from "../types/visualization";
-import * as viewerStoreModule from "$lib/session/stores/session-viewer-store";
 import * as d3 from "d3";
 
 export interface EventHandlers {
@@ -215,15 +214,16 @@ export function calculateMedicalPath(
 export function handleNodeClick(
   event: MouseEvent | TouchEvent,
   node: SankeyNode,
+  viewerActions: any, // Actions from either global or isolated store instance
   onnodeSelect?: (event: CustomEvent) => void,
 ) {
   event.preventDefault();
   event.stopPropagation();
 
-  // Use session viewer store to select node only
+  // Use provided viewer actions to select node only
   // Store the original medical data, not the D3 Sankey wrapper
   // Path calculation will be handled by the reactive effect in SessionMoeVisualizer
-  viewerStoreModule.sessionViewerActions.selectItem(
+  viewerActions.selectItem(
     "node",
     node.id,
     node.data || node,
@@ -246,13 +246,14 @@ export function handleNodeClick(
 export function handleLinkClick(
   event: MouseEvent | TouchEvent,
   link: SankeyLink,
+  viewerActions: any, // Actions from either global or isolated store instance
   onlinkSelect?: (event: CustomEvent) => void,
 ) {
   event.preventDefault();
   event.stopPropagation();
 
-  // Use session viewer store to select link
-  viewerStoreModule.sessionViewerActions.selectItem(
+  // Use provided viewer actions to select link
+  viewerActions.selectItem(
     "link",
     `${link.source}-${link.target}`,
     link,
@@ -272,7 +273,10 @@ export function handleLinkClick(
 /**
  * Handle canvas click events with proper selection clearing
  */
-export function handleCanvasClick(event: MouseEvent) {
+export function handleCanvasClick(
+  event: MouseEvent,
+  viewerActions: any, // Actions from either global or isolated store instance
+) {
   // Ignore clicks that were part of a drag/zoom operation
   if (event.defaultPrevented) return;
 
@@ -286,8 +290,8 @@ export function handleCanvasClick(event: MouseEvent) {
     target.closest(".link");
 
   if (!isClickableElement) {
-    // Clear all selections using the unified store system
-    viewerStoreModule.sessionViewerActions.clearSelection();
+    // Clear all selections using the provided viewer actions
+    viewerActions.clearSelection();
   }
 }
 
@@ -299,12 +303,13 @@ export function handleNodeHover(
   isEntering: boolean,
   svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
   allNodeArrays: any[],
+  viewerActions: any, // Actions from either global or isolated store instance
 ) {
   if (!svg) return;
 
-  // Use new unified hover system
+  // Use provided hover system
   if (!isEntering) {
-    viewerStoreModule.sessionViewerActions.setHoveredItem(null);
+    viewerActions.setHoveredItem(null);
     // Explicitly remove hover classes and reset all opacity states
     svg.selectAll(".node-html.hovered").classed("hovered", false);
     svg.selectAll(".link.hovered").classed("hovered", false);
@@ -321,7 +326,7 @@ export function handleNodeHover(
   // Find the complete node object from allNodeArrays
   const nodeObject = allNodeArrays.find((n) => n.id === nodeId);
   if (nodeObject) {
-    viewerStoreModule.sessionViewerActions.setHoveredItem(
+    viewerActions.setHoveredItem(
       "node",
       nodeId,
       nodeObject.data || nodeObject,
@@ -337,11 +342,12 @@ export function handleLinkHover(
   isEntering: boolean,
   svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
   tooltipData: any,
+  viewerActions: any, // Actions from either global or isolated store instance
   container?: HTMLElement,
 ) {
-  // Use unified hover system
+  // Use provided hover system
   if (!isEntering) {
-    viewerStoreModule.sessionViewerActions.setHoveredItem(null);
+    viewerActions.setHoveredItem(null);
     tooltipData.visible = false;
     // Explicitly remove hover classes and reset all states
     if (svg) {
@@ -359,7 +365,7 @@ export function handleLinkHover(
 
   // Set hovered item for consistency
   const linkId = `${typeof link.source === "object" ? link.source.id : link.source}-${typeof link.target === "object" ? link.target.id : link.target}`;
-  viewerStoreModule.sessionViewerActions.setHoveredItem("link", linkId, link);
+  viewerActions.setHoveredItem("link", linkId, link);
 
   // Build tooltip content
   const sourceNode = typeof link.source === "object" ? link.source : null;

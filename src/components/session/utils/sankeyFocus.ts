@@ -4,8 +4,7 @@
  */
 
 import * as d3 from "d3";
-import type { SankeyNode, SankeyLink } from "../types/visualization";
-import * as viewerStoreModule from "$lib/session/stores/session-viewer-store";
+import type { SankeyNode } from "../types/visualization";
 
 /**
  * Build focusable nodes list ordered by medical workflow
@@ -103,13 +102,14 @@ export function focusPreviousNode(
 export function selectFocusedNode(
   focusableNodes: SankeyNode[],
   currentFocusedIndex: number,
+  viewerActions: any, // Actions from either global or isolated store instance
   onnodeSelect?: (event: any) => void,
 ): void {
   if (currentFocusedIndex >= 0 && currentFocusedIndex < focusableNodes.length) {
     const focusedNode = focusableNodes[currentFocusedIndex];
 
-    // Use session viewer store to select the focused node
-    viewerStoreModule.sessionViewerActions.selectItem(
+    // Use provided viewer actions to select the focused node
+    viewerActions.selectItem(
       "node",
       focusedNode.id,
       focusedNode.data || focusedNode,
@@ -419,11 +419,12 @@ export function updateSelectionState(
  */
 export function resetToDefault(
   svg: d3.Selection<SVGSVGElement, unknown, null, undefined> | null,
+  viewerActions: any, // Actions from either global or isolated store instance
 ): void {
   if (!svg) return;
 
   // Clear viewer store selections
-  viewerStoreModule.sessionViewerActions.clearSelection();
+  viewerActions.clearSelection();
 
   // Reset all visual states
   svg

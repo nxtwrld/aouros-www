@@ -7,5 +7,18 @@
     "type": "command",
     "command": "bunx claude-code-tamagotchi statusline",
     "padding": 0
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bunx claude-code-tamagotchi violation-check"
+          }
+        ]
+      }
+    ]
   }
 }

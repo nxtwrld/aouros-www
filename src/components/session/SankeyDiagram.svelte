@@ -419,7 +419,7 @@
             .attr('viewBox', `0 0 ${width} ${height}`)
             .attr('preserveAspectRatio', 'xMidYMid meet')
             .classed('draggable-surface', true)
-            .on('click', handleCanvasClick);
+            .on('click', (event: MouseEvent) => handleCanvasClick(event, getViewerActions()));
 
         // Create constrain function with current parameters
         const constrainFn = (transform: d3.ZoomTransform) => 
@@ -443,7 +443,7 @@
         const mainGroup = svg.append('g')
             .attr('class', 'main-group')
             .attr('transform', `translate(${margins.left}, ${margins.top})`)
-            .on('click', handleCanvasClick);
+            .on('click', (event: MouseEvent) => handleCanvasClick(event, getViewerActions()));
             
         // Initialize groups for links and nodes
         linkGroup = mainGroup.append('g').attr('class', 'link-group');
@@ -747,8 +747,8 @@
             .attr('data-relationship-type', (d: any) => d.type || 'default')
             .on('click', (event: MouseEvent, d: any) => handleLinkClick(event, d, onlinkSelect))
             .on('touchstart', (event: TouchEvent, d: any) => handleLinkClick(event, d, onlinkSelect))
-            .on('mouseenter', (_, d: any) => handleLinkHover(d, true, svg || null, tooltipData, container))
-            .on('mouseleave', (_, d: any) => handleLinkHover(d, false, svg || null, tooltipData, container));
+            .on('mouseenter', (_, d: any) => handleLinkHover(d, true, svg || null, tooltipData, getViewerActions(), container))
+            .on('mouseleave', (_, d: any) => handleLinkHover(d, false, svg || null, tooltipData, getViewerActions(), container));
 
         linkSelection.exit()
             .transition()
@@ -790,15 +790,15 @@
             .attr('data-node-id', (d: any) => d.id)
             .classed('interactive-element', true)
             .html((d: any) => createNodeComponent(d, selectedNodeId, isMobile, nodeComponents))
-            .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
-            .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
+            .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, getViewerActions(), onnodeSelect))
+            .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, getViewerActions(), onnodeSelect))
             .on('mouseenter', (_, d: any) => {
                 const allNodeArrays = [currentSankeyData?.nodes || []].flat();
-                handleNodeHover(d.id, true, svg || null, allNodeArrays);
+                handleNodeHover(d.id, true, svg || null, allNodeArrays, getViewerActions());
             })
             .on('mouseleave', (_, d: any) => {
                 const allNodeArrays = [currentSankeyData?.nodes || []].flat();
-                handleNodeHover(d.id, false, svg || null, allNodeArrays);
+                handleNodeHover(d.id, false, svg || null, allNodeArrays, getViewerActions());
             });
 
         // Priority indicators are now included in HTML content
@@ -921,9 +921,9 @@
     // This is a workaround since we can't pass functions up directly
     if (typeof window !== 'undefined') {
         (window as any).sankeyNavigationFunctions = {
-            focusNext: focusNextNode,
-            focusPrevious: focusPreviousNode,
-            selectFocused: selectFocusedNode,
+            focusNext: () => focusNextNode(focusableNodes, focusedNodeIndex, onfocusChange),
+            focusPrevious: () => focusPreviousNode(focusableNodes, focusedNodeIndex, onfocusChange),
+            selectFocused: () => selectFocusedNode(focusableNodes, focusedNodeIndex, getViewerActions(), onnodeSelect),
             clearSelection: () => {
                 // Clear the unified visual state system
         getViewerActions().clearSelection();
@@ -1109,15 +1109,15 @@
             .attr('data-node-id', (d: any) => d.id)
             .classed('interactive-element', true)
             .html((d: any) => createNodeComponent(d, selectedNodeId, isMobile, nodeComponents))
-            .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
-            .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, onnodeSelect))
+            .on('click', (event: MouseEvent, d: any) => handleNodeClick(event, d, getViewerActions(), onnodeSelect))
+            .on('touchstart', (event: TouchEvent, d: any) => handleNodeClick(event, d, getViewerActions(), onnodeSelect))
             .on('mouseenter', (_, d: any) => {
                 const allNodeArrays = [currentSankeyData?.nodes || []].flat();
-                handleNodeHover(d.id, true, svg || null, allNodeArrays);
+                handleNodeHover(d.id, true, svg || null, allNodeArrays, getViewerActions());
             })
             .on('mouseleave', (_, d: any) => {
                 const allNodeArrays = [currentSankeyData?.nodes || []].flat();
-                handleNodeHover(d.id, false, svg || null, allNodeArrays);
+                handleNodeHover(d.id, false, svg || null, allNodeArrays, getViewerActions());
             });
         
         // Fade in new nodes

@@ -289,10 +289,14 @@
     // Get counts for mobile header display only
     const questionCount = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question')?.length || 0);
     const pendingQuestions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question' && a.status === 'pending')?.length || 0);
-    // For now, let's use the global stores and rely on the action isolation
-    // TODO: Implement proper isolated store reactivity in a future iteration
-    const currentSidebarOpen = $derived($sidebarOpen);
-    const currentSelectedItem = $derived($selectedItem);
+    // Use the correct store instance (isolated or global)
+    const selectedItemStore = storeInstance ? storeInstance.viewerStore.selectedItem : selectedItem;
+    const sidebarOpenStore = storeInstance ? storeInstance.viewerStore.sidebarOpen : sidebarOpen;
+    const activeTabStore = storeInstance ? storeInstance.viewerStore.activeTab : activeTab;
+    
+    const currentSidebarOpen = $derived($sidebarOpenStore);
+    const currentSelectedItem = $derived($selectedItemStore);
+    const currentActiveTab = $derived($activeTabStore);
     
     // Get selected node from viewer store (no reactive sessionData reads!)
     const selectedNode = $derived(currentSelectedItem?.type === 'node' ? currentSelectedItem.item : null);
