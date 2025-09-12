@@ -19,21 +19,19 @@
 
 		const authListener = currentSupabase.auth.onAuthStateChange((event, sessionData) => {
 			const newUserId = sessionData?.user?.id || null;
-			const isSignIn = event === 'SIGNED_IN';
-			const isSignOut = event === 'SIGNED_OUT';
-			const isUserUpdated = event === 'USER_UPDATED';
-			const userChanged = newUserId !== lastUserId;
+			// Only invalidate when the user logs out (transition from some id to null)
+			const didLogout = lastUserId !== null && newUserId === null;
 
-			if ((isSignIn || isSignOut || isUserUpdated) && userChanged) {
-				lastUserId = newUserId;
-				if (!invalidateScheduled) {
-					invalidateScheduled = true;
-					queueMicrotask(() => {
-						invalidate('supabase:auth');
-						invalidateScheduled = false;
-					});
-				}
+			if (didLogout && !invalidateScheduled) {
+				invalidateScheduled = true;
+				queueMicrotask(() => {
+					invalidate('supabase:auth');
+					invalidateScheduled = false;
+				});
 			}
+
+			// Update last seen user id
+			lastUserId = newUserId;
 		});
 
 		return () => authListener.data.subscription.unsubscribe();

@@ -102,7 +102,31 @@ export async function loadDocuments(
 export async function importDocuments(
   documentsEncrypted: DocumentEncrypted[] = [],
 ): Promise<(Document | DocumentPreload)[]> {
-  const documentsPreload: (DocumentPreload | Document)[] = await Promise.all(
+  // Reuse non-mutating decrypt helper, then batch update the store once
+  // If keys are not available (unlock disabled), skip quietly
+  if (!(user as any)?.keyPair?.isReady?.()) {
+    logger.documents.warn("Skipping importDocuments: user keys not available");
+    return [];
+  }
+  const docs = await decryptDocumentsNoStore(documentsEncrypted);
+  setDocuments(docs);
+  return docs;
+}
+
+/**
+ * Decrypt documents without mutating the global documents store.
+ * Useful for callers that need decrypted metadata/content but want to
+ * manage store updates themselves (e.g. batch updates).
+ */
+export async function decryptDocumentsNoStore(
+  documentsEncrypted: DocumentEncrypted[] = [],
+): Promise<(Document | DocumentPreload)[]> {
+  // If keys are not available (unlock disabled), skip quietly
+  if (!(user as any)?.keyPair?.isReady?.()) {
+    logger.documents.warn("Skipping decryptDocumentsNoStore: user keys not available");
+    return [];
+  }
+  const documentsDecrypted: (DocumentPreload | Document)[] = await Promise.all(
     documentsEncrypted.map(async (document) => {
       const key = document.keys[0].key;
 
@@ -110,12 +134,20 @@ export async function importDocuments(
       if (document.content) {
         encrypted.push(document.content);
       }
-      const enc = await decrypt(encrypted, key);
+      const dec = await decrypt(encrypted, key);
 
-      const parsedMetadata = JSON.parse(enc[0]);
+      const parsedMetadata = JSON.parse(dec[0]);
       const embeddings = parsedMetadata.embeddings || {};
 
-      const doc: Document | DocumentPreload = {
+      // Normalize attachments to Attachment[]
+      const normalizedAttachments: Attachment[] = (document.attachments || []).map(
+        (att: any) =>
+          typeof att === "string"
+            ? { url: att, path: att }
+            : (att as Attachment),
+      );
+
+      const base: Document | DocumentPreload = {
         key,
         id: document.id,
         user_id: document.user_id,
@@ -124,30 +156,37 @@ export async function importDocuments(
         content: undefined,
         owner_id: document.keys[0].owner_id,
         author_id: document.author_id,
-        attachments: document.attachments || [],
-        // Extract embedding fields from metadata subsection
-        embedding_summary: embeddings.summary,
-        embedding_vector: embeddings.vector,
-        embedding_provider: embeddings.provider,
-        embedding_model: embeddings.model,
-        embedding_timestamp: embeddings.timestamp,
+        attachments: normalizedAttachments,
       };
 
-      if (enc[1]) {
-        // if we have full document data - add content
-        doc.content = JSON.parse(enc[1]);
-        return doc as Document;
+      // Attach embedding metadata on the object without affecting type checks
+      (base as any).embedding_summary = embeddings.summary;
+      (base as any).embedding_vector = embeddings.vector;
+      (base as any).embedding_provider = embeddings.provider;
+      (base as any).embedding_model = embeddings.model;
+      (base as any).embedding_timestamp = embeddings.timestamp;
+
+      if (dec[1]) {
+        (base as Document).content = JSON.parse(dec[1]);
+        return base as Document;
       }
-      // add load function
-      return doc as DocumentPreload;
+      return base as DocumentPreload;
     }),
   );
 
-  documents.set(documentsPreload);
-  updateIndex();
+  return documentsDecrypted;
+}
 
+/**
+ * Replace the global documents store in one batched update and rebuild indices.
+ */
+export function setDocuments(
+  docs: (DocumentPreload | Document)[],
+): (DocumentPreload | Document)[] {
+  documents.set(docs);
+  updateIndex();
   loadingDocumentsResolve(true);
-  return documentsPreload;
+  return docs;
 }
 
 export async function loadDocument(
@@ -306,7 +345,7 @@ export async function updateDocument(documentData: Document) {
       body: JSON.stringify({
         metadata: enc[1],
         content: enc[0],
-        attachments: document.content.attachments.map((a) => a.url),
+        attachments: document.content.attachments.map((a: Attachment) => a.url),
       }),
     },
   )
@@ -354,7 +393,7 @@ export async function addDocument(document: DocumentNew): Promise<Document> {
   );
 
   // map attachments to content
-  document.content.attachments = (document.attachments || []).map((a, i) => {
+  document.content.attachments = (document.attachments || []).map((a: Attachment, i: number) => {
     return {
       url: attachmentsUrls[i].url,
       path: attachmentsUrls[i].path,
