@@ -67,8 +67,8 @@ export async function loadProfiles(
   if (!fetch) fetch = window.fetch;
   // fetch basic profile data
   const profilesLoaded = await fetch("/v1/med/profiles")
-    .then((r) => r.json())
-    .catch((e) => {
+    .then((r: Response) => r.json())
+    .catch((e: Error) => {
       console.error("Error loading profiles", e);
       return [];
     });
@@ -76,15 +76,15 @@ export async function loadProfiles(
   // extend profile data with decrypted roots and batch set documents once
   const results = await Promise.all(
     profilesLoaded
-      .filter((d) => d.profiles != null)
-      .map(async (d) => {
+      .filter((d: any) => d.profiles != null)
+      .map(async (d: any) => {
         // fetch encrypted profile and health documents
         try {
           const rootsEncrypted = await fetch(
             `/v1/med/profiles/${d.profiles.id}/documents?types=profile,health&full=true`,
           )
-            .then((r) => r.json())
-            .catch((e) => {
+            .then((r: Response) => r.json())
+            .catch((e: Error) => {
               console.error("Error loading profile documents", e);
               return [];
             });
@@ -139,13 +139,13 @@ export function updateProfile(p: Profile) {
   }
 }
 
-export function mapProfileData(core, roots) {
+export function mapProfileData(core: any, roots: any) {
   let profile = null,
     health = null,
     profileDocumentId = null,
     healthDocumentId = null;
 
-  roots.forEach((r) => {
+  roots.forEach((r: any) => {
     if (r.type === "profile") {
       profile = r.content;
       profileDocumentId = r.id;

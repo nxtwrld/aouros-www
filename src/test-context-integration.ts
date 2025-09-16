@@ -17,9 +17,9 @@ if (typeof global !== "undefined") {
 }
 
 import {
-  runAllSystemChecks,
+  runFullSystemCheck,
   runMinimalCheck,
-} from "./src/lib/context/integration/run-system-check";
+} from "./src/lib/context/integration/system-check";
 
 async function testContextIntegration() {
   console.log("🔍 Testing Context Assembly Integration...\n");
@@ -52,7 +52,7 @@ async function testContextIntegration() {
 
     if (minimalResult.criticalFailures.length > 0) {
       console.log("\n⚠️ Critical Failures:");
-      minimalResult.criticalFailures.forEach((failure) => {
+      minimalResult.criticalFailures.forEach((failure: any) => {
         console.log(`  - ${failure}`);
       });
     }
@@ -84,7 +84,7 @@ async function testContextIntegration() {
 
       if (fullResult.deploymentCheck.blockers.length > 0) {
         console.log("\n🚫 Deployment Blockers:");
-        fullResult.deploymentCheck.blockers.forEach((blocker) => {
+        fullResult.deploymentCheck.blockers.forEach((blocker: any) => {
           console.log(`  - ${blocker}`);
         });
       }
