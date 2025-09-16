@@ -300,6 +300,21 @@
     
     // Get selected node from viewer store (no reactive sessionData reads!)
     const selectedNode = $derived(currentSelectedItem?.type === 'node' ? currentSelectedItem.item : null);
+    
+    // Debug logging for selected item
+    $effect(() => {
+        if (currentSelectedItem) {
+            console.log('📍 Selected item changed:', {
+                type: currentSelectedItem.type,
+                id: currentSelectedItem.id,
+                hasItem: !!currentSelectedItem.item,
+                itemKeys: currentSelectedItem.item ? Object.keys(currentSelectedItem.item) : [],
+                storeType: storeInstance ? 'isolated' : 'global'
+            });
+        } else {
+            console.log('📍 Selection cleared');
+        }
+    });
 
     // Note: Tab selection is now handled directly in event handlers to ensure
     // it works even when clicking the same node/link multiple times
