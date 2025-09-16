@@ -3,26 +3,41 @@
     import { 
         sidebarOpen, 
         activeTab, 
-        sessionViewerStore 
+        sessionViewerStore,
+        sessionViewerActions
     } from '$lib/session/stores/session-viewer-store';
     import { 
         SESSION_TAB_DEFINITIONS, 
         type SessionTabDefinition 
     } from './SessionTabs.svelte';
+    import type { DocumentStoreInstance } from '$lib/session/stores/session-store-manager';
     
     interface Props {
         activeMainView?: string; // Track which view is active in main area
         onToggleSidebar: () => void;
         onTabSelect?: (tab: string) => void;
         onMainViewSelect?: (view: string) => void;
+        storeInstance?: DocumentStoreInstance; // Optional isolated store instance for document viewing
     }
     
     let {
         activeMainView = 'diagram',
         onToggleSidebar,
         onTabSelect,
-        onMainViewSelect
+        onMainViewSelect,
+        storeInstance = undefined
     }: Props = $props();
+    
+    // Helper function to get viewer actions (isolated or global)
+    const getViewerActions = () => storeInstance?.viewerStore.actions || sessionViewerActions;
+    
+    // Use isolated stores when provided, otherwise fall back to global stores
+    const sidebarOpenStore = storeInstance ? storeInstance.viewerStore.sidebarOpen : sidebarOpen;
+    const activeTabStore = storeInstance ? storeInstance.viewerStore.activeTab : activeTab;
+    const viewerStore = storeInstance ? storeInstance.viewerStore.sessionViewerStore : sessionViewerStore;
+    
+    const currentSidebarOpen = $derived($sidebarOpenStore);
+    const currentActiveTab = $derived($activeTabStore);
     
     // Main area view tabs (left side)
     const mainViewTabs = $derived([
@@ -35,7 +50,7 @@
     
     // Sidebar content tabs (right side) - use shared definitions and store context
     const sidebarTabs = $derived(() => {
-        const context = $sessionViewerStore.tabContext;
+        const context = $viewerStore.tabContext;
         return SESSION_TAB_DEFINITIONS
             .filter(tab => !tab.condition || tab.condition(context))
             .map(tab => ({
@@ -55,19 +70,20 @@
     }
     
     function handleSidebarTabClick(tabId: string) {
+        const viewerActions = getViewerActions();
+        
         // If clicking the already active tab while sidebar is open, close the sidebar
-        if ($sidebarOpen && $activeTab === tabId) {
-            onToggleSidebar();
+        if (currentSidebarOpen && currentActiveTab === tabId) {
+            viewerActions.toggleSidebar();
         } 
         // If sidebar is closed, open it and select the tab
-        else if (!$sidebarOpen) {
-            onToggleSidebar();
-            // Delay tab selection to allow sidebar to render
-            setTimeout(() => onTabSelect?.(tabId), 50);
+        else if (!currentSidebarOpen) {
+            viewerActions.setSidebarOpen(true);
+            viewerActions.setActiveTab(tabId);
         } 
         // Sidebar is open but clicking a different tab, just switch tabs
         else {
-            onTabSelect?.(tabId);
+            viewerActions.setActiveTab(tabId);
         }
     }
 </script>
@@ -94,9 +110,9 @@
         {#each sidebarTabs() as tab (tab.id)}
             <button 
                 class="tab-head sidebar-tab"
-                class:-active={$sidebarOpen && $activeTab === tab.id}
+                class:-active={currentSidebarOpen && currentActiveTab === tab.id}
                 onclick={() => handleSidebarTabClick(tab.id)}
-                title={$sidebarOpen && $activeTab === tab.id ? `${$t('session.actions.hide-panel')} (${tab.label})` : tab.label}
+                title={currentSidebarOpen && currentActiveTab === tab.id ? `${$t('session.actions.hide-panel')} (${tab.label})` : tab.label}
             >
                 {tab.label}
                 {#if tab.hasBadge && tab.badgeCount > 0}

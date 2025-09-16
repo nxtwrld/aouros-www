@@ -19,7 +19,6 @@ export function setClient(
   client: SupabaseClient,
   clientName: string = "default",
 ) {
-  console.log("Supabase - setting client:", clientName);
   const existingClient = clients.get(clientName);
   if (existingClient != undefined) {
     // Only warn if trying to set a different client instance
@@ -31,6 +30,7 @@ export function setClient(
     // Don't warn for same client instance (common during hydration)
     return;
   }
+  console.log("Supabase - setting client:", clientName);
   clients.set(clientName, client);
 }
 

@@ -51,6 +51,7 @@
         activeTab, 
         sessionViewerStore
     } from '$lib/session/stores/session-viewer-store';
+    import type { DocumentStoreInstance } from '$lib/session/stores/session-store-manager';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -62,8 +63,9 @@
         }[];
         selectedNode: any | null;
         selectedLink: any | null;
-        pendingQuestions: number;
         isMobile?: boolean;
+        tabsRef?: any;
+        storeInstance?: DocumentStoreInstance; // Optional isolated store instance for document viewing
         onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
         onrelationshipNodeClick?: (detail: { nodeId: string }) => void;
     }
@@ -73,12 +75,18 @@
         transcript = [], 
         selectedNode,
         selectedLink, 
-        pendingQuestions, 
         isMobile = false,
+        tabsRef = $bindable(),
+        storeInstance = undefined,
         onnodeAction,
         onrelationshipNodeClick 
     }: Props = $props();
 
+    // Use isolated stores when provided, otherwise fall back to global stores
+    const activeTabStore = storeInstance ? storeInstance.viewerStore.activeTab : activeTab;
+    const currentActiveTab = $derived($activeTabStore);
+    
+    
     // Filter questions and alerts
     const questions = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'question') || []);
     const alerts = $derived(sessionData.nodes.actions?.filter(a => a.actionType === 'alert') || []);
@@ -109,7 +117,7 @@
     
 </script>
 
-<Tabs fixedHeight={false} selectedTabId={$activeTab}>
+<Tabs fixedHeight={false} selectedTabId={currentActiveTab}>
     {#each visibleTabs() as tab (tab.id)}
         <TabPanel 
             id={tab.id}

@@ -31,9 +31,10 @@
 		children?: import('svelte').Snippet;
 		fixedHeight?: boolean;
 		selectedTabId?: string;
+		ontabSelect?: (tabId: string) => void;
 	}
 
-	let { children, fixedHeight = true, selectedTabId }: Props = $props();
+	let { children, fixedHeight = true, selectedTabId, ontabSelect }: Props = $props();
 
 	const tabs: number[] = [];
 	const panels: number[] = [];
@@ -92,6 +93,12 @@
 			selectedTab.set(tab);
 			selectedPanel.set(panels[i]);
 			activePanelIndex = i;  // Update index for transform
+			
+			// Notify parent component about tab selection
+			const tabId = tabIds[i];
+			if (tabId && ontabSelect) {
+				ontabSelect(tabId);
+			}
 		},
 
 		selectByIndex: (index: number) => {

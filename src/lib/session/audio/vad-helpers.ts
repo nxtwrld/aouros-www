@@ -13,6 +13,14 @@ export interface VADConfig {
   maxSilenceDuration?: number;
   lookAheadFrames?: number;
   lookBackFrames?: number;
+  
+  // Timeout and overlap settings for stuck VAD prevention
+  maxSpeechDurationMs?: number; // Maximum speech duration before forced timeout
+  overlapDurationMs?: number; // Overlap duration for chunk continuity
+  enableSmartTimeout?: boolean; // Enable energy-based smart timeout detection
+  energyHistorySize?: number; // Number of energy frames to keep for analysis
+  timeoutEnergyThreshold?: number; // Energy threshold for timeout detection
+  timeoutVarianceThreshold?: number; // Variance threshold for consistent noise detection
 }
 
 export interface VADState {
@@ -24,6 +32,11 @@ export interface VADState {
   consecutiveSilenceFrames: number;
   energyHistory: number[];
   volumeHistory: number[];
+  
+  // Extended state for timeout detection
+  lastTimeoutCheck: number;
+  timeoutTriggered: boolean;
+  energyVarianceHistory: number[];
 }
 
 export interface VADDecision {
@@ -33,6 +46,12 @@ export interface VADDecision {
   shouldEndCapture: boolean;
   speechDuration: number;
   silenceDuration: number;
+  
+  // Extended decision data for timeout handling
+  shouldTimeout: boolean;
+  timeoutReason?: 'duration' | 'energy_pattern' | 'variance_pattern';
+  energyLevel: number;
+  energyVariance: number;
 }
 
 export class VADProcessor {
@@ -49,6 +68,14 @@ export class VADProcessor {
       maxSilenceDuration: config.maxSilenceDuration ?? 1000, // 1000ms
       lookAheadFrames: config.lookAheadFrames ?? 3,
       lookBackFrames: config.lookBackFrames ?? 5,
+      
+      // Timeout and overlap settings
+      maxSpeechDurationMs: config.maxSpeechDurationMs ?? 30000, // 30 seconds
+      overlapDurationMs: config.overlapDurationMs ?? 5000, // 5 seconds
+      enableSmartTimeout: config.enableSmartTimeout ?? true,
+      energyHistorySize: config.energyHistorySize ?? 50,
+      timeoutEnergyThreshold: config.timeoutEnergyThreshold ?? 0.001,
+      timeoutVarianceThreshold: config.timeoutVarianceThreshold ?? 0.0001,
     };
 
     this.state = this.initializeState();
@@ -64,6 +91,11 @@ export class VADProcessor {
       consecutiveSilenceFrames: 0,
       energyHistory: [],
       volumeHistory: [],
+      
+      // Extended state for timeout detection
+      lastTimeoutCheck: Date.now(),
+      timeoutTriggered: false,
+      energyVarianceHistory: [],
     };
   }
 
@@ -77,12 +109,19 @@ export class VADProcessor {
     this.state.energyHistory.push(features.energy);
     this.state.volumeHistory.push(features.volume);
 
-    // Keep history limited
-    const maxHistoryLength =
-      this.config.lookBackFrames + this.config.lookAheadFrames;
-    if (this.state.energyHistory.length > maxHistoryLength) {
+    // Keep energy history limited for timeout detection
+    if (this.state.energyHistory.length > this.config.energyHistorySize) {
       this.state.energyHistory.shift();
+    }
+    if (this.state.volumeHistory.length > this.config.energyHistorySize) {
       this.state.volumeHistory.shift();
+    }
+
+    // Calculate energy variance for timeout detection
+    const energyVariance = this.calculateEnergyVariance();
+    this.state.energyVarianceHistory.push(energyVariance);
+    if (this.state.energyVarianceHistory.length > 10) {
+      this.state.energyVarianceHistory.shift();
     }
 
     // Determine if current frame contains speech
@@ -100,21 +139,33 @@ export class VADProcessor {
     // Previous state
     const wasSpeaking = this.state.isSpeaking;
 
-    // Decision logic with hysteresis
-    const shouldStartSpeaking = this.shouldStartSpeaking(frameHasSpeech, now);
-    const shouldStopSpeaking = this.shouldStopSpeaking(frameHasSpeech, now);
+    // Check for timeout conditions
+    const timeoutDecision = this.checkTimeoutConditions(features, now);
+
+    // Decision logic with hysteresis and timeout
+    const shouldStartSpeaking = !timeoutDecision.shouldTimeout && this.shouldStartSpeaking(frameHasSpeech, now);
+    const shouldStopSpeaking = timeoutDecision.shouldTimeout || this.shouldStopSpeaking(frameHasSpeech, now);
 
     // Update speaking state
     if (!wasSpeaking && shouldStartSpeaking) {
       this.state.isSpeaking = true;
       this.state.speechStartTime = now;
       this.state.silenceStartTime = null;
+      this.state.timeoutTriggered = false;
       logger.audio.debug("VAD: Speech started");
     } else if (wasSpeaking && shouldStopSpeaking) {
       this.state.isSpeaking = false;
       this.state.speechEndTime = now;
       this.state.silenceStartTime = now;
-      logger.audio.debug("VAD: Speech ended");
+      if (timeoutDecision.shouldTimeout) {
+        this.state.timeoutTriggered = true;
+        logger.audio.warn("VAD: Speech ended due to timeout", {
+          reason: timeoutDecision.timeoutReason,
+          duration: now - (this.state.speechStartTime || now),
+        });
+      } else {
+        logger.audio.debug("VAD: Speech ended naturally");
+      }
     }
 
     // Calculate durations
@@ -137,6 +188,10 @@ export class VADProcessor {
       shouldEndCapture: wasSpeaking && !this.state.isSpeaking,
       speechDuration,
       silenceDuration,
+      shouldTimeout: timeoutDecision.shouldTimeout,
+      timeoutReason: timeoutDecision.timeoutReason,
+      energyLevel: features.energy,
+      energyVariance,
     };
   }
 
@@ -249,7 +304,10 @@ export class VADProcessor {
    */
   reset(): void {
     this.state = this.initializeState();
-    logger.audio.debug("VAD state reset");
+    logger.audio.debug("VAD state reset", {
+      timeoutTriggered: this.state.timeoutTriggered,
+      energyHistorySize: this.state.energyHistory.length,
+    });
   }
 
   /**
@@ -257,9 +315,79 @@ export class VADProcessor {
    */
   updateConfig(newConfig: Partial<VADConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    logger.audio.debug("VAD config updated:", newConfig);
+    logger.audio.debug("VAD config updated:", {
+      ...newConfig,
+      timeoutEnabled: this.config.enableSmartTimeout,
+      maxSpeechDuration: `${this.config.maxSpeechDurationMs}ms`,
+      overlapDuration: `${this.config.overlapDurationMs}ms`,
+    });
   }
 
+  /**
+   * Calculate energy variance for timeout detection
+   */
+  private calculateEnergyVariance(): number {
+    if (this.state.energyHistory.length < 5) return 0;
+    
+    const recentEnergies = this.state.energyHistory.slice(-10);
+    const mean = recentEnergies.reduce((a, b) => a + b, 0) / recentEnergies.length;
+    
+    const variance = recentEnergies.reduce((acc, energy) => {
+      return acc + Math.pow(energy - mean, 2);
+    }, 0) / recentEnergies.length;
+    
+    return variance;
+  }
+  
+  /**
+   * Check for timeout conditions based on duration and energy patterns
+   */
+  private checkTimeoutConditions(features: AudioFeatures, now: number): {
+    shouldTimeout: boolean;
+    timeoutReason?: 'duration' | 'energy_pattern' | 'variance_pattern';
+  } {
+    if (!this.config.enableSmartTimeout || !this.state.isSpeaking || !this.state.speechStartTime) {
+      return { shouldTimeout: false };
+    }
+    
+    const speechDuration = now - this.state.speechStartTime;
+    
+    // Duration-based timeout
+    if (speechDuration > this.config.maxSpeechDurationMs) {
+      return {
+        shouldTimeout: true,
+        timeoutReason: 'duration',
+      };
+    }
+    
+    // Only check energy patterns after minimum speech duration
+    if (speechDuration < 5000 || this.state.energyHistory.length < 10) {
+      return { shouldTimeout: false };
+    }
+    
+    // Energy-based timeout (sustained low energy indicating stuck VAD)
+    const recentEnergies = this.state.energyHistory.slice(-10);
+    const avgRecentEnergy = recentEnergies.reduce((a, b) => a + b, 0) / recentEnergies.length;
+    
+    if (avgRecentEnergy < this.config.timeoutEnergyThreshold) {
+      return {
+        shouldTimeout: true,
+        timeoutReason: 'energy_pattern',
+      };
+    }
+    
+    // Variance-based timeout (consistent noise pattern)
+    const energyVariance = this.calculateEnergyVariance();
+    if (energyVariance < this.config.timeoutVarianceThreshold && avgRecentEnergy > 0.0005) {
+      return {
+        shouldTimeout: true,
+        timeoutReason: 'variance_pattern',
+      };
+    }
+    
+    return { shouldTimeout: false };
+  }
+  
   /**
    * Get adaptive thresholds based on environment
    */
@@ -339,7 +467,7 @@ export const vadHelpers = {
       lookBackFrames: 3,
     }),
 
-    // Medical - optimized for medical consultations
+    // Medical - optimized for medical consultations with timeout protection
     medical: (): VADConfig => ({
       energyThreshold: 0.008,
       silenceThreshold: 0.004,
@@ -348,11 +476,38 @@ export const vadHelpers = {
       maxSilenceDuration: 900,
       lookAheadFrames: 4,
       lookBackFrames: 6,
+      
+      // Medical consultation optimized timeout settings
+      maxSpeechDurationMs: 45000, // 45 seconds for longer medical explanations
+      overlapDurationMs: 5000, // 5 seconds overlap
+      enableSmartTimeout: true,
+      energyHistorySize: 60, // Larger history for medical context
+      timeoutEnergyThreshold: 0.0008, // Lower threshold for quiet speech
+      timeoutVarianceThreshold: 0.00008, // Tighter variance for medical precision
+    }),
+    
+    // Timeout-focused - prioritizes preventing stuck VAD events
+    timeoutOptimized: (): VADConfig => ({
+      energyThreshold: 0.01,
+      silenceThreshold: 0.005,
+      speechThreshold: 0.02,
+      minSpeechDuration: 300,
+      maxSilenceDuration: 1000,
+      lookAheadFrames: 3,
+      lookBackFrames: 5,
+      
+      // Aggressive timeout settings
+      maxSpeechDurationMs: 20000, // 20 seconds maximum
+      overlapDurationMs: 3000, // 3 seconds overlap
+      enableSmartTimeout: true,
+      energyHistorySize: 30,
+      timeoutEnergyThreshold: 0.002, // Higher threshold for quicker timeout
+      timeoutVarianceThreshold: 0.0002, // Looser variance for faster detection
     }),
   },
 
   /**
-   * Analyze VAD performance metrics
+   * Analyze VAD performance metrics including timeout statistics
    */
   analyzePerformance(decisions: VADDecision[]): {
     speechPercentage: number;
@@ -360,6 +515,10 @@ export const vadHelpers = {
     speechSegments: number;
     avgSpeechDuration: number;
     avgSilenceDuration: number;
+    timeoutEvents: number;
+    timeoutReasons: Record<string, number>;
+    avgEnergyLevel: number;
+    avgEnergyVariance: number;
   } {
     if (decisions.length === 0) {
       return {
@@ -368,6 +527,10 @@ export const vadHelpers = {
         speechSegments: 0,
         avgSpeechDuration: 0,
         avgSilenceDuration: 0,
+        timeoutEvents: 0,
+        timeoutReasons: {},
+        avgEnergyLevel: 0,
+        avgEnergyVariance: 0,
       };
     }
 
@@ -378,6 +541,19 @@ export const vadHelpers = {
       decisions.reduce((sum, d) => sum + d.confidence, 0) / decisions.length;
 
     const speechSegments = decisions.filter((d) => d.shouldStartCapture).length;
+    
+    // Timeout analysis
+    const timeoutEvents = decisions.filter((d) => d.shouldTimeout).length;
+    const timeoutReasons: Record<string, number> = {};
+    decisions.forEach((d) => {
+      if (d.shouldTimeout && d.timeoutReason) {
+        timeoutReasons[d.timeoutReason] = (timeoutReasons[d.timeoutReason] || 0) + 1;
+      }
+    });
+    
+    // Energy analysis
+    const avgEnergyLevel = decisions.reduce((sum, d) => sum + d.energyLevel, 0) / decisions.length;
+    const avgEnergyVariance = decisions.reduce((sum, d) => sum + d.energyVariance, 0) / decisions.length;
 
     const speechDurations = decisions
       .filter((d) => d.speechDuration > 0)
@@ -401,6 +577,10 @@ export const vadHelpers = {
       speechSegments,
       avgSpeechDuration,
       avgSilenceDuration,
+      timeoutEvents,
+      timeoutReasons,
+      avgEnergyLevel,
+      avgEnergyVariance,
     };
   },
 };

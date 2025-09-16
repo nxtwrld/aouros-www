@@ -77,6 +77,14 @@
       "translatePrompt": "This is a medical consultation recording. Please transcribe AND translate the conversation to English. Maintain medical accuracy and use appropriate English medical terminology.",
       "medicalTermsBoost": true,
       "speakerIdentification": false
+    },
+    "overlapProcessing": {
+      "enabled": true,
+      "overlapThreshold": 0.7,
+      "mergeThreshold": 0.8,
+      "enableMedicalTermBoost": true,
+      "maxSegmentsToMerge": 5,
+      "preserveTimestamps": true
     }
   },
   "performance": {
@@ -86,6 +94,19 @@
       "enabled": false,
       "maxBatchSize": 10,
       "batchTimeoutMs": 60000
+    },
+    "vadTimeout": {
+      "enabled": true,
+      "maxSpeechDurationMs": 30000,
+      "overlapDurationMs": 5000,
+      "enableSmartTimeout": true,
+      "energyThreshold": 0.001,
+      "varianceThreshold": 0.0001,
+      "medicalConsultationMode": {
+        "maxSpeechDurationMs": 45000,
+        "energyThreshold": 0.0008,
+        "varianceThreshold": 0.00008
+      }
     }
   },
   "fallback": {

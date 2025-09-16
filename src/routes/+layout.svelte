@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { setClient, getClient } from '$lib/supabase';
 	import '../css/app.css';
 	import '../css/index.css';
 
@@ -15,21 +14,27 @@
 		const currentSupabase = data?.supabase;
 		if (!currentSupabase) return;
 		
+		let lastUserId: string | null = data?.session?.user?.id || null;
+		let invalidateScheduled = false;
+
 		const authListener = currentSupabase.auth.onAuthStateChange((event, sessionData) => {
-			// Only invalidate on actual auth changes, not session refresh or token refresh
-			if (event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED') {
-				invalidate('supabase:auth');
+			const newUserId = sessionData?.user?.id || null;
+			// Only invalidate when the user logs out (transition from some id to null)
+			const didLogout = lastUserId !== null && newUserId === null;
+
+			if (didLogout && !invalidateScheduled) {
+				invalidateScheduled = true;
+				queueMicrotask(() => {
+					invalidate('supabase:auth');
+					invalidateScheduled = false;
+				});
 			}
+
+			// Update last seen user id
+			lastUserId = newUserId;
 		});
 
 		return () => authListener.data.subscription.unsubscribe();
-	});
-
-	// Set client for compatibility using effect to avoid self-reference
-	$effect(() => {
-		if (data?.supabase) {
-			setClient(data.supabase);
-		}
 	});
 </script>
 

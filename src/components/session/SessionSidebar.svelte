@@ -3,6 +3,7 @@
     import type { SessionAnalysis } from './types/visualization';
     import { t } from '$lib/i18n';
     import { sidebarOpen } from '$lib/session/stores/session-viewer-store';
+    import type { DocumentStoreInstance } from '$lib/session/stores/session-store-manager';
 
     interface Props {
         sessionData: SessionAnalysis;
@@ -14,10 +15,11 @@
         }[];
         selectedNode: any | null;
         selectedLink: any | null;
-        pendingQuestions: number;
         isMobile: boolean;
         sidebarWidth: number;
         tabsRef?: any;
+        storeInstance?: DocumentStoreInstance; // Optional isolated store instance for document viewing
+        ontabSelect?: (tabId: string) => void; // Tab selection handler from parent
         onnodeAction?: (detail: { action: string; targetId: string; reason?: string }) => void;
         onrelationshipNodeClick?: (detail: { nodeId: string }) => void;
         onToggleSidebar: () => void;
@@ -29,18 +31,23 @@
         transcript,
         selectedNode,
         selectedLink,
-        pendingQuestions,
         isMobile,
         sidebarWidth,
         tabsRef = $bindable(),
+        storeInstance = undefined,
         onnodeAction,
         onrelationshipNodeClick,
         onToggleSidebar,
         onStartResize
     }: Props = $props();
+
+    // Use isolated stores when provided, otherwise fall back to global stores
+    const sidebarOpenStore = storeInstance ? storeInstance.viewerStore.sidebarOpen : sidebarOpen;
+    
+    const currentSidebarOpen = $derived($sidebarOpenStore);
 </script>
 
-{#if $sidebarOpen}
+{#if currentSidebarOpen}
     {#if !isMobile}
         <!-- Desktop Sidebar -->
         <aside class="sidebar desktop" style="width: {sidebarWidth}px">
@@ -69,8 +76,8 @@
                     {transcript}
                     {selectedNode}
                     {selectedLink}
-                    {pendingQuestions}
                     {isMobile}
+                    {storeInstance}
                     {onnodeAction}
                     {onrelationshipNodeClick}
                 />
@@ -91,8 +98,8 @@
                     {transcript}
                     {selectedNode}
                     {selectedLink}
-                    {pendingQuestions}
                     {isMobile}
+                    {storeInstance}
                     {onnodeAction}
                     {onrelationshipNodeClick}
                 />

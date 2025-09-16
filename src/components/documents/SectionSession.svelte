@@ -1,8 +1,11 @@
 <script lang="ts">
+    import { onMount, onDestroy } from 'svelte';
     import SessionMoeVisualizer from '$components/session/SessionMoeVisualizer.svelte';
     import type { Document } from '$lib/documents/types.d';
     import { t } from '$lib/i18n';
     import { date, time } from '$lib/datetime';
+    import { createDocumentStoreInstance } from '$lib/session/stores/session-store-manager';
+    import type { DocumentStoreInstance } from '$lib/session/stores/session-store-manager';
     
     interface Props {
         data: any; // Session analysis data
@@ -17,6 +20,40 @@
     let sessionAnalysis = $derived(sessionContainer?.analysis);
     let transcript = $derived(sessionContainer?.transcript || []);
     let metadata = $derived(document?.metadata || {});
+    
+    // Create isolated store instance for this document
+    let documentStoreInstance = $state<DocumentStoreInstance | null>(null);
+    
+    onMount(() => {
+        // Create isolated store instance for this document viewing session
+        console.log("🔍 SectionSession onMount - sessionAnalysis:", !!sessionAnalysis, sessionAnalysis);
+        if (sessionAnalysis) {
+            documentStoreInstance = createDocumentStoreInstance(sessionAnalysis);
+            console.log("📄 Document store instance created:", documentStoreInstance.id);
+            
+            // Debug: Check if isolated store has data
+            setTimeout(() => {
+                const storeData = documentStoreInstance?.dataStore.actions.getCurrentSessionData();
+                console.log("🔍 Isolated store data check:", {
+                    hasData: !!storeData,
+                    nodeCount: storeData?.nodes ? Object.keys(storeData.nodes).length : 0,
+                    symptoms: storeData?.nodes?.symptoms?.length || 0,
+                    diagnoses: storeData?.nodes?.diagnoses?.length || 0
+                });
+            }, 100);
+        } else {
+            console.warn("❌ No sessionAnalysis data available for store creation");
+        }
+    });
+    
+    onDestroy(() => {
+        // Clean up the store instance when component unmounts
+        if (documentStoreInstance) {
+            console.log("🧹 Cleaning up document store instance:", documentStoreInstance.id);
+            documentStoreInstance.cleanup();
+            documentStoreInstance = null;
+        }
+    });
     
     /*
     let duration = $derived(() => {
@@ -33,6 +70,15 @@
     
     // Check if we have valid session data
     let hasSessionData = $derived(!!sessionAnalysis?.nodes);
+    
+    // Debug reactive state
+    $effect(() => {
+        console.log("🔄 Reactive state:", {
+            hasSessionData,
+            hasStoreInstance: !!documentStoreInstance,
+            storeInstanceId: documentStoreInstance?.id
+        });
+    });
 </script>
 
 <h3 class="h3 heading -sticky">{$t('documents.session.title')} - {date(metadata.sessionDate)} - {time(metadata.sessionDate)}</h3>
@@ -73,7 +119,7 @@
         {/if}
     </div-->
     
-    {#if hasSessionData}
+    {#if hasSessionData && documentStoreInstance}
         <div class="session-visualization">
             <SessionMoeVisualizer 
                 sessionData={sessionAnalysis}
@@ -81,7 +127,15 @@
                 showLegend={true}
                 enableInteractions={false}
                 transcript={transcript}
+                storeInstance={documentStoreInstance}
             />
+        </div>
+    {:else if hasSessionData}
+        <div class="session-visualization loading-visualization">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Loading analysis...</p>
+            </div>
         </div>
     {:else}
         <div class="no-session-data">
@@ -138,6 +192,41 @@
         position: relative;
         overflow: hidden;
         min-height: 500px;
+    }
+    
+    .loading-visualization {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .loading-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 3rem;
+        text-align: center;
+    }
+    
+    .loading-spinner {
+        width: 2rem;
+        height: 2rem;
+        border: 2px solid var(--color-border, #e2e8f0);
+        border-top: 2px solid var(--color-primary, #3b82f6);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    .loading-text {
+        margin: 0;
+        color: var(--color-text-secondary, #6b7280);
+        font-size: 0.875rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
     
     .no-session-data {

@@ -1,7 +1,7 @@
 import profiles from "./profiles";
 import profile from "./profile";
 
-import { importDocuments, addDocument } from "$lib/documents";
+import { decryptDocumentsNoStore, setDocuments, addDocument } from "$lib/documents";
 import { DocumentType } from "$lib/documents/types.d";
 import type { ProfileNew, Profile } from "$lib/types.d";
 import user from "$lib/user";
@@ -10,6 +10,11 @@ import { createHash } from "$lib/encryption/hash";
 import { generatePassphrase } from "$lib/encryption/passphrase";
 
 export { profiles, profile };
+
+// Simple in-memory metadata for loadProfiles
+const loadProfilesMeta: { lastLoadedUserId: string | null } = {
+  lastLoadedUserId: null,
+};
 
 /** 1
  *  Removes links between a parent and a profile
@@ -49,12 +54,16 @@ export async function loadProfiles(
   fetch: any = undefined,
   force: boolean = false,
 ) {
-  /*
-    if (!force && profiles.get().length > 0) {
-        console.log('profiles already loaded', profiles.get());
-        return;
+  // Guard: avoid unnecessary reloads for the same authenticated user
+  // Reload only if forced, or if no profiles are in store, or if user changed
+  const currentUserId = user.getId();
+  const existingProfiles = profiles.get() as any[];
+  if (!force && existingProfiles && existingProfiles.length > 0) {
+    // Track the last user id we loaded profiles for
+    if (loadProfilesMeta.lastLoadedUserId && loadProfilesMeta.lastLoadedUserId === currentUserId) {
+      return;
     }
-*/
+  }
   if (!fetch) fetch = window.fetch;
   // fetch basic profile data
   const profilesLoaded = await fetch("/v1/med/profiles")
@@ -64,8 +73,8 @@ export async function loadProfiles(
       return [];
     });
 
-  // extend proifle data with decrypted data
-  const profilesExtended = await Promise.all(
+  // extend profile data with decrypted roots and batch set documents once
+  const results = await Promise.all(
     profilesLoaded
       .filter((d) => d.profiles != null)
       .map(async (d) => {
@@ -80,27 +89,41 @@ export async function loadProfiles(
               return [];
             });
 
-          // decrypt documents
-          const roots = await importDocuments(rootsEncrypted);
+          // decrypt documents without mutating global documents store
+          const roots = await decryptDocumentsNoStore(rootsEncrypted);
 
           // map profile data
           const profileData = mapProfileData(d, roots);
 
-          return profileData;
+          return { profileData, roots };
         } catch (e) {
           return {
-            ...d.profiles,
-            status: d.status,
-            insurance: {},
-            health: {},
-            vcard: {},
+            profileData: {
+              ...d.profiles,
+              status: d.status,
+              insurance: {},
+              health: {},
+              vcard: {},
+            },
+            roots: [],
           };
         }
       }),
   );
 
+  const profilesExtended = results.map((r) => r.profileData);
+  const allRoots = results.flatMap((r) => r.roots);
+
   // set profiles
   profiles.set(profilesExtended || []);
+
+  // Batch update documents store once with all roots for all profiles
+  if (allRoots.length > 0) {
+    setDocuments(allRoots);
+  }
+
+  // Update metadata after successful load
+  loadProfilesMeta.lastLoadedUserId = currentUserId || null;
 }
 
 export function updateProfile(p: Profile) {
