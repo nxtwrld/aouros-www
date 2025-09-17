@@ -3,7 +3,7 @@
  */
 
 export function createMermaidHighlighter() {
-  return (code: string, lang: string, meta: any) => {
+  return (code, lang, meta) => {
     if (lang === "mermaid") {
       // Return a special div that will be processed by our Svelte component
       const encodedCode = encodeURIComponent(code.trim());
@@ -15,7 +15,7 @@ export function createMermaidHighlighter() {
   };
 }
 
-function escapeHtml(text: string) {
+function escapeHtml(text) {
   const map = {
     "&": "&amp;",
     "<": "&lt;",
@@ -23,5 +23,5 @@ function escapeHtml(text: string) {
     '"': "&quot;",
     "'": "&#039;",
   };
-  return text.replace(/[&<>"']/g, (m: string) => map[m as keyof typeof map]);
+  return text.replace(/[&<>"']/g, (m) => map[m]);
 }
