@@ -27,10 +27,10 @@ export interface Profile {
   publicKey: string;
   avatarUrl: string;
   status: string;
+  publicKey: string;
+  language: string;
   profileDocumentId: string;
   healthDocumentId: string;
-  birthDate?: string;
-  isOwnProfile?: boolean;
 }
 
 export interface ProfileNew {

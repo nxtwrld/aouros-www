@@ -22,7 +22,7 @@
 
 	let avatarUrl: string | null = $state(null)
 	let uploading = $state(false)
-	let files: FileList | undefined = $state()
+	let files: FileList = $state()
 	let loaded: boolean = $state(false);
 
 	const dispatch = createEventDispatcher()

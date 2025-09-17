@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export function fillWithPoints(
-  geometry: THREE.BufferGeometry,
+  geometry: THREE.geometry,
   count: number,
 ): THREE.BufferGeometry {
   const dummyTarget = new THREE.Vector3(); // to prevent logging of warnings from ray.at() method

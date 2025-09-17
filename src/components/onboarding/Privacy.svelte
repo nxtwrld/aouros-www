@@ -47,7 +47,7 @@
     async function setPassphrase() {
         logger.api.debug('Setting passphrase', passphrase);
 
-        const passwordCredential = new (window as any).PasswordCredential({ id: data.bio.email, password: passphrase });
+        const passwordCredential = new PasswordCredential({ id: data.bio.email, password: passphrase });
         await navigator.credentials.store(passwordCredential);
 
         setTimeout(() => {
@@ -89,12 +89,12 @@
 
 
     async function checkPassphrase() {
-        let credentials = await navigator.credentials.get({ password: true } as any);
+        let credentials = await navigator.credentials.get({ password: true });
         testPassphrase = '';
-
         if (credentials) {
-            testPassphrase = (credentials as any).password;
+            testPassphrase = credentials.password;
         }
+
 
         if (testPassphrase === passphrase) {
             let keys = await prepareKeys(testPassphrase);
@@ -135,7 +135,7 @@
 
     onMount(async () => {
         await navigator.credentials.preventSilentAccess();
-        automaticSavingCapable = ((window as any)?.PasswordCredential) ? true : false;
+        automaticSavingCapable = (window?.PasswordCredential) ? true : false;
         if (!automaticSavingCapable)  {
             autoPassphrase = 'custom';
         } else {
@@ -192,7 +192,7 @@
 
                 {#if viewPassphrase}
                 <div class="input">
-                    <input type="text" bind:value={passphrase} onfocus={(e) => clickedToCopy(e as any)} />
+                    <input type="text" bind:value={passphrase} onfocus={clickedToCopy} />
 
                 </div>
                 <p class="p"><button class="a" onclick={() => navigator.clipboard.writeText(passphrase)}>{ $t('app.onboarding.copy-to-clipboard') }</button> { $t('app.onboarding.or') } <button class="a" type="button" onclick={() => viewPassphrase = false}>{ $t('app.onboarding.hide-passphrase') }</button></p>

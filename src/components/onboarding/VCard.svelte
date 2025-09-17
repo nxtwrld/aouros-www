@@ -111,28 +111,28 @@
     let { data = $bindable(), profileForm }: Props = $props();
 
 
-    function addItem(id: string) {
-        (vcard as any)[id] = [...(vcard as any)[id], {
+    function addItem(id) {
+        vcard[id] = [...vcard[id], {
             type: 'work',
             value: ''
-        }];
+        }]
     }
 
-    function removeItem(id: string, index: number) {
-        (vcard as any)[id].splice(index, 1);
-        (vcard as any)[id] = [...(vcard as any)[id]];
+    function removeItem(id, index) {
+        vcard[id].splice(index, 1);
+        vcard[id] = [...vcard[id]];
     }
     run(() => {
         Object.entries(vcard).forEach(([key, value]) => {
             const path = key.split('__');
             if (path.length === 1) {
-                (data.vcard as any)[path[0]] = value;
+                data.vcard[path[0]] = value;
                 return;
             }
-            if (!(data.vcard as any)[path[0]]) {
-                (data.vcard as any)[path[0]] = {};
+            if (!data.vcard[path[0]]) {
+                data.vcard[path[0]] = {};
             }
-            (data.vcard as any)[path[0]][path[1]] = value;
+            data.vcard[path[0]][path[1]] = value;
         })        
         //logger.api.debug('VCard data:', data.vcard);
     });
@@ -143,7 +143,7 @@
 
 <div class="tab-heads">
 {#each Object.keys(formSets) as key}
-    <button  onclick={() => currentSet = key as keyof typeof formSets} class:-active={currentSet == key}>{key}</button>
+    <button  onclick={() => currentSet = key} class:-active={currentSet == key}>{key}</button>
 {/each}
 </div>
 
@@ -152,12 +152,12 @@
         <!--label for={id}>{label}</label-->
         {#if type == 'text'}
         <div class="input">
-        <input id={id} name={id} type="text" bind:value={(vcard as any)[bind]} placeholder={label} />
+        <input id={id} name={id} type="text" bind:value={vcard[bind]} placeholder={label} />
     </div>
         {:else if type == 'array'}
         <div class="form-block">
             <h4 class="h4">{label}</h4>
-            {#each (vcard as any)[bind] as arr, index}
+            {#each vcard[bind] as arr, index}
             <div class="flex contact-item">
                 <div class="input">
                 <select id={id + 'type' +index} name={id + 'type' +index}  bind:value={arr.type}>

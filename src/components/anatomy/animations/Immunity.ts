@@ -14,14 +14,9 @@ const colors: number[] = [
   0xcc6633, 0x80bf35, 0x745d6b, 0x9f8033, 0x66737e, 0x00ffff, 0xffffff,
 ];
 
-interface ExtendedMesh extends THREE.Mesh {
-  initialVelocity?: THREE.Vector3;
-  velocity?: THREE.Vector3;
-}
-
 export default class Vaccination implements IAnimation {
   name: string = "Vaccination";
-  private objects: ExtendedMesh[] = [];
+  private objects: THREE.Mesh[] = [];
   private sceneBoundaries: any = {
     minX: -2000,
     maxX: 2000,
@@ -30,16 +25,17 @@ export default class Vaccination implements IAnimation {
     minZ: -2000,
     maxZ: 2000,
   };
-  private scene: THREE.Scene | null;
-  private objectBounced: THREE.Mesh | null;
+  private scene: THREE.Scene;
+  private objectBounced: THREE.Mesh;
   private velocity: number = 0.03;
   private group: THREE.Group = new THREE.Group();
   private objectCount: number = 100;
 
   constructor(scene: THREE.Scene, boundaries?: any) {
     this.scene = scene;
-    const shadeObj = this.scene.getObjectByName("shade_skin");
-    this.objectBounced = shadeObj ? shadeObj.getObjectByName("body") : null;
+    this.objectBounced = this.scene
+      .getObjectByName("shade_skin")
+      .getObjectByName("body");
 
     if (boundaries) this.sceneBoundaries = boundaries;
 
@@ -52,11 +48,11 @@ export default class Vaccination implements IAnimation {
 
     const objs: THREE.Mesh[] = await Promise.all(
       models.map((m) => {
-        return new Promise<THREE.Mesh>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
           loader.load(
             "/models/biology/" + m,
-            (object: THREE.Group) => {
-              resolve(object.children[0] as THREE.Mesh);
+            (object: THREE.Mesh) => {
+              resolve(object.children[0]);
             },
             () => {},
             (error: Error) => {
@@ -79,14 +75,14 @@ export default class Vaccination implements IAnimation {
       //const object = new THREE.Mesh(geometry , material );
 
       const randomNumber: number = Math.floor(Math.random() * objs.length);
-      const object = objs[randomNumber].clone() as ExtendedMesh;
+      const object = objs[randomNumber].clone();
       object.scale.set(1.2, 1.2, 1.2);
 
       object.material = new THREE.MeshStandardMaterial({
         color: colors[randomNumber],
       }); // Red color for example
-      (object.material as THREE.MeshStandardMaterial).opacity = 0.65;
-      (object.material as THREE.MeshStandardMaterial).transparent = true;
+      object.material.opacity = 0.65;
+      object.material.transparent = true;
       object.position.copy(this.randomPosition(this.sceneBoundaries, object));
       object.initialVelocity = this.randomVelocity(this.velocity, object);
       object.velocity = object.initialVelocity.clone();
@@ -118,8 +114,6 @@ export default class Vaccination implements IAnimation {
   }
 
   update() {
-    if (!this.objectBounced) return;
-    
     const bouncedBoundingBox = new THREE.Box3().setFromObject(
       this.objectBounced,
     );
@@ -129,26 +123,22 @@ export default class Vaccination implements IAnimation {
       this.objectBounced,
     );
 
-    this.objects.forEach((object: ExtendedMesh) => {
+    this.objects.forEach((object: THREE.Mesh) => {
       // Calculate attraction force towards the cube
       const attractionForce = this.calculateAttractionForce(
         object,
         this.objectBounced,
         attractionStrength,
       );
-      if (object.velocity) {
-        object.velocity.add(attractionForce);
+      object.velocity.add(attractionForce);
 
-        // Update position
-        object.position.add(object.velocity);
-      }
+      // Update position
+      object.position.add(object.velocity);
 
       const objectBoundingBox = new THREE.Box3().setFromObject(object);
       if (objectBoundingBox.intersectsBox(targetBoundingBox)) {
         // Collision response: invert velocity
-        if (object.velocity) {
-          object.velocity.multiplyScalar(-30);
-        }
+        object.velocity.multiplyScalar(-30);
 
         // Optional: Add some randomness or modify the response as needed
       }
@@ -164,9 +154,7 @@ export default class Vaccination implements IAnimation {
       ) {
         // Invert velocity for bounce
         //object.velocity = this.randomVelocity(this.velocity, object);
-        if (object.velocity && object.initialVelocity) {
-          object.velocity.copy(object.initialVelocity);
-        }
+        object.velocity.copy(object.initialVelocity);
 
         // Optional: Increase the magnitude of the velocity after bounce
         //object.velocity.multiplyScalar(1.2); // Adjust multiplier as needed
