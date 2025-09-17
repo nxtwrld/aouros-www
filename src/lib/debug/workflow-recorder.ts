@@ -83,11 +83,26 @@ export class WorkflowRecorder {
   private debugDir: string;
 
   private constructor() {
+    // Skip all initialization in production/Vercel
+    const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+
+    if (isProduction) {
+      // Explicitly disable recording in production
+      this.recordingEnabled = false;
+      this.replayMode = false;
+      this.debugDir = "/tmp"; // Safe fallback, won't be used
+      console.log("WorkflowRecorder: Disabled in production environment");
+      return;
+    }
+
     console.log("WorkflowRecorder: Constructor called");
     this.debugDir = join(process.cwd(), "test-data", "workflows");
     console.log("WorkflowRecorder: Debug directory set to:", this.debugDir);
-    this.ensureDebugDirectory();
     this.initializeFromEnvironment();
+    // Only ensure directory if recording is actually enabled
+    if (this.recordingEnabled) {
+      this.ensureDebugDirectory();
+    }
   }
 
   static getInstance(): WorkflowRecorder {
@@ -98,6 +113,14 @@ export class WorkflowRecorder {
   }
 
   private initializeFromEnvironment() {
+    // Never enable recording in production
+    const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+    if (isProduction) {
+      this.recordingEnabled = false;
+      this.replayMode = false;
+      return;
+    }
+
     // Check for DEBUG_ANALYSIS environment variable
     const debugAnalysis = DEBUG_ANALYSIS;
 
