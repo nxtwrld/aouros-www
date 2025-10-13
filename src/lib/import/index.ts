@@ -1,5 +1,3 @@
-import langauges from "$data/languages.iso.json";
-
 export enum TaskState {
   "NEW" = "NEW",
   "ASSESSING" = "ASSESSING",
@@ -100,24 +98,3 @@ export type DetectedProfileData = {
   };
   health?: any; // Add missing health property
 };
-
-export async function processDocument(
-  document: Document,
-  lanaguage: string = "en",
-): Promise<any> {
-  const payload = {
-    text: document.pages.reduce((acc, page) => acc + page.text, ""),
-    language: langauges.find((l) => l.code === lanaguage)?.name || "English",
-  };
-  //console.log('Processing document', document.title);
-
-  const response = await fetch("/v1/import/report", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  const result = await response.json();
-  return result;
-}
