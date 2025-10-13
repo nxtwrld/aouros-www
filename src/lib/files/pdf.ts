@@ -191,7 +191,8 @@ export async function loadPdfDocument(config: any) {
   return loadingTask.promise;
 }
 
-async function renderPDFToBase64Images(
+// Export for use in createTasks() to pre-process PDFs
+export async function renderPDFToBase64Images(
   pdfDoc: PDFDocumentProxy,
 ): Promise<string[]> {
   let base64Images: string[] = [];

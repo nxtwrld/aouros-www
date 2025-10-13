@@ -1,5 +1,5 @@
 import { readAsArrayBuffer, readAsText, readAsBase64 } from "./reader";
-import { processPDF, CODES as PDF_CODES } from "./pdf";
+import { processPDF, CODES as PDF_CODES, loadPdfDocument, renderPDFToBase64Images, makeThumb } from "./pdf";
 import { processImages } from "./image";
 import type {
   Assessment,
@@ -209,20 +209,52 @@ export async function createTasks(files: File[]): Promise<Task[]> {
     switch (file.type) {
       case "application/pdf":
         const data = await readAsArrayBuffer(file);
+        // checkPassword already prompts user if PDF is encrypted
         let password = await checkPassword(data, file.name);
         if (!(password instanceof Error)) {
-          console.log("Password obtained", password);
-          tasks.push({
-            title: file.name,
-            type: "application/pdf",
-            icon: "pdf",
-            data,
-            password,
-            state: TaskState.NEW,
-            files: [file],
-          });
+          console.log("Password obtained for PDF:", file.name, password ? "(protected)" : "(unprotected)");
+
+          try {
+            // Pre-process PDF to base64 images for SSE compatibility
+            console.log(`📄 Pre-processing PDF: ${file.name} - Converting to base64 images`);
+
+            const options: { data: ArrayBuffer; password?: string } = {
+              data: data.slice(0),
+            };
+            if (password) {
+              options.password = password;
+            }
+
+            // Load PDF document (password already validated by checkPassword)
+            const pdfDoc = await loadPdfDocument(options);
+
+            // Convert all pages to base64 images
+            const base64Images = await renderPDFToBase64Images(pdfDoc);
+
+            // Generate thumbnail from first page
+            const thumbnail = await makeThumb(await pdfDoc.getPage(1));
+
+            console.log(`✅ PDF pre-processing completed: ${file.name} - Extracted ${base64Images.length} pages as base64 images`);
+
+            tasks.push({
+              title: file.name,
+              type: "application/pdf",
+              icon: "pdf",
+              data: base64Images, // Store base64 images for SSE processing
+              password,
+              originalPdf: data, // Store original PDF for attachment creation
+              thumbnail,
+              state: TaskState.NEW,
+              files: [file],
+            });
+          } catch (error) {
+            console.error(`❌ PDF pre-processing failed for ${file.name}:`, error);
+            throw new Error(
+              `PDF pre-processing failed for ${file.name}: ${(error as Error).message}`,
+            );
+          }
         } else {
-          console.log("Cannot obtain password", file.type);
+          console.log("Cannot obtain password for PDF:", file.name);
         }
         break;
       default:
@@ -336,8 +368,8 @@ async function processMultipageAssessmentToDocumnets(
       };
       switch (task.type) {
         case "application/pdf":
-          // split orignal pdf into individual document pdf
-          const pdf = task.data as ArrayBuffer;
+          // Use originalPdf (ArrayBuffer) for attachment, not task.data (base64 images)
+          const pdf = task.originalPdf || (task.data as ArrayBuffer);
           //console.log('splitting pdf', pages.map((p) => p.page), pdf);
 
           attachment = {

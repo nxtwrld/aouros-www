@@ -1,24 +1,11 @@
 {
   "permissions": {
-    "allow": ["Bash(grep:*)", "Bash(npm run build:*)"],
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(npm run build:*)",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__performance_start_trace"
+    ],
     "deny": []
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "bunx claude-code-tamagotchi statusline",
-    "padding": 0
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bunx claude-code-tamagotchi violation-check"
-          }
-        ]
-      }
-    ]
   }
 }

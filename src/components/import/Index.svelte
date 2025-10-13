@@ -1,7 +1,7 @@
 
 <script lang="ts">
-    import { files, createTasks, processTask } from '$lib/files';
-    import { processDocument, DocumentState, type Task, TaskState, type Document  } from '$lib/import';
+    import { files, createTasks } from '$lib/files';
+    import { DocumentState, type Task, TaskState, type Document  } from '$lib/import';
     import { DocumentType, type DocumentNew, type Document as SavedDocument } from '$lib/documents/types.d';
     import { addDocument } from '$lib/documents';
     import  user, { type User } from '$lib/user';
@@ -19,20 +19,18 @@
     import LoaderThinking from '$components/ui/LoaderThinking.svelte';
     import { processHealthData } from '$lib/health/signals';
     import DocumentTile from '$components/documents/DocumentTile.svelte';
-    
+
     // Attachment processing imports
     import { selectPagesFromPdf, createPdfFromImageBuffers } from '$lib/files/pdf';
     import { toBase64, base64ToArrayBuffer } from '$lib/arrays';
     import { resizeImage } from '$lib/images';
     import { THUMBNAIL_SIZE } from '$lib/files/CONFIG';
-    
-    // SSE Import support
-    import { IMPORT_FEATURE_FLAGS, selectImportMode } from '$lib/config/import-flags';
+
+    // SSE Import - always enabled
     import { SSEImportClient } from '$lib/import/sse-client';
     import DualStageProgress from './DualStageProgress.svelte';
     
-    let documents: Document[] = $state([]);
-    let results: Document[] = $state([]);//empResults;
+    let results: Document[] = $state([]);
     let byProfileDetected: {
         profile: Profile,
         reports: Document[]
@@ -44,12 +42,10 @@
     let currentFiles: File[] = $state([]);
     let processingFiles: File[] = $state([]);
     let processedCount: number = $state(0);
-    
-    // SSE Import state
-    let importMode = selectImportMode();
-    let useSSE = IMPORT_FEATURE_FLAGS.ENABLE_SSE_IMPORT && importMode !== 'traditional';
-    let sseClient = useSSE ? new SSEImportClient() : null;
-    
+
+    // SSE Import - always enabled
+    const sseClient = new SSEImportClient();
+
     let currentStage: 'extract' | 'analyze' | null = $state(null);
     let stageProgress = $state(0);
 
@@ -90,7 +86,6 @@
 
     function clearAll() {
         files.set([]);
-        documents = [];
         results = [];
         byProfileDetected = [];
         invalids = [];
@@ -133,14 +128,9 @@
         // Always create tasks first for consistent file detection and logging
         const newTasks = await createTasks(files);
         tasks = [...tasks, ...newTasks];
-        
-        if (useSSE && sseClient) {
-            // Use SSE import for real-time progress, but with pre-analyzed tasks
-            await analyzeWithSSE(files);
-        } else {
-            // Use traditional import flow
-            //assess();
-        }
+
+        // Use SSE import for real-time progress with LangGraph workflow
+        await analyzeWithSSE(files);
     }
     
     async function analyzeWithSSE(files: File[]) {
@@ -390,7 +380,6 @@
             // Remove files from processing arrays (but keep tasks for retry/error visibility)
             removeFiles(files);
             
-            // Could fall back to traditional import here
         } finally {
             assessingState = AssessingState.IDLE;
             processingState = ProcessingState.IDLE;
@@ -399,92 +388,7 @@
         }
     }
 
-    async function assess() {
-        // STEP 1: assess, split and preprocess files
-        if (tasks.length === 0) {
-            //console.log('no more tasks');
-            return;
-        }
-
-        if (assessingState === AssessingState.ASSESSING) {
-            // we are still processing the previous tasks no need to start again
-            //console.log('still processing');
-            return;
-        }
-
-        assessingState = AssessingState.ASSESSING;
-
-        const task = tasks[0]
-        task.state = TaskState.ASSESSING;
-        tasks  = [...tasks];
-        const doc = await processTask(task)            
-            .catch(e => {
-                doc.state = DocumentState.ERROR;
-                console.log('ERROR assessing document', e, doc);
-            });
-        const valid = doc.filter((d: Document) => d.isMedical);
-        const invalid = doc.filter((d: Document) => !d.isMedical).map((d: Document) => {
-            d.state = DocumentState.ERROR;
-            return d;
-        });
-        tasks = tasks.slice(1);
-        documents = [...documents, ...valid];
-        invalids = [...invalids, ...invalid];
-        removeFiles(task.files);
-        //console.log('documents', documents);
-        process();
-        processedCount++;
-        assessingState = AssessingState.IDLE;
-        //documents = await processFiles(files);
-
-    }
-
-    async function process() {
-        if (processingState === ProcessingState.PROCESSING) {
-            return;
-        }        
-        processingState = ProcessingState.PROCESSING;
-        while(documents.length > 0) {
-            const doc = documents[0];
-            doc.state = DocumentState.PROCESSING;
-            documents = [...documents];
-        
-            const report = await processDocument(doc, ($user as User)?.language)
-                .catch(e => {
-                    doc.state = DocumentState.ERROR;
-                    console.log('ERROR processing document', e, doc);
-                    return null;
-                });
-            
-            documents = documents.slice(1);
-            
-            if (!report) {
-                continue;
-            }
-
-            const processedDoc: Document = {
-                ...doc,
-                state: DocumentState.PROCESSED,
-                title: report.report?.title || doc.title,
-                content: {
-                    tags: report.tags || [],
-                    ...report.report
-                }
-            };
-            
-            results = [...results, processedDoc]
-            play('focus');
-            
-            byProfileDetected = mergeNamesOnReports(results);
-        }
-        processingState = ProcessingState.IDLE;
-        //console.log('result', results);
-        // lets do another task....
-        assess();
-        
-    }
-
-    function removeItem(type: 'tasks' | 'results' | 'documents' | 'invalids', item: any) {
+    function removeItem(type: 'tasks' | 'results' | 'invalids', item: any) {
         switch(type) {
             case 'tasks':
                 removeFiles(item.files);
@@ -498,9 +402,6 @@
                         return profileDetected;
                     })
                 ]
-                break;
-            case 'documents':
-                documents = documents.filter(doc => doc !== item);
                 break;
             case 'invalids':
                 invalids = invalids.filter(doc => doc !== item);
@@ -677,11 +578,6 @@
                 {/each}
             {/each}
 
-            {#each [...documents] as doc}
-            <div class="report-import">
-                <ImportDocument {doc}  removable={false}  />
-            </div>
-            {/each}
             {#each invalids as doc}
             <div class="report-import">
                 <ImportDocument {doc} onremove={() => removeItem('invalids', doc)} />
@@ -712,11 +608,11 @@
         <div class="actions">
             
             {#if tasks.length > 0 || analyzingInProgress}
-            <button onclick={assess} class="button -primary -large" disabled={tasks.length == 0 || analyzingInProgress}>
+            <button class="button -primary -large" disabled={tasks.length == 0 || analyzingInProgress}>
                 {#if analyzingInProgress}
                     <div class="button-loading">
-                        {#if useSSE && currentStage}
-                            <DualStageProgress 
+                        {#if currentStage}
+                            <DualStageProgress
                                 overallProgress={stageProgress}
                                 currentStage={currentStage || 'extract'}
                                 extractProgress={currentStage === 'extract' ? stageProgress : 100}

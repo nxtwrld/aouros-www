@@ -1,6 +1,6 @@
 <script lang="ts">
     import Header from '$components/layout/Header.svelte';
-    import DropFiles from '$components/import/DropFiles.svelte';   
+    import DropFiles from '$components/import/DropFiles.svelte';
     import Modal from '$components/ui/Modal.svelte';
     import HealthForm from '../profile/HealthForm.svelte';
     import HealthProperty from '../healthProperty/Overview.svelte';
