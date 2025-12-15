@@ -1,10 +1,8 @@
 // AI Model Configuration Loader
 // Loads and manages AI model configurations from YAML file
 
-import { readFileSync } from "fs";
-import { load as yamlLoad } from "js-yaml";
 import { env } from "$env/dynamic/private";
-import { join } from "path";
+import { configs } from "virtual:configs";
 
 export interface ModelInfo {
   model_id: string;
@@ -66,34 +64,26 @@ export type FlowType =
 let cachedConfig: ModelConfiguration | null = null;
 
 /**
- * Load configuration from YAML file
+ * Load configuration from build-time virtual module
  */
 function loadConfiguration(): ModelConfiguration {
   if (cachedConfig) {
     return cachedConfig;
   }
 
-  try {
-    // Try to load from YAML file
-    const configPath = join(process.cwd(), "src/lib/config/models.yaml");
-    const configFile = readFileSync(configPath, "utf8");
-    cachedConfig = yamlLoad(configFile) as ModelConfiguration;
-
-    console.log("📋 Model configuration loaded from YAML file");
-    console.log("🔧 Available providers:", Object.keys(cachedConfig.providers));
-    console.log("📊 Configured flows:", Object.keys(cachedConfig.flows));
-
-    return cachedConfig;
-  } catch (error) {
-    console.warn(
-      "⚠️ Failed to load YAML config, using fallback:",
-      error.message,
-    );
-
-    // Fallback configuration if YAML loading fails
+  // Use build-time loaded config from virtual module
+  if (configs.modelsYaml) {
+    cachedConfig = configs.modelsYaml;
+    console.log("📋 Model configuration loaded from build");
+  } else {
+    console.warn("⚠️ Using fallback model configuration");
     cachedConfig = getFallbackConfiguration();
-    return cachedConfig;
   }
+
+  console.log("🔧 Available providers:", Object.keys(cachedConfig.providers));
+  console.log("📊 Configured flows:", Object.keys(cachedConfig.flows));
+
+  return cachedConfig;
 }
 
 /**

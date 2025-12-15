@@ -11,6 +11,8 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 // import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
 import { qomConfigPlugin } from "./vite-plugin-qom-config";
+import { promptsPlugin } from "./vite-plugin-prompts";
+import { configsPlugin } from "./vite-plugin-configs";
 
 // Plugin to inject Node.js polyfills
 function nodePolyfillsPlugin(): Plugin {
@@ -38,6 +40,8 @@ export default defineConfig({
     // If async imports are needed, handle them manually in components with dynamic imports
     nodePolyfillsPlugin(),
     qomConfigPlugin(),
+    promptsPlugin(),
+    configsPlugin(),
     viteStaticCopy({
       targets: [
         {

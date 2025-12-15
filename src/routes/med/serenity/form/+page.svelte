@@ -127,7 +127,7 @@
       <h3>Language</h3>
       <select bind:value={language} disabled={isProcessing}>
         <option value="en">English</option>
-        <option value="cs">Czech</option>
+        <option value="cs" selected>Czech</option>
         <option value="de">German</option>
       </select>
     </div>

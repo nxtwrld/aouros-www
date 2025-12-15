@@ -2,17 +2,16 @@ import { enhancedAIProvider } from '$lib/ai/providers/enhanced-abstraction';
 import { serenityFormExtractionSchema } from './serenity-schema';
 import type { TokenUsage } from '$lib/ai/types.d';
 import type { SerenityFormResponse } from './types';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { prompts } from 'virtual:prompts';
+import { configs } from 'virtual:configs';
 
 export async function analyzeSerenityForm(
   transcript: string,
   formType: 'pre' | 'post',
   language: string = 'en'
 ): Promise<SerenityFormResponse> {
-  // Load prompt template
-  const promptPath = join(process.cwd(), 'src/lib/prompts/serenity-form-analysis.md');
-  const promptTemplate = readFileSync(promptPath, 'utf-8');
+  // Load prompt from build-time virtual module
+  const promptTemplate = prompts.serenityFormAnalysis;
 
   // Construct content with prompt + transcript
   const content = [
@@ -48,12 +47,8 @@ export async function analyzeSerenityForm(
 
   const totalScore = scores.reduce((sum, s) => sum + s, 0);
 
-  // Load form schema for interpretation
-  const formSchemaPath = join(
-    process.cwd(),
-    `src/lib/selfassess/forms/form.serenity-therapeutic-${formType}.json`
-  );
-  const formSchema = JSON.parse(readFileSync(formSchemaPath, 'utf-8'));
+  // Load form schema from build-time virtual module
+  const formSchema = configs.serenityFormSchemas[formType];
 
   // Find interpretation range
   const interpretation = formSchema.scoringInterpretation.ranges.find(

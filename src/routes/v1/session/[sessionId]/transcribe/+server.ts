@@ -2,18 +2,10 @@ import { error, json, type RequestHandler } from "@sveltejs/kit";
 import { transcriptionProvider } from "$lib/ai/providers/transcription-abstraction";
 import { getSession } from "$lib/session/manager";
 import { type AudioChunkMetadata, type TranscriptionSegment } from "$lib/audio/overlap-processor";
-import fs from "fs";
-import path from "path";
+import { configs } from "virtual:configs";
 
-// Load audio transcription config
-const configPath = path.join(process.cwd(), "config", "audio-transcription.json");
-let audioTranscriptionConfig: any = {};
-try {
-  const configData = fs.readFileSync(configPath, "utf-8");
-  audioTranscriptionConfig = JSON.parse(configData);
-} catch (e) {
-  console.warn("Could not load audio transcription config, using defaults");
-}
+// Load audio transcription config from build-time virtual module
+const audioTranscriptionConfig = configs.transcription || {};
 
 export const POST: RequestHandler = async ({
   params,
