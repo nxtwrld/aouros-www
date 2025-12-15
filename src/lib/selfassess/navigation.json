@@ -1,0 +1,57 @@
+[
+  {
+    "name": "General Health Metrics",
+    "items": [
+      "Body Measurements",
+      "Vital Signs",
+      "Nutritional Intake",
+      "Sleep Tracking"
+    ]
+  },
+  {
+    "name": "Lifestyle and Wellness",
+    "items": [
+      "Exercise and Physical Activity",
+      "Diet and Nutrition",
+      "Mental Wellness",
+      "Substance Use Assessment"
+    ]
+  },
+  {
+    "name": "Laboratory Results",
+    "items": [
+      "Blood Tests",
+      "Urine Analysis",
+      "Imaging Results",
+      "Other Lab Results"
+    ]
+  },
+  {
+    "name": "Mental Health Assessments",
+    "items": [
+      "Depression",
+      "Anxiety",
+      "Stress",
+      "Mood Tracking",
+      "Wellness Check",
+      "Pain Management"
+    ]
+  },
+  {
+    "name": "Physical Health Assessments",
+    "items": [
+      "Pain Management",
+      "Symptom Tracking",
+      "Chronic Condition Management",
+      "Fitness Assessment"
+    ]
+  },
+  {
+    "name": "Preventive Health",
+    "items": [
+      "Health Screenings",
+      "Vaccination Records",
+      "Family Health History"
+    ]
+  }
+]
