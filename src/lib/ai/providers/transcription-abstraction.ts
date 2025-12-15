@@ -2,13 +2,12 @@
 // Extends the existing AI provider abstractions to support audio transcription
 
 import OpenAI from "openai";
-import fs from "fs/promises";
-import path from "path";
 import {
   OPENAI_API_KEY,
   AZURE_SPEECH_KEY,
   GOOGLE_API_KEY,
 } from "$env/static/private";
+import { configs } from "virtual:configs";
 
 export interface TranscriptionConfig {
   providers: Record<string, ProviderConfig>;
@@ -125,14 +124,9 @@ export class TranscriptionProviderAbstraction {
   private static instance: TranscriptionProviderAbstraction;
   private config: TranscriptionConfig | null = null;
   private providers: Map<string, any> = new Map();
-  private configPath: string;
 
   private constructor() {
-    this.configPath = path.join(
-      process.cwd(),
-      "config",
-      "audio-transcription.json",
-    );
+    // No longer need configPath - configs loaded at build time
   }
 
   static getInstance(): TranscriptionProviderAbstraction {
@@ -147,8 +141,14 @@ export class TranscriptionProviderAbstraction {
    */
   async initialize(): Promise<void> {
     try {
-      const configData = await fs.readFile(this.configPath, "utf-8");
-      this.config = JSON.parse(configData);
+      // Use build-time loaded config from virtual module
+      if (configs.transcription) {
+        this.config = configs.transcription;
+        console.log("✅ Transcription config loaded from build");
+      } else {
+        console.warn("⚠️ Using fallback transcription config");
+        this.config = this.getDefaultConfig();
+      }
 
       await this.initializeProviders();
 
