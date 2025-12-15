@@ -1,0 +1,103 @@
+{
+  "title": "SERENITY Therapeutic Assessment - Pre-Session",
+  "description": "Observational assessment completed by therapist/caregiver before the therapeutic session. Evaluate patient's calmness and comfort level.",
+  "category": "Mental Health Assessments",
+  "subCategory": "Therapeutic Observation",
+  "loincCode": "aouros-serenity-therapeutic-pre",
+  "resultFormat": "observation",
+  "fhirCategory": "survey",
+  "badges": ["therapeutic_observation", "pre_session_assessment"],
+  "tags": [
+    "mental health",
+    "therapeutic",
+    "observation",
+    "pre-session"
+  ],
+  "performerRole": "therapist",
+  "administrationType": "observer",
+  "sessionTiming": "pre",
+  "overallScore": {
+    "unit": "points",
+    "system": "http://unitsofmeasure.org",
+    "code": "points"
+  },
+  "questions": [
+    {
+      "id": "facialExpression",
+      "text": "Facial Expression",
+      "responseType": "likert",
+      "options": [
+        "Calm, relaxed",
+        "Mild grimacing, pursed lips",
+        "Marked pain, tension, furrowed brow"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "eyeMovement",
+      "text": "Eye Movement",
+      "responseType": "likert",
+      "options": [
+        "Calm gaze, interested in environment",
+        "Occasional darting, uncertainty",
+        "Markedly restless, closing eyes, avoiding gaze"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "bodyMovement",
+      "text": "Body Movement / Restlessness",
+      "responseType": "likert",
+      "options": [
+        "Calm, no signs of restlessness",
+        "Occasional small movements, hand/foot restlessness",
+        "Frequent movements, marked restlessness, muscle tension"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "vocalizationBreathing",
+      "text": "Vocalization / Breathing",
+      "responseType": "likert",
+      "options": [
+        "Calm breathing, no sounds",
+        "Occasional sighs, mild change in breathing",
+        "Frequent moaning, markedly irregular breathing"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "environmentalEngagement",
+      "text": "Environmental Engagement",
+      "responseType": "likert",
+      "options": [
+        "Interest, watches screen, responds",
+        "Brief attention, occasional disinterest",
+        "No response, refusal, turning away"
+      ],
+      "scores": [0, 1, 2]
+    }
+  ],
+  "scoringInterpretation": {
+    "ranges": [
+      {
+        "minScore": 0,
+        "maxScore": 3,
+        "interpretation": "Good",
+        "guidance": "Patient appears very calm and comfortable. The therapeutic environment is well-suited, and the patient shows positive engagement."
+      },
+      {
+        "minScore": 4,
+        "maxScore": 6,
+        "interpretation": "Moderate",
+        "guidance": "Patient shows moderate signs of discomfort or restlessness. Consider environmental adjustments or additional comfort measures."
+      },
+      {
+        "minScore": 7,
+        "maxScore": 10,
+        "interpretation": "Poor",
+        "guidance": "Patient displays significant distress or disengagement. Immediate intervention may be needed. Review therapeutic approach and environmental factors."
+      }
+    ]
+  }
+}

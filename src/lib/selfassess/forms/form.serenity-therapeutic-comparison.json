@@ -1,0 +1,122 @@
+{
+  "title": "SERENITY Therapeutic Assessment - Session Comparison",
+  "description": "Compare pre-session and post-session observations to evaluate therapeutic effectiveness and track patient response to intervention.",
+  "category": "Mental Health Assessments",
+  "subCategory": "Therapeutic Observation",
+  "loincCode": "aouros-serenity-therapeutic-comparison",
+  "resultFormat": "observation",
+  "fhirCategory": "survey",
+  "badges": ["therapeutic_observation", "session_comparison", "outcome_tracking"],
+  "tags": [
+    "mental health",
+    "therapeutic",
+    "observation",
+    "comparison",
+    "outcome"
+  ],
+  "performerRole": "therapist",
+  "administrationType": "observer",
+  "sessionTiming": "comparison",
+  "overallScore": {
+    "unit": "points",
+    "system": "http://unitsofmeasure.org",
+    "code": "points"
+  },
+  "questions": [
+    {
+      "id": "facialExpressionChange",
+      "text": "Change in Facial Expression (from pre to post)",
+      "responseType": "likert",
+      "options": [
+        "Improved (more relaxed)",
+        "No change",
+        "Worsened (more tense)"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "eyeMovementChange",
+      "text": "Change in Eye Movement (from pre to post)",
+      "responseType": "likert",
+      "options": [
+        "Improved (calmer gaze)",
+        "No change",
+        "Worsened (more restless)"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "bodyMovementChange",
+      "text": "Change in Body Movement / Restlessness (from pre to post)",
+      "responseType": "likert",
+      "options": [
+        "Improved (less restless)",
+        "No change",
+        "Worsened (more restless)"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "vocalizationBreathingChange",
+      "text": "Change in Vocalization / Breathing (from pre to post)",
+      "responseType": "likert",
+      "options": [
+        "Improved (calmer breathing)",
+        "No change",
+        "Worsened (more irregular)"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "environmentalEngagementChange",
+      "text": "Change in Environmental Engagement (from pre to post)",
+      "responseType": "likert",
+      "options": [
+        "Improved (more engaged)",
+        "No change",
+        "Worsened (less engaged)"
+      ],
+      "scores": [0, 1, 2]
+    },
+    {
+      "id": "overallSessionEffectiveness",
+      "text": "Overall Session Effectiveness",
+      "responseType": "likert",
+      "options": [
+        "Highly effective - significant positive change",
+        "Moderately effective - some positive change",
+        "Neutral - minimal change",
+        "Ineffective - no improvement or decline"
+      ],
+      "scores": [0, 1, 2, 3]
+    },
+    {
+      "id": "sessionNotes",
+      "text": "Additional observations or notes about the session (optional)",
+      "responseType": "openEnded",
+      "scoring": false
+    }
+  ],
+  "scoringInterpretation": {
+    "ranges": [
+      {
+        "minScore": 0,
+        "maxScore": 4,
+        "interpretation": "Good",
+        "guidance": "Session was highly effective. Patient showed significant improvement across most or all observed areas. Therapeutic approach is working well."
+      },
+      {
+        "minScore": 5,
+        "maxScore": 8,
+        "interpretation": "Moderate",
+        "guidance": "Session had mixed results. Some areas showed improvement while others remained unchanged or worsened. Consider adjusting therapeutic approach."
+      },
+      {
+        "minScore": 9,
+        "maxScore": 13,
+        "interpretation": "Poor",
+        "guidance": "Session showed minimal effectiveness or patient condition worsened. Significant changes to therapeutic approach may be needed. Consider alternative interventions."
+      }
+    ]
+  }
+}
