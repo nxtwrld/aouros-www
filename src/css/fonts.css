@@ -5,52 +5,54 @@
 
 /* Mulish - Primary Body Font (Variable Font) */
 @font-face {
-  font-family: 'Mulish';
+  font-family: "Mulish";
   font-style: normal;
   font-weight: 200 1000;
   font-display: swap;
-  src: url('/fonts/mulish/mulish-latin.woff2') format('woff2');
+  src: url("/fonts/mulish/mulish-latin.woff2") format("woff2");
 }
 
 /* Roboto Mono - Numeric Values & Code */
 @font-face {
-  font-family: 'Roboto Mono';
+  font-family: "Roboto Mono";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/roboto-mono/roboto-mono-v23-latin-regular.woff2') format('woff2');
+  src: url("/fonts/roboto-mono/roboto-mono-v23-latin-regular.woff2")
+    format("woff2");
 }
 
 @font-face {
-  font-family: 'Roboto Mono';
+  font-family: "Roboto Mono";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('/fonts/roboto-mono/roboto-mono-v23-latin-500.woff2') format('woff2');
+  src: url("/fonts/roboto-mono/roboto-mono-v23-latin-500.woff2") format("woff2");
 }
 
-/* Montserrat - Headers (Variable Font) */
+/* Montserrat - Headers (Variable Font) 
 @font-face {
-  font-family: 'Montserrat';
+  font-family: "Montserrat";
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/montserrat/montserrat-latin.woff2') format('woff2');
+  src: url("/fonts/montserrat/montserrat-latin.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: 'Montserrat';
+  font-family: "Montserrat";
   font-style: italic;
   font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/montserrat/montserrat-latin-italic.woff2') format('woff2');
+  src: url("/fonts/montserrat/montserrat-latin-italic.woff2") format("woff2");
 }
+*/
 
 /* Caveat - Decorative/Cursive (Variable Font) */
 @font-face {
-  font-family: 'Caveat';
+  font-family: "Caveat";
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  src: url('/fonts/caveat/caveat-latin.woff2') format('woff2');
+  src: url("/fonts/caveat/caveat-latin.woff2") format("woff2");
 }
