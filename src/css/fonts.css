@@ -1,0 +1,104 @@
+/**
+ * Local Font Declarations
+ * Self-hosted fonts for improved LCP performance
+ */
+
+/* Mulish - Primary Body Font */
+@font-face {
+  font-family: 'Mulish';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/mulish/mulish-v13-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Mulish';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/mulish/mulish-v13-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Mulish';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/mulish/mulish-v13-latin-700.woff2') format('woff2');
+}
+
+/* Roboto Mono - Numeric Values & Code */
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/roboto-mono/roboto-mono-v23-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/roboto-mono/roboto-mono-v23-latin-500.woff2') format('woff2');
+}
+
+/* Montserrat - Headers */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/montserrat/montserrat-v26-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/montserrat/montserrat-v26-latin-italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/montserrat/montserrat-v26-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/montserrat/montserrat-v26-latin-600italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/montserrat/montserrat-v26-latin-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/montserrat/montserrat-v26-latin-700italic.woff2') format('woff2');
+}
+
+/* Caveat - Decorative/Cursive */
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/caveat/caveat-v18-latin-regular.woff2') format('woff2');
+}
