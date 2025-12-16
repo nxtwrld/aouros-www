@@ -156,7 +156,6 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
         left: 0;
         right: 0;
         height: var(--toolbar-height);
-        background-color: var(--background);
         z-index: 1000;
         --menu-shadow: 0 1rem 1rem -.5rem var(--color-gray-800);
     }

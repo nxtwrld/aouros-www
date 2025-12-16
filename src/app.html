@@ -47,12 +47,22 @@
       href="/apple-touch-icon-180x180.png"
     />
     <meta name="viewport" content="width=device-width" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Preload critical fonts for improved LCP -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      href="/fonts/mulish/mulish-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
+    <!--link
+      rel="preload"
+      href="/fonts/montserrat/montserrat-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    /-->
 
     %sveltekit.head%
   </head>
