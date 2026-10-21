@@ -25,7 +25,7 @@ const config: CapacitorConfig = {
     },
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: "#ffffff",
+      backgroundColor: "#4fd8df",
       showSpinner: false,
       androidSpinnerStyle: "small",
       spinnerColor: "#3880ff",
@@ -43,6 +43,7 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "never",
     preferredContentMode: "mobile",
+    scheme: "Mediqom",
     // Deep link scheme configured in Info.plist
   },
 

@@ -118,7 +118,9 @@
       "WebFetch(domain:gist.github.com)",
       "Bash(awk '{print}')",
       "Bash(kill %1)",
-      "Read(//Users/nxtwrld/Library/Logs/DiagnosticReports/**)"
+      "Read(//Users/nxtwrld/Library/Logs/DiagnosticReports/**)",
+      "Bash(cd /Users/nxtwrld/Documents/GitHub/mediqom/ios/App/App; grep -n \"UsageDescription\" -A1 Info.plist; ls *.entitlements; cat *.entitlements | grep -i -A3 health; grep -rn \"requestAuthorization\\\\|write\\\\b\\\\|saveSample\\\\|toShare\" ../../../src/lib/capacitor 2>/dev/null | grep -i health | head)",
+      "Read(//Users/nxtwrld/src/lib/**)"
     ],
     "deny": []
   },

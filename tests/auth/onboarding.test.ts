@@ -50,6 +50,11 @@ test.describe("Auth - Onboarding wizard", () => {
     await expect(nextButton).toBeDisabled();
 
     await birthDate.fill("1990-05-15");
+    await expect(nextButton).toBeDisabled();
+
+    // Biological sex is the third required field on step 1.
+    const sexCard = page.locator(".sex-card").first();
+    await sexCard.click();
     await expect(nextButton).toBeEnabled();
 
     await nextButton.click();
@@ -66,5 +71,6 @@ test.describe("Auth - Onboarding wizard", () => {
     await expect(page).toHaveURL(/#0$/);
     await expect(page.locator("#fullName")).toHaveValue("Test Patient");
     await expect(page.locator("#birthDate")).toHaveValue("1990-05-15");
+    await expect(page.locator(".sex-card").first()).toHaveClass(/-selected/);
   });
 });

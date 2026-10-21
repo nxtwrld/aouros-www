@@ -43,6 +43,8 @@
 	<string>Mediqom needs camera access to scan and import medical documents.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Mediqom needs access to your health data to sync vitals, body measurements, and other health metrics into your medical profile.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Mediqom only reads your health data and does not write to Apple Health. This permission is required by the health integration library and is never requested by the app.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Mediqom needs microphone access to record doctor-patient consultations for transcription and analysis.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
