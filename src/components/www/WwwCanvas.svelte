@@ -67,7 +67,7 @@
 				if (section) {
 					const canvasPosition = isMobile
 						? 'center'
-						: index === 0
+						: index === 0 || section.id === 'story'
 							? 'center'
 							: section.alignment === 'right'
 								? 'left'

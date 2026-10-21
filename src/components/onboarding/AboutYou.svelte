@@ -85,6 +85,15 @@
     });
 </script>
 
+<div class="story">
+    <svg class="story-logo" viewBox="0 0 500 500" aria-hidden="true">
+        <use href="/logo.svg#icon" />
+    </svg>
+    <p class="story-symbol">{$t('app.onboarding.story.symbol')}</p>
+    <p class="story-text">{$t('app.onboarding.story.text')}</p>
+    <p class="story-tagline">{$t('app.onboarding.story.tagline')}</p>
+</div>
+
 <div class="flex -center">
     <Avatar
         bind:url={data.bio.avatarUrl as any}
@@ -147,6 +156,35 @@
 </div>
 
 <style>
+    .story {
+        text-align: center;
+        margin-bottom: var(--ui-pad-large);
+        padding-bottom: var(--ui-pad-large);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .story-logo {
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: var(--ui-pad-small);
+    }
+
+    .story-symbol {
+        font-style: italic;
+        margin-bottom: var(--ui-pad-small);
+    }
+
+    .story-text {
+        font-size: 0.9rem;
+        color: var(--color-text-secondary);
+        line-height: 1.5;
+        margin-bottom: var(--ui-pad-small);
+    }
+
+    .story-tagline {
+        font-weight: 600;
+    }
+
     .subtitle {
         font-size: 0.9rem;
         color: var(--color-text-secondary);

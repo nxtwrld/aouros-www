@@ -784,6 +784,11 @@
       }
     },
     "onboarding": {
+      "story": {
+        "symbol": "",
+        "text": "",
+        "tagline": ""
+      },
       "about-you": {
         "title": "",
         "subtitle": ""

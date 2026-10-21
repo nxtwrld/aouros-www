@@ -797,6 +797,11 @@
       }
     },
     "onboarding": {
+      "story": {
+        "symbol": "Kruh pro kontinuitu. Srdce pro život.",
+        "text": "Každý okamžik vašeho zdraví souvisí s tím, co bylo předtím. Mediqom vám pomáhá tyto okamžiky propojit, porozumět širším souvislostem a mít svůj zdravotní příběh ve vlastních rukou.",
+        "tagline": "Vaše zdraví. Váš příběh. Vždy jen váš."
+      },
       "about-you": {
         "title": "",
         "subtitle": ""
@@ -4008,6 +4013,16 @@
       "motto": "Všechna vaše zdravotní data ve vašich rukou",
       "sub": "Přinášíme lékařskou zkušenost do 21. století",
       "get-started": "Začít zdarma"
+    },
+    "story": {
+      "title": "Všechno souvisí se vším.",
+      "symbol": "Kruh pro kontinuitu. Srdce pro život.",
+      "lead": "Naše zdraví není sbírkou izolovaných okamžiků.",
+      "p1": "Naše zdraví není sbírkou izolovaných okamžiků. Je to příběh, který se odvíjí v čase – každá zkušenost, každý záznam a každé zjištění se stává součástí většího celku.",
+      "p2": "Věříme, že porozumění přítomnosti začíná vzpomínkou na minulost.",
+      "p3": "Mediqom spojuje vaši zdravotní historii dohromady, pomáhá vám vidět souvislosti, chápat své zdraví v kontextu a rozhodovat se informovaněji.",
+      "ownership": "A po celou dobu zůstává váš příběh jen váš.",
+      "tagline": "Vaše zdraví. Váš příběh. Vždy jen váš."
     },
     "download": {
       "cta": "Stáhnout aplikaci"

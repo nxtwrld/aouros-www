@@ -5,6 +5,7 @@
 	import { createScrollObserver } from '$components/www/scroll-observer';
 	import SectionHero from '$components/www/SectionHero.svelte';
 	import SectionFeature from '$components/www/SectionFeature.svelte';
+	import SectionStory from '$components/www/SectionStory.svelte';
 	import SectionDots from '$components/www/SectionDots.svelte';
 	import AppDownload from '$components/www/AppDownload.svelte';
 	import WwwCanvas from '$components/www/WwwCanvas.svelte';
@@ -44,15 +45,19 @@
 	<SectionHero lang={data.lang} />
 
 	{#each sections.slice(1) as section}
-		<SectionFeature
-			id={section.id}
-			titleKey={section.titleKey}
-			descriptionKey={section.descriptionKey}
-			screenshotUrl={section.screenshotUrl}
-			alignment={section.alignment}
-			linkKey={section.linkKey}
-			linkUrl={section.linkUrl}
-		/>
+		{#if section.id === 'story'}
+			<SectionStory />
+		{:else}
+			<SectionFeature
+				id={section.id}
+				titleKey={section.titleKey}
+				descriptionKey={section.descriptionKey}
+				screenshotUrl={section.screenshotUrl}
+				alignment={section.alignment}
+				linkKey={section.linkKey}
+				linkUrl={section.linkUrl}
+			/>
+		{/if}
 	{/each}
 </div>
 

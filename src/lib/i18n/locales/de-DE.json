@@ -797,6 +797,11 @@
       }
     },
     "onboarding": {
+      "story": {
+        "symbol": "Ein Kreis für Kontinuität. Ein Herz für das Leben.",
+        "text": "Jeder Moment Ihrer Gesundheit ist mit dem verbunden, was davor war. Mediqom hilft Ihnen, diese Momente zusammenzuführen, das große Ganze zu verstehen und Ihre medizinische Geschichte in Ihren eigenen Händen zu behalten.",
+        "tagline": "Ihre Gesundheit. Ihre Geschichte. Immer Ihre."
+      },
       "about-you": {
         "title": "",
         "subtitle": ""
@@ -4008,6 +4013,16 @@
       "motto": "Alle Ihre Gesundheitsdaten in Ihren Händen",
       "sub": "Medizinische Erfahrung ins 21. Jahrhundert bringen",
       "get-started": "Kostenlos starten"
+    },
+    "story": {
+      "title": "Alles ist verbunden.",
+      "symbol": "Ein Kreis für Kontinuität. Ein Herz für das Leben.",
+      "lead": "Unsere Gesundheit ist keine Sammlung einzelner Momente.",
+      "p1": "Unsere Gesundheit ist keine Sammlung einzelner Momente. Sie ist eine Geschichte, die sich im Laufe der Zeit entfaltet – in der jede Erfahrung, jeder Befund und jede Erkenntnis Teil eines größeren Ganzen wird.",
+      "p2": "Wir glauben: Wer die Gegenwart verstehen will, muss sich an die Vergangenheit erinnern.",
+      "p3": "Mediqom führt Ihre Krankengeschichte zusammen, hilft Ihnen, Zusammenhänge zu erkennen, Ihre Gesundheit im Kontext zu verstehen und fundiertere Entscheidungen zu treffen.",
+      "ownership": "Und dabei bleibt Ihre Geschichte immer Ihre.",
+      "tagline": "Ihre Gesundheit. Ihre Geschichte. Immer Ihre."
     },
     "download": {
       "cta": "App herunterladen"

@@ -911,6 +911,11 @@
       }
     },
     "onboarding": {
+      "story": {
+        "symbol": "A circle for continuity. A heart for life.",
+        "text": "Every moment of your health is connected to what came before. Mediqom helps you bring those moments together, understand the bigger picture, and keep your medical story in your own hands.",
+        "tagline": "Your health. Your story. Always yours."
+      },
       "about-you": {
         "title": "About you",
         "subtitle": "A few basics to personalize your health profile. You can change these anytime."
@@ -4112,6 +4117,16 @@
       "motto": "Your body remembers everything. Now your records do too.",
       "sub": "Mediqom keeps your full medical history in one place — so every doctor sees the whole story, not just one chapter.",
       "get-started": "Get Started Free"
+    },
+    "story": {
+      "title": "Everything is connected.",
+      "symbol": "A circle for continuity. A heart for life.",
+      "lead": "Our health is not a collection of isolated moments.",
+      "p1": "Our health is not a collection of isolated moments. It is a story that unfolds over time, where every experience, every record, and every discovery becomes part of a greater whole.",
+      "p2": "We believe that understanding the present begins with remembering the past.",
+      "p3": "Mediqom brings your medical history together, helping you see the connections, understand your health in context, and make more informed decisions.",
+      "ownership": "And through it all, your story remains yours.",
+      "tagline": "Your health. Your story. Always yours."
     },
     "download": {
       "cta": "Get the App"
