@@ -1,5 +1,5 @@
 /**
- * Free-text -> anatomy resolution (AI_PLUGIN.md §6).
+ * Free-text -> anatomy resolution (docs/features/plugin/ENGINEERING.md §6).
  *
  * `show_anatomy`'s `structure` argument is a closed enum over the 50 region ids,
  * so it needs no resolution. This resolver exists for the free-text `highlight`

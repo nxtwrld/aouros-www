@@ -10,7 +10,7 @@ import { durationFromFormatted } from "$lib/datetime";
 import { getSignal } from "$data/signal-catalog";
 import type { CarePlanItem, FollowUpTask } from "./types";
 
-/** Per condition-type certainty decay cadence (CAREPLAN.md table). */
+/** Per condition-type certainty decay cadence (docs/features/careplan/CAREPLAN.md table). */
 const CYCLE_BY_TYPE: Record<CarePlanItem["conditionType"], number> = {
   exploratory: 14,
   acute: 30,
@@ -57,7 +57,7 @@ export function computeTaskCertaintyCycle(
 
 /**
  * Item certainty in [0, 1]. Higher = fresher / better supported.
- * Mirrors CAREPLAN.md §Temporal Certainty System.
+ * Mirrors docs/features/careplan/CAREPLAN.md §Temporal Certainty System.
  */
 export function computeItemCertainty(
   item: CarePlanItem,
@@ -88,7 +88,7 @@ export interface CertaintyBucket {
 
 /**
  * Map a certainty score to a display opacity + i18n label key. The buckets
- * mirror CAREPLAN.md §"What certainty drives in the UI"; the label keys feed
+ * mirror docs/features/careplan/CAREPLAN.md §"What certainty drives in the UI"; the label keys feed
  * both the sr-only string and the optional inline label.
  */
 export function certaintyBucket(score: number): CertaintyBucket {

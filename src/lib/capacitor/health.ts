@@ -1,5 +1,5 @@
 // =====================================================
-// Device Health Data Service (cordova-plugin-health)
+// Device Health Data Service (@capgo/capacitor-health)
 // =====================================================
 // Syncs Apple HealthKit / Google Health Connect data
 // into our Signal system. Follows the RevenueCat pattern
@@ -7,6 +7,15 @@
 // =====================================================
 
 import { browser } from '$app/environment';
+import {
+	Health,
+	type HealthDataType as PluginHealthDataType,
+	type AvailabilityResult,
+	type AuthorizationOptions,
+	type QueryOptions,
+	type ReadSamplesResult,
+	type HealthSample
+} from '@capgo/capacitor-health';
 import { isNativePlatform, getPlatform } from '$lib/config/platform';
 import { log } from '$lib/logging/logger';
 import {
@@ -50,17 +59,24 @@ export interface SyncResult {
 	errors?: string[];
 }
 
-/** Maps our data type names to cordova-plugin-health query strings */
-const PLUGIN_TYPE_MAP: Record<HealthDataType, string> = {
-	heart_rate: 'heart_rate',
-	resting_heart_rate: 'heart_rate.resting',
-	heart_rate_variability: 'heart_rate.variability',
-	blood_pressure: 'blood_pressure',
-	blood_glucose: 'blood_glucose',
+/** Maps our data type names to @capgo/capacitor-health data types */
+const PLUGIN_TYPE_MAP: Record<HealthDataType, PluginHealthDataType> = {
+	heart_rate: 'heartRate',
+	resting_heart_rate: 'restingHeartRate',
+	heart_rate_variability: 'heartRateVariability',
+	blood_pressure: 'bloodPressure',
+	blood_glucose: 'bloodGlucose',
 	weight: 'weight',
 	height: 'height',
-	body_fat_percentage: 'fat_percentage'
+	body_fat_percentage: 'bodyFat'
 };
+
+/** Subset of the plugin API we use — implemented by both the real plugin and the dev mock */
+export interface HealthPluginLike {
+	isAvailable(): Promise<AvailabilityResult>;
+	requestAuthorization(options: AuthorizationOptions): Promise<unknown>;
+	readSamples(options: QueryOptions): Promise<ReadSamplesResult>;
+}
 
 /** All supported data types */
 export const ALL_DATA_TYPES: HealthDataType[] = [
@@ -80,10 +96,10 @@ let initialized = false;
 // Plugin Access
 // =====================================================
 
-function getHealthPlugin(): any {
+function getHealthPlugin(): HealthPluginLike | null {
 	// Real plugin on native
-	if (isNativePlatform() && typeof navigator !== 'undefined' && (navigator as any).health) {
-		return (navigator as any).health;
+	if (isNativePlatform()) {
+		return Health;
 	}
 	// Mock plugin in dev mode on web (tree-shaken in production)
 	if (import.meta.env.DEV && !isNativePlatform()) {
@@ -110,12 +126,11 @@ export async function isHealthAvailable(): Promise<boolean> {
 	const plugin = getHealthPlugin();
 	if (!plugin) return false;
 
-	return new Promise<boolean>((resolve) => {
-		plugin.isAvailable(
-			() => resolve(true),
-			() => resolve(false)
-		);
-	});
+	try {
+		return (await plugin.isAvailable()).available;
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -129,28 +144,16 @@ export async function requestHealthPermissions(
 	const plugin = getHealthPlugin();
 	if (!plugin) return false;
 
-	const readTypes = dataTypes.map((dt) => ({
-		read: [PLUGIN_TYPE_MAP[dt]]
-	}));
-
-	// Flatten into a single request
-	const datatypesFlat = readTypes.flatMap((r) => r.read);
-
-	return new Promise<boolean>((resolve) => {
-		plugin.requestAuthorization(
-			datatypesFlat,
-			[], // no write permissions
-			() => {
-				initialized = true;
-				healthLog.info('Health permissions granted', { dataTypes });
-				resolve(true);
-			},
-			(err: any) => {
-				healthLog.warn('Health permissions denied', { error: err });
-				resolve(false);
-			}
-		);
-	});
+	try {
+		// Read-only; HealthKit never reveals read denials, so a resolved call counts as granted
+		await plugin.requestAuthorization({ read: dataTypes.map((dt) => PLUGIN_TYPE_MAP[dt]) });
+		initialized = true;
+		healthLog.info('Health permissions granted', { dataTypes });
+		return true;
+	} catch (err) {
+		healthLog.warn('Health permissions denied', { error: err });
+		return false;
+	}
 }
 
 /**
@@ -341,24 +344,19 @@ export async function syncHealthData(
 // Internal: Query Plugin
 // =====================================================
 
-function queryHealthData(
-	plugin: any,
-	dataType: string,
+async function queryHealthData(
+	plugin: HealthPluginLike,
+	dataType: PluginHealthDataType,
 	startDate: Date,
 	endDate: Date
-): Promise<any[]> {
-	return new Promise((resolve, reject) => {
-		plugin.query(
-			{
-				startDate,
-				endDate,
-				dataType,
-				limit: 10000
-			},
-			(data: any[]) => resolve(data),
-			(err: any) => reject(new Error(String(err)))
-		);
+): Promise<HealthSample[]> {
+	const { samples } = await plugin.readSamples({
+		dataType,
+		startDate: startDate.toISOString(),
+		endDate: endDate.toISOString(),
+		limit: 10000
 	});
+	return samples;
 }
 
 /**

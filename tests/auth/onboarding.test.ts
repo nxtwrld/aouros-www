@@ -4,7 +4,7 @@ import { shouldSkip } from "../fixtures/skip";
 // The real onboarding wizard (`/account`) does a lot of client-side crypto
 // (WebCrypto key generation/wrapping) on final submit before it ever calls
 // POST /v1/account/onboarding — that machinery already has its own unit
-// tests (see CRYPTOGRAPHY.md). This spec sticks to what's proportionate for
+// tests (see docs/security/CRYPTOGRAPHY.md). This spec sticks to what's proportionate for
 // a UI regression suite: does the wizard render and step correctly.
 
 test.describe("Auth - Onboarding wizard", () => {

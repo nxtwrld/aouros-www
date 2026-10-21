@@ -3,7 +3,7 @@
  *
  * Pure helper that maps a task/item/goal's provenance fields to the right
  * "Why is this here?" copy and link, per the three creation paths
- * (CAREPLAN.md §Task creation paths). Kept free of Svelte/i18n so it can be
+ * (docs/features/careplan/CAREPLAN.md §Task creation paths). Kept free of Svelte/i18n so it can be
  * unit-tested; the component renders the returned i18n key + values.
  */
 import type { PerformerRef } from "./types";

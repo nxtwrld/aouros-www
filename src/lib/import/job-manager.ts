@@ -145,7 +145,7 @@ export async function processJob(
   // side); empty body when there is no plan yet — Care Plan build row 7c. When
   // not supplied explicitly, build it from the currently active profile (the
   // merge defensively validates every link id, so a wrong-profile guess is
-  // harmless — see CAREPLAN.md conflict C3).
+  // harmless — see docs/features/careplan/CAREPLAN.md conflict C3).
   let ctx = carePlanContext;
   if (CARE_PLAN && ctx === undefined) {
     try {

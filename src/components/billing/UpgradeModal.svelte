@@ -28,7 +28,7 @@
     } from '$lib/billing/revenuecat';
     import { isNativePlatform } from '$lib/config/platform';
     import type { SubscriptionTierId, BillingCycle } from '$lib/billing/types';
-    import { onMount } from 'svelte';
+    import { onMount, untrack } from 'svelte';
 
     interface Props {
         mode?: 'upgrade' | 'credits';
@@ -47,7 +47,7 @@
     let selectedTierName = $state<string | null>(null);
 
     let billingCycle: BillingCycle = $state('yearly');
-    let currentTab: 'plans' | 'credits' = $state(mode === 'credits' ? 'credits' : 'plans');
+    let currentTab: 'plans' | 'credits' = $state(untrack(() => mode === 'credits' ? 'credits' : 'plans'));
 
     // Mobile (RevenueCat) state
     let isMobile = $state(false);

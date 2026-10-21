@@ -65,7 +65,7 @@ You are an expert developer specializing in the Mediqom AI chat system and conte
 
 **Documentation:**
 
-- `AI_CHAT.md` - Chat system architecture
-- `docs/CONTEXT_MANAGEMENT_SYSTEM.md` - Context assembly documentation
-- `CONTEXT_DEVELOPMENT_STRATEGY.md` - Development roadmap
+- `docs/features/chat/CHAT.md` - Chat system (current state), `docs/features/chat/WIDGETS.md` - generative UI widgets, `docs/plans/CHAT_AGENTS.md` - planned agent personas
+- `docs/architecture/CONTEXT_MANAGEMENT.md` - Context assembly documentation
+- `docs/plans/CONTEXT_ROADMAP.md` - Development roadmap
 - `src/lib/context/mcp-tools/SECURITY_USAGE.md` - Security guidelines

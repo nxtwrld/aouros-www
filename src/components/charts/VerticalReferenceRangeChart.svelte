@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { select, scaleTime, scaleLinear, axisLeft, line, area, curveNatural, curveMonotoneY, zoom as d3Zoom, zoomIdentity, type Selection, type ScaleTime, type ScaleLinear } from 'd3';
+    import { select, scaleTime, scaleLinear, axisLeft, line, area, curveMonotoneY, zoom as d3Zoom, zoomIdentity, type Selection, type ScaleTime, type ScaleLinear } from 'd3';
     import { onMount } from 'svelte';
     import { get } from 'svelte/store';
     import { t } from '$lib/i18n';

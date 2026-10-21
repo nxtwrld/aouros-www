@@ -244,7 +244,7 @@ describe("resolveAnatomy — region scoping via `within`", () => {
   });
 });
 
-describe("resolveAnatomy — the AI_PLUGIN.md §1 flagship call", () => {
+describe("resolveAnatomy — the docs/features/plugin/ENGINEERING.md §1 flagship call", () => {
   // show_anatomy({ structure: "R_knee", highlight: ["medial meniscus"] })
   it("frames the region and refines the highlight within it", () => {
     const region = resolveAnatomy("R_knee", {

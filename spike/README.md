@@ -1,7 +1,7 @@
 # Slice Zero — ChatGPT sandbox probes
 
 **Throwaway.** Delete `spike/`, `static/spike/`, `vite.config.spike.ts` and
-`src/routes/v1/mcp-spike/` once the results are recorded in `AI_PLUGIN.md` §3.
+`src/routes/v1/mcp-spike/` once the results are recorded in `docs/features/plugin/ENGINEERING.md` §3.
 
 `scripts/anatomy-pipeline/` is **not** throwaway — it is the real P3 deliverable and
 already passes its gates.
@@ -10,7 +10,7 @@ already passes its gates.
 
 | probe | question | status |
 |---|---|---|
-| 0a | can the assets be made small enough, with names intact? | ✅ **passed** — see `AI_PLUGIN.md` §3 |
+| 0a | can the assets be made small enough, with names intact? | ✅ **passed** — see `docs/features/plugin/ENGINEERING.md` §3 |
 | 0b-A | does WebGL render in the sandboxed iframe? | ⏳ needs ChatGPT |
 | 0b-B | does a cross-origin GLB fetch survive the CSP? | ⏳ needs ChatGPT |
 | 0b-C | at what size is an inlined HTML resource truncated? | ⏳ needs ChatGPT |
@@ -97,4 +97,4 @@ variants render:
 
 The spike **never logs tool arguments**. `structure: "l4-l5"` is benign in isolation and
 PHI when logged against a session. Only the tool name and the resulting mesh count are
-logged. Keep it that way in `/v1/mcp` — see `AI_PLUGIN.md` §9.
+logged. Keep it that way in `/v1/mcp` — see `docs/features/plugin/ENGINEERING.md` §9.

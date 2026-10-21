@@ -12,7 +12,7 @@ import path from "node:path";
  * consume the `$components` copy, so drift would show up as the widget and the
  * app disagreeing about which meshes exist. Collapsing the duplicate is a
  * separate cleanup; until then this makes drift a red test instead of a silent
- * bug. See AI_PLUGIN.md §5.
+ * bug. See docs/features/plugin/ENGINEERING.md §5.
  */
 const ROOT = path.resolve(__dirname, "../..");
 const A = path.join(ROOT, "src/data/objects.json");

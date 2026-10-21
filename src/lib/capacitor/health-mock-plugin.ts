@@ -1,7 +1,7 @@
 // =====================================================
 // Mock Health Plugin for Dev Mode
 // =====================================================
-// Emulates cordova-plugin-health API with realistic
+// Emulates @capgo/capacitor-health API with realistic
 // temporal health data so the full sync pipeline works
 // identically on web during development.
 // =====================================================
@@ -9,6 +9,8 @@
 // =====================================================
 
 import type { PluginDataPoint } from './health-normalize';
+import type { HealthPluginLike } from './health';
+import type { HealthSample } from '@capgo/capacitor-health';
 import { normalizeHealthData, aggregateByHour, shouldAggregate, computeBMI } from './health-normalize';
 import type { Signal } from '$lib/types.d';
 
@@ -50,14 +52,13 @@ function eachDay(start: Date, end: Date): Date[] {
 	return days;
 }
 
-function point(date: Date, value: any, unit: string): PluginDataPoint {
+function point(date: Date, value: number, unit: string): PluginDataPoint {
 	return {
-		startDate: new Date(date),
-		endDate: new Date(date.getTime() + 60_000),
+		startDate: date.toISOString(),
+		endDate: new Date(date.getTime() + 60_000).toISOString(),
 		value,
 		unit,
-		sourceName: 'MockHealth',
-		sourceBundleId: 'dev.mediqom.mock'
+		sourceName: 'MockHealth'
 	};
 }
 
@@ -122,7 +123,7 @@ const generateBloodPressure: DataGenerator = (start, end, rand) => {
 			const d = new Date(day);
 			d.setHours(hour, Math.floor(rand() * 30), 0, 0);
 			points.push(
-				point(d, { systolic: sys, diastolic: dia }, 'mmHg')
+				{ ...point(d, sys, 'mmHg'), systolic: sys, diastolic: dia }
 			);
 		}
 	}
@@ -179,7 +180,7 @@ const generateWeight: DataGenerator = (start, end, rand) => {
 const generateHeight: DataGenerator = (start, _end, _rand) => {
 	const d = new Date(start);
 	d.setHours(12, 0, 0, 0);
-	return [point(d, 1.78, 'm')];
+	return [point(d, 178, 'cm')];
 };
 
 // Body fat percentage: ~1/week
@@ -203,66 +204,60 @@ const generateFatPercentage: DataGenerator = (start, end, rand) => {
 };
 
 const GENERATORS: Record<string, DataGenerator> = {
-	heart_rate: generateHeartRate,
-	'heart_rate.resting': generateRestingHeartRate,
-	'heart_rate.variability': generateHRV,
-	blood_pressure: generateBloodPressure,
-	blood_glucose: generateBloodGlucose,
+	heartRate: generateHeartRate,
+	restingHeartRate: generateRestingHeartRate,
+	heartRateVariability: generateHRV,
+	bloodPressure: generateBloodPressure,
+	bloodGlucose: generateBloodGlucose,
 	weight: generateWeight,
 	height: generateHeight,
-	fat_percentage: generateFatPercentage
+	bodyFat: generateFatPercentage
 };
 
 // =====================================================
 // Mock Plugin
 // =====================================================
 
-interface MockHealthPlugin {
-	isAvailable(success: (available: boolean) => void, error: (err: any) => void): void;
-	requestAuthorization(
-		datatypes: string[],
-		write: string[],
-		success: () => void,
-		error: (err: any) => void
-	): void;
-	query(
-		opts: { startDate: Date; endDate: Date; dataType: string; limit?: number },
-		success: (data: PluginDataPoint[]) => void,
-		error: (err: any) => void
-	): void;
+let _instance: HealthPluginLike | null = null;
+
+function delay(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-let _instance: MockHealthPlugin | null = null;
-
-function createMockHealthPlugin(): MockHealthPlugin {
+function createMockHealthPlugin(): HealthPluginLike {
 	const SEED = 42;
 
 	return {
-		isAvailable(success) {
-			setTimeout(() => success(true), 50);
+		async isAvailable() {
+			await delay(50);
+			return { available: true, platform: 'web' };
 		},
 
-		requestAuthorization(_datatypes, _write, success) {
-			setTimeout(() => success(), 100);
+		async requestAuthorization() {
+			await delay(100);
+			return {};
 		},
 
-		query(opts, success, error) {
+		async readSamples(opts) {
 			const generator = GENERATORS[opts.dataType];
 			if (!generator) {
-				setTimeout(() => error(`Unknown data type: ${opts.dataType}`), 10);
-				return;
+				await delay(10);
+				throw new Error(`Unknown data type: ${opts.dataType}`);
 			}
 
 			// Deterministic seed per data type
 			const typeSeed = SEED + hashString(opts.dataType);
 			const rand = createPRNG(typeSeed);
 
-			const data = generator(opts.startDate, opts.endDate, rand);
+			const end = opts.endDate ? new Date(opts.endDate) : new Date();
+			const start = opts.startDate ? new Date(opts.startDate) : new Date(end.getTime() - 86_400_000);
+			const data = generator(start, end, rand);
 
 			// Apply limit
 			const limited = opts.limit ? data.slice(0, opts.limit) : data;
 
-			setTimeout(() => success(limited), 50 + Math.random() * 100);
+			await delay(50 + Math.random() * 100);
+			return { samples: limited.map((p) => ({ ...p, dataType: opts.dataType }) as HealthSample) };
 		}
 	};
 }
@@ -279,7 +274,7 @@ function hashString(s: string): number {
  * Returns the singleton mock health plugin instance.
  * Only call in dev mode.
  */
-export function getMockHealthPlugin(): MockHealthPlugin {
+export function getMockHealthPlugin(): HealthPluginLike {
 	if (!_instance) {
 		_instance = createMockHealthPlugin();
 	}

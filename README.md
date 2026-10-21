@@ -1,40 +1,22 @@
-# MEDIQON
+# Mediqom
 
-## MEdical Diagnosis Quorum Of Models
+Medical records explorer and doctor–patient consultation analysis. SvelteKit 2 / Svelte 5 web app with a Capacitor build for iOS and Android, Supabase for auth and data, and client-side AES/RSA (+ ML-KEM) encryption so the server never sees plaintext health data.
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
-
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
+## Develop
 
 ```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
+npm install
+npm run dev          # dev server
+npm run check        # svelte-check + types
+npm run lint         # prettier + eslint
+npm test             # Playwright + Vitest
 ```
 
-## Developing
+Mobile: `npm run mobile:build`, `npm run mobile:sync`, then `npm run mobile:ios` / `npm run mobile:android`.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Docs
 
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+- [`docs/README.md`](docs/README.md): documentation index and feature status board
+- [`CLAUDE.md`](CLAUDE.md): architecture overview and coding conventions (for people and AI agents)
+- [`DESIGN.md`](DESIGN.md): design system tokens and components
+- [`AGENTS.md`](AGENTS.md): repo conventions for testing and commits

@@ -4,7 +4,7 @@
  * Registers four `show_anatomy_*` tools, one per widget size variant, so probes
  * 0b-A/B/C/D and 0c can all be answered in a single ChatGPT conversation
  * instead of four deploys. Delete this route (and `spike/`, `static/spike/`,
- * `vite.config.spike.ts`) once the results are recorded in AI_PLUGIN.md §3.
+ * `vite.config.spike.ts`) once the results are recorded in docs/features/plugin/ENGINEERING.md §3.
  *
  * The real endpoint is `/v1/mcp` (P5). This one exists to make the decisions
  * that endpoint's architecture depends on — above all the CSP tier.
@@ -110,7 +110,7 @@ function buildServer(origin: string, fetchFn: typeof globalThis.fetch) {
       {
         title: `Show anatomy (${variant})`,
         // Describes the situation, not the brand. No promotional language —
-        // model-readable fields are policed separately (AI_PLUGIN.md §9b).
+        // model-readable fields are policed separately (docs/features/plugin/ENGINEERING.md §9b).
         description:
           "Show an interactive 3D anatomical visualization when seeing the " +
           "location, surrounding structures or anatomical layers would " +

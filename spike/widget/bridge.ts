@@ -6,7 +6,7 @@
  * point: it lets us debug the renderer without a round trip through ChatGPT.
  *
  * Nothing here may leak into the production widget's renderer — see
- * AI_PLUGIN.md §10: the anatomy engine must never depend on `window.openai`.
+ * `docs/features/plugin/ENGINEERING.md` §10: the anatomy engine must never depend on `window.openai`.
  */
 
 export interface AnatomyToolOutput {

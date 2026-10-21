@@ -230,7 +230,7 @@ export default defineConfig({
         "src/lib/logging/**",
         "src/lib/i18n/**",
       ],
-      // Thresholds ratchet up each sprint; see docs/TEST_COVERAGE.md.
+      // Thresholds ratchet up each sprint; see docs/testing/TEST_COVERAGE.md.
       // Target: lines 80, functions 75, branches 70.
       // Current floor is baseline - 2% to prevent regressions.
       thresholds: {

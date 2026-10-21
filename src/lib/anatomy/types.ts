@@ -3,7 +3,7 @@
  *
  * Nothing in `src/lib/anatomy/` may import from SvelteKit (`$app/*`, `$env/*`)
  * or touch the network, so the MCP route, the embedded widget and the app can
- * all import it unchanged. See AI_PLUGIN.md §6.
+ * all import it unchanged. See docs/features/plugin/ENGINEERING.md §6.
  */
 
 /** The 10 layer keys in `src/data/objects.json`. */
@@ -37,7 +37,7 @@ export const ANATOMY_LAYERS: readonly AnatomyLayer[] = [
  * structure *within* them cannot be highlighted at sub-layer granularity:
  * vascular has only `heart` + `vascular_system`, nervous only `brain` +
  * `nerves`, lymphatic only `lymphatic_system`. The resolver reports these as
- * whole-system rather than silently painting 160k vertices. See AI_PLUGIN.md §2.
+ * whole-system rather than silently painting 160k vertices. See docs/features/plugin/ENGINEERING.md §2.
  */
 export const WHOLE_SYSTEM_ONLY_LAYERS: readonly AnatomyLayer[] = [
   "vascular",
@@ -70,7 +70,7 @@ export interface AnatomyResolution {
   snomedCode?: string;
   /** Exact-case mesh names, filtered against the manifest when one is supplied. */
   meshes: string[];
-  /** Resolved but absent from this sex's geometry — see AI_PLUGIN.md §2. */
+  /** Resolved but absent from this sex's geometry — see docs/features/plugin/ENGINEERING.md §2. */
   unavailable: string[];
   /** Layers the resolved meshes belong to. */
   layers: AnatomyLayer[];

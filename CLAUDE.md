@@ -14,6 +14,8 @@ Before implementing:
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 
+**Map the blast radius before editing.** List every place the change must reach: callers, tests, fixtures, locale JSON (`src/lib/i18n`), `.d.ts` types, schema ↔ `Section*.svelte` pairs, and `fetch` forwarding for `apiFetch` in load functions. For a bug, find every caller and fix the root cause once in shared code — not per call site.
+
 ## 2. Simplicity First
 
 **Minimum code that solves the problem. Nothing speculative.**
@@ -59,6 +61,10 @@ For multi-step tasks, state a brief plan:
 ```
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+**Close every task with what you didn't do.** End with 1–2 lines: what was skipped or left unverified, and the risk. Mandatory for changes touching encryption, RLS, auth or audit logging.
+
+**Mark deliberate shortcuts** in code as `// shortcut: <limitation>, <upgrade when>` so `/debt` can collect them.
 
 ---
 
@@ -108,9 +114,9 @@ Before reading files or exploring directories, always use qmd to search for info
 
 - **Authentication**: Supabase-based auth with session management via `src/lib/auth.ts` and `src/hooks.server.ts`
 - **Real-time Sessions**: In-memory session store with EventEmitter updates via `src/lib/session/manager.ts`
-- **AI Analysis**: Multi-provider AI integration (GPT, Gemini) for medical conversation analysis
+- **AI Analysis**: Chat on Vercel AI SDK + AI Gateway; import and session analysis on LangChain/LangGraph (see AI stack below)
 - **Audio Pipeline**: Real-time transcription with Voice Activity Detection, MP3 encoding, and multiple transcription providers
-- **Medical Data**: FHIR-compliant health records with comprehensive medical configurations
+- **Medical Data**: FHIR-aligned health records with comprehensive medical configurations (full FHIR adoption is pending — see `docs/architecture/ONTOLOGY.md`)
 - **Encryption**: Multi-layer security with AES/RSA encryption for sensitive health data
 
 ### Document Import Architecture
@@ -155,7 +161,7 @@ Before reading files or exploring directories, always use qmd to search for info
 ### Medical Domain Specifics
 
 - **Session Management**: Medical consultations are tracked as real-time sessions with transcript analysis
-- **FHIR Compliance**: All medical data follows healthcare interoperability standards
+- **FHIR alignment**: Medical data structures are modelled on FHIR; not yet a formal FHIR substrate
 - **Multi-language Support**: Internationalization for Czech, German, and English
 - **Privacy-First**: Encrypted health data storage with public key cryptography
 
@@ -177,11 +183,9 @@ Before reading files or exploring directories, always use qmd to search for info
 
 ### AI & Language Processing
 
-- **LangChain** ecosystem (@langchain/core, @langchain/openai, @langchain/anthropic, @langchain/google-genai)
-- **LangGraph** (@langchain/langgraph) for orchestrating complex AI workflows
-- **OpenAI GPT-4** as primary AI provider with multi-provider fallback support
-- **AssemblyAI** and **Google Speech SDK** for audio transcription
-- **Whisper** integration for offline transcription capabilities
+- **Vercel AI SDK + AI Gateway** for chat — `src/lib/ai/gateway.ts`, model switcher in `src/lib/ai/model-catalog.ts`. See `docs/architecture/AI_GATEWAY.md`
+- **LangChain / LangGraph** for import, session and other flows — models in `src/lib/config/models.yaml` (still gpt-4o; migration to the gateway pending)
+- **Transcription**: Deepgram streaming, AssemblyAI, Google Speech SDK, Whisper
 
 ### Audio Processing
 
@@ -293,14 +297,11 @@ await loadProfiles(false, fetch);
 
 ### AI Model Configuration
 
-- **YAML-based config**: AI models defined in `src/lib/config/models.yaml`
-- **Provider abstraction**: Support for OpenAI, Google, Anthropic with fallback chains
-- **Flow-specific models**: Different models for extraction, analysis, feature detection, etc.
-- **Cost optimization**: Automatic model selection based on task complexity
+- **Chat**: model catalog in `src/lib/ai/model-catalog.ts`, routed through the AI Gateway
+- **Other flows**: per-flow models in `src/lib/config/models.yaml` (LangChain)
 
 ### Medical Configuration Schema
 
-- **FHIR compliance**: All medical data structures follow FHIR standards
 - **Structured schemas**: Medical configurations in `src/lib/configurations/` with TypeScript interfaces
 - **Multi-language support**: Schemas support Czech, German, and English localization
 - **Validation patterns**: Schema validation with confidence scoring and error handling
@@ -426,53 +427,10 @@ export const POST: RequestHandler = async ({
 - **Zero-knowledge**: Logs contain IDs, types, actions — never plaintext medical data
 - **Coverage**: 16 endpoints — documents, profiles, shares, imports, chat, sessions, encryption, recovery, account deletion
 
-## Performance & Optimization
+## Logging
 
-### Build Configuration
-
-- **Vite optimization**: Custom excludes for ONNX runtime and large dependencies
-- **Static copying**: Automatic copying of WASM files and worker scripts
-- **Code splitting**: Lazy loading for heavy components and AI models
-- **Bundle analysis**: Optimized imports and tree shaking
-
-### Runtime Performance
-
-- **Lazy loading**: PDF.js and other heavy libraries loaded on demand
-- **Worker threads**: Audio processing and VAD in web workers
-- **Caching strategies**: Local storage caching for frequently accessed data
-- **Memory management**: Proper cleanup of event listeners and subscriptions
-
-## Error Handling & Logging
-
-### Centralized Logging
-
-- **Namespace-based logging**: Organized by feature (Session, Audio, Analysis, etc.)
-- **Environment awareness**: Different log levels for development vs production
+- **Namespace-based logging**: Organized by feature (Session, Audio, Analysis, etc.) — use `logger.session`, `logger.analysis`, …
 - **Runtime configuration**: Logging configurable via `window.logger` object
-- **Structured logging**: Consistent format with timestamps and context
-
-### Error Handling Patterns
-
-- **Type-safe errors**: Standardized error interfaces with proper HTTP status codes
-- **Graceful degradation**: Fallback mechanisms for AI provider failures
-- **User feedback**: Clear error messages with actionable guidance
-- **Monitoring**: Error tracking with detailed context for debugging
-
-## Development Workflow
-
-### Code Quality
-
-- **Pre-commit hooks**: Automated formatting and linting
-- **Type checking**: Strict TypeScript compilation with `svelte-check`
-- **Test coverage**: Unit and integration tests with clear separation
-- **Documentation**: Comprehensive inline documentation for complex logic
-
-### Deployment
-
-- **Vercel deployment**: Automatic deployments with preview environments
-- **Environment management**: Separate staging and production configurations
-- **Performance monitoring**: Built-in analytics and performance tracking
-- **Health checks**: Automated monitoring of critical endpoints
 
 ## Chat System
 
@@ -480,7 +438,7 @@ export const POST: RequestHandler = async ({
 - **Components**: `src/components/chat/` - AIChatSidebar, ContextPrompt
 - **API**: `src/routes/v1/chat/conversation/+server.ts`
 - **Context Assembly**: `src/lib/context/` - Context composer, MCP tools, integrations
-- For detailed context, use the `@chat` command. Reference: `AI_CHAT.md`
+- For detailed context, use the `@chat` command. Reference: `docs/features/chat/CHAT.md` (current), `docs/features/chat/WIDGETS.md`
 
 ## Medical Configuration Schemas
 
@@ -495,21 +453,21 @@ export const POST: RequestHandler = async ({
 - **Code**: `src/lib/context/` - Context composer, token optimization, MCP tools
 - **Integrations**: Client/server context providers, session and profile context
 - **MCP Tools**: Medical expert tools for document search, patient timeline, profile data
-- Reference: `docs/CONTEXT_MANAGEMENT_SYSTEM.md`, `CONTEXT_DEVELOPMENT_STRATEGY.md`
+- Reference: `docs/architecture/CONTEXT_MANAGEMENT.md`, `docs/plans/CONTEXT_ROADMAP.md`
 
 ## Audio / Transcription Pipeline
 
 - **Core Audio**: `src/lib/audio/` - AudioManager, microphone, streaming transcription
 - **Session Audio**: `src/lib/session/audio/` - Audio processing, VAD helpers, microphone utils
 - **Providers**: AssemblyAI, Google Speech SDK, Deepgram, Whisper
-- Reference: `TRANSCRIPTION.md`
+- Reference: `docs/features/session/TRANSCRIPTION.md`
 
 ## Mobile / Capacitor Development
 
 - **Config files**: `capacitor.config.ts`, `vite.config.mobile.ts`, `svelte.config.mobile.js`, `src/app.mobile.html`
 - **Platform adapters**: `src/lib/capacitor/auth.ts`, `src/lib/device.ts`
 - **Native directories**: `android/`, `ios/`, `mobile/`
-- For detailed context, use the `@mobile` command. Reference: `RESPONSIVE.md`
+- For detailed context, use the `@mobile` command. Reference: `docs/design/RESPONSIVE.md`, `docs/guides/MOBILE_AUTH.md`
 
 ### Keyboard Handling on Native (iOS/Android)
 
@@ -553,7 +511,10 @@ No per-input logic needed. On keyboard hide the padding is removed automatically
 
 ## Session Development
 
-For session development context, use the `@session` command. Key references: `AI_SESSION_WORKFLOW.md`, `AI_SESSION_QOM.md`, `AI_SESSION_ANALYSIS.md`
+For session development context, use the `@session` command.
+
+- **What runs today**: live analysis goes through `src/lib/session-deprecated/analyzeConversation.ts`; `src/lib/session/qom/` drives the visualisation only.
+- **MoE/QOM expert pipeline** is a plan, not built — see `docs/plans/SESSION_MOE.md`.
 
 ## CSS Architecture & Styling Guidelines
 
@@ -670,36 +631,11 @@ When reviewing or creating styled components:
 - [ ] No inline styles unless absolutely necessary
 - [ ] Mobile-responsive (uses CSS variables and media queries)
 
-## Documentation Index
+## Documentation
 
-| File                                | Purpose                                                              |
-| ----------------------------------- | -------------------------------------------------------------------- |
-| `AI_CHAT.md`                        | Chat system architecture and design                                  |
-| `AI_IMPORT_USER_CONFIGURATION.md`   | Import schema user configuration                                     |
-| `AI_RESEARCH.md`                    | AI research notes                                                    |
-| `AI_SESSION_ANALYSIS.md`            | Session analysis pipeline                                            |
-| `AI_SESSION_QOM.md`                 | QOM expert pipeline architecture                                     |
-| `AI_SESSION_WORKFLOW.md`            | Full session AI workflow phases                                      |
-| `AI_TODO.md`                        | AI development TODO items                                            |
-| `CONTEXT_DEVELOPMENT_STRATEGY.md`   | Context assembly roadmap                                             |
-| `DATA_AND_PRIVACY.md`               | Data handling and privacy policies                                   |
-| `LOGGER_MIGRATION_GUIDE.md`         | Logger migration instructions                                        |
-| `LOGGER_EXAMPLE_MIGRATION.md`       | Logger migration examples                                            |
-| `MARKETING.md`                      | Marketing content                                                    |
-| `DESIGN.md`                         | Design system: tokens, typography, components, rules (Stitch format) |
-| `RESPONSIVE.md`                     | Mobile responsive patterns and breakpoints                           |
-| `TRANSCRIPTION.md`                  | Audio transcription providers and setup                              |
-| `docs/BETA_ACCESS_SYSTEM.md`        | Beta access management                                               |
-| `docs/CLINICAL_DATA_PLATFORM.md`    | Clinical data platform design                                        |
-| `docs/CONTEXT_MANAGEMENT_SYSTEM.md` | Context assembly system documentation                                |
-| `docs/IMPORT.md`                    | Import architecture documentation                                    |
-| `docs/README.md`                    | Documentation index                                                  |
-| `src/routes/med/FEATURES.md`        | Medical features documentation                                       |
-| `src/components/apps/README.md`     | Apps component documentation                                         |
-| `CRYPTOGRAPHY.md`                   | Cryptographic architecture: algorithms, key hierarchy, wire formats |
-| `3D_TEXTURES.md`                    | 3D texture pipeline: Blender prep, glTF export, Three.js integration |
-| `SECURITY_REPORT.md`                | Security audit findings and HIPAA compliance status                  |
-| `NIS2_COMPLIANCE.md`                | NIS2 (EU 2022/2555) gap assessment, posture matrix, fix backlog      |
+All docs live in `docs/`; **[`docs/README.md`](docs/README.md) is the index and status board** (Implemented / Partial / Pending / Obsolete). Every doc starts with a status block — check it before trusting a doc, and update it when you change the code it describes. Folders: `architecture/` (how it works), `features/` (shipped features), `plans/` (not built yet), `research/`, `security/`, `compliance/`, `guides/`, `archive/` (obsolete — do not follow).
+
+Most used: `DESIGN.md` (root, design tokens), `docs/security/CRYPTOGRAPHY.md`, `docs/architecture/import/IMPORT.md`, `docs/features/chat/CHAT.md`, `docs/features/careplan/CAREPLAN.md`, `docs/features/plugin/ENGINEERING.md`.
 
 ## Important Notes
 
@@ -710,6 +646,15 @@ When reviewing or creating styled components:
 - All medical analysis follows structured schemas with confidence scoring (0.0-1.0 scale)
 - Use the centralized logging system (`logger.session`, `logger.analysis`) for consistent debugging
 - Always validate AI provider responses and implement proper fallback mechanisms
-- Follow FHIR standards for all medical data structures and transformations
+- Model new medical data structures on FHIR resources where one fits
 - **CRITICAL**: Use Svelte 5 runes syntax throughout - `$state()`, `$props()`, `$bindable()` required
 - **Store Management**: Prefer Svelte stores over `$effect()`/`$derived()` for shared state
+
+### Never cut (simplicity never applies to these)
+
+- Validation at trust boundaries (API input, AI output, imported files)
+- Encryption — plaintext medical data never reaches the server or logs
+- RLS policies and auth guards (`safeGetSession`) on every new table/endpoint
+- `auditFromEvent` on endpoints that touch documents, profiles, shares, imports, sessions
+- Data-loss handling (failed saves, partial imports, interrupted uploads)
+- Accessibility (labels, keyboard) and i18n (`$t()` keys, never hardcoded text)

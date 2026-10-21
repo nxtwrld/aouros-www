@@ -1,7 +1,7 @@
 // =====================================================
 // Health Data Normalization Layer
 // =====================================================
-// Converts raw cordova-plugin-health data points into
+// Converts raw @capgo/capacitor-health samples into
 // our standard Signal format. Handles entity name mapping,
 // unit conversion, and value aggregation.
 // =====================================================
@@ -12,14 +12,15 @@ import type { Signal } from '$lib/types.d';
 // Types
 // =====================================================
 
-/** Raw data point from cordova-plugin-health */
+/** Raw sample from @capgo/capacitor-health (subset of its HealthSample) */
 export interface PluginDataPoint {
-	startDate: Date;
-	endDate: Date;
-	value: any;
+	startDate: string;
+	endDate: string;
+	value: number;
 	unit: string;
+	systolic?: number;
+	diastolic?: number;
 	sourceName?: string;
-	sourceBundleId?: string;
 }
 
 /** Normalized signal entry ready for batch insert */
@@ -37,8 +38,7 @@ interface HealthEntityMapping {
 	signal: string;
 	targetUnit: string;
 	sourceUnit?: string;
-	platform?: 'ios' | 'android';
-	extract?: (raw: any) => number | null;
+	extract?: (raw: PluginDataPoint) => number | null;
 }
 
 // =====================================================
@@ -47,44 +47,31 @@ interface HealthEntityMapping {
 
 const ENTITY_MAP: HealthEntityMapping[] = [
 	// Heart rate
-	{ pluginType: 'heart_rate', signal: 'heart_rate', targetUnit: 'beats/min' },
-	{ pluginType: 'heart_rate.resting', signal: 'resting_heart_rate', targetUnit: 'bpm' },
-	{ pluginType: 'heart_rate.variability', signal: 'heart_rate_variability', targetUnit: 'ms' },
+	{ pluginType: 'heartRate', signal: 'heart_rate', targetUnit: 'beats/min' },
+	{ pluginType: 'restingHeartRate', signal: 'resting_heart_rate', targetUnit: 'bpm' },
+	{ pluginType: 'heartRateVariability', signal: 'heart_rate_variability', targetUnit: 'ms' },
 
 	// Blood pressure → two separate signals
 	{
-		pluginType: 'blood_pressure',
+		pluginType: 'bloodPressure',
 		signal: 'systolic',
 		targetUnit: 'mmHg',
 		extract: (r) => r.systolic ?? null
 	},
 	{
-		pluginType: 'blood_pressure',
+		pluginType: 'bloodPressure',
 		signal: 'diastolic',
 		targetUnit: 'mmHg',
 		extract: (r) => r.diastolic ?? null
 	},
 
-	// Blood glucose — platform-specific source units
-	{
-		pluginType: 'blood_glucose',
-		signal: 'blood_sugar',
-		targetUnit: 'mg/dL',
-		sourceUnit: 'mg/dL',
-		platform: 'ios'
-	},
-	{
-		pluginType: 'blood_glucose',
-		signal: 'blood_sugar',
-		targetUnit: 'mg/dL',
-		sourceUnit: 'mmol/L',
-		platform: 'android'
-	},
+	// Blood glucose — plugin returns mg/dL on both platforms
+	{ pluginType: 'bloodGlucose', signal: 'blood_sugar', targetUnit: 'mg/dL' },
 
 	// Body measurements
 	{ pluginType: 'weight', signal: 'weight', targetUnit: 'kg' },
-	{ pluginType: 'height', signal: 'height', targetUnit: 'cm', sourceUnit: 'm' },
-	{ pluginType: 'fat_percentage', signal: 'body_fat_percentage', targetUnit: '%' }
+	{ pluginType: 'height', signal: 'height', targetUnit: 'cm' },
+	{ pluginType: 'bodyFat', signal: 'body_fat_percentage', targetUnit: '%' }
 ];
 
 // =====================================================
@@ -115,7 +102,7 @@ function convertUnit(value: number, from: string, to: string): number {
 // High-frequency data types that need aggregation
 // =====================================================
 
-const HIGH_FREQUENCY_TYPES = new Set(['heart_rate']);
+const HIGH_FREQUENCY_TYPES = new Set(['heartRate']);
 
 // =====================================================
 // Main Normalization Function
@@ -123,16 +110,14 @@ const HIGH_FREQUENCY_TYPES = new Set(['heart_rate']);
 
 /**
  * Convert raw plugin data points into normalized signal entries.
- * May produce multiple signals from one plugin type (e.g., blood_pressure → systolic + diastolic).
+ * May produce multiple signals from one plugin type (e.g., bloodPressure → systolic + diastolic).
  */
 export function normalizeHealthData(
 	rawDataPoints: PluginDataPoint[],
 	pluginType: string,
 	platform: 'ios' | 'android'
 ): NormalizedSignalEntry[] {
-	const mappings = ENTITY_MAP.filter(
-		(m) => m.pluginType === pluginType && (!m.platform || m.platform === platform)
-	);
+	const mappings = ENTITY_MAP.filter((m) => m.pluginType === pluginType);
 
 	if (mappings.length === 0) return [];
 
@@ -144,9 +129,9 @@ export function normalizeHealthData(
 			// Extract value
 			let value: number | null;
 			if (mapping.extract) {
-				value = mapping.extract(point.value);
+				value = mapping.extract(point);
 			} else {
-				value = typeof point.value === 'number' ? point.value : parseFloat(point.value);
+				value = point.value;
 			}
 
 			if (value === null || isNaN(value)) continue;
@@ -163,7 +148,7 @@ export function normalizeHealthData(
 				signal: mapping.signal,
 				value,
 				unit: mapping.targetUnit,
-				date: point.startDate.toISOString(),
+				date: new Date(point.startDate).toISOString(),
 				source
 			});
 		}

@@ -6,7 +6,7 @@
  * changed. Re-running with the same documentId is a no-op (guards on
  * confirmingDocuments membership and source-tagged task/goal creation).
  *
- * Precedence rule (CAREPLAN.md §Conflict resolution):
+ * Precedence rule (docs/features/careplan/CAREPLAN.md §Conflict resolution):
  *   User edit > Document extraction > AI inference.
  * A field listed in an item/task `userEdited` map is never overwritten by a
  * subsequent document; the disagreement surfaces in `delta.conflicts` instead.

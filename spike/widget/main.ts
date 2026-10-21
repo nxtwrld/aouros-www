@@ -205,7 +205,7 @@ function frame(rootObj: THREE.Object3D, wanted: Set<string>) {
   controls.update();
 }
 
-// ── Footer handoff (AI_PLUGIN.md §9b: informational only, one CTA) ──────────
+// ── Footer handoff (`docs/features/plugin/ENGINEERING.md` §9b: informational only, one CTA) ──────────
 
 function addFooter() {
   const footer = document.createElement("button");

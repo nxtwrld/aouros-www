@@ -51,7 +51,7 @@ function planFromDocument(doc: Document): CarePlanDocument {
   };
 }
 
-/** Load-time mesh-name durability sweep (CAREPLAN.md §Mesh name durability). */
+/** Load-time mesh-name durability sweep (docs/features/careplan/CAREPLAN.md §Mesh name durability). */
 function normalizeAnatomyIds(items: CarePlanItem[]): CarePlanItem[] {
   for (const item of items) {
     for (const bp of item.bodyParts ?? []) {

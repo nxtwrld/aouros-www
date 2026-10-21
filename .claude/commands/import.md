@@ -84,4 +84,4 @@ Medical extraction schemas in `src/lib/configurations/` define what data to extr
 ## Documentation
 
 - `docs/IMPORT.md` - Full import architecture documentation
-- `AI_IMPORT_USER_CONFIGURATION.md` - User configuration for import schemas
+- `docs/architecture/import/IMPORT.md` - Import pipeline architecture (schema config)

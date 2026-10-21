@@ -33,7 +33,7 @@ $ARGUMENTS
 
 ## Responsive Design
 
-- See `RESPONSIVE.md` for mobile responsive patterns and breakpoints
+- See `docs/design/RESPONSIVE.md` for mobile responsive patterns and breakpoints
 - CSS variables in `src/css/core.css` define responsive breakpoints
 - Mobile-first approach with consistent spacing units
 - Touch-friendly interaction targets

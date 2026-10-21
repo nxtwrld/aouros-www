@@ -1,0 +1,15 @@
+# Taglines
+
+> **Status:** n/a · **Type:** Marketing · **Verified:** 2026-10-21
+> Candidate brand taglines (formerly `MARKETING.md`).
+
+"Empowering Health, Enhancing Healing."
+"Where Your Health Begins, And Healing Never Ends."
+"Pioneering Paths to Health and Healing."
+"Bridging Technology and Tradition for True Healing."
+"Elevate Your Health, Embrace Healing."
+"Revolutionizing Health, Reimagining Healing."
+"At the Heart of Health and Healing."
+"Your Journey to Health and Healing Starts Here."
+"Harnessing Technology for Health and Healing."
+"Unified in Purpose: Health and Healing for All."

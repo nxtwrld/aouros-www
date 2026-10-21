@@ -2,7 +2,7 @@
  * Care Plan data model (Care Plan build row 2, 7q, 7r).
  *
  * Canonical TypeScript shapes for the Care Plan singleton document and its
- * parts. Mirrors `CAREPLAN.md` §Data Model. Where a shape is isomorphic to a
+ * parts. Mirrors `docs/features/careplan/CAREPLAN.md` §Data Model. Where a shape is isomorphic to a
  * FHIR resource the JSDoc notes the mapping (REVISION §7 — adopt FHIR shapes
  * "where practical" without diverging from the PRD interfaces).
  *

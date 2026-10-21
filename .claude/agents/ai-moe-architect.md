@@ -71,7 +71,7 @@ Your designs prioritize:
 
 The project's primary MoE implementation is the QOM (Quality-Outcome-Model) expert pipeline for session analysis:
 
-- **Documentation**: `AI_SESSION_QOM.md` (architecture), `AI_SESSION_WORKFLOW.md` (full workflow phases), `AI_SESSION_ANALYSIS.md` (analysis details)
+- **Documentation**: `docs/plans/SESSION_MOE.md` (MoE/QOM design — mostly not built; live analysis runs through `src/lib/session-deprecated/analyzeConversation.ts`), `docs/archive/AI_SESSION_ANALYSIS.md` (obsolete, historical)
 - **QOM code**: `src/lib/session/qom/` - `qom-transformer.ts`, `qom-event-processor.ts`, `qom-simulation.ts`, `dynamic-layout-engine.ts`
 - **QOM execution store**: `src/lib/session/stores/qom-execution-store.ts`
 - **Session manager**: `src/lib/session/manager.ts` (EventEmitter orchestration)

@@ -1,0 +1,153 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Europe/Prague",
+  "schedule": ["before 6am on monday"],
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Dependency Updates",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "prConcurrentLimit": 8,
+  "prHourlyLimit": 0,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Group all @capacitor/* bumps into one PR; flag native sync requirement",
+      "matchPackageNames": ["@capacitor/**"],
+      "groupName": "Capacitor",
+      "prBodyNotes": [
+        "⚠️ Run `npx cap sync ios` / `npx cap sync android` and do a native build check before merging — CI cannot catch native Swift/Gradle issues."
+      ]
+    },
+    {
+      "description": "RevenueCat plugin needs the same native sync + build check as Capacitor",
+      "matchPackageNames": ["@revenuecat/purchases-capacitor"],
+      "groupName": "RevenueCat",
+      "prBodyNotes": [
+        "⚠️ Run `npx cap sync ios` / `npx cap sync android` and do a native build check before merging — CI cannot catch native Swift/Gradle issues."
+      ]
+    },
+    {
+      "description": "Group LangChain packages — move together",
+      "matchPackageNames": ["@langchain/**"],
+      "groupName": "LangChain"
+    },
+    {
+      "description": "Group SvelteKit/Vite ecosystem — build/deploy chain, move together",
+      "matchPackageNames": [
+        "@sveltejs/**",
+        "vite",
+        "vite-plugin-**",
+        "svelte",
+        "svelte-check"
+      ],
+      "groupName": "SvelteKit/Vite"
+    },
+    {
+      "description": "Cornerstone (DICOM viewer) packages must move in lockstep",
+      "matchPackageNames": ["@cornerstonejs/**"],
+      "groupName": "Cornerstone"
+    },
+    {
+      "description": "Group ESLint/Prettier tooling",
+      "matchPackageNames": [
+        "eslint",
+        "eslint-**",
+        "prettier",
+        "prettier-**",
+        "@typescript-eslint/**"
+      ],
+      "groupName": "Lint tooling"
+    },
+    {
+      "description": "Vitest + coverage must move together",
+      "matchPackageNames": ["vitest", "@vitest/**"],
+      "groupName": "Vitest"
+    },
+    {
+      "description": "Automerge devDependencies patch/minor once CI is green",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Automerge a curated allowlist of low-risk runtime utility packages on patch/minor",
+      "matchPackageNames": [
+        "dayjs",
+        "axios",
+        "uuid",
+        "chrono-node",
+        "js-yaml",
+        "mdsvex",
+        "qrcode",
+        "dompurify",
+        "mixpanel-browser",
+        "gray-matter",
+        "pdfmake",
+        "fflate"
+      ],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Never automerge AI/medical-schema/billing/native/build-chain critical packages, even on minor/patch — require manual review",
+      "matchPackageNames": [
+        "zod",
+        "openai",
+        "stripe",
+        "@stripe/stripe-js",
+        "@langchain/**",
+        "@ai-sdk/**",
+        "ai",
+        "@modelcontextprotocol/sdk",
+        "@supabase/**",
+        "three",
+        "@tweenjs/tween.js",
+        "@cornerstonejs/**",
+        "pdfjs-dist",
+        "@revenuecat/purchases-capacitor",
+        "@capacitor/**",
+        "assemblyai",
+        "@google-cloud/speech",
+        "@google/generative-ai",
+        "@ricky0123/vad-web",
+        "@sveltejs/**",
+        "vite",
+        "vite-plugin-**"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "Hold majors for packages that need a dedicated migration — visible in dashboard, gated behind manual approval",
+      "matchPackageNames": [
+        "zod",
+        "openai",
+        "three",
+        "@tweenjs/tween.js",
+        "@types/three",
+        "@cornerstonejs/**",
+        "typescript",
+        "stripe",
+        "@stripe/stripe-js",
+        "pdfjs-dist",
+        "@google/generative-ai",
+        "@ricky0123/vad-web",
+        "@supabase/ssr"
+      ],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "All major bumps never automerge",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "dependency-major"]
+    }
+  ]
+}
