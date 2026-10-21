@@ -10,6 +10,7 @@ android {
 apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
     implementation project(':capacitor-camera')
+    implementation project(':capgo-capacitor-health')
     implementation project(':revenuecat-purchases-capacitor')
     implementation project(':capacitor-app')
     implementation project(':capacitor-browser')
@@ -17,9 +18,9 @@ dependencies {
     implementation project(':capacitor-preferences')
     implementation project(':capacitor-splash-screen')
     implementation project(':capacitor-status-bar')
-    implementation "androidx.health.connect:connect-client:1.1.0-alpha10"
+
 }
-apply from: "../../node_modules/cordova-plugin-health/src/android/build-extras.gradle"
+
 
 if (hasProperty('postBuildExtras')) {
   postBuildExtras()

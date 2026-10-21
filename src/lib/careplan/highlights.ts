@@ -16,7 +16,7 @@ export interface HighlightRegion {
   opacity: number;
 }
 
-// Condition-type colours (CAREPLAN.md §3D Model Integration). Resolved from CSS
+// Condition-type colours (docs/features/careplan/CAREPLAN.md §3D Model Integration). Resolved from CSS
 // custom properties at call time so they track the theme; fall back to fixed hex.
 const TYPE_COLOR_VAR: Record<CarePlanItem["conditionType"], string> = {
   chronic: "--color-primary",

@@ -3,7 +3,6 @@
 import { AssemblyAI, type TranscribeParams } from "assemblyai";
 //import { SpeechModel } from 'assemblyai/dist/types';
 import { ASSEMBLYAI_API_KEY } from "$env/static/private";
-import fs from "fs/promises";
 import axios from "axios";
 
 /*import path from "path"

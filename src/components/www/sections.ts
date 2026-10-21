@@ -26,6 +26,13 @@ export const sections: Section[] = [
 		alignment: 'left'
 	},
 	{
+		id: 'story',
+		titleKey: 'www.story.title',
+		descriptionKey: 'www.story.lead',
+		canvasColor: '#ff0086',
+		alignment: 'left'
+	},
+	{
 		id: 'profiles',
 		titleKey: 'www.profiles.title',
 		descriptionKey: 'www.profiles.description',

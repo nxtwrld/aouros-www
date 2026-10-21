@@ -664,8 +664,8 @@
 		<summary>Layer 1: AES-256-GCM <span class="layer-desc">Document encryption</span></summary>
 		<div class="panel">
 			<div class="field">
-				<label>Plaintext</label>
-				<textarea class="input" bind:value={aes.plaintext} rows="2"></textarea>
+				<label for="aes-plaintext">Plaintext</label>
+				<textarea id="aes-plaintext" class="input" bind:value={aes.plaintext} rows="2"></textarea>
 			</div>
 			<div class="actions">
 				<button class="button -primary" onclick={aesGenerate}>Generate Key</button>
@@ -674,19 +674,19 @@
 				<button class="button" onclick={aesDoDecrypt} disabled={!aes.key || !aes.ciphertext}>Decrypt</button>
 			</div>
 			<div class="field">
-				<label>AES Key (Base64) {#if aes.timing.generate}<span class="timing">{aes.timing.generate}ms</span>{/if}</label>
-				<input class="input mono" bind:value={aes.keyBase64} placeholder="Generate or paste a Base64 AES key" />
+				<label for="aes-key-base64">AES Key (Base64) {#if aes.timing.generate}<span class="timing">{aes.timing.generate}ms</span>{/if}</label>
+				<input id="aes-key-base64" class="input mono" bind:value={aes.keyBase64} placeholder="Generate or paste a Base64 AES key" />
 			</div>
 			{#if aes.ciphertext}
 				<div class="field">
-					<label>Ciphertext {#if aes.timing.encrypt}<span class="timing">{aes.timing.encrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="3">{aes.ciphertext}</textarea>
+					<label for="aes-ciphertext">Ciphertext {#if aes.timing.encrypt}<span class="timing">{aes.timing.encrypt}ms</span>{/if}</label>
+					<textarea id="aes-ciphertext" class="input mono" readonly rows="3">{aes.ciphertext}</textarea>
 				</div>
 			{/if}
 			{#if aes.decrypted}
 				<div class="field">
-					<label>Decrypted {#if aes.timing.decrypt}<span class="timing">{aes.timing.decrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="2">{aes.decrypted}</textarea>
+					<label for="aes-decrypted">Decrypted {#if aes.timing.decrypt}<span class="timing">{aes.timing.decrypt}ms</span>{/if}</label>
+					<textarea id="aes-decrypted" class="input mono" readonly rows="2">{aes.decrypted}</textarea>
 				</div>
 			{/if}
 			{#if aes.error}<p class="error">{aes.error}</p>{/if}
@@ -698,8 +698,8 @@
 		<summary>Layer 2: RSA-4096-OAEP <span class="layer-desc">Asymmetric wrapping (max ~446 bytes plaintext)</span></summary>
 		<div class="panel">
 			<div class="field">
-				<label>Plaintext</label>
-				<textarea class="input" bind:value={rsa.plaintext} rows="2"></textarea>
+				<label for="rsa-plaintext">Plaintext</label>
+				<textarea id="rsa-plaintext" class="input" bind:value={rsa.plaintext} rows="2"></textarea>
 			</div>
 			<div class="actions">
 				<button class="button -primary" onclick={rsaGenerate} disabled={rsa.generating}>
@@ -710,24 +710,24 @@
 			</div>
 			{#if rsa.publicPEM}
 				<div class="field">
-					<label>Public Key (PEM) {#if rsa.timing.generate}<span class="timing">{rsa.timing.generate}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="4">{rsa.publicPEM}</textarea>
+					<label for="rsa-public-pem">Public Key (PEM) {#if rsa.timing.generate}<span class="timing">{rsa.timing.generate}ms</span>{/if}</label>
+					<textarea id="rsa-public-pem" class="input mono" readonly rows="4">{rsa.publicPEM}</textarea>
 				</div>
 				<div class="field">
-					<label>Private Key (PEM)</label>
-					<textarea class="input mono" readonly rows="4">{rsa.privatePEM}</textarea>
+					<label for="rsa-private-pem">Private Key (PEM)</label>
+					<textarea id="rsa-private-pem" class="input mono" readonly rows="4">{rsa.privatePEM}</textarea>
 				</div>
 			{/if}
 			{#if rsa.ciphertext}
 				<div class="field">
-					<label>Ciphertext {#if rsa.timing.encrypt}<span class="timing">{rsa.timing.encrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="3">{rsa.ciphertext}</textarea>
+					<label for="rsa-ciphertext">Ciphertext {#if rsa.timing.encrypt}<span class="timing">{rsa.timing.encrypt}ms</span>{/if}</label>
+					<textarea id="rsa-ciphertext" class="input mono" readonly rows="3">{rsa.ciphertext}</textarea>
 				</div>
 			{/if}
 			{#if rsa.decrypted}
 				<div class="field">
-					<label>Decrypted {#if rsa.timing.decrypt}<span class="timing">{rsa.timing.decrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="2">{rsa.decrypted}</textarea>
+					<label for="rsa-decrypted">Decrypted {#if rsa.timing.decrypt}<span class="timing">{rsa.timing.decrypt}ms</span>{/if}</label>
+					<textarea id="rsa-decrypted" class="input mono" readonly rows="2">{rsa.decrypted}</textarea>
 				</div>
 			{/if}
 			{#if rsa.error}<p class="error">{rsa.error}</p>{/if}
@@ -745,28 +745,28 @@
 			</div>
 			{#if kem.publicKeySerialized}
 				<div class="field">
-					<label>Public Key {#if kem.timing.generate}<span class="timing">{kem.timing.generate}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="2">{kem.publicKeySerialized.slice(0, 80)}... ({kem.publicKey?.length}B)</textarea>
+					<label for="kem-public-key">Public Key {#if kem.timing.generate}<span class="timing">{kem.timing.generate}ms</span>{/if}</label>
+					<textarea id="kem-public-key" class="input mono" readonly rows="2">{kem.publicKeySerialized.slice(0, 80)}... ({kem.publicKey?.length}B)</textarea>
 				</div>
 				<div class="field">
-					<label>Secret Key</label>
-					<textarea class="input mono" readonly rows="2">{kem.secretKeySerialized.slice(0, 80)}... ({kem.secretKey?.length}B)</textarea>
+					<label for="kem-secret-key">Secret Key</label>
+					<textarea id="kem-secret-key" class="input mono" readonly rows="2">{kem.secretKeySerialized.slice(0, 80)}... ({kem.secretKey?.length}B)</textarea>
 				</div>
 			{/if}
 			{#if kem.ciphertextHex}
 				<div class="field">
-					<label>Ciphertext {#if kem.timing.encapsulate}<span class="timing">{kem.timing.encapsulate}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="2">{kem.ciphertextHex}</textarea>
+					<label for="kem-ciphertext">Ciphertext {#if kem.timing.encapsulate}<span class="timing">{kem.timing.encapsulate}ms</span>{/if}</label>
+					<textarea id="kem-ciphertext" class="input mono" readonly rows="2">{kem.ciphertextHex}</textarea>
 				</div>
 				<div class="field">
-					<label>Sender Shared Secret (32 bytes)</label>
-					<textarea class="input mono" readonly rows="1">{kem.senderSecretHex}</textarea>
+					<label for="kem-sender-secret">Sender Shared Secret (32 bytes)</label>
+					<textarea id="kem-sender-secret" class="input mono" readonly rows="1">{kem.senderSecretHex}</textarea>
 				</div>
 			{/if}
 			{#if kem.receiverSecretHex}
 				<div class="field">
-					<label>Receiver Shared Secret {#if kem.timing.decapsulate}<span class="timing">{kem.timing.decapsulate}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="1">{kem.receiverSecretHex}</textarea>
+					<label for="kem-receiver-secret">Receiver Shared Secret {#if kem.timing.decapsulate}<span class="timing">{kem.timing.decapsulate}ms</span>{/if}</label>
+					<textarea id="kem-receiver-secret" class="input mono" readonly rows="1">{kem.receiverSecretHex}</textarea>
 				</div>
 				{#if kem.match !== null}
 					<p class={kem.match ? 'success' : 'error'}>
@@ -791,22 +791,22 @@
 			</div>
 			{#if hybrid.aesKeyBase64}
 				<div class="field">
-					<label>Original AES Key {#if hybrid.timing.generate}<span class="timing">{hybrid.timing.generate}ms</span>{/if}</label>
-					<input class="input mono" readonly value={hybrid.aesKeyBase64} />
+					<label for="hybrid-original-aes-key">Original AES Key {#if hybrid.timing.generate}<span class="timing">{hybrid.timing.generate}ms</span>{/if}</label>
+					<input id="hybrid-original-aes-key" class="input mono" readonly value={hybrid.aesKeyBase64} />
 				</div>
 			{/if}
 			{#if hybrid.wrappedKey}
 				<div class="field">
-					<label>Wrapped Key {#if hybrid.timing.wrap}<span class="timing">{hybrid.timing.wrap}ms</span>{/if}
+					<label for="hybrid-wrapped-key">Wrapped Key {#if hybrid.timing.wrap}<span class="timing">{hybrid.timing.wrap}ms</span>{/if}
 						{#if hybrid.isHybrid !== null}<span class="badge">hybrid1: {hybrid.isHybrid}</span>{/if}
 					</label>
-					<textarea class="input mono" readonly rows="4">{hybrid.wrappedKey}</textarea>
+					<textarea id="hybrid-wrapped-key" class="input mono" readonly rows="4">{hybrid.wrappedKey}</textarea>
 				</div>
 			{/if}
 			{#if hybrid.unwrappedKey}
 				<div class="field">
-					<label>Unwrapped AES Key {#if hybrid.timing.unwrap}<span class="timing">{hybrid.timing.unwrap}ms</span>{/if}</label>
-					<input class="input mono" readonly value={hybrid.unwrappedKey} />
+					<label for="hybrid-unwrapped-key">Unwrapped AES Key {#if hybrid.timing.unwrap}<span class="timing">{hybrid.timing.unwrap}ms</span>{/if}</label>
+					<input id="hybrid-unwrapped-key" class="input mono" readonly value={hybrid.unwrappedKey} />
 				</div>
 				{#if hybrid.match !== null}
 					<p class={hybrid.match ? 'success' : 'error'}>
@@ -823,15 +823,15 @@
 		<summary>Layer 5: Passphrase <span class="layer-desc">PBKDF2-SHA256 (300k iterations)</span></summary>
 		<div class="panel">
 			<div class="field">
-				<label>Passphrase</label>
+				<label for="pass-passphrase">Passphrase</label>
 				<div class="input-row">
-					<input class="input" bind:value={pass.passphrase} placeholder="Enter or generate a passphrase" />
+					<input id="pass-passphrase" class="input" bind:value={pass.passphrase} placeholder="Enter or generate a passphrase" />
 					<button class="button" onclick={passGenerate}>Generate</button>
 				</div>
 			</div>
 			<div class="field">
-				<label>Plaintext</label>
-				<textarea class="input" bind:value={pass.plaintext} rows="2"></textarea>
+				<label for="pass-plaintext">Plaintext</label>
+				<textarea id="pass-plaintext" class="input" bind:value={pass.plaintext} rows="2"></textarea>
 			</div>
 			<div class="actions">
 				<button class="button -primary" onclick={passDoEncrypt} disabled={!pass.passphrase}>Encrypt</button>
@@ -839,14 +839,14 @@
 			</div>
 			{#if pass.ciphertext}
 				<div class="field">
-					<label>Ciphertext {#if pass.timing.encrypt}<span class="timing">{pass.timing.encrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="3">{pass.ciphertext}</textarea>
+					<label for="pass-ciphertext">Ciphertext {#if pass.timing.encrypt}<span class="timing">{pass.timing.encrypt}ms</span>{/if}</label>
+					<textarea id="pass-ciphertext" class="input mono" readonly rows="3">{pass.ciphertext}</textarea>
 				</div>
 			{/if}
 			{#if pass.decrypted}
 				<div class="field">
-					<label>Decrypted {#if pass.timing.decrypt}<span class="timing">{pass.timing.decrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="2">{pass.decrypted}</textarea>
+					<label for="pass-decrypted">Decrypted {#if pass.timing.decrypt}<span class="timing">{pass.timing.decrypt}ms</span>{/if}</label>
+					<textarea id="pass-decrypted" class="input mono" readonly rows="2">{pass.decrypted}</textarea>
 				</div>
 			{/if}
 			{#if pass.error}<p class="error">{pass.error}</p>{/if}
@@ -859,8 +859,8 @@
 		<div class="panel">
 			<p class="warning">This layer triggers system authenticator prompts (Face ID / Touch ID / Windows Hello).</p>
 			<div class="field">
-				<label>Plaintext</label>
-				<textarea class="input" bind:value={passkey.plaintext} rows="2"></textarea>
+				<label for="passkey-plaintext">Plaintext</label>
+				<textarea id="passkey-plaintext" class="input" bind:value={passkey.plaintext} rows="2"></textarea>
 			</div>
 			<div class="actions">
 				<button class="button" onclick={passkeyCheckSupport}>Check Support</button>
@@ -872,7 +872,7 @@
 			</div>
 			{#if passkey.support}
 				<div class="field">
-					<label>Browser Support {#if passkey.timing.check}<span class="timing">{passkey.timing.check}ms</span>{/if}</label>
+					<span class="field-label">Browser Support {#if passkey.timing.check}<span class="timing">{passkey.timing.check}ms</span>{/if}</span>
 					<div class="support-grid">
 						<span>WebAuthn: <strong class={passkey.support.webauthnSupported ? 'success' : 'error'}>{passkey.support.webauthnSupported}</strong></span>
 						<span>PRF: <strong class={passkey.support.prfSupported ? 'success' : 'error'}>{passkey.support.prfSupported}</strong></span>
@@ -882,24 +882,24 @@
 			{/if}
 			{#if passkey.credential}
 				<div class="field">
-					<label>Credential {#if passkey.timing.create}<span class="timing">{passkey.timing.create}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="2">ID: {passkey.credential.credentialId}
+					<label for="passkey-credential">Credential {#if passkey.timing.create}<span class="timing">{passkey.timing.create}ms</span>{/if}</label>
+					<textarea id="passkey-credential" class="input mono" readonly rows="2">ID: {passkey.credential.credentialId}
 Salt: {passkey.credential.prfSalt}</textarea>
 				</div>
 			{/if}
 			{#if passkey.ciphertext}
 				<div class="field">
-					<label>Ciphertext {#if passkey.timing.encrypt}<span class="timing">{passkey.timing.encrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="2">{passkey.ciphertext}</textarea>
+					<label for="passkey-ciphertext">Ciphertext {#if passkey.timing.encrypt}<span class="timing">{passkey.timing.encrypt}ms</span>{/if}</label>
+					<textarea id="passkey-ciphertext" class="input mono" readonly rows="2">{passkey.ciphertext}</textarea>
 				</div>
 			{/if}
 			{#if passkey.decrypted}
 				<div class="field">
-					<label>Decrypted
+					<label for="passkey-decrypted">Decrypted
 						{#if passkey.timing.auth}<span class="timing">auth: {passkey.timing.auth}ms</span>{/if}
 						{#if passkey.timing.decrypt}<span class="timing">decrypt: {passkey.timing.decrypt}ms</span>{/if}
 					</label>
-					<textarea class="input mono" readonly rows="2">{passkey.decrypted}</textarea>
+					<textarea id="passkey-decrypted" class="input mono" readonly rows="2">{passkey.decrypted}</textarea>
 				</div>
 			{/if}
 			{#if passkey.error}<p class="error">{passkey.error}</p>{/if}
@@ -911,15 +911,15 @@ Salt: {passkey.credential.prfSalt}</textarea>
 		<summary>Layer 7: Recovery Key <span class="layer-desc">HKDF-SHA256 with 200-bit entropy</span></summary>
 		<div class="panel">
 			<div class="field">
-				<label>Recovery Key</label>
+				<label for="recovery-key">Recovery Key</label>
 				<div class="input-row">
-					<input class="input mono" bind:value={recovery.recoveryKey} placeholder="XXXX-XXXX-XXXX-..." />
+					<input id="recovery-key" class="input mono" bind:value={recovery.recoveryKey} placeholder="XXXX-XXXX-XXXX-..." />
 					<button class="button" onclick={recoveryGenerate}>Generate</button>
 				</div>
 			</div>
 			<div class="field">
-				<label>Plaintext</label>
-				<textarea class="input" bind:value={recovery.plaintext} rows="2"></textarea>
+				<label for="recovery-plaintext">Plaintext</label>
+				<textarea id="recovery-plaintext" class="input" bind:value={recovery.plaintext} rows="2"></textarea>
 			</div>
 			<div class="actions">
 				<button class="button" onclick={recoveryDoHash} disabled={!recovery.recoveryKey}>Hash</button>
@@ -929,20 +929,20 @@ Salt: {passkey.credential.prfSalt}</textarea>
 			</div>
 			{#if recovery.hash}
 				<div class="field">
-					<label>SHA-256 Hash {#if recovery.timing.hash}<span class="timing">{recovery.timing.hash}ms</span>{/if}</label>
-					<input class="input mono" readonly value={recovery.hash} />
+					<label for="recovery-hash">SHA-256 Hash {#if recovery.timing.hash}<span class="timing">{recovery.timing.hash}ms</span>{/if}</label>
+					<input id="recovery-hash" class="input mono" readonly value={recovery.hash} />
 				</div>
 			{/if}
 			{#if recovery.ciphertext}
 				<div class="field">
-					<label>Ciphertext {#if recovery.timing.encrypt}<span class="timing">{recovery.timing.encrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="3">{recovery.ciphertext}</textarea>
+					<label for="recovery-ciphertext">Ciphertext {#if recovery.timing.encrypt}<span class="timing">{recovery.timing.encrypt}ms</span>{/if}</label>
+					<textarea id="recovery-ciphertext" class="input mono" readonly rows="3">{recovery.ciphertext}</textarea>
 				</div>
 			{/if}
 			{#if recovery.decrypted}
 				<div class="field">
-					<label>Decrypted {#if recovery.timing.decrypt}<span class="timing">{recovery.timing.decrypt}ms</span>{/if}</label>
-					<textarea class="input mono" readonly rows="2">{recovery.decrypted}</textarea>
+					<label for="recovery-decrypted">Decrypted {#if recovery.timing.decrypt}<span class="timing">{recovery.timing.decrypt}ms</span>{/if}</label>
+					<textarea id="recovery-decrypted" class="input mono" readonly rows="2">{recovery.decrypted}</textarea>
 				</div>
 			{/if}
 			{#if recovery.hashVerified !== null}
@@ -960,7 +960,7 @@ Salt: {passkey.credential.prfSalt}</textarea>
 		<summary>Layer 8: Full Pipeline <span class="layer-desc">End-to-end encryption roundtrip</span></summary>
 		<div class="panel">
 			<div class="field">
-				<label>Key Protection Method</label>
+				<span class="field-label">Key Protection Method</span>
 				<div class="mode-toggle">
 					<button
 						class="button"
@@ -978,9 +978,9 @@ Salt: {passkey.credential.prfSalt}</textarea>
 			</div>
 			{#if pipeline.mode === 'passphrase'}
 				<div class="field">
-					<label>Passphrase (for private key protection)</label>
+					<label for="pipeline-passphrase">Passphrase (for private key protection)</label>
 					<div class="input-row">
-						<input class="input" bind:value={pipeline.passphrase} placeholder="Auto-generated if empty" />
+						<input id="pipeline-passphrase" class="input" bind:value={pipeline.passphrase} placeholder="Auto-generated if empty" />
 						<button class="button" onclick={() => pipeline.passphrase = generatePassphrase()}>Generate</button>
 					</div>
 				</div>
@@ -988,8 +988,8 @@ Salt: {passkey.credential.prfSalt}</textarea>
 				<p class="warning">Passkey mode will trigger 2 system authenticator prompts: one to create the passkey, one to re-authenticate for decryption.</p>
 			{/if}
 			<div class="field">
-				<label>Document Plaintext</label>
-				<textarea class="input" bind:value={pipeline.plaintext} rows="2"></textarea>
+				<label for="pipeline-plaintext">Document Plaintext</label>
+				<textarea id="pipeline-plaintext" class="input" bind:value={pipeline.plaintext} rows="2"></textarea>
 			</div>
 			<div class="actions">
 				<button class="button -primary" onclick={pipelineRun} disabled={pipeline.running}>
@@ -1081,7 +1081,8 @@ Salt: {passkey.credential.prfSalt}</textarea>
 		gap: 0.25rem;
 	}
 
-	.field label {
+	.field label,
+	.field .field-label {
 		font-size: 0.8125rem;
 		font-weight: 500;
 		color: var(--color-text-secondary);

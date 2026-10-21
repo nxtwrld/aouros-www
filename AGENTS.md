@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+> **Source of truth for coding rules is [`CLAUDE.md`](CLAUDE.md)** (behaviour, Svelte 5 runes, `apiFetch`, CSS, i18n, "never cut" list). Docs index and feature status: [`docs/README.md`](docs/README.md). This file only adds repo-level conventions; if the two ever disagree, CLAUDE.md wins.
+
 ## Project Structure & Module Organization
 
 - `src/` contains the SvelteKit app. `routes/` maps directly to pages and endpoints; `lib/` holds reusable services, stores, and utilities; `components/` is for shared UI.

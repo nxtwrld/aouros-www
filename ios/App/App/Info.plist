@@ -43,14 +43,33 @@
 	<string>Mediqom needs camera access to scan and import medical documents.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Mediqom needs access to your health data to sync vitals, body measurements, and other health metrics into your medical profile.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Mediqom only reads your health data and does not write to Apple Health. This permission is required by the health integration library and is never requested by the app.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Mediqom needs microphone access to record doctor-patient consultations for transcription and analysis.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mediqom needs photo library access to import medical images.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>

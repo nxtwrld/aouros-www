@@ -4,7 +4,7 @@ import { shouldSkip } from "../fixtures/skip";
 // The real onboarding wizard (`/account`) does a lot of client-side crypto
 // (WebCrypto key generation/wrapping) on final submit before it ever calls
 // POST /v1/account/onboarding — that machinery already has its own unit
-// tests (see CRYPTOGRAPHY.md). This spec sticks to what's proportionate for
+// tests (see docs/security/CRYPTOGRAPHY.md). This spec sticks to what's proportionate for
 // a UI regression suite: does the wizard render and step correctly.
 
 test.describe("Auth - Onboarding wizard", () => {
@@ -50,6 +50,11 @@ test.describe("Auth - Onboarding wizard", () => {
     await expect(nextButton).toBeDisabled();
 
     await birthDate.fill("1990-05-15");
+    await expect(nextButton).toBeDisabled();
+
+    // Biological sex is the third required field on step 1.
+    const sexCard = page.locator(".sex-card").first();
+    await sexCard.click();
     await expect(nextButton).toBeEnabled();
 
     await nextButton.click();
@@ -66,5 +71,6 @@ test.describe("Auth - Onboarding wizard", () => {
     await expect(page).toHaveURL(/#0$/);
     await expect(page.locator("#fullName")).toHaveValue("Test Patient");
     await expect(page.locator("#birthDate")).toHaveValue("1990-05-15");
+    await expect(page.locator(".sex-card").first()).toHaveClass(/-selected/);
   });
 });

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { onMount, untrack } from 'svelte';
     import { createEventDispatcher } from "svelte";
     import Input from '$components/forms/Input.svelte';
     import { t } from '$lib/i18n';
@@ -35,12 +35,12 @@
     let loadingDocs = $state(false);
 
     // IDs of documents selected for sharing — pre-seeded from items prop
-    let selectedIds = $state<Set<string>>(new Set(items.map((i) => i.id).filter(Boolean)));
+    let selectedIds = $state<Set<string>>(untrack(() => new Set(items.map((i) => i.id).filter(Boolean))));
 
     // Map of id → full item (from prop) for docs already loaded
-    const preloaded = new Map(items.map((i) => [i.id, i]));
+    const preloaded = untrack(() => new Map(items.map((i) => [i.id, i])));
 
-    const ownerId: string | undefined = items[0]?.user_id;
+    const ownerId: string | undefined = untrack(() => items[0]?.user_id);
 
     onMount(async () => {
         if (!ownerId) return;

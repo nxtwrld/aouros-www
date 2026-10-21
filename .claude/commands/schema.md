@@ -132,4 +132,4 @@ Schemas are consumed by LangGraph nodes in `src/lib/langgraph/nodes/` for AI ext
 
 ## Documentation
 
-- `AI_IMPORT_USER_CONFIGURATION.md` - Schema configuration for import pipeline
+- `docs/architecture/import/IMPORT.md` - Import pipeline architecture (schema config)

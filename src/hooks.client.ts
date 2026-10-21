@@ -28,7 +28,10 @@ export const handleError: HandleClientError = ({
   console.error("[Client Error]", {
     status,
     message,
-    error,
+    error:
+      error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : error,
     url: event?.url?.pathname,
   });
 

@@ -1,5 +1,5 @@
 // QOM Visualization Type Definitions
-// Based on AI_SESSION_QOM.md specification
+// Based on docs/plans/SESSION_MOE.md specification
 
 import type {
   SymptomNode,

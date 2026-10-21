@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import steps from './steps';
-    import { onMount } from 'svelte';
+    import { onMount, untrack } from 'svelte';
 	import type { VCard } from '$lib/contact/types.d';
 	import { logger } from '$lib/logging/logger';
 	let STEP = $state(0);
@@ -40,7 +40,7 @@
 	let hash = $state('');
 	let global: any = undefined;
 
-	let { session, profile } = $state(data);
+	let { session, profile } = $state(untrack(() => data));
 
 
 	function setLocation(loc: string) {
@@ -63,10 +63,10 @@
 	let editData: EditData = $state({
 		bio: {
 			email: '', // TODO: Fix when this component is needed
-			fullName: form?.fullName ?? profile?.fullName ?? '',
+			fullName: untrack(() => form?.fullName) ?? profile?.fullName ?? '',
 			avatarUrl: profile?.avatarUrl ?? '',
-			birthDate: form?.birthDate ?? profile?.birthDate ?? '',
-			language: form?.language ?? profile?.language ?? 'en'
+			birthDate: untrack(() => form?.birthDate) ?? profile?.birthDate ?? '',
+			language: untrack(() => form?.language) ?? profile?.language ?? 'en'
 		},
 		subscription: profile?.subscription ?? 'individual',
 		vcard: JSON.parse(profile?.vcard ?? '{}'),

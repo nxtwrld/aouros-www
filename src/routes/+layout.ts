@@ -4,7 +4,6 @@ import {
   createBrowserClient,
   createServerClient,
   isBrowser,
-  parse,
 } from "@supabase/ssr";
 import {
   PUBLIC_SUPABASE_ANON_KEY,
@@ -118,7 +117,13 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
   if (session) {
     CurrentSession.set(session);
   }
-  setClient(supabase);
+  // Only register singleton clients (mobile/browser) in the shared registry.
+  // The SSR server client is request-scoped and already returned below —
+  // registering it here would just clobber the shared "default" entry on
+  // every request.
+  if (isMobileBuild || isBrowser()) {
+    setClient(supabase);
+  }
 
   return { session, supabase, user };
 };

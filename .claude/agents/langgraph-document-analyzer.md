@@ -95,6 +95,6 @@ You always consider:
 **Documentation:**
 
 - `docs/IMPORT.md` - Import architecture overview
-- `AI_IMPORT_USER_CONFIGURATION.md` - Schema configuration for import
+- `docs/architecture/import/IMPORT.md` - Import pipeline architecture (schema config)
 
 Your responses are technically precise, focusing on practical implementation details while ensuring robust, scalable document analysis solutions that integrate seamlessly with the existing unified-workflow system.

@@ -1,250 +1,87 @@
 # Mediqom Documentation
 
-Welcome to the Mediqom technical documentation. This directory contains comprehensive guides for developers, system administrators, and technical stakeholders.
-
-## 📚 Documentation Index
-
-### Core Systems
-
-#### [Context Management System](./CONTEXT_MANAGEMENT_SYSTEM.md)
-
-**Status: ✅ Production Ready**
-
-Mediqom's intelligent document retrieval and contextual AI system. Provides semantic search, context assembly, and secure medical data access through MCP tools.
-
-**Key Features:**
-
-- Client-side encrypted embeddings for privacy-preserving search
-- 12 comprehensive MCP medical tools for AI interactions
-- HIPAA-compliant security and audit logging
-- Real-time session and chat integration
-- Intelligent context assembly for AI conversations
-
-**Use Cases:**
-
-- AI-powered medical conversations with full patient context
-- Real-time clinical decision support during consultations
-- Semantic medical document search
-- Secure medical data access with audit trails
-
----
-
-#### [Clinical Data Platform (CDP)](./CLINICAL_DATA_PLATFORM.md)
-
-**Status: 🚧 Core Complete, Advanced Features in Progress**
-
-Comprehensive medical data management system that unifies historical records, real-time measurements, and clinical intelligence into a searchable platform.
-
-**Key Features:**
-
-- Unified entry system for all medical data types
-- Hybrid storage optimized for time-series data
-- Real-time signal processing and device integration
-- Context system integration for AI (✅ Complete)
-- Advanced querying and analytics (🚧 In Progress)
-
-**Use Cases:**
-
-- Centralized medical data storage and retrieval
-- Real-time device monitoring and anomaly detection
-- Clinical pattern recognition and analytics
-- Integration with electronic health records
-
----
-
-#### [Beta Access System](./BETA_ACCESS_SYSTEM.md)
-
-**Status: ✅ Production Ready**
-
-Public beta application system with automated user approval and account creation workflow.
-
-**Key Features:**
-
-- Public beta application form
-- Admin approval workflow through Supabase Dashboard
-- Automated user account creation
-- Email confirmation and onboarding
-- Beta-only mode for controlled access
-
-**Use Cases:**
-
-- Managing early access program
-- Controlled user onboarding
-- Beta testing coordination
-
-## 🏗️ System Architecture Overview
-
-```
-Mediqom Platform
-├── Frontend (SvelteKit)
-│   ├── Real-time Sessions
-│   ├── AI Chat Interface
-│   ├── Document Management
-│   └── Medical Data Visualization
-│
-├── Context Management System
-│   ├── Client-side Encrypted Embeddings
-│   ├── Semantic Search Engine
-│   ├── Context Assembly for AI
-│   ├── 12 MCP Medical Tools
-│   └── Security & Audit System
-│
-├── Clinical Data Platform (CDP)
-│   ├── Unified Medical Data Storage
-│   ├── Real-time Signal Processing
-│   ├── Time-series Data Management
-│   └── Clinical Intelligence Engine
-│
-├── Document System
-│   ├── Encrypted Document Storage
-│   ├── LangGraph Processing
-│   ├── Medical Data Extraction
-│   └── Context Integration
-│
-└── Core Infrastructure
-    ├── Supabase Backend
-    ├── Authentication & Authorization
-    ├── Beta Access Management
-    └── Real-time Communications
-```
-
-## 🔒 Security & Privacy
-
-Mediqom implements multiple layers of security and privacy protection:
-
-### Privacy-First Architecture
-
-- **Client-side Encryption**: All sensitive data encrypted before leaving the client
-- **Zero-Knowledge Design**: Server cannot access unencrypted medical data
-- **User-Controlled Keys**: Users maintain control of their encryption keys
-
-### HIPAA Compliance
-
-- **Access Control**: Role-based access with authentication requirements
-- **Audit Logging**: Complete audit trails for all medical data access
-- **Data Minimization**: Only relevant data accessed and logged
-- **Security Monitoring**: Real-time security validation and monitoring
-
-### Technical Security
-
-- **End-to-End Encryption**: AES-GCM encryption for data at rest
-- **Secure Communication**: TLS encryption for data in transit
-- **Rate Limiting**: Prevents abuse and ensures system stability
-- **Input Validation**: All inputs validated and sanitized
-
-## 🚀 Getting Started
-
-### For Developers
-
-1. **Set Up Development Environment**
-
-   ```bash
-   npm install
-   npm run dev
-   ```
-
-2. **Review Core Systems**
-
-   - Start with [Context Management System](./CONTEXT_MANAGEMENT_SYSTEM.md) for AI features
-   - Review [Clinical Data Platform](./CLINICAL_DATA_PLATFORM.md) for data architecture
-   - Check [Beta Access System](./BETA_ACCESS_SYSTEM.md) for user management
-
-3. **Key Development Concepts**
-   - **MCP Tools**: Use `secureMcpTools` for medical data access
-   - **Context Assembly**: Leverage context system for AI interactions
-   - **Security First**: Always use security validation and audit logging
-   - **Privacy Preservation**: Keep sensitive data client-side encrypted
-
-### For System Administrators
-
-1. **Beta Access Management**
-
-   - Review [Beta Access System](./BETA_ACCESS_SYSTEM.md)
-   - Use Supabase Dashboard for application management
-   - Configure beta-only mode as needed
-
-2. **Security Monitoring**
-
-   - Monitor audit logs through Context Management System
-   - Review access patterns and security violations
-   - Configure rate limits and access policies
-
-3. **Performance Monitoring**
-   - Track context system performance metrics
-   - Monitor CDP storage and query performance
-   - Review embedding generation and search latency
-
-## 📋 Implementation Status
-
-### ✅ Complete Systems
-
-- **Context Management System**: Full implementation with security and audit
-- **Beta Access System**: Production-ready with automated workflows
-- **Document System**: Full integration with context and CDP
-- **Session Management**: Real-time context integration
-- **Chat System**: Context-aware AI conversations
-
-### 🚧 In Progress
-
-- **Clinical Data Platform**: Advanced querying and analytics
-- **Medical Intelligence**: Pattern recognition and predictive analytics
-- **External Integrations**: FHIR compliance and EHR integration
-
-### 📋 Planned
-
-- **Advanced AI Features**: Custom medical models and specialized embeddings
-- **Enterprise Features**: Multi-tenant architecture and admin dashboards
-- **Clinical Decision Support**: Real-time clinical recommendations
-- **Analytics Platform**: Population health insights and reporting
-
-## 🤝 Contributing
-
-### Documentation Guidelines
-
-- Keep documentation current with implementation
-- Include practical examples and use cases
-- Document security considerations for all features
-- Provide troubleshooting guides for common issues
-
-### Code Guidelines
-
-- Follow security-first development practices
-- Use TypeScript for all new code
-- Implement comprehensive error handling
-- Include audit logging for medical data access
-
-### Testing Guidelines
-
-- Write tests for all MCP tools and security features
-- Test with realistic medical data scenarios
-- Validate security and privacy controls
-- Performance test with large datasets
-
-## 📞 Support
-
-### Technical Issues
-
-- Review relevant documentation section
-- Check troubleshooting guides
-- Verify security context and permissions
-- Monitor audit logs for access issues
-
-### Security Concerns
-
-- Follow HIPAA compliance guidelines
-- Report security issues through secure channels
-- Review audit trails for suspicious activity
-- Validate access controls and permissions
-
-### Feature Requests
-
-- Review existing documentation for current capabilities
-- Consider MCP tool extensions for new medical features
-- Evaluate context system enhancements
-- Assess integration requirements
-
----
-
-_Last Updated: January 2024_  
-_Documentation Version: 2.0_  
-_System Version: Context Management v1.0, CDP v0.9, Beta Access v1.0_
+This is the index and status board for all project docs. Each doc starts with a status block, written as `> **Status:** … · **Type:** … · **Verified:** YYYY-MM-DD`, followed by what is built and what is pending. When you change code that a doc describes, update its status block and the matching row below.
+
+Status values:
+
+- **Implemented**: the doc describes code that exists.
+- **Partial**: some of it is built.
+- **Pending**: not built yet.
+- **Obsolete**: kept for history; don't follow it.
+
+Coding conventions live in [`../CLAUDE.md`](../CLAUDE.md), and design tokens in [`../DESIGN.md`](../DESIGN.md).
+
+## Layout
+
+| Folder                              | What goes there                                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `architecture/`                     | How core systems work, plus cross-cutting design (AI, context, health data, import) |
+| `features/`                         | Shipped or partly shipped features, with their remaining roadmap                    |
+| `plans/`                            | Designs not built yet                                                               |
+| `research/`                         | Evaluations and option analyses                                                     |
+| `design/`                           | UX and layout strategy (tokens are in root `DESIGN.md`)                             |
+| `security/`, `compliance/`          | Cryptography, security audit, NIS2                                                  |
+| `guides/`, `testing/`, `marketing/` | How-tos, coverage policy, copy                                                      |
+| `archive/`                          | Obsolete docs, each with a banner naming its replacement                            |
+
+## Status board (verified 2026-10-21)
+
+### Architecture
+
+| Doc                                                           | Status                 | Notes                                                                                                                                                 |
+| ------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [AI Gateway](architecture/AI_GATEWAY.md)                      | Implemented (chat)     | AI SDK + Vercel AI Gateway. Only chat uses it. Import, session, Serenity, care-plan plain-language and `llm-output-guard` still go through LangChain. |
+| [Context management](architecture/CONTEXT_MANAGEMENT.md)      | Implemented, with gaps | 7 MCP tools registered. Search is term-based; semantic/embedding search is not built.                                                                 |
+| [Health data (meta-histories)](architecture/HEALTH_DATA.md)   | Partial                | Storage tiers and types built. Time-series queries and compression are stubs. HealthKit sync writes to legacy signals.                                |
+| [Ontology](architecture/ONTOLOGY.md)                          | Partial                | SNOMED anatomy scaffold, with 343 of 465 codes empty. FHIR substrate pending.                                                                         |
+| [Anatomy 3D textures](architecture/ANATOMY_3D_TEXTURES.md)    | Pending                | GLBs exist but have no textures. The loader is still OBJ/MTL.                                                                                         |
+| [Import](architecture/import/IMPORT.md)                       | Implemented            | LangGraph workflow, SSE, resilient job-based import (`/v1/import/jobs`).                                                                              |
+| [Import encryption](architecture/import/IMPORT_ENCRYPTION.md) | Implemented            | Encrypted job results; completed jobs have a 1h TTL.                                                                                                  |
+
+### Features
+
+| Doc                                                                                   | Status            | Notes                                                                                                        |
+| ------------------------------------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| [Chat](features/chat/CHAT.md)                                                         | Partial           | Phase 1 safety layer built. Phases 2–4 pending. No consent module. `emergency_banner` has no client handler. |
+| [Chat widgets](features/chat/WIDGETS.md)                                              | Implemented       | Allowlist registry. No Shadow DOM isolation.                                                                 |
+| [Care plan](features/careplan/CAREPLAN.md) · [roadmap](features/careplan/ROADMAP.md)  | Partial           | v1 and multi-region highlighting built. Open: Care Team, sparklines, multi-profile, sharing, notifications.  |
+| [Plugin: engineering](features/plugin/ENGINEERING.md) · [PRD](features/plugin/PRD.md) | Partial / Pending | Anatomy pipeline and `mcp-spike` built. No production `/v1/mcp`, widget bundle or P0 tools.                  |
+| [Transcription](features/session/TRANSCRIPTION.md)                                    | Partial           | 17 of 44 checklist items. Deepgram diarization exists but is off by default.                                 |
+| [Sharing](features/SHARING.md)                                                        | Implemented       | `document_shares` and the accept flow.                                                                       |
+| [Billing](features/BILLING.md)                                                        | Implemented       | Stripe (web) and RevenueCat (mobile). `/iap/verify` is legacy.                                               |
+| [Quantile bands](features/QUANTILE_BANDS.md)                                          | Implemented       | `src/lib/signals/quantile-bands.ts`                                                                          |
+| [Access & referrals](features/ACCESS_AND_REFERRALS.md)                                | Partial           | Beta applications and invite codes built. Referral rewards pending.                                          |
+
+### Plans (not built)
+
+| Doc                                                     | Status                   | Notes                                                                                                                          |
+| ------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| [Session MoE / QOM](plans/SESSION_MOE.md)               | Partial (mostly pending) | **Live analysis runs through `src/lib/session-deprecated/`.** The QOM code only drives visualisation and simulation (6 of 22). |
+| [Chat agents](plans/CHAT_AGENTS.md)                     | Pending                  | Agent personas, third-party services, consent.                                                                                 |
+| [Context roadmap](plans/CONTEXT_ROADMAP.md)             | Partial                  | Phases 1–4 done. Phase 5 (document index) pending.                                                                             |
+| [Conversation history](plans/CONVERSATION_HISTORY.md)   | Pending                  | Sessions are saved as documents instead.                                                                                       |
+| [Profile matching](plans/PROFILE_MATCHING.md)           | Pending                  | `findInProfiles` is still basic.                                                                                               |
+| [Research data sharing](plans/RESEARCH_DATA_SHARING.md) | Pending                  | 0 of 20.                                                                                                                       |
+| [Ideas backlog](plans/IDEAS.md)                         | Pending                  | Scratch list.                                                                                                                  |
+
+### Research, design, security, other
+
+| Doc                                            | Status             | Notes                                                                    |
+| ---------------------------------------------- | ------------------ | ------------------------------------------------------------------------ |
+| [Models review](research/MODELS_REVIEW.md)     | Partial (outdated) | `models.yaml` is still on gpt-4o. Chat has moved to the gateway catalog. |
+| [Responsive layout](design/RESPONSIVE.md)      | Partial (diverged) | The real layout in `UI.svelte` differs from the recommended approach.    |
+| [Cryptography](security/CRYPTOGRAPHY.md)       | Implemented        | AES/RSA plus ML-KEM hybrid, passkey PRF, recovery key.                   |
+| [Security report](security/SECURITY_REPORT.md) | Partial            | 24 fixed, 3 accepted, 2 partial (H-1, M-9), 2 open (H-9, M-8).           |
+| [NIS2](compliance/NIS2.md)                     | Pending            | 0 of 12 technical items.                                                 |
+| [Mobile auth](guides/MOBILE_AUTH.md)           | Implemented        | Deep links and the auth callback.                                        |
+| [Test coverage](testing/TEST_COVERAGE.md)      | Partial            | Thresholds 24/24/24/20 in `vite.config.ts`.                              |
+| [Taglines](marketing/TAGLINES.md)              | n/a                |                                                                          |
+
+### Archive (obsolete, don't follow)
+
+| Doc                                                                     | Superseded by                                                                |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [AI session analysis](archive/AI_SESSION_ANALYSIS.md)                   | [plans/SESSION_MOE.md](plans/SESSION_MOE.md)                                 |
+| [AI import user configuration](archive/AI_IMPORT_USER_CONFIGURATION.md) | [architecture/import/IMPORT.md](architecture/import/IMPORT.md) (never built) |
+| [AI TODO (import modernisation)](archive/AI_TODO.md)                    | [architecture/import/IMPORT.md](architecture/import/IMPORT.md)               |
+| [Data & privacy](archive/DATA_AND_PRIVACY.md)                           | [security/CRYPTOGRAPHY.md](security/CRYPTOGRAPHY.md)                         |

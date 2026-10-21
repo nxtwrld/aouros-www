@@ -43,7 +43,7 @@ $ARGUMENTS
 - `src/lib/session/audio/` - Session-specific audio (audio-processing, microphone-utils, vad-helpers)
 - `src/lib/audio/` - Core audio library (AudioManager, microphone, assemblyai, googlesdk, overlap-processor)
 - `src/lib/audio/streaming/` - Streaming transcription (StreamingTranscriptionClient, DeepgramStreamingProvider)
-- See `TRANSCRIPTION.md` for provider details
+- See `docs/features/session/TRANSCRIPTION.md` for provider details
 
 ### Testing
 
@@ -113,10 +113,8 @@ $ARGUMENTS
 
 ## Documentation
 
-- `AI_SESSION_WORKFLOW.md` - Full session AI workflow phases
-- `AI_SESSION_QOM.md` - QOM expert pipeline architecture
-- `AI_SESSION_ANALYSIS.md` - Analysis pipeline details
-- `TRANSCRIPTION.md` - Audio transcription providers and setup
+- `docs/plans/SESSION_MOE.md` - Session MoE/QOM design (mostly a plan; live analysis runs through `src/lib/session-deprecated/analyzeConversation.ts`)
+- `docs/features/session/TRANSCRIPTION.md` - Audio transcription providers and setup
 
 ## Data Flow
 

@@ -4,7 +4,7 @@
     import { DocumentState, type Task, TaskState, type Document  } from '$lib/import';
     import { DocumentType, type Document as SavedDocument } from '$lib/documents/types.d';
     import  user, { type User } from '$lib/user';
-    import { onMount } from 'svelte';
+    import { onMount, untrack } from 'svelte';
     import { t } from '$lib/i18n';
     import { isNativePlatform } from '$lib/config/platform';
     import { pickFromGallery, captureFromCamera } from '$lib/capacitor/file-picker';
@@ -54,7 +54,7 @@
     let stageProgress = $state(0);
 
     // Current job tracking
-    let currentJobId: string | null = $state(jobId || null);
+    let currentJobId: string | null = $state(untrack(() => jobId || null));
     let noCachedFiles = $state(false);
     let isResuming = $state(false);
 

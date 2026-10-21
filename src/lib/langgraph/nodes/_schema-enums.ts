@@ -21,7 +21,7 @@ import { log } from "$lib/logging/logger";
 
 // Body-part identification enum = fine-grained meshes ∪ named regions ∪
 // whole_body. Regions are first-class anchors so the LLM may emit a leaf mesh
-// or a region name (CAREPLAN.md §Region meta-layer).
+// or a region name (docs/features/careplan/CAREPLAN.md §Region meta-layer).
 const ANATOMY_ENUM: readonly string[] = Object.freeze([
   ...new Set([
     ...Object.values(anatomyObjects).flatMap(

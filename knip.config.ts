@@ -29,7 +29,6 @@ const config: KnipConfig = {
     // Capacitor plugins are loaded at runtime by the native layer
     "@capacitor/*",
     "@revenuecat/purchases-capacitor",
-    "cordova-plugin-health",
     // Node.js polyfills — explicitly aliased in vite.config.ts + vite.config.mobile.ts
     "buffer",
     "crypto-browserify",

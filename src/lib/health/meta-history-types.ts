@@ -1,5 +1,5 @@
 // META_HISTORIES Flat Architecture Types
-// Based on META_HISTORIES.md flat structure design
+// Based on docs/architecture/HEALTH_DATA.md flat structure design
 
 export enum MetaHistoryEntryType {
   // Medications

@@ -69,5 +69,5 @@ You are an expert developer specializing in Mediqom's medical configuration sche
 
 **Documentation:**
 
-- `AI_IMPORT_USER_CONFIGURATION.md` - Schema configuration for import pipeline
+- `docs/architecture/import/IMPORT.md` - Import pipeline architecture (schema config)
 - `docs/IMPORT.md` - Import architecture overview

@@ -2,7 +2,7 @@
 	import { run } from 'svelte/legacy';
 
 	import steps from '$components/onboarding/steps';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import type { VCard } from '$lib/contact/types.d';
 	import { goto } from '$app/navigation';
 	import { prepareKey, encrypt as encryptAES, exportKey } from '$lib/encryption/aes.js';
@@ -49,7 +49,7 @@
 	let global: any = undefined;
 ;
 
-	let { session, profile, userEmail } = $state(data);
+	let { session, profile, userEmail } = $state(untrack(() => data));
 
 
 	function setLocation(loc: string) {

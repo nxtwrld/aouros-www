@@ -50,9 +50,9 @@ The chat system provides AI-assisted medical conversations with access to patien
 
 ## Documentation
 
-- `AI_CHAT.md` - Chat system architecture and design
-- `docs/CONTEXT_MANAGEMENT_SYSTEM.md` - Context assembly system documentation
-- `CONTEXT_DEVELOPMENT_STRATEGY.md` - Context development roadmap
+- `docs/features/chat/CHAT.md` - Chat system (current state), `docs/features/chat/WIDGETS.md` - generative UI widgets, `docs/plans/CHAT_AGENTS.md` - planned agent personas
+- `docs/architecture/CONTEXT_MANAGEMENT.md` - Context assembly system documentation
+- `docs/plans/CONTEXT_ROADMAP.md` - Context development roadmap
 - `src/lib/context/mcp-tools/SECURITY_USAGE.md` - MCP tool security guidelines
 
 ## Key Patterns

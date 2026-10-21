@@ -168,7 +168,7 @@ Primary:
 - **Touch detection**: `@media (pointer: coarse)` for touch-specific targets
 - **Mobile-first approach** with `min()` for responsive sizing without media queries
 
-See `RESPONSIVE.md` for detailed layout strategies and patterns.
+See `docs/design/RESPONSIVE.md` for detailed layout strategies and patterns.
 
 ## Session / Medical Colors
 
