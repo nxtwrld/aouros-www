@@ -19,5 +19,5 @@ export const load: PageServerLoad = async ({
   }
 
   // Redirect to the www folder with detected language
-  throw redirect(307, `/www/${detectedLang}/home`);
+  throw redirect(307, `/www/${detectedLang}`);
 };

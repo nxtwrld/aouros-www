@@ -5,7 +5,7 @@
 //
 // Auth: resolved by @ai-sdk/gateway from AI_GATEWAY_API_KEY, or VERCEL_OIDC_TOKEN on Vercel.
 
-import { generateObject, jsonSchema } from "ai";
+import { generateObject, streamObject, jsonSchema } from "ai";
 import type { ModelMessage } from "ai";
 import type { Content, TokenUsage } from "$lib/ai/types.d";
 import { log } from "$lib/logging/logger";
@@ -106,4 +106,72 @@ export async function generateStructured(
   });
 
   return result.object;
+}
+
+export interface StreamStructuredResult {
+  /** Progressively-more-complete partial objects as generation proceeds. */
+  partialObjectStream: AsyncIterable<any>;
+  /** Resolves to the final, schema-validated object once generation completes. */
+  object: Promise<any>;
+}
+
+/**
+ * Streaming counterpart to generateStructured(). Lets callers read fields (e.g. the
+ * main text response) incrementally via partialObjectStream while still awaiting the
+ * final schema-validated object for fields that must only be used once complete
+ * (e.g. widgets, toolCalls).
+ */
+export function streamStructured(
+  content: Content[],
+  schema: StructuredSchema,
+  options: GenerateStructuredOptions,
+): StreamStructuredResult {
+  const language = options.language || "English";
+  const startTime = Date.now();
+
+  const messages: ModelMessage[] = [
+    { role: "system", content: buildSystemInstruction(language) },
+    { role: "user", content: toUserContent(content) },
+  ];
+
+  aiLogger.info("Gateway stream request", {
+    model: options.model,
+    function: schema.name,
+    language,
+    temperature: options.temperature ?? 0,
+  });
+
+  const result = streamObject({
+    model: options.model,
+    schema: jsonSchema(schema.parameters),
+    messages,
+    temperature: options.temperature ?? 0,
+    providerOptions: {
+      gateway: {
+        disallowPromptTraining: true,
+        ...(options.userId ? { user: options.userId } : {}),
+        ...(options.tags ? { tags: options.tags } : {}),
+      },
+    },
+  });
+
+  result.usage
+    .then((usage) => {
+      const tokens = usage?.totalTokens ?? 0;
+      if (options.tokenUsage) {
+        options.tokenUsage.total += tokens;
+        if (schema.description) {
+          options.tokenUsage[schema.description] = tokens;
+        }
+      }
+      aiLogger.info("Gateway stream response", {
+        model: options.model,
+        function: schema.name,
+        tokens,
+        executionTime: Date.now() - startTime,
+      });
+    })
+    .catch(() => {});
+
+  return { partialObjectStream: result.partialObjectStream, object: result.object };
 }

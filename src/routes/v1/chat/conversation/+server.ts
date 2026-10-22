@@ -1,7 +1,7 @@
 import { json, error, type RequestHandler } from "@sveltejs/kit";
 import { checkRateLimit } from "$lib/auth/rate-limiter";
 import { auditFromEvent, auditLog } from "$lib/audit/index.server";
-import { generateStructured } from "$lib/ai/gateway";
+import { streamStructured } from "$lib/ai/gateway";
 import { DEFAULT_CHAT_MODEL, isValidChatModel } from "$lib/ai/model-catalog";
 import type { Content } from "$lib/ai/types.d";
 import { generateId } from "$lib/utils/id";
@@ -290,7 +290,10 @@ async function processAIRequest(
 
     // Single LLM call via the AI Gateway — returns text response + toolCalls + metadata
     // atomically. The model is user-selectable (switchable mid-conversation).
-    const structuredData = await generateStructured(content, schema, {
+    // The `response` text streams to the client as it's generated; toolCalls, widgets,
+    // and all other fields are only read once the full object settles below, so a
+    // widget is never rendered until its data block is fully ready.
+    const streamResult = streamStructured(content, schema, {
       model,
       language: chatConfigManager.getLanguageName(language),
       temperature: 0,
@@ -299,6 +302,23 @@ async function processAIRequest(
       tags: ["feature:chat", `mode:${mode}`],
     });
 
+    let sentLength = 0;
+    let streamedAnyText = false;
+    for await (const partial of streamResult.partialObjectStream) {
+      const text = typeof partial.response === "string" ? partial.response : "";
+      if (text.length > sentLength) {
+        const delta = text.slice(sentLength);
+        sentLength = text.length;
+        streamedAnyText = true;
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ type: "chunk", content: delta })}\n\n`,
+          ),
+        );
+      }
+    }
+
+    const structuredData = await streamResult.object;
     const fullResponse = structuredData.response || "";
     const hasToolCalls =
       structuredData.toolCalls && structuredData.toolCalls.length > 0;
@@ -325,15 +345,19 @@ async function processAIRequest(
       },
     });
 
-    // Only send text response if no tool calls — tools are handled by the client
-    if (!hasToolCalls && fullResponse) {
-      // Send response as a single chunk
-      controller.enqueue(
-        encoder.encode(
-          `data: ${JSON.stringify({ type: "chunk", content: fullResponse })}\n\n`,
-        ),
-      );
+    if (hasToolCalls && streamedAnyText) {
+      // Accepted edge case: the model streamed response text before also emitting
+      // toolCalls, against its own instruction to choose one or the other. We can't
+      // retract already-sent SSE chunks, so just log it for visibility.
+      log.warn("Model streamed text and returned toolCalls in the same response", {
+        mode,
+        profileId,
+      });
+    }
 
+    // Only send follow-up chunks (banner/disclaimer) if no tool calls — tools are
+    // handled by the client. The main response text was already streamed above.
+    if (!hasToolCalls && fullResponse) {
       // M2: Emergency banner
       if (emergencyBanner) {
         controller.enqueue(

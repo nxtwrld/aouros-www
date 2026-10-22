@@ -122,10 +122,6 @@
 		color: gray;
 	}
 
-	.brand-logo :global(*) {
-		fill: gray !important;
-	}
-
 	.brand-name {
 		font-family: 'Baloo Thambi 2';
 		font-size: 1.35rem;

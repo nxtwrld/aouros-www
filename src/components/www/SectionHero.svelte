@@ -54,10 +54,6 @@
 		color: gray;
 	}
 
-	.hero-logo :global(*) {
-		fill: gray !important;
-	}
-
 	.hero-title {
 		font-family: 'Baloo Thambi 2';
 		font-size: clamp(3rem, 8vw, 5.5rem);
